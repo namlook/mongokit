@@ -17,6 +17,7 @@ class StructureError(Exception):pass
 class BadKeyError(Exception):pass
 class AuthorizedTypeError(Exception):pass
 class ValidationError(Exception):pass
+class ConnectionError(Exception):pass
 
 class MongoDocument(dict):
     """
@@ -140,9 +141,9 @@ class MongoDocument(dict):
             if len(doc) != len(struct):
                 struct_doc_diff = list(set(struct).difference(set(doc)))
                 if struct_doc_diff:
-                    raise ValueError( "missed fields : %s" % struct_doc_diff )
+                    raise StructureError( "missed fields : %s" % struct_doc_diff )
                 else:
-                    raise ValueError( "unknown fields : %s" % list(set(doc).difference(set(struct))))
+                    raise StructureError( "unknown fields : %s" % list(set(doc).difference(set(struct))))
         for key in struct:
             new_path = ".".join([path, key]).strip(".")
             #
@@ -270,7 +271,7 @@ class MongoDocument(dict):
     def _get_collection(self):
         if self._collection is None:
             if self.connection_path is None:
-                raise ValueError( "You must set a connection_path" )
+                raise ConnectionError( "You must set a connection_path" )
             db_name, collection_name = self.connection_path.split('.')
             #self._connection = Connection(self.db_host, self.db_port)[db_name][collection_name]
             self._connection = Connection()[db_name][collection_name]
