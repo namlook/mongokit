@@ -81,6 +81,7 @@ class MongoDocument(dict):
     change to. You can make more complicated signals. A signals return nothing.
     """
     
+    auto_inheritance = True
     structure = None
     required_fields = []
     default_values = {}
@@ -97,6 +98,26 @@ class MongoDocument(dict):
         gen_skel : if True, generate automaticly the skeleton of the doc
             filled with NoneType each time validate() is called
         """
+        #
+        # inheritance
+        #
+        if self.auto_inheritance:
+            parent = self.__class__.__mro__[1]
+            if hasattr(parent, "structure") and parent is not MongoDocument:
+                parent = parent()
+                if parent.structure:
+                    self.structure.update(parent.structure)
+                if parent.required_fields:
+                    self.required_fields = list(set(self.required_fields+parent.required_fields))
+                if parent.default_values:
+                    obj_default_values = self.default_values.copy()
+                    self.default_values = parent.default_values.copy()
+                    self.default_values.update(obj_default_values)
+                if parent.validators:
+                    obj_validators = self.validators.copy()
+                    self.validators = parent.validators.copy()
+                    self.validators.update(obj_validators)
+        # init
         self.__signals = {}
         for k,v in doc.iteritems():
             self[k] = v

@@ -351,6 +351,176 @@ class MongoDocumentTestCase(unittest.TestCase):
         mydoc.validate()
         assert mydoc['foo'] is None
 
- 
+    def test_simple_inheritance(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":int}
+            }
 
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+
+        assert B() == {"a":{"foo":None}, "b":{"bar":None}}
+ 
+    def test_required_inheritance(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":int}
+            }
+            required_fields = ["a.foo"]
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+
+        b = B()
+        self.assertRaises(RequireFieldError, b.validate)
+        b['a']['foo'] = 4
+        b.validate()
+ 
+    def test_default_values_inheritance(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":int}
+            }
+            default_values = {"a.foo":3}
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+
+        assert B() == {"a":{"foo":3}, "b":{"bar":None}}
+ 
+        class C(A):
+            structure = {
+                "c":{"spam":unicode}
+            }
+
+        assert C() == {"a":{"foo":5}, "c":{"spam":None}}, C()
+
+    def test_validators_inheritance(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":int}
+            }
+            validators = {"a.foo":lambda x: x>1}
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+
+        b = B()
+        b["a"]["foo"] = 0
+        self.assertRaises(ValidationError, b.validate)
+        b["a"]["foo"] = 3
+        b.validate()
+
+        class C(A):
+            validators = {"a.foo":lambda x: x<1}
+
+        class D(C):
+            pass
+
+        d = D()
+        d["a"]["foo"] = 4
+        self.assertRaises(ValidationError, d.validate)
+        d["a"]["foo"] = -3
+        d.validate()
+ 
+    def test_complete_inheritance(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":int}
+            }
+            default_values = {"a.foo":3}
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+            required_fields = ['b.bar']
+            default_values = {"a.foo":5}
+
+        b =  B()
+        assert b == {"a":{"foo":5}, "b":{"bar":None}}
+        self.assertRaises(RequireFieldError, b.validate)
+ 
+        class C(B):
+            structure = {
+                "c":{"spam":unicode}
+            }
+
+        c =  C()
+        assert c == {"a":{"foo":5}, "b":{"bar":None}, "c":{"spam":None}}, C()
+        self.assertRaises(RequireFieldError, c.validate)
+        c["b"]["bar"] = u"bla"
+        c.validate()
+  
+    def test_simple_manual_inheritance(self):
+        class A(MongoDocument):
+            auto_inheritance = False
+            structure = {
+                "a":{"foo":int}
+            }
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+            structure.update(A.structure)
+
+        assert B() == {"a":{"foo":None}, "b":{"bar":None}}
+ 
+    def test_required_inheritance(self):
+        class A(MongoDocument):
+            auto_inheritance = False
+            structure = {
+                "a":{"foo":int}
+            }
+            required_fields = ["a.foo"]
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+            structure.update(A.structure)
+            required_fields = A.required_fields
+
+        b = B()
+        self.assertRaises(RequireFieldError, b.validate)
+        b['a']['foo'] = 4
+        b.validate()
+ 
+    def test_default_values_inheritance(self):
+        class A(MongoDocument):
+            auto_inheritance = False
+            structure = {
+                "a":{"foo":int}
+            }
+            default_values = {"a.foo":3}
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+            structure.update(A.structure)
+            default_values = A.default_values
+
+        assert B() == {"a":{"foo":3}, "b":{"bar":None}}
+ 
+        class C(A):
+            structure = {
+                "c":{"spam":unicode}
+            }
+            structure.update(A.structure)
+            default_values = A.default_values
+            default_values.update({"a.foo":5})
+
+        assert C() == {"a":{"foo":5}, "c":{"spam":None}}, C()
+  
  
