@@ -526,7 +526,7 @@ class MongoDocumentTestCase(unittest.TestCase):
     def test_generate_skeleton(self):
         class A(MongoDocument):
             structure = {
-                "a":{"foo":int}
+                "a":{"foo":int},
                 "bar":unicode
             }
         a = A(gen_skel=False)

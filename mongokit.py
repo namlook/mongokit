@@ -127,7 +127,8 @@ class MongoDocument(dict):
         self.__validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self.__gen_skel = gen_skel
-        self.__validate_doc(self, self.structure, check_required = False)
+        if gen_skel:
+            self.__validate_doc(self, self.structure, check_required = False)
         self._collection = None
 
     def __walk_dict(self, dic):
@@ -148,7 +149,7 @@ class MongoDocument(dict):
         from the structure (unknown values are set to None)
         """
         self.__gen_skel = True
-        self.validate()
+        self.__validate_doc(self, self.structure, check_required = False)
 
     def __validate_structure(self, struct=None):
         if struct is None:
