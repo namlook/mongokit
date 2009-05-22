@@ -12,6 +12,12 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
   type(re.compile("")),
 ]
 
+class RequireFieldError(Exception):pass
+class StructureError(Exception):pass
+class BadKeyError(Exception):pass
+class AuthorizedTypeError(Exception):pass
+class ValidationError(Exception):pass
+
 class MongoDocument(dict):
     """
     A dictionnary with a building structured schema
@@ -38,7 +44,7 @@ class MongoDocument(dict):
 
         required = ["keys1.foo", "bla"]
 
-    Validators can be add in order to validate some values :
+    Validators can be added in order to validate some values :
 
         validators = {
             "key1.foo":lambda x: x>5,
@@ -60,14 +66,26 @@ class MongoDocument(dict):
         >>> del my_doc["bla"]
         >>> my_doc.validate()
         <type 'exceptions.ValueError'>: bla is required
+
+    Signals can be mapped to a field. Each time a field will changed, the function
+    will be called:
+        
+        signals = {
+            "key1.foo": lambda doc, value: doc['bla'] = unicode(value)
+        }
+
+    This means that each time key1.foo will be changed, the value of field "bla" will
+    change to. You can make more complicated signals. A signals return nothing.
     """
     
     structure = None
     required_fields = []
+    default_values = {}
     validators = {}
+    signals = {}
 
     db_host = "localhost"
-    db_port = "21017"
+    db_port = 21017
     connection_path = None
     
     def __init__(self, doc={}, gen_skel=True):
@@ -76,14 +94,16 @@ class MongoDocument(dict):
         gen_skel : if True, generate automaticly the skeleton of the doc
             filled with NoneType each time validate() is called
         """
+        self.__signals = {}
         for k,v in doc.iteritems():
             self[k] = v
         if self.structure is None:
-            raise ValueError("your document must have a structure defined")
+            raise StructureError("your document must have a structure defined")
         self.__validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self.__gen_skel = gen_skel
         self.__validate_doc(self, self.structure, check_required = False)
+        self._collection = None
 
     def __walk_dict(self, dic):
         for key, value in dic.items():
@@ -101,12 +121,12 @@ class MongoDocument(dict):
             struct = self.structure
         for key in struct:
             assert isinstance(key, basestring), "%s must be a basestring" % key
-            assert "." not in key
-            assert not key.startswith('$')
+            if "." in key: raise BadKeyError("%s must not contain '.'" % key)
+            if key.startswith('$'): raise BadKeyError("%s must not start with '$'" % key)
             if type(struct[key]) is dict:
                 if type in [type(k) for k,v in struct[key].iteritems()]:
-                    assert k in authorized_types
-                    assert v in authorized_types
+                    if k not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % k.__name__)
+                    if v not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % v.__name__)
                 else:
                     self.__validate_structure(struct[key])
             elif type(struct[key]) is list:
@@ -151,10 +171,15 @@ class MongoDocument(dict):
                 #
                 assert type(doc[key]) is dict, "the value of %s must be a dict, not %s" % (key, type(doc[key]).__name__)
                 #
-                # if the dict is empty into the document we build it with None values
+                # if the list is empty and there are default values, we fill them
+                #
+                if not len(doc[key]) and new_path in self.default_values:
+                    doc[new_path.split('.')[-1]] = self.default_values[new_path]
+                #
+                # if the dict is still empty into the document we build it with None values
                 #
                 if not len(doc[key]) and new_path in self.required_fields and check_required:
-                    raise ValueError( "%s is required" % new_path )
+                    raise RequireFieldError( "%s is required" % new_path )
                 #
                 # It the dict is not a schema but a simply dictionnary with attempted values,
                 # we iterate over these values and check their type
@@ -187,12 +212,16 @@ class MongoDocument(dict):
                 # check if the list must not be null
                 #
                 if not len(doc[key]) and new_path in self.required_fields and check_required:
-                    raise ValueError( "%s is required" % new_path )
+                    raise RequireFieldError( "%s is required" % new_path )
                 #
                 # iterate over the list to check values type
                 #
                 for v in doc[key]:
-                    assert type(v) is struct[key][0], "invalide type: %s must be a %s not %s" % (key,  struct[key][0].__name__, type(v).__name__)
+                    if len(struct[key]) == 0:
+                        if type(v) not in authorized_types:
+                            raise AuthorizedTypeError("%s is not an authorized type" % v) 
+                    elif type(v) is not struct[key][0]:
+                        raise TypeError( "%s must be a %s not %s" % (key,  struct[key][0].__name__, type(v).__name__) )
             #
             # It is not a dict nor a list but a simple key:value
             #
@@ -216,28 +245,42 @@ class MongoDocument(dict):
                 # check if the value must not be null
                 #
                 if doc[key] is None and new_path in self.required_fields and check_required:
-                    raise ValueError( "%s is required" % new_path )
+                    raise RequireFieldError( "%s is required" % new_path )
                 #
                 # check that the value pass througt the validator process
                 #
-                if new_path in self.validators:
-                    assert self.validators[new_path](doc[key]), "%s does not pass the validator %s" % (doc[key], self.validators[new_path].__name__)
+                if new_path in self.validators and check_required and doc[key] is not None:
+                    if not self.validators[new_path](doc[key]):
+                        raise ValidationError("%s does not pass the validator %s" % (doc[key], self.validators[new_path].__name__))
+                if new_path in self.signals and check_required:
+                    make_signal = False
+                    if new_path in self.__signals:
+                        if doc[key] != self.__signals[new_path]:
+                            make_signal = True
+                    else:
+                        make_signal = True
+                    if make_signal:
+                        self.signals[new_path](self, doc[key])
+                        self.__signals[new_path] = doc[key]
+
 
     def validate(self):
         self.__validate_doc(self, self.structure)
 
-    def _get_connection(self):
-        if self._connection is None:
-            if connection_path is None:
+    def _get_collection(self):
+        if self._collection is None:
+            if self.connection_path is None:
                 raise ValueError( "You must set a connection_path" )
             db_name, collection_name = self.connection_path.split('.')
-            self._connection = Connection(self.db_host, self.db_port)[db_name][collection_name]
+            #self._connection = Connection(self.db_host, self.db_port)[db_name][collection_name]
+            self._connection = Connection()[db_name][collection_name]
         return self._connection
 
     def save(self):
-        if validate:
-            self.validate()
+        self.validate()
         collection = self._get_collection()
         if collection is None:
             raise ValueError( "You must set a collection to this object before using save" )
-        collection.save(self._doc)
+        collection.save(self)
+
+
