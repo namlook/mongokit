@@ -142,6 +142,14 @@ class MongoDocument(dict):
                 else:
                     yield ""
 
+    def generate_skeleton(self):
+        """
+        validate and generate the skeleton of the document
+        from the structure (unknown values are set to None)
+        """
+        self.__gen_skel = True
+        self.validate()
+
     def __validate_structure(self, struct=None):
         if struct is None:
             struct = self.structure

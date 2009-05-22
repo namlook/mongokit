@@ -523,4 +523,13 @@ class MongoDocumentTestCase(unittest.TestCase):
 
         assert C() == {"a":{"foo":5}, "c":{"spam":None}}, C()
   
- 
+    def test_generate_skeleton(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":int}
+                "bar":unicode
+            }
+        a = A(gen_skel=False)
+        assert a == {}
+        a.generate_skeleton()
+        assert a == {"a":{"foo":None}, "bar":None}
