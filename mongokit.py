@@ -18,6 +18,8 @@ class BadKeyError(Exception):pass
 class AuthorizedTypeError(Exception):pass
 class ValidationError(Exception):pass
 class ConnectionError(Exception):pass
+class DuplicateRequiredError(Exception):pass
+class DuplicateDefaultValueError(Exception):pass
 
 class MongoDocument(dict):
     """
@@ -86,7 +88,7 @@ class MongoDocument(dict):
     signals = {}
 
     db_host = "localhost"
-    db_port = 21017
+    db_port = 27017
     connection_path = None
     
     def __init__(self, doc={}, gen_skel=True):
@@ -120,6 +122,9 @@ class MongoDocument(dict):
     def __validate_structure(self, struct=None):
         if struct is None:
             struct = self.structure
+        if self.required_fields:
+            if len(self.required_fields) != len(set(self.required_fields)):
+                raise DuplicateRequiredError("duplicate required_fields : %s" % self.required_fields)
         for key in struct:
             assert isinstance(key, basestring), "%s must be a basestring" % key
             if "." in key: raise BadKeyError("%s must not contain '.'" % key)
@@ -264,24 +269,22 @@ class MongoDocument(dict):
                         self.signals[new_path](self, doc[key])
                         self.__signals[new_path] = doc[key]
 
-
     def validate(self):
         self.__validate_doc(self, self.structure)
 
-    def _get_collection(self):
-        if self._collection is None:
-            if self.connection_path is None:
-                raise ConnectionError( "You must set a connection_path" )
-            db_name, collection_name = self.connection_path.split('.')
-            #self._connection = Connection(self.db_host, self.db_port)[db_name][collection_name]
-            self._connection = Connection()[db_name][collection_name]
-        return self._connection
-
     def save(self):
         self.validate()
-        collection = self._get_collection()
+        collection = self.__class__.collection()
         if collection is None:
             raise ValueError( "You must set a collection to this object before using save" )
         collection.save(self)
+
+    @classmethod
+    def collection(cls):
+        print cls.connection_path
+        if cls.connection_path is None:
+            raise ConnectionError( "You must set a connection_path" )
+        db_name, collection_name = cls.connection_path.split('.')
+        return Connection(cls.db_host, cls.db_port)[db_name][collection_name]
 
 
