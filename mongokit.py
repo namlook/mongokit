@@ -119,16 +119,20 @@ class MongoDocument(dict):
                 else:
                     yield ""
 
-    def __validate_structure(self, struct=None):
+    def __validate_structure(self, struct=None,  skip_basetring=False):
         if struct is None:
             struct = self.structure
         if self.required_fields:
             if len(self.required_fields) != len(set(self.required_fields)):
                 raise DuplicateRequiredError("duplicate required_fields : %s" % self.required_fields)
         for key in struct:
-            assert isinstance(key, basestring), "%s must be a basestring" % key
-            if "." in key: raise BadKeyError("%s must not contain '.'" % key)
-            if key.startswith('$'): raise BadKeyError("%s must not start with '$'" % key)
+            if not skip_basetring:
+                if not isinstance(key, basestring):
+                    raise StructureError("%s must be a basestring" % key)
+                if "." in key:
+                    raise BadKeyError("%s must not contain '.'" % key)
+                if key.startswith('$'):
+                    raise BadKeyError("%s must not start with '$'" % key)
             if type(struct[key]) is dict:
                 if type in [type(k) for k,v in struct[key].iteritems()]:
                     if k not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % k.__name__)
@@ -137,7 +141,10 @@ class MongoDocument(dict):
                     self.__validate_structure(struct[key])
             elif type(struct[key]) is list:
                 for value in struct[key]:
-                    assert value in authorized_types
+                    if type(value) is dict or type(value) is list:
+                        self.__validate_structure(value, skip_basetring=True)
+                    else:
+                        assert value in authorized_types
             else:
                 assert struct[key] in authorized_types, "%s must not be %s but a type like %s" % (key, struct[key], authorized_types )
 
@@ -226,6 +233,8 @@ class MongoDocument(dict):
                     if len(struct[key]) == 0:
                         if type(v) not in authorized_types:
                             raise AuthorizedTypeError("%s is not an authorized type" % v) 
+                    elif type(v) is dict or type(v) is list:
+                        self.__validate_doc(v, struct)
                     elif type(v) is not struct[key][0]:
                         raise TypeError( "%s must be a %s not %s" % (key,  struct[key][0].__name__, type(v).__name__) )
             #
