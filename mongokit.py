@@ -92,16 +92,17 @@ class MongoDocument(dict):
     db_port = 27017
     connection_path = None
     
-    def __init__(self, doc={}, gen_skel=True):
+    def __init__(self, doc={}, gen_skel=True, auto_inheritance=True):
         """
         doc : a document dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
             filled with NoneType each time validate() is called
+        auto_inheritance: enable the automatic inheritance (default)
         """
         #
         # inheritance
         #
-        if self.auto_inheritance:
+        if self.auto_inheritance and auto_inheritance:
             parent = self.__class__.__mro__[1]
             if hasattr(parent, "structure") and parent is not MongoDocument:
                 parent = parent()
@@ -130,6 +131,7 @@ class MongoDocument(dict):
         self._collection = None
 
     def __walk_dict(self, dic):
+        # thanks jean_b for the patch
         for key, value in dic.items():
             if hasattr(value, 'keys'):
                 for child_key in self.__walk_dict(value):
