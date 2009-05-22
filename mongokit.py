@@ -116,8 +116,13 @@ class MongoDocument(dict):
                 assert struct[key] in authorized_types, "%s must not be %s but a type like %s" % (key, struct[key], authorized_types )
 
     def __validate_doc(self, doc, struct, check_required = True, path = ""):
-        #if len(doc) != len(struct):
-        #    raise ValueError( "missed fields : %s" % list(set(struct).difference(set(doc))))
+        if check_required:
+            if len(doc) != len(struct):
+                struct_doc_diff = list(set(struct).difference(set(doc)))
+                if struct_doc_diff:
+                    raise ValueError( "missed fields : %s" % struct_doc_diff )
+                else:
+                    raise ValueError( "unknown fields : %s" % list(set(doc).difference(set(struct))))
         for key in struct:
             new_path = ".".join([path, key]).strip(".")
             #
