@@ -180,7 +180,9 @@ class MongoDocument(dict):
                 if struct_doc_diff:
                     raise StructureError( "missed fields : %s" % struct_doc_diff )
                 else:
-                    raise StructureError( "unknown fields : %s" % list(set(doc).difference(set(struct))))
+                    struct_struct_diff = list(set(doc).difference(set(struct)))
+                    if struct_struct_diff != ['_id']:
+                        raise StructureError( "unknown fields : %s" % struct_struct_diff)
         for key in struct:
             new_path = ".".join([path, key]).strip(".")
             #
@@ -301,22 +303,34 @@ class MongoDocument(dict):
                         self.signals[new_path](self, doc[key])
                         self.__signals[new_path] = doc[key]
 
+    def _get_id(self):
+        return self.get('_id')
+
+    def _set_id(self, id):
+        self['_id'] = id
+
+    id = property(_get_id, _set_id)
+
     def validate(self):
         self.__validate_doc(self, self.structure)
 
     def save(self):
         self.validate()
         collection = self.__class__.collection()
-        if collection is None:
-            raise ValueError( "You must set a collection to this object before using save" )
         collection.save(self)
 
     @classmethod
     def collection(cls):
-        print cls.connection_path
         if cls.connection_path is None:
             raise ConnectionError( "You must set a connection_path" )
         db_name, collection_name = cls.connection_path.split('.')
         return Connection(cls.db_host, cls.db_port)[db_name][collection_name]
 
+    @classmethod
+    def get_from_id(cls, id):
+        return cls.collection().find_one({"_id":id})
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return cls.collection().find(*args, **kwargs)
 

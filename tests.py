@@ -533,3 +533,43 @@ class MongoDocumentTestCase(unittest.TestCase):
         assert a == {}
         a.generate_skeleton()
         assert a == {"a":{"foo":None}, "bar":None}
+
+    def test_get_from_id(self):
+        class MyDoc(MongoDocument):
+            connection_path = "test.mongokit"
+            structure = {
+                "foo":int,
+            }
+        mydoc = MyDoc()
+        mydoc["_id"] = "bar"
+        mydoc["foo"] = 3
+        mydoc.save()
+        fetched_doc = MyDoc.get_from_id("bar")
+        mydoc == fetched_doc
+
+    def test_find(self):
+        class MyDoc(MongoDocument):
+            connection_path = "test.mongokit"
+            structure = {
+                "foo":int,
+            }
+        for i in range(10):
+            mydoc = MyDoc()
+            mydoc["foo"] = i
+            mydoc.save()
+        docs_list = [i["foo"] for i in MyDoc.find({"foo":{"$gt":4}})]
+        assert docs_list == [5,6,7,8,9]
+
+
+    def test_id(self):
+        class MyDoc(MongoDocument):
+            connection_path = "test.mongokit"
+            structure = {
+                "foo":int,
+            }
+        mydoc = MyDoc()
+        mydoc["_id"] = "bar"
+        assert mydoc.id == "bar"
+        mydoc.id = "ble"
+        assert mydoc['_id'] == "ble"
+        mydoc.save()
