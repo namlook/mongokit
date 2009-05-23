@@ -200,8 +200,8 @@ class MongoDocument(dict):
             # key must match the structure
             # and its type must be authorized
             #
-            assert key in struct, "incorrect field name : %s" % key
-            assert type(doc[key]) in authorized_types, "%s: %s must not be %s but a type like %s" % (key, doc[key],type(doc[key]), authorized_types)
+            assert key in struct, "incorrect field name : %s" % new_path
+            assert type(doc[key]) in authorized_types, "%s: %s must not be %s but a type like %s" % (new_path, doc[key],type(doc[key]), authorized_types)
             #
             # if the value is a dict, we have a another structure to validate
             #
@@ -209,7 +209,7 @@ class MongoDocument(dict):
                 #
                 # we check that the type value in the document is correct (must be a dict like in the structure)
                 #
-                assert type(doc[key]) is dict, "the value of %s must be a dict, not %s" % (key, type(doc[key]).__name__)
+                assert type(doc[key]) is dict, "the value of %s must be a dict, not %s" % (new_path, type(doc[key]).__name__)
                 #
                 # if the list is empty and there are default values, we fill them
                 #
@@ -242,7 +242,7 @@ class MongoDocument(dict):
                 #
                 # confirme that the document match the structure
                 #
-                assert type(doc[key]) is list, "the value of %s must be a list, not %s" % (key, type(doc[key]).__name__)
+                assert type(doc[key]) is list, "the value of %s must be a list, not %s" % (new_path, type(doc[key]).__name__)
                 #
                 # if the list is empty and there are default values, we fill them
                 #
@@ -261,7 +261,7 @@ class MongoDocument(dict):
                         if type(v) not in authorized_types:
                             raise AuthorizedTypeError("%s is not an authorized type" % v) 
                     elif type(v) is not struct[key][0]:
-                        raise TypeError( "%s must be a %s not %s" % (key,  struct[key][0].__name__, type(v).__name__) )
+                        raise TypeError( "%s must be a %s not %s" % (new_path,  struct[key][0].__name__, type(v).__name__) )
             #
             # It is not a dict nor a list but a simple key:value
             #
@@ -270,7 +270,7 @@ class MongoDocument(dict):
                 # check if the value type is matching the on into the structure or is a NoneType
                 #
                 assert type(doc[key]) is struct[key] or type(doc[key]) is type(None), "invalide type : %s must be a %s not %s" % (
-                  key, struct[key].__name__, type(doc[key]).__name__)
+                  new_path, struct[key].__name__, type(doc[key]).__name__)
                 #
                 # if the value is None, check if a default value exist.
                 # if exists, and it is a function then call it otherwise, juste feed it
@@ -291,7 +291,7 @@ class MongoDocument(dict):
                 #
                 if new_path in self.validators and check_required and doc[key] is not None:
                     if not self.validators[new_path](doc[key]):
-                        raise ValidationError("%s does not pass the validator %s" % (doc[key], self.validators[new_path].__name__))
+                        raise ValidationError("%s does not pass the validator %s" % (new_path, self.validators[new_path].__name__))
                 if new_path in self.signals and check_required:
                     make_signal = False
                     if new_path in self.__signals:

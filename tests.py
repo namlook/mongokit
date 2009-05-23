@@ -197,7 +197,6 @@ class MongoDocumentTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo'] = [set([1,2]), "bla"]
         self.assertRaises(AuthorizedTypeError, mydoc.validate)
-        
  
     def test_typed_list(self):
         class MyDoc(MongoDocument):
