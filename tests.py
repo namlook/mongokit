@@ -559,16 +559,3 @@ class MongoDocumentTestCase(unittest.TestCase):
         docs_list = [i["foo"] for i in MyDoc.find({"foo":{"$gt":4}})]
         assert docs_list == [5,6,7,8,9]
 
-
-    def test_id(self):
-        class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
-            structure = {
-                "foo":int,
-            }
-        mydoc = MyDoc()
-        mydoc["_id"] = "bar"
-        assert mydoc.id == "bar"
-        mydoc.id = "ble"
-        assert mydoc['_id'] == "ble"
-        mydoc.save()

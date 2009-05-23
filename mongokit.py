@@ -303,14 +303,6 @@ class MongoDocument(dict):
                         self.signals[new_path](self, doc[key])
                         self.__signals[new_path] = doc[key]
 
-    def _get_id(self):
-        return self.get('_id')
-
-    def _set_id(self, id):
-        self['_id'] = id
-
-    id = property(_get_id, _set_id)
-
     def validate(self):
         self.__validate_doc(self, self.structure)
 
