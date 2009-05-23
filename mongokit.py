@@ -225,10 +225,10 @@ class MongoDocument(dict):
             #
             if self.__gen_skel:
                 if not key in doc:
-                    if hasattr(struct[key], "keys"):
-                        doc[key] = {}
+                    if isinstance(struct[key], dict):
+                        doc[key] = type(struct[key])()
                     elif isinstance(struct[key], list):
-                        doc[key] = []
+                        doc[key] = type(struct[key])()
                     else:
                         doc[key] = None
             #
@@ -284,7 +284,8 @@ class MongoDocument(dict):
                 #
                 # we check that the type value in the document is correct (must be a dict like in the structure)
                 #
-                assert isinstance(doc[key], struct[key]), "the value of %s must be a dict instance, not %s" % (new_path, type(doc[key]).__name__)
+                if not isinstance(doc[key], type(struct[key])):
+                    raise TypeError("the value of %s must be a %s instance, not %s" % (new_path, type(struct[key]), type(doc[key]).__name__))
                 #
                 # if the list is empty and there are default values, we fill them
                 #
