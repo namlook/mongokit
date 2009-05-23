@@ -398,7 +398,7 @@ class MongoDocumentTestCase(unittest.TestCase):
         mydoc['foo'] = 4
         mydoc.validate()
         assert mydoc['foo'] == "4"
-        assert mydoc["bar"]["bla"] == "3"
+        assert mydoc["bar"]["bla"] == "3", mydoc
 
 
     def test_multiple_signals(self):
@@ -489,6 +489,7 @@ class MongoDocumentTestCase(unittest.TestCase):
             structure = {
                 "c":{"spam":unicode}
             }
+            default_values = {"a.foo":5}
 
         assert C() == {"a":{"foo":5}, "c":{"spam":None}}, C()
 
@@ -546,7 +547,7 @@ class MongoDocumentTestCase(unittest.TestCase):
         b['foo'] = 4
         b.validate()
         assert b['foo'] == "4"
-        assert b["bar"]["bla"] == "3"
+        assert b["bar"]["bla"] == "3", b
 
  
     def test_complete_inheritance(self):
@@ -593,7 +594,7 @@ class MongoDocumentTestCase(unittest.TestCase):
 
         assert B() == {"a":{"foo":None}, "b":{"bar":None}}
  
-    def test_required_inheritance(self):
+    def test_required_manual_inheritance(self):
         class A(MongoDocument):
             auto_inheritance = False
             structure = {
@@ -613,7 +614,7 @@ class MongoDocumentTestCase(unittest.TestCase):
         b['a']['foo'] = 4
         b.validate()
  
-    def test_default_values_inheritance(self):
+    def test_default_values_manual_inheritance(self):
         class A(MongoDocument):
             auto_inheritance = False
             structure = {
@@ -693,4 +694,32 @@ class MongoDocumentTestCase(unittest.TestCase):
             validators = {"foo.bla":lambda x:x}
         self.assertRaises(ValueError, MyDoc)
 
+    def test_with_custom_object(self):
+        class MyDict(dict):
+            pass
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{unicode:int}
+            }
+        mydoc = MyDoc()
+        mydict = MyDict()
+        mydict[u"foo"] = 3
+        mydoc["foo"] = mydict
+        mydoc.validate()
  
+    def test_custom_object_as_type(self):
+        class MyDict(dict):
+            pass
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":MyDict({unicode:int})
+            }
+        mydoc = MyDoc()
+        mydict = MyDict()
+        mydict[u"foo"] = 3
+        mydoc["foo"] = mydict
+        mydoc.validate()
+        mydoc['foo'] = {u"foo":7}
+        self.assertRaises(TypeError, mydoc.validate)
+ 
+

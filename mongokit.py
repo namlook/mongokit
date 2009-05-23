@@ -112,25 +112,7 @@ class MongoDocument(dict):
         # inheritance
         #
         if self.auto_inheritance and auto_inheritance:
-            parent = self.__class__.__mro__[1]
-            if hasattr(parent, "structure") and parent is not MongoDocument:
-                parent = parent()
-                if parent.structure:
-                    self.structure.update(parent.structure)
-                if parent.required_fields:
-                    self.required_fields = list(set(self.required_fields+parent.required_fields))
-                if parent.default_values:
-                    obj_default_values = self.default_values.copy()
-                    self.default_values = parent.default_values.copy()
-                    self.default_values.update(obj_default_values)
-                if parent.validators:
-                    obj_validators = self.validators.copy()
-                    self.validators = parent.validators.copy()
-                    self.validators.update(obj_validators)
-                if parent.signals:
-                    obj_signals = self.signals.copy()
-                    self.signals = parent.signals.copy()
-                    self.signals.update(obj_signals)
+            self.generate_inheritance()
         # init
         self.__signals = {}
         for k,v in doc.iteritems():
@@ -168,6 +150,31 @@ class MongoDocument(dict):
         self.__gen_skel = True
         self.__validate_doc(self, self.structure, check_required = False)
 
+    def generate_inheritance(self):
+        """
+        generate self.structure, self.validators, self.default_values
+        and self.signals from ancestors
+        """
+        parent = self.__class__.__mro__[1]
+        if hasattr(parent, "structure") and parent is not MongoDocument:
+            parent = parent()
+            if parent.structure:
+                self.structure.update(parent.structure)
+            if parent.required_fields:
+                self.required_fields = list(set(self.required_fields+parent.required_fields))
+            if parent.default_values:
+                obj_default_values = self.default_values.copy()
+                self.default_values = parent.default_values.copy()
+                self.default_values.update(obj_default_values)
+            if parent.validators:
+                obj_validators = self.validators.copy()
+                self.validators = parent.validators.copy()
+                self.validators.update(obj_validators)
+            if parent.signals:
+                obj_signals = self.signals.copy()
+                self.signals = parent.signals.copy()
+                self.signals.update(obj_signals)
+
     def __validate_descriptors(self):
         for dv in self.default_values:
             if dv not in self._namespaces:
@@ -189,13 +196,13 @@ class MongoDocument(dict):
             assert isinstance(key, basestring), "%s must be a basestring" % key
             if "." in key: raise BadKeyError("%s must not contain '.'" % key)
             if key.startswith('$'): raise BadKeyError("%s must not start with '$'" % key)
-            if type(struct[key]) is dict:
+            if isinstance(struct[key], dict):
                 if type in [type(k) for k,v in struct[key].iteritems()]:
                     if k not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % k.__name__)
                     if v not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % v.__name__)
                 else:
                     self.__validate_structure(struct[key])
-            elif type(struct[key]) is list:
+            elif isinstance(struct[key], list):
                 for value in struct[key]:
                     assert value in authorized_types
             else:
@@ -225,19 +232,59 @@ class MongoDocument(dict):
                     else:
                         doc[key] = None
             #
+            # default_values :
+            # if the value is None, check if a default value exist.
+            # if exists, and it is a function then call it otherwise, juste feed it
+            #
+            if doc[key] is None and new_path in self.default_values:
+                new_value = self.default_values[new_path]
+                if callable(new_value):
+                    doc[key] = new_value()
+                else:
+                    doc[key] = new_value
+            #
+            # Process all signals of the field
+            #
+            if new_path in self.signals and new_path in self.default_values:
+                launch_signals = True
+            elif check_required:
+                launch_signals = True
+            else:
+                launch_signals = False
+            if new_path in self.signals and launch_signals:
+                make_signal = False
+                if new_path in self.__signals:
+                    if doc[key] != self.__signals[new_path]:
+                        make_signal = True
+                else:
+                    make_signal = True
+                if make_signal:
+                    if not hasattr(self.signals[new_path], "__iter__"):
+                        signals = [self.signals[new_path]]
+                    else:
+                        signals = self.signals[new_path]
+                    for signal in signals:
+                        signal(self, doc[key])
+                    self.__signals[new_path] = doc[key]
+            #
             # key must match the structure
             # and its type must be authorized
             #
             assert key in struct, "incorrect field name : %s" % new_path
-            assert type(doc[key]) in authorized_types, "%s: %s must not be %s but a type like %s" % (new_path, doc[key],type(doc[key]), authorized_types)
+            bad_type = True
+            for auth_type in authorized_types:
+                if isinstance(doc[key], auth_type):
+                    bad_type = False
+            if bad_type:
+                raise TypeError( "%s: %s must not be %s but an instance of %s" % (new_path, doc[key],type(doc[key]), authorized_types) )
             #
             # if the value is a dict, we have a another structure to validate
             #
-            if type(struct[key]) is dict:
+            if isinstance(struct[key], dict):
                 #
                 # we check that the type value in the document is correct (must be a dict like in the structure)
                 #
-                assert type(doc[key]) is dict, "the value of %s must be a dict, not %s" % (new_path, type(doc[key]).__name__)
+                assert isinstance(doc[key], dict), "the value of %s must be a dict instance, not %s" % (new_path, type(doc[key]).__name__)
                 #
                 # if the list is empty and there are default values, we fill them
                 #
@@ -254,9 +301,9 @@ class MongoDocument(dict):
                 #
                 if type in [type(k) for k,v in struct[key].iteritems()]:
                     for k,v in doc[key].iteritems():
-                        assert type(k) is struct[key].keys()[0], "invalide type : key of %s must be %s not %s" % (
+                        assert isinstance(k, struct[key].keys()[0]), "invalide type : key of %s must be %s not %s" % (
                           new_path, struct[key].keys()[0].__name__, type(k).__name__)
-                        assert type(v) is struct[key].values()[0], "invalide type : value of %s must be %s not %s" % (
+                        assert isinstance(v, struct[key].values()[0]), "invalide type : value of %s must be %s not %s" % (
                           new_path, struct[key].keys()[0].__name__, type(v).__name__)
                 #
                 # If the dict is a schema, we call __validate_doc again
@@ -294,40 +341,6 @@ class MongoDocument(dict):
             # It is not a dict nor a list but a simple key:value
             #
             else:
-                #
-                # if the value is None, check if a default value exist.
-                # if exists, and it is a function then call it otherwise, juste feed it
-                #
-                if doc[key] is None and new_path in self.default_values:
-                    new_value = self.default_values[new_path]
-                    if callable(new_value):
-                        doc[key] = new_value()
-                    else:
-                        doc[key] = new_value
-                #
-                # Process all signals of the field
-                #
-                if new_path in self.signals and new_path in self.default_values:
-                    launch_signals = True
-                elif check_required:
-                    launch_signals = True
-                else:
-                    launch_signals = False
-                if new_path in self.signals and launch_signals:
-                    make_signal = False
-                    if new_path in self.__signals:
-                        if doc[key] != self.__signals[new_path]:
-                            make_signal = True
-                    else:
-                        make_signal = True
-                    if make_signal:
-                        if not hasattr(self.signals[new_path], "__iter__"):
-                            signals = [self.signals[new_path]]
-                        else:
-                            signals = self.signals[new_path]
-                        for signal in signals:
-                            signal(self, doc[key])
-                        self.__signals[new_path] = doc[key]
                 #
                 # check if the value type is matching the on into the structure or is a NoneType
                 #
