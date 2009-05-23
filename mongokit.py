@@ -127,6 +127,10 @@ class MongoDocument(dict):
                     obj_validators = self.validators.copy()
                     self.validators = parent.validators.copy()
                     self.validators.update(obj_validators)
+                if parent.signals:
+                    obj_signals = self.signals.copy()
+                    self.signals = parent.signals.copy()
+                    self.signals.update(obj_signals)
         # init
         self.__signals = {}
         for k,v in doc.iteritems():

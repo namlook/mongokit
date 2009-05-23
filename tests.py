@@ -433,6 +433,14 @@ class MongoDocumentTestCase(unittest.TestCase):
         assert mydoc['foo'] is None
         assert mydoc['ble'] is None
 
+    def test_bad_signals(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{"bar":int},
+            }
+            signals = {"foo.bla":lambda x:x}
+        self.assertRaises(ValueError, MyDoc)
+
     def test_simple_inheritance(self):
         class A(MongoDocument):
             structure = {
@@ -513,6 +521,33 @@ class MongoDocumentTestCase(unittest.TestCase):
         self.assertRaises(ValidationError, d.validate)
         d["a"]["foo"] = -3
         d.validate()
+
+    def test_signals_inheritance(self):
+        def fill_foo(doc, value):
+            doc["foo"] = unicode(doc["foo"])
+
+        def fill_bar(doc, value):
+            doc["bar"]["bla"] = unicode(doc["bar"]["bla"])
+       
+        class A(MongoDocument):
+            structure = {
+                "foo":unicode,
+            }
+            signals = {"foo":fill_foo}
+
+        class B(A):
+            structure = {
+                "bar":{"bla":unicode}
+            }
+            signals = {"bar.bla":fill_bar}
+            default_values = {"bar.bla":3}
+
+        b = B()
+        b['foo'] = 4
+        b.validate()
+        assert b['foo'] == "4"
+        assert b["bar"]["bla"] == "3"
+
  
     def test_complete_inheritance(self):
         class A(MongoDocument):
@@ -648,14 +683,6 @@ class MongoDocumentTestCase(unittest.TestCase):
                 "foo":{"bar":int},
             }
             default_values = {"foo.bla":2}
-        self.assertRaises(ValueError, MyDoc)
-
-    def test_bad_signals(self):
-        class MyDoc(MongoDocument):
-            structure = {
-                "foo":{"bar":int},
-            }
-            signals = {"foo.bla":lambda x:x}
         self.assertRaises(ValueError, MyDoc)
 
     def test_bad_validators(self):
