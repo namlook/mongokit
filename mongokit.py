@@ -54,6 +54,12 @@ class MongoDocument(dict):
             "key2.spam": lambda x: x.startswith("miam")
         }
 
+    You can set multiple validators :
+
+        validators = {
+            "key1.foo": [validator1, validator2]
+        }
+
     A MongoDocument works just like dict:
 
         >>> my_doc = MongoDocument()
@@ -71,7 +77,8 @@ class MongoDocument(dict):
         <type 'exceptions.ValueError'>: bla is required
 
     Signals can be mapped to a field. Each time a field will changed, the function
-    will be called:
+    will be called. A signal is called before field validation so you can make some
+    field processing:
         
         signals = {
             "key1.foo": lambda doc, value: doc['bla'] = unicode(value)
@@ -79,6 +86,8 @@ class MongoDocument(dict):
 
     This means that each time key1.foo will be changed, the value of field "bla" will
     change to. You can make more complicated signals. A signals return nothing.
+
+    Juste like validators, you can specify multiple signals for one field.
     """
     
     auto_inheritance = True
@@ -126,6 +135,7 @@ class MongoDocument(dict):
             raise StructureError("your document must have a structure defined")
         self.__validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
+        self.__validate_descriptors()
         self.__gen_skel = gen_skel
         if gen_skel:
             self.__validate_doc(self, self.structure, check_required = False)
@@ -134,9 +144,12 @@ class MongoDocument(dict):
     def __walk_dict(self, dic):
         # thanks jean_b for the patch
         for key, value in dic.items():
-            if hasattr(value, 'keys'):
-                for child_key in self.__walk_dict(value):
-                    yield '%s.%s' % (key, child_key)
+            if hasattr(value, 'keys') and len(value):
+                if type(value.keys()[0]) is not type:
+                    for child_key in self.__walk_dict(value):
+                        yield '%s.%s' % (key, child_key)
+                else:
+                    yield key
             else:
                 if type(key) is not type:
                     yield key
@@ -150,6 +163,17 @@ class MongoDocument(dict):
         """
         self.__gen_skel = True
         self.__validate_doc(self, self.structure, check_required = False)
+
+    def __validate_descriptors(self):
+        for dv in self.default_values:
+            if dv not in self._namespaces:
+                raise ValueError("Error in default_values: can't find %s in structure" % dv )
+        for signal in self.signals:
+            if signal not in self._namespaces:
+                raise ValueError("Error in signals: can't find %s in structure" % signal )
+        for validator in self.validators:
+            if validator not in self._namespaces:
+                raise ValueError("Error in validators: can't find %s in structure" % validator )
 
     def __validate_structure(self, struct=None):
         if struct is None:
@@ -267,11 +291,6 @@ class MongoDocument(dict):
             #
             else:
                 #
-                # check if the value type is matching the on into the structure or is a NoneType
-                #
-                assert type(doc[key]) is struct[key] or type(doc[key]) is type(None), "invalide type : %s must be a %s not %s" % (
-                  new_path, struct[key].__name__, type(doc[key]).__name__)
-                #
                 # if the value is None, check if a default value exist.
                 # if exists, and it is a function then call it otherwise, juste feed it
                 #
@@ -282,6 +301,35 @@ class MongoDocument(dict):
                     else:
                         doc[key] = new_value
                 #
+                # Process all signals of the field
+                #
+                if new_path in self.signals and new_path in self.default_values:
+                    launch_signals = True
+                elif check_required:
+                    launch_signals = True
+                else:
+                    launch_signals = False
+                if new_path in self.signals and launch_signals:
+                    make_signal = False
+                    if new_path in self.__signals:
+                        if doc[key] != self.__signals[new_path]:
+                            make_signal = True
+                    else:
+                        make_signal = True
+                    if make_signal:
+                        if not hasattr(self.signals[new_path], "__iter__"):
+                            signals = [self.signals[new_path]]
+                        else:
+                            signals = self.signals[new_path]
+                        for signal in signals:
+                            signal(self, doc[key])
+                        self.__signals[new_path] = doc[key]
+                #
+                # check if the value type is matching the on into the structure or is a NoneType
+                #
+                assert type(doc[key]) is struct[key] or type(doc[key]) is type(None), "invalide type : %s must be a %s not %s" % (
+                  new_path, struct[key].__name__, type(doc[key]).__name__)
+                #
                 # check if the value must not be null
                 #
                 if doc[key] is None and new_path in self.required_fields and check_required:
@@ -290,18 +338,13 @@ class MongoDocument(dict):
                 # check that the value pass througt the validator process
                 #
                 if new_path in self.validators and check_required and doc[key] is not None:
-                    if not self.validators[new_path](doc[key]):
-                        raise ValidationError("%s does not pass the validator %s" % (new_path, self.validators[new_path].__name__))
-                if new_path in self.signals and check_required:
-                    make_signal = False
-                    if new_path in self.__signals:
-                        if doc[key] != self.__signals[new_path]:
-                            make_signal = True
+                    if not hasattr(self.validators[new_path], "__iter__"):
+                        validators = [self.validators[new_path]]
                     else:
-                        make_signal = True
-                    if make_signal:
-                        self.signals[new_path](self, doc[key])
-                        self.__signals[new_path] = doc[key]
+                        validators = self.validators[new_path]
+                    for validator in validators:
+                        if not validator(doc[key]):
+                            raise ValidationError("%s does not pass the validator %s" % (new_path, validator.__name__))
 
     def validate(self):
         self.__validate_doc(self, self.structure)

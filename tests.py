@@ -299,7 +299,18 @@ class MongoDocumentTestCase(unittest.TestCase):
             default_values = {"foo":{u"bar":42}}
         mydoc = MyDoc()
         assert mydoc["foo"] == {"bar":42}, mydoc
-          
+
+    def _test_default_dict_nested_checked_values(self):
+        # TODO
+        class MyDoc(MongoDocument):
+            connection_path = "test.mongokit"
+            structure = {
+                "foo":{unicode:{"bla":int, "ble":unicode}}
+            }
+            default_values = {"foo":{u"bar":{"bla":42, "ble":u"arf"}}}
+        mydoc = MyDoc()
+        assert mydoc["foo"] == {u"bar":{"bla":42, "ble":u"arf"}}, mydoc
+           
     def test_validators(self):
         class MyDoc(MongoDocument):
             connection_path = "test.mongokit"
@@ -321,6 +332,23 @@ class MongoDocumentTestCase(unittest.TestCase):
         mydoc['bar']['bla'] = 2
         self.assertRaises(ValidationError, mydoc.validate)
         mydoc['bar']['bla'] = 42
+        mydoc.validate()
+
+    def test_multiple_validators(self):
+        class MyDoc(MongoDocument):
+            connection_path = "test.mongokit"
+            structure = {
+                "foo":unicode,
+            }
+            validators = {
+                "foo":[lambda x: x.startswith("http://"),lambda x: x.endswith(".com")],
+            }
+        mydoc = MyDoc()
+        mydoc["foo"] = u"google.com"
+        self.assertRaises(ValidationError, mydoc.validate)
+        mydoc["foo"] = u"http://google.fr"
+        self.assertRaises(ValidationError, mydoc.validate)
+        mydoc["foo"] = u"http://google.com"
         mydoc.validate()
 
     def test_signals(self):
@@ -349,6 +377,61 @@ class MongoDocumentTestCase(unittest.TestCase):
         mydoc['bar']['bla'] = None
         mydoc.validate()
         assert mydoc['foo'] is None
+
+    def test_signals2(self):
+        def fill_foo(doc, value):
+            doc["foo"] = unicode(doc["foo"])
+
+        def fill_bar(doc, value):
+            doc["bar"]["bla"] = unicode(doc["bar"]["bla"])
+       
+        class MyDoc(MongoDocument):
+            connection_path = "test.mongokit"
+            structure = {
+                "foo":unicode,
+                "bar":{"bla":unicode}
+            }
+            signals = {"foo":fill_foo, "bar.bla":fill_bar}
+            default_values = {"bar.bla":3}
+
+        mydoc = MyDoc()
+        mydoc['foo'] = 4
+        mydoc.validate()
+        assert mydoc['foo'] == "4"
+        assert mydoc["bar"]["bla"] == "3"
+
+
+    def test_multiple_signals(self):
+        def fill_foo(doc, value):
+            if value is not None:
+                doc['foo'] = unicode(value)
+            else:
+                doc['foo'] = None
+
+        def fill_bla(doc, value):
+            doc["ble"] = doc["foo"]
+       
+        class MyDoc(MongoDocument):
+            connection_path = "test.mongokit"
+            structure = {
+                "foo":unicode,
+                "bar":{
+                    "bla":int
+                },
+                "ble":unicode,
+            }
+            signals = {"bar.bla":[fill_foo, fill_bla]}
+
+        mydoc = MyDoc()
+        mydoc['bar']['bla'] = 4
+        assert mydoc['foo'] is None
+        mydoc.validate()
+        assert mydoc['foo'] == "4"
+        assert mydoc["ble"] == "4"
+        mydoc['bar']['bla'] = None
+        mydoc.validate()
+        assert mydoc['foo'] is None
+        assert mydoc['ble'] is None
 
     def test_simple_inheritance(self):
         class A(MongoDocument):
@@ -559,3 +642,28 @@ class MongoDocumentTestCase(unittest.TestCase):
         docs_list = [i["foo"] for i in MyDoc.find({"foo":{"$gt":4}})]
         assert docs_list == [5,6,7,8,9]
 
+    def test_bad_default_values(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{"bar":int},
+            }
+            default_values = {"foo.bla":2}
+        self.assertRaises(ValueError, MyDoc)
+
+    def test_bad_signals(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{"bar":int},
+            }
+            signals = {"foo.bla":lambda x:x}
+        self.assertRaises(ValueError, MyDoc)
+
+    def test_bad_validators(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{"bar":int},
+            }
+            validators = {"foo.bla":lambda x:x}
+        self.assertRaises(ValueError, MyDoc)
+
+ 
