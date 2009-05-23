@@ -284,7 +284,7 @@ class MongoDocument(dict):
                 #
                 # we check that the type value in the document is correct (must be a dict like in the structure)
                 #
-                assert isinstance(doc[key], dict), "the value of %s must be a dict instance, not %s" % (new_path, type(doc[key]).__name__)
+                assert isinstance(doc[key], struct[key]), "the value of %s must be a dict instance, not %s" % (new_path, type(doc[key]).__name__)
                 #
                 # if the list is empty and there are default values, we fill them
                 #
