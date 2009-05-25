@@ -579,7 +579,40 @@ class MongoDocumentTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, c.validate)
         c["b"]["bar"] = u"bla"
         c.validate()
-  
+
+    def test_polymorphisme(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":int}
+            }
+            default_values = {"a.foo":3}
+
+        class B(MongoDocument):
+            structure = {
+                "b":{"bar":unicode}
+            }
+            required_fields = ['b.bar']
+
+        b =  B()
+        assert b == {"b":{"bar":None}}
+        self.assertRaises(RequireFieldError, b.validate)
+ 
+        class C(A,B):
+            auto_inheritance = False
+            structure = {
+                "c":{"spam":unicode}
+            }
+            structure.update(A.structure)
+            structure.update(B.structure)
+            default_values = {"a.foo":5}
+            required_fields = B.required_fields
+
+        c =  C()
+        assert c == {"a":{"foo":5}, "b":{"bar":None}, "c":{"spam":None}}, C()
+        self.assertRaises(RequireFieldError, c.validate)
+        c["b"]["bar"] = u"bla"
+        c.validate()
+   
     def test_simple_manual_inheritance(self):
         class A(MongoDocument):
             auto_inheritance = False

@@ -205,9 +205,12 @@ class MongoDocument(dict):
                     self.__validate_structure(struct[key])
             elif isinstance(struct[key], list):
                 for value in struct[key]:
-                    assert value in authorized_types
+                    if isinstance(value, dict):
+                        self.__validate_structure(value)
+                    elif value not in authorized_types:
+                        raise StructureError("%s is not an authorized_types" % value )
             else:
-                assert struct[key] in authorized_types, "%s must not be %s but a type like %s" % (key, struct[key], authorized_types )
+                assert struct[key] in authorized_types, "%s must not be %s but a type like" % (key, struct[key])
 
     def __validate_doc(self, doc, struct, check_required = True, path = ""):
         if check_required:
@@ -277,7 +280,7 @@ class MongoDocument(dict):
                 if isinstance(doc[key], auth_type):
                     bad_type = False
             if bad_type:
-                raise TypeError( "%s: %s must not be %s but an instance of %s" % (new_path, doc[key],type(doc[key]), authorized_types) )
+                raise TypeError( "%s: %s must not be %s" % (new_path, doc[key],type(doc[key])) )
             #
             # if the value is a dict, we have a another structure to validate
             #
@@ -337,7 +340,12 @@ class MongoDocument(dict):
                     if len(struct[key]) == 0:
                         if type(v) not in authorized_types:
                             raise AuthorizedTypeError("%s is not an authorized type" % v) 
-                    elif type(v) is not struct[key][0]:
+                    elif isinstance(v, dict):
+                        # TODO
+                        pass
+                        #self.__validate_doc(doc[key], struct[key], check_required, new_path)
+                    elif type(v) is not struct[key][0] and v is not None:
+                        print new_path, v
                         raise TypeError( "%s must be a %s not %s" % (new_path,  struct[key][0].__name__, type(v).__name__) )
             #
             # It is not a dict nor a list but a simple key:value
@@ -368,22 +376,26 @@ class MongoDocument(dict):
     def validate(self):
         self.__validate_doc(self, self.structure)
 
-    def save(self):
-        self.validate()
-        collection = self.__class__.collection()
-        collection.save(self)
+    def save(self, validate=True):
+        if validate:
+            self.validate()
+        self.collection.save(self)
 
     @classmethod
-    def collection(cls):
+    def get_collection(cls):
         if not cls.db_name or not cls.collection_name:
             raise ConnectionError( "You must set a db_name and a collection_name" )
         return Connection(cls.db_host, cls.db_port)[cls.db_name][cls.collection_name]
 
+    def _get_collection(self):
+        return self.__class__.get_collection()
+    collection = property(_get_collection)
+
     @classmethod
     def get_from_id(cls, id):
-        return cls.collection().find_one({"_id":id})
+        return cls.get_collection().find_one({"_id":id})
 
     @classmethod
     def find(cls, *args, **kwargs):
-        return cls.collection().find(*args, **kwargs)
+        return cls.get_collection().find(*args, **kwargs)
 
