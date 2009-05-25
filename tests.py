@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2008-2009 Benoit Chesneau <benoitc@e-engura.com> 
+# Copyright (c) 2009 Nicolas Clairon
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -111,7 +111,8 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_save(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
+            db_name = "test"
+            collection_name = "mongokit"
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -654,7 +655,8 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_get_from_id(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
+            db_name = "test"
+            collection_name = "mongokit"
             structure = {
                 "foo":int,
             }
@@ -667,7 +669,8 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_find(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
+            db_name = "test"
+            collection_name = "mongokit"
             structure = {
                 "foo":int,
             }

@@ -99,7 +99,8 @@ class MongoDocument(dict):
 
     db_host = "localhost"
     db_port = 27017
-    connection_path = None
+    db_name = None
+    collection_name = None
     
     def __init__(self, doc={}, gen_skel=True, auto_inheritance=True):
         """
@@ -374,10 +375,9 @@ class MongoDocument(dict):
 
     @classmethod
     def collection(cls):
-        if cls.connection_path is None:
-            raise ConnectionError( "You must set a connection_path" )
-        db_name, collection_name = cls.connection_path.split('.')
-        return Connection(cls.db_host, cls.db_port)[db_name][collection_name]
+        if not cls.db_name or not cls.collection_name:
+            raise ConnectionError( "You must set a db_name and a collection_name" )
+        return Connection(cls.db_host, cls.db_port)[cls.db_name][cls.collection_name]
 
     @classmethod
     def get_from_id(cls, id):
