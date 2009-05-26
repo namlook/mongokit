@@ -759,3 +759,24 @@ class MongoDocumentTestCase(unittest.TestCase):
         self.assertRaises(TypeError, mydoc.validate)
  
 
+    def test_update(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo":int
+            }
+        mydoc = MyDoc()
+        mydoc["foo"] = 3
+        self.assertRaises(AttributeError, mydoc.db_update, {"$inc":{"foo":1}})
+        mydoc['_id'] = "4"
+        mydoc.save()
+        self.assertRaises(ModifierOperatorError, mydoc.db_update, {"foo":{"$inc":1}})
+        mydoc = mydoc.db_update({"$inc":{"foo":1}})
+        assert mydoc["foo"] == 4, mydoc
+        
+
+
+
+ 
+

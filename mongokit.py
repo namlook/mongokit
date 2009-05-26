@@ -20,6 +20,7 @@ class ValidationError(Exception):pass
 class ConnectionError(Exception):pass
 class DuplicateRequiredError(Exception):pass
 class DuplicateDefaultValueError(Exception):pass
+class ModifierOperatorError(Exception):pass
 
 class MongoDocument(dict):
     """
@@ -101,6 +102,8 @@ class MongoDocument(dict):
     db_port = 27017
     db_name = None
     collection_name = None
+
+    _collection = None
     
     def __init__(self, doc={}, gen_skel=True, auto_inheritance=True):
         """
@@ -385,11 +388,39 @@ class MongoDocument(dict):
     def get_collection(cls):
         if not cls.db_name or not cls.collection_name:
             raise ConnectionError( "You must set a db_name and a collection_name" )
-        return Connection(cls.db_host, cls.db_port)[cls.db_name][cls.collection_name]
+        if not cls._collection:
+            cls._collection = Connection(cls.db_host, cls.db_port)[cls.db_name][cls.collection_name]
+        return cls._collection
 
     def _get_collection(self):
         return self.__class__.get_collection()
     collection = property(_get_collection)
+
+    def db_update(self, document, upsert=False, manipulate=False, safe=False, validate=True):
+        """
+        update the object in the database.
+
+        :Parameters:
+          - `document`: a SON object specifying the fields to be changed in the
+            selected document(s), or (in the case of an upsert) the document to
+            be inserted.
+          - `upsert` (optional): perform an upsert operation
+          - `manipulate` (optional): monipulate the document before updating?
+          - `safe` (optional): check that the update succeeded?
+          - `validate`: validate the updated object (usefull to check if update
+            values follow schema)
+        """
+        if not self.get('_id'):
+            raise AttributeError("Your document must be saved in the database updating it")
+        for modif_op in document:
+            if modif_op not in ["$inc", "$set", "$push"]:
+                raise ModifierOperatorError("bad modifier operator : %s" % modif_op)
+        self.collection.update(spec={"_id":self['_id']}, document=document,
+          upsert=upsert, manipulate=manipulate, safe=safe )
+        updated_obj = self.__class__(self.collection.find_one({"_id":self['_id']}))
+        if validate:
+            updated_obj.validate()
+        return updated_obj
 
     @classmethod
     def get_from_id(cls, id):
