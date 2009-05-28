@@ -548,6 +548,60 @@ class MongoDocument(dict):
                         if not validator(doc[key]):
                             raise ValidationError("%s does not pass the validator %s" % (new_path, validator.__name__))
 
+    def _set_default_fields(self, doc, struct, path = ""):
+        for key in struct:
+            if type(key) is type:
+                new_key = "$%s" % key.__name__
+            else:
+                new_key = key
+            new_path = ".".join([path, new_key]).strip('.')
+            #
+            # if the value is a dict, we have a another structure to validate
+            #
+            if isinstance(struct[key], dict):
+                #
+                # if the dict is still empty into the document we build it with None values
+                #
+                if type(key) is not type and key not in doc:
+                    if new_path in self._default_fields_namespace:
+                        raise RequireFieldError("%s is required" % new_path)
+                elif type(key) is type:
+                    if not len(doc):
+                        if new_path in self._default_fields_namespace:
+                            raise RequireFieldError("%s is required" % new_path)
+                    else:
+                        for doc_key in doc:
+                            self._validate_required(doc[doc_key], struct[key], new_path)
+                elif not len(doc[key]) and new_path in self._default_fields_namespace:
+                    raise RequireFieldError( "%s is required" % new_path )
+                else:
+                    self._validate_required(doc[key], struct[key], new_path)
+            #
+            # If the struct is a list, we have to validate all values into it
+            #
+            elif type(struct[key]) is list:
+                #
+                # check if the list must not be null
+                #
+                if not key in doc:
+                    if new_path in self._required_namespace:
+                        raise RequireFieldError( "%s is required" % new_path )
+                if not len(doc[key]) and new_path in self.required_fields:
+                    raise RequireFieldError( "%s is required" % new_path )
+            #
+            # It is not a dict nor a list but a simple key:value
+            #
+            else:
+                #
+                # check if the value must not be null
+                #
+                if not key in doc:
+                    if new_path in self._required_namespace:
+                        raise RequireFieldError( "%s is required" % new_path )
+                elif doc[key] is None and new_path in self._required_namespace:
+                    raise RequireFieldError( "%s is required" % new_path )
+
+
     def _validate_required(self, doc, struct, path = ""):
         for key in struct:
             if type(key) is type:
@@ -572,7 +626,7 @@ class MongoDocument(dict):
                     else:
                         for doc_key in doc:
                             self._validate_required(doc[doc_key], struct[key], new_path)
-                elif not len(doc[key]) and new_path in self.required_fields:
+                elif not len(doc[key]) and new_path in self._required_namespace:
                     raise RequireFieldError( "%s is required" % new_path )
                 else:
                     self._validate_required(doc[key], struct[key], new_path)
