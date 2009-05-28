@@ -21,6 +21,7 @@ class ConnectionError(Exception):pass
 class DuplicateRequiredError(Exception):pass
 class DuplicateDefaultValueError(Exception):pass
 class ModifierOperatorError(Exception):pass
+class MultipleResultsFound(Exception):pass
 
 class MongoDocument(dict):
     """
@@ -109,7 +110,8 @@ class MongoDocument(dict):
         """
         doc : a document dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
-            filled with NoneType each time validate() is called
+            filled with NoneType each time validate() is called. Note that
+            if doc is not {}, gen_skel is always False
         auto_inheritance: enable the automatic inheritance (default)
         """
         #
@@ -118,14 +120,16 @@ class MongoDocument(dict):
         if self.auto_inheritance and auto_inheritance:
             self.generate_inheritance()
         # init
-        self.__signals = {}
-        for k,v in doc.iteritems():
-            self[k] = v
         if self.structure is None:
             raise StructureError("your document must have a structure defined")
         self.__validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self.__validate_descriptors()
+        self.__signals = {}
+        for k,v in doc.iteritems():
+            self[k] = v
+        if doc:
+            gen_skel = False
         self.__gen_skel = gen_skel
         if gen_skel:
             self.__validate_doc(self, self.structure, check_required = False)
@@ -348,7 +352,6 @@ class MongoDocument(dict):
                         pass
                         #self.__validate_doc(doc[key], struct[key], check_required, new_path)
                     elif type(v) is not struct[key][0] and v is not None:
-                        print new_path, v
                         raise TypeError( "%s must be a %s not %s" % (new_path,  struct[key][0].__name__, type(v).__name__) )
             #
             # It is not a dict nor a list but a simple key:value
@@ -379,10 +382,10 @@ class MongoDocument(dict):
     def validate(self):
         self.__validate_doc(self, self.structure)
 
-    def save(self, validate=True):
+    def save(self, validate=True, safe=True, *args, **kwargs):
         if validate:
             self.validate()
-        self.collection.save(self)
+        self.collection.save(self, safe=safe, *args, **kwargs)
 
     @classmethod
     def get_collection(cls):
@@ -396,7 +399,7 @@ class MongoDocument(dict):
         return self.__class__.get_collection()
     collection = property(_get_collection)
 
-    def db_update(self, document, upsert=False, manipulate=False, safe=False, validate=True):
+    def db_update(self, document, upsert=False, manipulate=False, safe=True, validate=True, reload=True):
         """
         update the object in the database.
 
@@ -413,20 +416,41 @@ class MongoDocument(dict):
         if not self.get('_id'):
             raise AttributeError("Your document must be saved in the database updating it")
         for modif_op in document:
-            if modif_op not in ["$inc", "$set", "$push"]:
+            if modif_op.startswith("$") and modif_op not in ["$inc", "$set", "$push"]:
                 raise ModifierOperatorError("bad modifier operator : %s" % modif_op)
         self.collection.update(spec={"_id":self['_id']}, document=document,
           upsert=upsert, manipulate=manipulate, safe=safe )
-        updated_obj = self.__class__(self.collection.find_one({"_id":self['_id']}))
-        if validate:
-            updated_obj.validate()
-        return updated_obj
+        if validate or reload:
+            updated_obj = self.collection.find_one({"_id":self['_id']})
+            if validate:
+                self.__class__(updated_obj).validate()
+            if reload:
+                for k,v in updated_obj.iteritems():
+                    self[k]=v
 
     @classmethod
     def get_from_id(cls, id):
-        return cls.get_collection().find_one({"_id":id})
+        # TODO test
+        bson_obj = cls.get_collection().find_one({"_id":id})
+        if bson_obj:
+            return cls(bson_obj)
 
     @classmethod
-    def find(cls, *args, **kwargs):
-        return cls.get_collection().find(*args, **kwargs)
+    def all(cls, *args, **kwargs):
+        # TODO test
+        # XXX the wrapper doesn't work, cant set limit/count...
+        for bson_obj in cls.get_collection().find(*args, **kwargs):
+            yield cls(bson_obj)
+
+    @classmethod
+    def one(cls, *args, **kwargs):
+        # TODO test
+        bson_obj = cls.get_collection().find(*args, **kwargs)
+        count = bson_obj.count()
+        if count > 1:
+            raise MultipleResultsFound("%s results found" % count)
+        elif count == 1:
+            return cls(list(bson_obj)[0])
+
+
 

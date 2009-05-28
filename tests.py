@@ -29,19 +29,17 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_no_structure(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
+            pass
         self.assertRaises(StructureError, MyDoc)
 
     def test_empty_structure(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {}
         assert MyDoc() == {}
 
     def test_load_with_dict(self):
         doc = {"foo":1, "bla":{"bar":u"spam"}}
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {"foo":int, "bla":{"bar":unicode}}
         mydoc = MyDoc(doc)
         assert mydoc == doc
@@ -49,7 +47,6 @@ class MongoDocumentTestCase(unittest.TestCase):
         
     def test_simple_structure(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
                 "bar":int
@@ -59,18 +56,15 @@ class MongoDocumentTestCase(unittest.TestCase):
     def test_missed_field(self):
         doc = {"foo":u"arf"}
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
                 "bar":{"bla":int}
             }
         mydoc = MyDoc(doc)
-        del mydoc["bar"]
         self.assertRaises(StructureError, mydoc.validate)
 
     def test_unknown_field(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
             }
@@ -83,7 +77,6 @@ class MongoDocumentTestCase(unittest.TestCase):
             if auth_type is dict:
                 auth_type = {}
             class MyDoc(MongoDocument):
-                connection_path = "test.mongokit"
                 structure = { "foo":auth_type }
             if type(auth_type) is dict:
                 assert MyDoc() == {"foo":{}}, MyDoc()
@@ -93,14 +86,12 @@ class MongoDocumentTestCase(unittest.TestCase):
     def test_not_authorized_type(self):
        for unauth_type in [set, str]:
             class MyDoc(MongoDocument):
-                connection_path = "test.mongokit"
                 structure = { "foo":unauth_type }
             self.assertRaises( AssertionError, MyDoc )
 
     def test_type_from_functions(self):
         from datetime import datetime
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":datetime,
             }
@@ -129,7 +120,7 @@ class MongoDocumentTestCase(unittest.TestCase):
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
 
-    def test_save_without_connection_path(self):
+    def test_save_without_collection(self):
         class MyDoc(MongoDocument):
             structure = {
                 "foo":int,
@@ -140,14 +131,12 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_duplicate_required(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {"foo":unicode}
             required_fields = ["foo", "foo"]
         self.assertRaises(DuplicateRequiredError, MyDoc)
     
     def test_flat_required(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
             }
@@ -157,7 +146,6 @@ class MongoDocumentTestCase(unittest.TestCase):
              
     def test_nested_required(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -169,7 +157,6 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_list_required(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":[]
             }
@@ -179,7 +166,6 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_dict_required(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":{}
             }
@@ -189,11 +175,12 @@ class MongoDocumentTestCase(unittest.TestCase):
    
     def test_non_typed_list(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":[]
             }
         mydoc = MyDoc()
+        mydoc.validate()
+        assert mydoc['foo'] == []
         mydoc['foo'] = [u"bla", 23]
         mydoc.validate()
         mydoc['foo'] = [set([1,2]), "bla"]
@@ -201,11 +188,12 @@ class MongoDocumentTestCase(unittest.TestCase):
  
     def test_typed_list(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":[int]
             }
         mydoc = MyDoc()
+        mydoc.validate()
+        assert mydoc['foo'] == []
         mydoc['foo'] = [1,2,3]
         mydoc.validate()
         mydoc['foo'] = [u"bla"]
@@ -214,7 +202,6 @@ class MongoDocumentTestCase(unittest.TestCase):
     def _test_typed_list_with_dict(self):
         # TODO
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":[{unicode:int}]
             }
@@ -227,7 +214,6 @@ class MongoDocumentTestCase(unittest.TestCase):
     def _test_typed_list_with_list(self):
         # TODO
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":[[unicode]]
             }
@@ -239,7 +225,6 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_default_values(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":int
             }
@@ -250,7 +235,6 @@ class MongoDocumentTestCase(unittest.TestCase):
     def test_default_values_from_function(self):
         import time
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":float
             }
@@ -260,7 +244,6 @@ class MongoDocumentTestCase(unittest.TestCase):
    
     def test_default_list_values(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":[int]
             }
@@ -271,7 +254,6 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_default_list_nested_values(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":{
                     "bar":[int]
@@ -283,7 +265,6 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_default_dict_values(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":{}
             }
@@ -293,7 +274,6 @@ class MongoDocumentTestCase(unittest.TestCase):
          
     def test_default_dict_checked_values(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":{unicode:int}
             }
@@ -304,7 +284,6 @@ class MongoDocumentTestCase(unittest.TestCase):
     def _test_default_dict_nested_checked_values(self):
         # TODO
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":{unicode:{"bla":int, "ble":unicode}}
             }
@@ -314,7 +293,6 @@ class MongoDocumentTestCase(unittest.TestCase):
            
     def test_validators(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
                 "bar":{
@@ -337,7 +315,6 @@ class MongoDocumentTestCase(unittest.TestCase):
 
     def test_multiple_validators(self):
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
             }
@@ -360,7 +337,6 @@ class MongoDocumentTestCase(unittest.TestCase):
                 doc['foo'] = None
        
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
                 "bar":{
@@ -387,7 +363,6 @@ class MongoDocumentTestCase(unittest.TestCase):
             doc["bar"]["bla"] = unicode(doc["bar"]["bla"])
        
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
                 "bar":{"bla":unicode}
@@ -413,7 +388,6 @@ class MongoDocumentTestCase(unittest.TestCase):
             doc["ble"] = doc["foo"]
        
         class MyDoc(MongoDocument):
-            connection_path = "test.mongokit"
             structure = {
                 "foo":unicode,
                 "bar":{
@@ -686,34 +660,6 @@ class MongoDocumentTestCase(unittest.TestCase):
         a.generate_skeleton()
         assert a == {"a":{"foo":None}, "bar":None}
 
-    def test_get_from_id(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "foo":int,
-            }
-        mydoc = MyDoc()
-        mydoc["_id"] = "bar"
-        mydoc["foo"] = 3
-        mydoc.save()
-        fetched_doc = MyDoc.get_from_id("bar")
-        mydoc == fetched_doc
-
-    def test_find(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "foo":int,
-            }
-        for i in range(10):
-            mydoc = MyDoc()
-            mydoc["foo"] = i
-            mydoc.save()
-        docs_list = [i["foo"] for i in MyDoc.find({"foo":{"$gt":4}})]
-        assert docs_list == [5,6,7,8,9]
-
     def test_bad_default_values(self):
         class MyDoc(MongoDocument):
             structure = {
@@ -771,11 +717,57 @@ class MongoDocumentTestCase(unittest.TestCase):
         self.assertRaises(AttributeError, mydoc.db_update, {"$inc":{"foo":1}})
         mydoc['_id'] = "4"
         mydoc.save()
-        self.assertRaises(ModifierOperatorError, mydoc.db_update, {"foo":{"$inc":1}})
-        mydoc = mydoc.db_update({"$inc":{"foo":1}})
+        self.assertRaises(ModifierOperatorError, mydoc.db_update, {"$foo":{"$inc":1}})
+        mydoc.db_update({"$inc":{"foo":1}})
         assert mydoc["foo"] == 4, mydoc
         
+    def test_get_from_id(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo":int,
+            }
+        mydoc = MyDoc()
+        mydoc["_id"] = "bar"
+        mydoc["foo"] = 3
+        mydoc.save()
+        fetched_doc = MyDoc.get_from_id("bar")
+        mydoc == fetched_doc
 
+    def test_all(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo":int,
+            }
+        for i in range(10):
+            mydoc = MyDoc()
+            mydoc["foo"] = i
+            mydoc.save()
+        docs_list = [i["foo"] for i in MyDoc.all({"foo":{"$gt":4}})]
+        assert docs_list == [5,6,7,8,9]
+        # using limit/count
+        assert MyDoc.all().count() == 10
+
+    def test_one(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo":int
+            }
+        mydoc = MyDoc()
+        mydoc['foo'] = 0
+        mydoc.save()
+        mydoc = MyDoc.one()
+        assert mydoc["foo"] == 0
+        for i in range(10):
+            mydoc = MyDoc()
+            mydoc["foo"] = i
+            mydoc.save()
+        self.assertRaises(MultipleResultsFound, MyDoc.one)
 
 
  
