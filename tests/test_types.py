@@ -81,8 +81,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [u"bla"]
         self.assertRaises(TypeError, mydoc.validate)
 
-    def _test_typed_list_with_dict(self):
-        # TODO
+    def test_typed_list_with_dict(self):
         class MyDoc(MongoDocument):
             structure = {
                 "foo":[{unicode:int}]
@@ -93,8 +92,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [{u"bla":u"bar"}]
         self.assertRaises(TypeError, mydoc.validate)
 
-    def _test_typed_list_with_list(self):
-        # TODO
+    def test_typed_list_with_list(self):
         class MyDoc(MongoDocument):
             structure = {
                 "foo":[[unicode]]
@@ -103,6 +101,19 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [[u"bla",u"blu"],[u"ble",u"bli"]]
         mydoc.validate()
         mydoc['foo'] = [[u"bla",1]]
+        self.assertRaises(TypeError, mydoc.validate)
+
+    def test_dict_unicode_typed_list(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{unicode:[int]}
+            }
+        mydoc = MyDoc()
+        mydoc['foo'] = {"bar":[1,2,3]}
+        mydoc.validate()
+        mydoc['foo'] = {"bar":["bla"]}
+        self.assertRaises(TypeError, mydoc.validate)
+        mydoc['foo'] = {3:[1,2,3]}
         self.assertRaises(TypeError, mydoc.validate)
 
     def test_with_custom_object(self):
