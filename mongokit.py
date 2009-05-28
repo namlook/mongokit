@@ -138,9 +138,10 @@ class MongoDocument(dict):
             self[k] = v
         if doc:
             gen_skel = False
-        self.__gen_skel = gen_skel
         if gen_skel:
             self.generate_skeleton()
+        self._set_default_fields(self, self.structure)
+        self._process_signals(self, self.structure)
         self._collection = None
         ## building required fields namespace
         self._required_namespace = set([])
@@ -556,38 +557,81 @@ class MongoDocument(dict):
                 new_key = key
             new_path = ".".join([path, new_key]).strip('.')
             #
+            # default_values :
+            # if the value is None, check if a default value exist.
+            # if exists, and it is a function then call it otherwise, juste feed it
+            #
+            if doc[key] is None and new_path in self.default_values:
+                new_value = self.default_values[new_path]
+                if callable(new_value):
+                    doc[key] = new_value()
+                else:
+                    doc[key] = new_value
+            #
             # if the value is a dict, we have a another structure to validate
             #
             if isinstance(struct[key], dict):
                 #
                 # if the dict is still empty into the document we build it with None values
                 #
-                if type(key) is not type and key not in doc:
-                    if new_path in self._default_fields_namespace:
-                        raise RequireFieldError("%s is required" % new_path)
-                elif type(key) is type:
-                    if not len(doc):
-                        if new_path in self._default_fields_namespace:
-                            raise RequireFieldError("%s is required" % new_path)
-                    else:
-                        for doc_key in doc:
-                            self._validate_required(doc[doc_key], struct[key], new_path)
-                elif not len(doc[key]) and new_path in self._default_fields_namespace:
-                    raise RequireFieldError( "%s is required" % new_path )
+                if len(struct[key]) and not [i for i in struct[key].keys() if type(i) is type]:
+                    self._set_default_fields(doc[key], struct[key], new_path)
                 else:
-                    self._validate_required(doc[key], struct[key], new_path)
+                    if new_path in self.default_values:
+                        new_value = self.default_values[new_path]
+                        if callable(new_value):
+                            doc[key] = new_value()
+                        else:
+                            doc[key] = new_value
+            else: # list or what else
+                if new_path in self.default_values:
+                    new_value = self.default_values[new_path]
+                    if callable(new_value):
+                        doc[key] = new_value()
+                    else:
+                        doc[key] = new_value
+
+    def _process_signals(self, doc, struct, path = ""):
+        #################################################
+        def __procsignals(self, new_path, doc):
+            if new_path in self.signals:
+                launch_signals = True
+            else:
+                launch_signals = False
+            if new_path in self.signals and launch_signals:
+                make_signal = False
+                if new_path in self.__signals:
+                    if doc[key] != self.__signals[new_path]:
+                        make_signal = True
+                else:
+                    make_signal = True
+                if make_signal:
+                    if not hasattr(self.signals[new_path], "__iter__"):
+                        signals = [self.signals[new_path]]
+                    else:
+                        signals = self.signals[new_path]
+                    for signal in signals:
+                        signal(self, doc[key])
+                    self.__signals[new_path] = doc[key]
+        ##################################################
+        for key in struct:
+            if type(key) is type:
+                new_key = "$%s" % key.__name__
+            else:
+                new_key = key
+            new_path = ".".join([path, new_key]).strip('.')
             #
-            # If the struct is a list, we have to validate all values into it
+            # if the value is a dict, we have a another structure to validate
             #
-            elif type(struct[key]) is list:
+            if isinstance(struct[key], dict):
                 #
-                # check if the list must not be null
+                # if the dict is still empty into the document we build it with None values
                 #
-                if not key in doc:
-                    if new_path in self._required_namespace:
-                        raise RequireFieldError( "%s is required" % new_path )
-                if not len(doc[key]) and new_path in self.required_fields:
-                    raise RequireFieldError( "%s is required" % new_path )
+                if key in doc:
+                    self._process_signals(doc[key], struct[key], new_path)
+                else:
+                    pass
+                    # TODO signals_namespace
             #
             # It is not a dict nor a list but a simple key:value
             #
@@ -595,12 +639,8 @@ class MongoDocument(dict):
                 #
                 # check if the value must not be null
                 #
-                if not key in doc:
-                    if new_path in self._required_namespace:
-                        raise RequireFieldError( "%s is required" % new_path )
-                elif doc[key] is None and new_path in self._required_namespace:
-                    raise RequireFieldError( "%s is required" % new_path )
-
+                if new_path in self.signals:
+                    __procsignals(self, new_path, doc)
 
     def _validate_required(self, doc, struct, path = ""):
         for key in struct:
@@ -679,6 +719,7 @@ class MongoDocument(dict):
                 self.__generate_skeleton(doc[key], struct[key], path)
 
     def validate(self):
+        self._process_signals(self, self.structure)
         self._validate_doc(self, self.structure)
         self._validate_required(self, self.structure)
 
