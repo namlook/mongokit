@@ -130,7 +130,7 @@ class MongoDocument(dict):
         # init
         if self.structure is None:
             raise StructureError("your document must have a structure defined")
-        self.__validate_structure()
+        self._validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self.__validate_descriptors()
         self.__signals = {}
@@ -140,18 +140,25 @@ class MongoDocument(dict):
             gen_skel = False
         self.__gen_skel = gen_skel
         if gen_skel:
-            self.__validate_doc(self, self.structure, check_required = False)
+            self.__generate_skeleton(self, self.structure, check_required = False)
         self._collection = None
 
     def __walk_dict(self, dic):
         # thanks jean_b for the patch
         for key, value in dic.items():
-            if hasattr(value, 'keys') and len(value):
-                if type(value.keys()[0]) is not type:
-                    for child_key in self.__walk_dict(value):
-                        yield '%s.%s' % (key, child_key)
-                else:
-                    yield key
+            if isinstance(value, dict) and len(value):
+                for child_key in self.__walk_dict(value):
+                    if type(key) is type:
+                        new_key = "$%s" % key.__name__
+                    else:
+                        new_key = key
+                    if type(child_key) is type:
+                        new_child_key = "$%s" % child_key.__name__
+                    else:
+                        new_child_key = child_key
+                    yield '%s.%s' % (new_key, new_child_key)
+            elif type(key) is type:
+                yield '$%s' % key.__name__
             else:
                 if type(key) is not type:
                     yield key
@@ -164,7 +171,7 @@ class MongoDocument(dict):
         from the structure (unknown values are set to None)
         """
         self.__gen_skel = True
-        self.__validate_doc(self, self.structure, check_required = False)
+        self.__generate_skeleton(self, self.structure, check_required = False)
 
     def generate_inheritance(self):
         """
@@ -202,20 +209,29 @@ class MongoDocument(dict):
             if validator not in self._namespaces:
                 raise ValueError("Error in validators: can't find %s in structure" % validator )
 
-    def __validate_structure(self, struct=None):
+    def _XXX__validate_structure(self, struct=None):
         if struct is None:
             struct = self.structure
         if self.required_fields:
             if len(self.required_fields) != len(set(self.required_fields)):
                 raise DuplicateRequiredError("duplicate required_fields : %s" % self.required_fields)
         for key in struct:
-            assert isinstance(key, basestring), "%s must be a basestring" % key
-            if "." in key: raise BadKeyError("%s must not contain '.'" % key)
-            if key.startswith('$'): raise BadKeyError("%s must not start with '$'" % key)
+            if isinstance(key, basestring):
+                if "." in key: raise BadKeyError("%s must not contain '.'" % key)
+                if key.startswith('$'): raise BadKeyError("%s must not start with '$'" % key)
+            elif type(key) is type:
+                if not key in authorized_types:
+                    raise AuthorizedTypeError("%s is not an authorized type" % key)
+            else:
+                raise StructureError("%s must be a basestring or a type" % key)
             if isinstance(struct[key], dict):
                 if type in [type(k) for k,v in struct[key].iteritems()]:
                     if k not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % k.__name__)
-                    if v not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % v.__name__)
+                    if isinstance(v, list):
+                        for item in v:
+                            self.__validate_structure(v)
+                    else:
+                        if v not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % v.__name__)
                 else:
                     self.__validate_structure(struct[key])
             elif isinstance(struct[key], list):
@@ -227,7 +243,137 @@ class MongoDocument(dict):
             else:
                 assert struct[key] in authorized_types, "%s must not be %s but a type like" % (key, struct[key])
 
-    def __validate_doc(self, doc, struct, check_required = True, path = ""):
+    def _validate_structure(self):
+        ##############
+        def __validate_structure( struct):
+            if type(struct) is type:
+                if struct not in authorized_types:
+                    raise StructureError("%s is not an authorized_types" % key)
+            elif isinstance(struct, dict):
+                for key in struct:
+                    if isinstance(key, basestring):
+                        if "." in key: raise BadKeyError("%s must not contain '.'" % key)
+                        if key.startswith('$'): raise BadKeyError("%s must not start with '$'" % key)
+                    elif type(key) is type:
+                        if not key in authorized_types:
+                            raise AuthorizedTypeError("%s is not an authorized type" % key)
+                    else:
+                        raise StructureError("%s must be a basestring or a type" % key)
+                    if isinstance(struct[key], dict):
+                        __validate_structure(struct[key])
+                    elif isinstance(struct[key], list):
+                        __validate_structure(struct[key])
+                    elif struct[key] not in authorized_types:
+                        raise StructureError("%s is not an authorized type" % struct[key])
+            elif isinstance(struct, list):
+                for item in struct:
+                    __validate_structure(item)
+        #################
+        if self.structure is None:
+            raise StructureError("self.structure must not be None")
+        if not isinstance(self.structure, dict):
+            raise StructureError("self.structure must be a dict instance")
+        if self.required_fields:
+            if len(self.required_fields) != len(set(self.required_fields)):
+                raise DuplicateRequiredError("duplicate required_fields : %s" % self.required_fields)
+        __validate_structure(self.structure)
+                    
+    def _validate_doc(self, doc, struct, path = ""):
+        if type(struct) is type or struct is None:
+            if struct is None:
+                if type(doc) not in authorized_types:
+                    raise AuthorizedTypeError("%s is not an authorized types" % type(doc).__name__)
+            elif not isinstance(doc, struct) and doc is not None:
+                raise TypeError("%s must be an instance of %s not %s" % (path, struct.__name__, type(doc).__name__))
+        elif isinstance(struct, dict):
+            if len(doc) != len(struct):
+                struct_doc_diff = list(set(struct).difference(set(doc)))
+                if struct_doc_diff:
+                    raise StructureError( "missed fields : %s" % struct_doc_diff )
+                else:
+                    struct_struct_diff = list(set(doc).difference(set(struct)))
+                    if struct_struct_diff != ['_id']:
+                        raise StructureError( "unknown fields : %s" % struct_struct_diff)
+            for key in struct:
+                if type(key) is type:
+                    new_key = "$%s" % key.__name__
+                else:
+                    new_key = key
+                new_path = ".".join([path, new_key]).strip('.')
+                if new_key.split('.')[-1].startswith("$"):
+                    for doc_key in doc:
+                        if not isinstance(doc_key, key):
+                            raise TypeError("key of %s must be an instance of %s not %s" % (path, key.__name__, type(doc_key).__name__))
+                        self._validate_doc(doc[doc_key], struct[key], new_path)
+                else:
+                    self._validate_doc(doc[key], struct[key],  new_path)
+        elif isinstance(struct, list):
+            if not isinstance(doc, list):
+                raise TypeError("%s must be an instance of list not %s" % (path, type(doc).__name__))
+            if not len(struct):
+                struct = None
+            else:
+                struct = struct[0]
+            for obj in doc:
+                self._validate_doc(obj, struct, path)
+                
+        # si c'est type (unicode, list, dict, int...)
+            # on valide
+            # avec path = "$unicode" ou "dict" ou "$int"...
+        # si c'est une instance de list ([]}:
+            # on iter et on __validate_ sur chaque element
+            # avec path = "$list"
+        # si c'est une instance de dict ({}):
+            # on iter sur les keys:
+                # on verifie que type(key) est correct
+                # si on __validate_ sur les values
+#        if isinstance(struct, dict):
+#            for key in struct:
+#                new_path = ".".join([path, key]).strip(".")
+#                #
+#                # if the value is a dict, we have a another structure to validate
+#                #
+#                if isinstance(struct[key], dict):
+#                    #
+#                    # It the dict is not a schema but a simply dictionnary with attempted values,
+#                    # we iterate over these values and check their type
+#                    #
+#                    if type in [type(k) for k,v in struct[key].iteritems()]:
+#                        for k,v in doc[key].iteritems():
+#                            assert isinstance(k, struct[key].keys()[0]), "invalide type : key of %s must be %s not %s" % (
+#                              new_path, struct[key].keys()[0].__name__, type(k).__name__)
+#                            assert isinstance(v, struct[key].values()[0]), "invalide type : value of %s must be %s not %s" % (
+#                              new_path, struct[key].keys()[0].__name__, type(v).__name__)
+#                    #
+#                    # If the dict is a schema, we call __validate_doc again
+#                    #
+#                    else:
+#                        self.__validate_doc(doc[key], struct[key], check_required, new_path)
+#                #
+#                # If the struct is a list, we have to validate all values into it
+#                #
+#                elif type(struct[key]) is list:
+#                    #
+#                    # iterate over the list to check values type
+#                    #
+#                    for v in doc[key]:
+#                        if len(struct[key]) == 0:
+#                            if type(v) not in authorized_types:
+#                                raise AuthorizedTypeError("%s is not an authorized type" % v) 
+#                        elif isinstance(v, dict):
+#                            # TODO
+#                            pass
+#                            #self.__validate_doc(doc[key], struct[key], check_required, new_path)
+#                        elif type(v) is not struct[key][0] and v is not None:
+#                            raise TypeError( "%s must be a %s not %s" % (new_path,  struct[key][0].__name__, type(v).__name__) )
+#                #
+#                # It is not a dict nor a list but a simple key:value
+#                #
+#                else:
+#                    pass
+
+
+    def __generate_skeleton(self, doc, struct, check_required = True, path = ""):
         if check_required:
             if len(doc) != len(struct):
                 struct_doc_diff = list(set(struct).difference(set(doc)))
@@ -246,8 +392,12 @@ class MongoDocument(dict):
                 if not key in doc:
                     if isinstance(struct[key], dict):
                         doc[key] = type(struct[key])()
+                    elif struct[key] is dict:
+                        doc[key] = {}
                     elif isinstance(struct[key], list):
                         doc[key] = type(struct[key])()
+                    elif struct[key] is list:
+                        doc[key] = []
                     else:
                         doc[key] = None
             #
@@ -326,10 +476,10 @@ class MongoDocument(dict):
                         assert isinstance(v, struct[key].values()[0]), "invalide type : value of %s must be %s not %s" % (
                           new_path, struct[key].keys()[0].__name__, type(v).__name__)
                 #
-                # If the dict is a schema, we call __validate_doc again
+                # If the dict is a schema, we call __generate_skeleton again
                 #
                 else:
-                    self.__validate_doc(doc[key], struct[key], check_required, new_path)
+                    self.__generate_skeleton(doc[key], struct[key], check_required, new_path)
             #
             # If the struct is a list, we have to validate all values into it
             #
@@ -358,7 +508,7 @@ class MongoDocument(dict):
                     elif isinstance(v, dict):
                         # TODO
                         pass
-                        #self.__validate_doc(doc[key], struct[key], check_required, new_path)
+                        #self.__generate_skeleton(doc[key], struct[key], check_required, new_path)
                     elif type(v) is not struct[key][0] and v is not None:
                         raise TypeError( "%s must be a %s not %s" % (new_path,  struct[key][0].__name__, type(v).__name__) )
             #
@@ -388,7 +538,7 @@ class MongoDocument(dict):
                             raise ValidationError("%s does not pass the validator %s" % (new_path, validator.__name__))
 
     def validate(self):
-        self.__validate_doc(self, self.structure)
+        self._validate_doc(self, self.structure)
 
     def save(self, validate=True, safe=True, *args, **kwargs):
         if validate:

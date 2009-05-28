@@ -35,14 +35,16 @@ class TypesTestCase(unittest.TestCase):
                 structure = { "foo":auth_type }
             if type(auth_type) is dict:
                 assert MyDoc() == {"foo":{}}, MyDoc()
+            elif auth_type is list:
+                assert MyDoc() == {"foo":[]}
             else:
-                assert MyDoc() == {"foo":None}, MyDoc()
+                assert MyDoc() == {"foo":None}, auth_type
  
     def test_not_authorized_type(self):
        for unauth_type in [set, str]:
             class MyDoc(MongoDocument):
                 structure = { "foo":unauth_type }
-            self.assertRaises( AssertionError, MyDoc )
+            self.assertRaises( StructureError, MyDoc )
 
     def test_type_from_functions(self):
         from datetime import datetime
@@ -67,7 +69,19 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo'] = [set([1,2]), "bla"]
         self.assertRaises(AuthorizedTypeError, mydoc.validate)
- 
+
+#        class MyDoc(MongoDocument):
+#            structure = {
+#                "foo":list
+#            }
+#        mydoc = MyDoc()
+#        mydoc.validate()
+#        assert mydoc['foo'] == []
+#        mydoc['foo'] = [u"bla", 23]
+#        mydoc.validate()
+#        mydoc['foo'] = [set([1,2]), "bla"]
+#        self.assertRaises(AuthorizedTypeError, mydoc.validate)
+  
     def test_typed_list(self):
         class MyDoc(MongoDocument):
             structure = {
@@ -109,9 +123,9 @@ class TypesTestCase(unittest.TestCase):
                 "foo":{unicode:[int]}
             }
         mydoc = MyDoc()
-        mydoc['foo'] = {"bar":[1,2,3]}
+        mydoc['foo'] = {u"bar":[1,2,3]}
         mydoc.validate()
-        mydoc['foo'] = {"bar":["bla"]}
+        mydoc['foo'] = {u"bar":[u"bla"]}
         self.assertRaises(TypeError, mydoc.validate)
         mydoc['foo'] = {3:[1,2,3]}
         self.assertRaises(TypeError, mydoc.validate)
@@ -141,6 +155,6 @@ class TypesTestCase(unittest.TestCase):
         mydict[u"foo"] = 3
         mydoc["foo"] = mydict
         mydoc.validate()
-        mydoc['foo'] = {u"foo":7}
+        mydoc['foo'] = {u"foo":"7"}
         self.assertRaises(TypeError, mydoc.validate)
  
