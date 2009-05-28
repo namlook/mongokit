@@ -68,6 +68,18 @@ class ApiTestCase(unittest.TestCase):
         a.generate_skeleton()
         assert a == {"a":{"foo":None}, "bar":None}
 
+    def test_generate_skeleton2(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":[int]},
+                "bar":{unicode:{"egg":int}}
+            }
+        a = A(gen_skel=False)
+        assert a == {}
+        a.generate_skeleton()
+        assert a == {"a":{"foo":[]}, "bar":{}}, a
+
+
     def test_update(self):
         class MyDoc(MongoDocument):
             db_name = "test"

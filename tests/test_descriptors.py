@@ -62,12 +62,31 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc = MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
 
+    def test_list_required2(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{int:[]}
+            }
+            required_fields = ["foo.$int"]
+        mydoc = MyDoc()
+        self.assertRaises(RequireFieldError, mydoc.validate )
+
+
     def test_dict_required(self):
         class MyDoc(MongoDocument):
             structure = {
                 "foo":{}
             }
             required_fields = ["foo"]
+        mydoc = MyDoc()
+        self.assertRaises(RequireFieldError, mydoc.validate )
+
+    def test_dict_nested_required(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{unicode:{"bar":int}}
+            }
+            required_fields = ["foo.$unicode.bar"]
         mydoc = MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
 
@@ -129,8 +148,7 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc = MyDoc()
         assert mydoc["foo"] == {"bar":42}, mydoc
 
-    def _test_default_dict_nested_checked_values(self):
-        # TODO
+    def test_default_dict_nested_checked_values(self):
         class MyDoc(MongoDocument):
             structure = {
                 "foo":{unicode:{"bla":int, "ble":unicode}}
