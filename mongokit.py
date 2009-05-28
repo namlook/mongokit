@@ -224,6 +224,44 @@ class MongoDocument(dict):
                     raise AuthorizedTypeError("%s is not an authorized type" % key)
             else:
                 raise StructureError("%s must be a basestring or a type" % key)
+            #
+            # default_values :
+            # if the value is None, check if a default value exist.
+            # if exists, and it is a function then call it otherwise, juste feed it
+            #
+            if doc[key] is None and new_path in self.default_values:
+                new_value = self.default_values[new_path]
+                if callable(new_value):
+                    doc[key] = new_value()
+                else:
+                    doc[key] = new_value
+            #
+            # Process all signals of the field
+            #
+            if new_path in self.signals and new_path in self.default_values:
+                launch_signals = True
+            elif check_required:
+                launch_signals = True
+            else:
+                launch_signals = False
+            if new_path in self.signals and launch_signals:
+                make_signal = False
+                if new_path in self.__signals:
+                    if doc[key] != self.__signals[new_path]:
+                        make_signal = True
+                else:
+                    make_signal = True
+                if make_signal:
+                    if not hasattr(self.signals[new_path], "__iter__"):
+                        signals = [self.signals[new_path]]
+                    else:
+                        signals = self.signals[new_path]
+                    for signal in signals:
+                        signal(self, doc[key])
+                    self.__signals[new_path] = doc[key]
+            #
+            #
+            #
             if isinstance(struct[key], dict):
                 if type in [type(k) for k,v in struct[key].iteritems()]:
                     if k not in authorized_types: raise AuthorizedTypeError("%s is not an authorized type" % k.__name__)
