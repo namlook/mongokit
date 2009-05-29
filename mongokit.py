@@ -315,7 +315,6 @@ class MongoDocument(dict):
                 new_path = ".".join([path, new_key]).strip('.')
                 if new_key.split('.')[-1].startswith("$"):
                     for doc_key in doc:
-                        print doc_key, key
                         if not isinstance(doc_key, key):
                             raise SchemaTypeError("key of %s must be an instance of %s not %s" % (path, key.__name__, type(doc_key).__name__))
                         self._validate_doc(doc[doc_key], struct[key], new_path)
@@ -566,7 +565,7 @@ class MongoDocument(dict):
         if validate:
             self.validate()
         id = self.collection.save(self, safe=safe, *args, **kwargs)
-        assert id == self['_id']
+        return self
 
     @classmethod
     def get_collection(cls):
@@ -602,6 +601,9 @@ class MongoDocument(dict):
                 raise ModifierOperatorError("bad modifier operator : %s" % modif_op)
         self.collection.update(spec={"_id":self['_id']}, document=document,
           upsert=upsert, manipulate=manipulate, safe=safe )
+        errors = self.collection.database().error()
+        if errors:
+            raise MongoDbError("%s" % errors['err'])
         if validate or reload:
             updated_obj = self.get_from_id(self['_id'])
             if validate:
@@ -620,8 +622,7 @@ class MongoDocument(dict):
     def all(cls, *args, **kwargs):
         # TODO test
         # XXX the wrapper doesn't work, cant set limit/count...
-        for bson_obj in cls.get_collection().find(*args, **kwargs):
-            yield cls(bson_obj)
+        return MongoDocumentCursor(cls.get_collection().find(*args, **kwargs), cls)
 
     @classmethod
     def one(cls, *args, **kwargs):
@@ -631,6 +632,41 @@ class MongoDocument(dict):
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
             return cls(list(bson_obj)[0])
+    
+#    def __setitem__(self, key, value):
+#        dict.__setitem__(self, key, value)
 
 
+class MongoDocumentCursor(object):
+    def __init__(self, cursor, cls):
+        self._cursor = cursor
+        self._class_object = cls
+
+    def where(self, *args, **kwargs):
+        return self.__class__(self._cursor.where(*args, **kwargs), self._class_object)
+
+    def sort(self, *args, **kwargs):
+        return self.__class__(self._cursor.sort(*args, **kwargs), self._class_object)
+
+    def limit(self, *args, **kwargs):
+        return self.__class__(self._cursor.limit(*args, **kwargs), self._class_object)
+
+    def hint(self, *args, **kwargs):
+        return self.__class__(self._cursor.hint(*args, **kwargs), self._class_object)
+
+    def count(self, *args, **kwargs):
+        return self._cursor.count(*args, **kwargs)
+        
+    def explain(self, *args, **kwargs):
+        return self._cursor.explain(*args, **kwargs)
+
+    def next(self, *args, **kwargs):
+        return self._class_object(self._cursor.next(*args, **kwargs))
+
+    def skip(self, *args, **kwargs):
+        return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
+
+    def __iter__(self, *args, **kwargs):
+        for obj in self._cursor:
+            yield self._class_object(obj)
 

@@ -132,10 +132,12 @@ class ApiTestCase(unittest.TestCase):
             mydoc = MyDoc()
             mydoc["foo"] = i
             mydoc.save()
+        for i in MyDoc.all({"foo":{"$gt":4}}):
+            assert isinstance(i, MyDoc)
         docs_list = [i["foo"] for i in MyDoc.all({"foo":{"$gt":4}})]
         assert docs_list == [5,6,7,8,9]
         # using limit/count
-        assert MyDoc.all().count() == 10
+        assert MyDoc.all().count() == 10, MyDoc.all().count()
 
     def test_one(self):
         class MyDoc(MongoDocument):
