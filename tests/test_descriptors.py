@@ -108,7 +108,41 @@ class DescriptorsTestCase(unittest.TestCase):
             default_values = {"foo":time.time}
         mydoc = MyDoc()
         mydoc.validate()
-   
+
+    def test_default_values_from_function_nested(self):
+        import time
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{"bar":float}
+            }
+            default_values = {"foo.bar":time.time}
+        mydoc = MyDoc()
+        mydoc.validate()
+        assert mydoc['foo']['bar'] > 0
+
+    def _test_default_values_from_function_througt_types(self):
+        # XXX TODO
+        import time
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{int:float}
+            }
+            default_values = {"foo.$int":time.time}
+        mydoc = MyDoc()
+        mydoc.validate()
+        # can't go througt types, because no values
+        assert mydoc['foo'] == {}
+
+        # but
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{int:float}
+            }
+            default_values = {"foo":{3:time.time}}
+        mydoc = MyDoc()
+        mydoc.validate()
+        assert mydoc['foo'][3] > 0
+     
     def test_default_list_values(self):
         class MyDoc(MongoDocument):
             structure = {
@@ -178,6 +212,23 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(ValidationError, mydoc.validate)
         mydoc['bar']['bla'] = 42
         mydoc.validate()
+
+    def test_validators_througt_types(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "bar":{
+                    int:{"bla":int}
+                }
+            }
+            validators = {
+                "bar.$int.bla": lambda x: x > 5
+            }
+        mydoc = MyDoc()
+        mydoc['bar'].update({3:{'bla': 2}})
+        self.assertRaises(ValidationError, mydoc.validate)
+        mydoc['bar'].update({3:{'bla': 15}})
+        mydoc.validate()
+
 
     def test_multiple_validators(self):
         class MyDoc(MongoDocument):

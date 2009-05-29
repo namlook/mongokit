@@ -157,4 +157,23 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo'] = {u"foo":"7"}
         self.assertRaises(TypeError, mydoc.validate)
+
+    def _test_big_nested_example(self):
+        # XXX TODO
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{unicode:[int], u"bar":{"spam":{int:[unicode]}}},
+                "bla":{"blo":{"bli":[{"arf":unicode}]}},
+            }
+        mydoc = MyDoc()
+        print mydoc
+        mydoc['foo'].update({u"bir":[1,2,3]})
+        mydoc['foo'][u'bar'][u'spam'] = {1:[u'bla', u'ble'], 3:[u'foo', u'bar']}
+        mydoc.validate()
+        mydoc['bla']['blo']['bli'] = [{u"bar":[u"bla"]}]
+        self.assertRaises(TypeError, mydoc.validate)
+        mydoc['bla']['blo']['bli'] = [{u"arf":[1]}]
+        self.assertRaises(TypeError, mydoc.validate)
+
+        
  

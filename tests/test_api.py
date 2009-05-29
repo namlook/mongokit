@@ -79,6 +79,16 @@ class ApiTestCase(unittest.TestCase):
         a.generate_skeleton()
         assert a == {"a":{"foo":[]}, "bar":{}}, a
 
+    def test_generate_skeleton3(self):
+        class A(MongoDocument):
+            structure = {
+                "a":{"foo":[int], "spam":{"bla":unicode}},
+                "bar":{unicode:{"egg":int}}
+            }
+        a = A(gen_skel=False)
+        assert a == {}
+        a.generate_skeleton()
+        assert a == {"a":{"foo":[], "spam":{"bla":None}}, "bar":{}}, a
 
     def test_update(self):
         class MyDoc(MongoDocument):
@@ -108,7 +118,8 @@ class ApiTestCase(unittest.TestCase):
         mydoc["foo"] = 3
         mydoc.save()
         fetched_doc = MyDoc.get_from_id("bar")
-        mydoc == fetched_doc
+        assert mydoc == fetched_doc
+        assert isinstance(fetched_doc, MyDoc)
 
     def test_all(self):
         class MyDoc(MongoDocument):
@@ -138,6 +149,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
         mydoc = MyDoc.one()
         assert mydoc["foo"] == 0
+        assert isinstance(mydoc, MyDoc)
         for i in range(10):
             mydoc = MyDoc()
             mydoc["foo"] = i
