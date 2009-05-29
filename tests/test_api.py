@@ -138,6 +138,7 @@ class ApiTestCase(unittest.TestCase):
         assert docs_list == [5,6,7,8,9]
         # using limit/count
         assert MyDoc.all().count() == 10, MyDoc.all().count()
+        assert MyDoc.all().limit(1).count() == 10, MyDoc.all().limit(1).count()
 
     def test_one(self):
         class MyDoc(MongoDocument):

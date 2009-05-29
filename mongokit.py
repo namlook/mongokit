@@ -620,8 +620,6 @@ class MongoDocument(dict):
 
     @classmethod
     def all(cls, *args, **kwargs):
-        # TODO test
-        # XXX the wrapper doesn't work, cant set limit/count...
         return MongoDocumentCursor(cls.get_collection().find(*args, **kwargs), cls)
 
     @classmethod
