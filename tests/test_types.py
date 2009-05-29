@@ -93,7 +93,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [1,2,3]
         mydoc.validate()
         mydoc['foo'] = [u"bla"]
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_typed_list_with_dict(self):
         class MyDoc(MongoDocument):
@@ -104,7 +104,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [{u"bla":1},{u"ble":2}]
         mydoc.validate()
         mydoc['foo'] = [{u"bla":u"bar"}]
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_typed_list_with_list(self):
         class MyDoc(MongoDocument):
@@ -115,7 +115,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [[u"bla",u"blu"],[u"ble",u"bli"]]
         mydoc.validate()
         mydoc['foo'] = [[u"bla",1]]
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_dict_unicode_typed_list(self):
         class MyDoc(MongoDocument):
@@ -126,9 +126,9 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = {u"bar":[1,2,3]}
         mydoc.validate()
         mydoc['foo'] = {u"bar":[u"bla"]}
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = {3:[1,2,3]}
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_with_custom_object(self):
         class MyDict(dict):
@@ -156,7 +156,16 @@ class TypesTestCase(unittest.TestCase):
         mydoc["foo"] = mydict
         mydoc.validate()
         mydoc['foo'] = {u"foo":"7"}
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+
+    def test_list_instead_of_dict(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":{unicode:[unicode]}
+            }
+        mydoc = MyDoc()
+        mydoc['foo'] = [u'bla']
+        self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def _test_big_nested_example(self):
         # XXX TODO
@@ -171,9 +180,9 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'][u'bar'][u'spam'] = {1:[u'bla', u'ble'], 3:[u'foo', u'bar']}
         mydoc.validate()
         mydoc['bla']['blo']['bli'] = [{u"bar":[u"bla"]}]
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['bla']['blo']['bli'] = [{u"arf":[1]}]
-        self.assertRaises(TypeError, mydoc.validate)
+        self.assertRaises(SchemaTypeError, mydoc.validate)
 
         
  

@@ -293,8 +293,10 @@ class MongoDocument(dict):
                 if type(doc) not in authorized_types:
                     raise AuthorizedTypeError("%s is not an authorized types" % type(doc).__name__)
             elif not isinstance(doc, struct) and doc is not None:
-                raise TypeError("%s must be an instance of %s not %s" % (path, struct.__name__, type(doc).__name__))
+                raise SchemaTypeError("%s must be an instance of %s not %s" % (path, struct.__name__, type(doc).__name__))
         elif isinstance(struct, dict):
+            if not isinstance(doc, type(struct)):
+                raise SchemaTypeError("%s must be an instance of %s not %s" %(path, type(struct).__name__, type(doc).__name__))
             if len(doc) != len(struct):
                 struct_doc_diff = list(set(struct).difference(set(doc)))
                 if struct_doc_diff:
@@ -313,14 +315,15 @@ class MongoDocument(dict):
                 new_path = ".".join([path, new_key]).strip('.')
                 if new_key.split('.')[-1].startswith("$"):
                     for doc_key in doc:
+                        print doc_key, key
                         if not isinstance(doc_key, key):
-                            raise TypeError("key of %s must be an instance of %s not %s" % (path, key.__name__, type(doc_key).__name__))
+                            raise SchemaTypeError("key of %s must be an instance of %s not %s" % (path, key.__name__, type(doc_key).__name__))
                         self._validate_doc(doc[doc_key], struct[key], new_path)
                 else:
                     self._validate_doc(doc[key], struct[key],  new_path)
         elif isinstance(struct, list):
             if not isinstance(doc, list):
-                raise TypeError("%s must be an instance of list not %s" % (path, type(doc).__name__))
+                raise SchemaTypeError("%s must be an instance of list not %s" % (path, type(doc).__name__))
             if not len(struct):
                 struct = None
             else:
@@ -562,7 +565,8 @@ class MongoDocument(dict):
     def save(self, validate=True, safe=True, *args, **kwargs):
         if validate:
             self.validate()
-        self.collection.save(self, safe=safe, *args, **kwargs)
+        id = self.collection.save(self, safe=safe, *args, **kwargs)
+        assert id == self['_id']
 
     @classmethod
     def get_collection(cls):

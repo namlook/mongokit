@@ -27,4 +27,5 @@ class DuplicateRequiredError(Exception):pass
 class DuplicateDefaultValueError(Exception):pass
 class ModifierOperatorError(Exception):pass
 class MultipleResultsFound(Exception):pass
+class SchemaTypeError(Exception):pass
 
