@@ -19,6 +19,7 @@ __author__ = 'n.namlook {at} gmail {dot} com'
 import unittest
 
 from mongokit import *
+from pymongo.objectid import ObjectId
 
 class ApiTestCase(unittest.TestCase):
     def setUp(self):
@@ -41,9 +42,21 @@ class ApiTestCase(unittest.TestCase):
         mydoc = MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
-        mydoc.save()
+        id = mydoc.save()
+        assert isinstance(id['_id'], unicode)
+        assert id['_id'].startswith("MyDoc"), id
+
+        mydoc = MyDoc()
+        mydoc["bla"]["foo"] = u"bar"
+        mydoc["bla"]["bar"] = 43
+        id = mydoc.save(uuid=False)
+        assert isinstance(id['_id'], ObjectId)
 
         saved_doc = self.collection.find_one({"bla.bar":42})
+        for key, value in mydoc.iteritems():
+            assert saved_doc[key] == value
+
+        saved_doc = self.collection.find_one({"bla.bar":43})
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
 

@@ -22,6 +22,8 @@ from pymongo.connection import Connection
 from exceptions import *
 import re
 
+from uuid import uuid4
+
 authorized_types = [type(None), bool, int, float, unicode, list, dict,
   datetime.datetime, 
   pymongo.binary.Binary,
@@ -561,9 +563,11 @@ class MongoDocument(dict):
         self._validate_required(self, self.structure)
         self._process_validators(self, self.structure)
 
-    def save(self, validate=True, safe=True, *args, **kwargs):
+    def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
         if validate:
             self.validate()
+        if '_id' not in self and uuid:
+            self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         id = self.collection.save(self, safe=safe, *args, **kwargs)
         return self
 
