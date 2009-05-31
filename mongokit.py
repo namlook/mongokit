@@ -33,6 +33,8 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
   type(re.compile("")),
 ]
 
+STRUCTURE_KEYWORDS = ['_id']
+
 class MongoDocument(dict):
     """
     A dictionnary with a building structured schema
@@ -307,7 +309,7 @@ class MongoDocument(dict):
                             raise StructureError( "missed fields : %s" % struct_doc_diff )
                 else:
                     struct_struct_diff = list(set(doc).difference(set(struct)))
-                    if struct_struct_diff != ['_id']:
+                    if not sum( 1 for s in struct_struct_diff if s in STRUCTURE_KEYWORDS):
                         raise StructureError( "unknown fields : %s" % struct_struct_diff)
             for key in struct:
                 if type(key) is type:

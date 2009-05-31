@@ -46,19 +46,55 @@ class ApiTestCase(unittest.TestCase):
         assert isinstance(id['_id'], unicode)
         assert id['_id'].startswith("MyDoc"), id
 
+        saved_doc = self.collection.find_one({"bla.bar":42})
+        for key, value in mydoc.iteritems():
+            assert saved_doc[key] == value
+
         mydoc = MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 43
         id = mydoc.save(uuid=False)
         assert isinstance(id['_id'], ObjectId)
 
-        saved_doc = self.collection.find_one({"bla.bar":42})
-        for key, value in mydoc.iteritems():
-            assert saved_doc[key] == value
-
         saved_doc = self.collection.find_one({"bla.bar":43})
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
+
+    def _test_save_versionning(self):
+        # TODO
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "bla" : unicode,
+            }
+
+        class MyVersionnedDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo" : unicode,
+            }
+            versioning = True
+
+        doc = MyDoc()
+        doc['bla'] =  u"bli"
+        doc.save()
+        assert "_version" not in doc
+        
+        versionned_doc = MyVersionnedDoc()
+        versionned_doc['foo'] = u'bla'
+        versionned_doc.save()
+        print versionned_doc
+        assert versionned_doc['_version'] == 1
+        versionned_doc['foo'] = u'bar'
+        versionned_doc.save()
+        assert versionned_doc['_version'] == 2
+        assert versionned_doc['foo'] == 'bar'
+
+        print list(MyVersionnedDoc.all())
+        versionned_doc = MyVersionnedDoc.get_from_id(versionned_doc)
+        assert count == 2, count
 
     def test_save_without_collection(self):
         class MyDoc(MongoDocument):
