@@ -19,7 +19,7 @@ __author__ = 'n.namlook {at} gmail {dot} com'
 import datetime
 import pymongo
 from pymongo.connection import Connection
-from exceptions import *
+from mongo_exceptions import *
 import re
 
 from uuid import uuid4
@@ -33,7 +33,7 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
   type(re.compile("")),
 ]
 
-STRUCTURE_KEYWORDS = ['_id']
+STRUCTURE_KEYWORDS = ['_id', '_revision']
 
 class MongoDocument(dict):
     """
@@ -151,7 +151,10 @@ class MongoDocument(dict):
     db_name = None
     collection_name = None
 
+    versioning = None
+
     _collection = None
+    _versioning_collection = None
     
     def __init__(self, doc={}, gen_skel=True, auto_inheritance=True):
         """
@@ -189,6 +192,8 @@ class MongoDocument(dict):
             splited_rf = rf.split('.')
             for index in range(len(splited_rf)):
                 self._required_namespace.add(".".join(splited_rf[:index+1]))
+        if type(self.versioning) not in [type(None), str, unicode]:
+            raise ValidationError("versioning attribute must be None or basestring")
      
     def __walk_dict(self, dic):
         # thanks jean_b for the patch
@@ -566,6 +571,15 @@ class MongoDocument(dict):
         self._process_validators(self, self.structure)
 
     def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
+        if self.versioning:
+            if not '_revision' in self:
+                self['_revision'] = 0
+            self['_revision'] += 1
+            versionned_doc = self.versioning_collection.find_one({'_id':self['_id']})
+            if not versionned_doc:
+                versionned_doc = {"revisions":{}, "_id":self['_id']}
+            versionned_doc['revisions'][unicode(self['_revision'])] = self
+            self.versioning_collection.save(versionned_doc)
         if validate:
             self.validate()
         if '_id' not in self and uuid:
@@ -581,9 +595,25 @@ class MongoDocument(dict):
             cls._collection = Connection(cls.db_host, cls.db_port)[cls.db_name][cls.collection_name]
         return cls._collection
 
+    @classmethod
+    def get_versioning_collection(cls):
+        if not cls.db_name or not cls.versioning:
+            raise ConnectionError( "You must set a db_name and a versioning collection name" )
+        if not cls._versioning_collection:
+            cls._versioning_collection = Connection(cls.db_host, cls.db_port)[cls.db_name][cls.versioning]
+        return cls._versioning_collection
+
     def _get_collection(self):
         return self.__class__.get_collection()
     collection = property(_get_collection)
+
+    def _get_versioning_collection(self):
+        return self.__class__.get_versioning_collection()
+    versioning_collection = property(_get_versioning_collection)
+
+    def _get_versions(self):
+        return self.versioning_collection.find_one({"_id":self['_id']})['revisions']
+    versions = property(_get_versions)
 
     def db_update(self, document, upsert=False, manipulate=False, safe=True, validate=True, reload=True):
         """
