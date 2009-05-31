@@ -89,15 +89,15 @@ class ApiTestCase(unittest.TestCase):
         versionned_doc['foo'] = u'bla'
         versionned_doc.save()
         assert versionned_doc['_revision'] == 1
-        assert versionned_doc.versions['1'] == {'foo':'bla', "_revision":1, "_id":"mydoc"}
+        assert versionned_doc.get_revision(1) == {'foo':'bla', "_revision":1, "_id":"mydoc"}, versionned_doc.get_revision(1)
         versionned_doc['foo'] = u'bar'
         versionned_doc.save()
         assert versionned_doc['_revision'] == 2
         assert versionned_doc['foo'] == 'bar'
-        assert versionned_doc.versions['2'] == {'foo':'bar', "_revision":2, "_id":"mydoc"}
+        assert versionned_doc.get_revision(2) == {'foo':'bar', "_revision":2, "_id":"mydoc"}
 
         versionned_doc = MyVersionnedDoc.get_from_id(versionned_doc['_id'])
-        assert len(versionned_doc.versions) == 2
+        assert len(list(versionned_doc.get_revisions())) == 2, len(list(versionned_doc.get_revisions()))
 
     def test_bad_versioning(self):
         class MyVersionnedDoc(MongoDocument):

@@ -577,8 +577,8 @@ class MongoDocument(dict):
             self['_revision'] += 1
             versionned_doc = self.versioning_collection.find_one({'_id':self['_id']})
             if not versionned_doc:
-                versionned_doc = {"revisions":{}, "_id":self['_id']}
-            versionned_doc['revisions'][unicode(self['_revision'])] = self
+                versionned_doc = {"_id":self['_id']}
+            versionned_doc[unicode(self['_revision'])] = self
             self.versioning_collection.save(versionned_doc)
         if validate:
             self.validate()
@@ -611,9 +611,18 @@ class MongoDocument(dict):
         return self.__class__.get_versioning_collection()
     versioning_collection = property(_get_versioning_collection)
 
-    def _get_versions(self):
-        return self.versioning_collection.find_one({"_id":self['_id']})['revisions']
-    versions = property(_get_versions)
+    def get_revision(self, revision_number):
+        assert revision_number != "_id"
+        field = unicode(revision_number)
+        revisions = self.versioning_collection.find({"_id":self['_id']}, [field])
+        if revisions.count():
+            return revisions.next()[field]
+
+    def get_revisions(self):
+        import itertools
+        versionned_doc = self.versioning_collection.find_one({"_id":self['_id']})
+        versionned_doc.pop('_id')
+        return itertools.chain(versionned_doc)
 
     def db_update(self, document, upsert=False, manipulate=False, safe=True, validate=True, reload=True):
         """
