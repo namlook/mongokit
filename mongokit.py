@@ -648,16 +648,24 @@ class RevisionDocument(MongoDocument):
 
 class VersionnedDocument(MongoDocument):
 
-    versioning = None
+    versioning_db_name = None
+    versioning_collection_name = None
+
     _versioning_collection = None
 
     def __init__(self,*args, **kwargs):
         super(VersionnedDocument, self).__init__(*args, **kwargs)
-        if type(self.versioning) not in [type(None), str, unicode]:
-            raise ValidationError("versioning attribute must be None or basestring")
+        if not ( self.versioning_db_name or self.db_name):
+            raise ValidationError( "you must specify versioning_db_name or db_name" )
+        if not (self.versioning_collection_name or self.collection_name):
+            raise ValidationError( "you must specify versioning_collection_name or collection_name" )
+        if type(self.versioning_db_name) not in [type(None), str, unicode]:
+            raise ValidationError("versioning_db attribute must be None or basestring")
+        if type(self.versioning_collection_name) not in [type(None), str, unicode]:
+            raise ValidationError("versioning_collection attribute must be None or basestring")
 
     def save(self, versioning=True, *args, **kwargs):
-        if self.versioning and versioning:
+        if versioning:
             if '_revision' in self:
                 self.pop('_revision')
                 self['_revision'] = self.get_last_revision_id()
@@ -674,19 +682,21 @@ class VersionnedDocument(MongoDocument):
         """
         if versioning is True delete revisions documents as well
         """
-        if self.versioning and versioning:
+        if versioning:
             self.get_versioning_collection().remove({'id':self['_id']})
         super(VersionnedDocument, self).delete(*args, **kwargs)
         
     @classmethod
     def get_versioning_collection(cls):
         if not cls._versioning_collection:
-            if not cls.db_name or not cls.versioning:
+            db_name = cls.versioning_db_name or cls.db_name
+            collection_name = cls.versioning_collection_name or cls.collection_name
+            if not  db_name and not collection_name:
                 raise ConnectionError( "You must set a db_name and a versioning collection name" )
-            db = Connection(cls.db_host, cls.db_port)[cls.db_name]
-            cls._versioning_collection = Connection(cls.db_host, cls.db_port)[cls.db_name][cls.versioning]
+            db = Connection(cls.db_host, cls.db_port)[db_name]
+            cls._versioning_collection = db[collection_name]
             if db.collection_names():
-                if not cls.versioning in db.collection_names():
+                if not collection_name in db.collection_names():
                     cls._versioning_collection.create_index([('id',1), ('revision', 1)], unique=True)
         return cls._versioning_collection
 

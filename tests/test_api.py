@@ -106,8 +106,6 @@ class ApiTestCase(unittest.TestCase):
 
     def test_bad_versioning(self):
         class MyVersionnedDoc(VersionnedDocument):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "foo" : unicode,
             }
@@ -148,7 +146,7 @@ class ApiTestCase(unittest.TestCase):
             structure = {
                 "foo" : unicode,
             }
-            versioning = "versionned_mongokit"
+            versioning_collection_name = "versionned_mongokit"
  
         versionned_doc = MyVersionnedDoc()
         versionned_doc['_id'] = "mydoc"
