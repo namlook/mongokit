@@ -101,9 +101,8 @@ class ApiTestCase(unittest.TestCase):
         old_doc.save()
         assert old_doc['_revision'] == 3
 
-
         versionned_doc = MyVersionnedDoc.get_from_id(versionned_doc['_id'])
-        assert len(list(versionned_doc.get_revisions())) == 2, len(list(versionned_doc.get_revisions()))
+        assert len(list(versionned_doc.get_revisions())) == 3, len(list(versionned_doc.get_revisions()))
 
     def test_bad_versioning(self):
         class MyVersionnedDoc(VersionnedDocument):
