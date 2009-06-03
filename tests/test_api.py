@@ -120,6 +120,25 @@ class ApiTestCase(unittest.TestCase):
         mydoc["foo"] = 1
         self.assertRaises(ConnectionError, mydoc.save)
 
+    def test_delete(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo":int,
+            }
+        mydoc = MyDoc()
+        mydoc['_id'] = 'foo'
+        mydoc["foo"] = 1
+        mydoc.save()
+        assert MyDoc.all().count() == 1
+        mydoc = MyDoc.get_from_id('foo')
+        assert mydoc['foo'] == 1
+        mydoc.delete()
+        assert MyDoc.all().count() == 0
+        
+
+
   
     def test_generate_skeleton(self):
         class A(MongoDocument):

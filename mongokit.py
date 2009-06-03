@@ -4,7 +4,7 @@
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
-# copyright notice and this permission notice appear in all copies.
+# copyright notice and this permission notice appear inall copies.
 #
 # THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 # WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
@@ -156,7 +156,7 @@ class MongoDocument(dict):
     _collection = None
     _versioning_collection = None
     
-    def __init__(self, doc={}, gen_skel=True, auto_inheritance=True):
+    def __init__(self, doc={}, gen_skel=True, process_signals=True, auto_inheritance=True):
         """
         doc : a document dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -184,7 +184,8 @@ class MongoDocument(dict):
         if gen_skel:
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
-        self._process_signals(self, self.structure)
+        if process_signals:
+            self._process_signals(self, self.structure)
         self._collection = None
         ## building required fields namespace
         self._required_namespace = set([])
@@ -570,8 +571,8 @@ class MongoDocument(dict):
         self._validate_required(self, self.structure)
         self._process_validators(self, self.structure)
 
-    def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
-        if self.versioning:
+    def save(self, uuid=True, validate=True, versioning=True, safe=True, *args, **kwargs):
+        if self.versioning and versioning:
             if not '_revision' in self:
                 self['_revision'] = 0
             self['_revision'] += 1
@@ -586,6 +587,14 @@ class MongoDocument(dict):
             self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         id = self.collection.save(self, safe=safe, *args, **kwargs)
         return self
+
+    def delete(self, versioning=False, safe=True, *arg, **kwargs):
+        """
+        if versioning is True delete revisions documents as well
+        """
+        if self.versioning and versioning:
+            pass # TODO delete revisions
+        self.collection.remove({'_id':self['_id']})
 
     @classmethod
     def get_collection(cls):
@@ -704,12 +713,12 @@ class MongoDocumentCursor(object):
         return self._cursor.explain(*args, **kwargs)
 
     def next(self, *args, **kwargs):
-        return self._class_object(self._cursor.next(*args, **kwargs))
+        return self._class_object(self._cursor.next(*args, **kwargs), process_signals=False)
 
     def skip(self, *args, **kwargs):
         return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
 
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
-            yield self._class_object(obj)
+            yield self._class_object(obj, process_signals=False)
 
