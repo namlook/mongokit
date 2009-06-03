@@ -137,6 +137,29 @@ class MongoDocument(dict):
         {'bla': None, 'key1': {}}
 
     So, default_values nor signals will work.
+
+    = versioning =
+
+    Mongokit implement a VersionnedDocument. To start versioning in a document just add
+    the collection_name where all revisions will be stored :
+
+        class MyVersionizedDocument(VersionnedDocument):
+            db_name = "my_db"
+            collection_name = "my_collection"
+            structure = {
+                "foo":int
+            }
+            versioning = "my_revision_collection"
+
+    In this example, all documents would be store in "my_db.my_collection" and all
+    revision documents stored in "my_db.my_revision_collection"
+
+    To get a specified revision, just call the `get_revision` method:
+
+        >>> mydoc.get_revision(3) # get the third revision of the doc
+
+        >>> for doc in mydoc.get_revisions(): # getting all revisions of a doc
+        ...    print "this is revision %s : %s" % (doc['_revision'], doc)
     """
     
     auto_inheritance = True
@@ -151,10 +174,7 @@ class MongoDocument(dict):
     db_name = None
     collection_name = None
 
-    versioning = None
-
     _collection = None
-    _versioning_collection = None
     
     def __init__(self, doc={}, gen_skel=True, process_signals=True, auto_inheritance=True):
         """
@@ -193,8 +213,6 @@ class MongoDocument(dict):
             splited_rf = rf.split('.')
             for index in range(len(splited_rf)):
                 self._required_namespace.add(".".join(splited_rf[:index+1]))
-        if type(self.versioning) not in [type(None), str, unicode]:
-            raise ValidationError("versioning attribute must be None or basestring")
      
     def __walk_dict(self, dic):
         # thanks jean_b for the patch
@@ -232,7 +250,7 @@ class MongoDocument(dict):
         and self.signals from ancestors
         """
         parent = self.__class__.__mro__[1]
-        if hasattr(parent, "structure") and parent is not MongoDocument:
+        if hasattr(parent, "structure") and parent not in [VersionnedDocument, MongoDocument]:
             parent = parent()
             if parent.structure:
                 self.structure.update(parent.structure)
@@ -571,16 +589,7 @@ class MongoDocument(dict):
         self._validate_required(self, self.structure)
         self._process_validators(self, self.structure)
 
-    def save(self, uuid=True, validate=True, versioning=True, safe=True, *args, **kwargs):
-        if self.versioning and versioning:
-            if not '_revision' in self:
-                self['_revision'] = 0
-            self['_revision'] += 1
-            versionned_doc = self.versioning_collection.find_one({'_id':self['_id']})
-            if not versionned_doc:
-                versionned_doc = {"_id":self['_id']}
-            versionned_doc[unicode(self['_revision'])] = self
-            self.versioning_collection.save(versionned_doc)
+    def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
         if validate:
             self.validate()
         if '_id' not in self and uuid:
@@ -588,89 +597,30 @@ class MongoDocument(dict):
         id = self.collection.save(self, safe=safe, *args, **kwargs)
         return self
 
-    def delete(self, versioning=False, safe=True, *arg, **kwargs):
+    def delete(self, *arg, **kwargs):
         """
         if versioning is True delete revisions documents as well
         """
-        if self.versioning and versioning:
-            pass # TODO delete revisions
         self.collection.remove({'_id':self['_id']})
 
     @classmethod
     def get_collection(cls):
-        if not cls.db_name or not cls.collection_name:
-            raise ConnectionError( "You must set a db_name and a collection_name" )
         if not cls._collection:
-            cls._collection = Connection(cls.db_host, cls.db_port)[cls.db_name][cls.collection_name]
+            if not cls.db_name or not cls.collection_name:
+                raise ConnectionError( "You must set a db_name and a collection_name" )
+            db = Connection(cls.db_host, cls.db_port)[cls.db_name]
+            cls._collection = db[cls.collection_name]
         return cls._collection
-
-    @classmethod
-    def get_versioning_collection(cls):
-        if not cls.db_name or not cls.versioning:
-            raise ConnectionError( "You must set a db_name and a versioning collection name" )
-        if not cls._versioning_collection:
-            cls._versioning_collection = Connection(cls.db_host, cls.db_port)[cls.db_name][cls.versioning]
-        return cls._versioning_collection
 
     def _get_collection(self):
         return self.__class__.get_collection()
     collection = property(_get_collection)
 
-    def _get_versioning_collection(self):
-        return self.__class__.get_versioning_collection()
-    versioning_collection = property(_get_versioning_collection)
-
-    def get_revision(self, revision_number):
-        assert revision_number != "_id"
-        field = unicode(revision_number)
-        revisions = self.versioning_collection.find({"_id":self['_id']}, [field])
-        if revisions.count():
-            return revisions.next()[field]
-
-    def get_revisions(self):
-        import itertools
-        versionned_doc = self.versioning_collection.find_one({"_id":self['_id']})
-        versionned_doc.pop('_id')
-        return itertools.chain(versionned_doc)
-
-    def db_update(self, document, upsert=False, manipulate=False, safe=True, validate=True, reload=True):
-        """
-        update the object in the database.
-
-        :Parameters:
-          - `document`: a SON object specifying the fields to be changed in the
-            selected document(s), or (in the case of an upsert) the document to
-            be inserted.
-          - `upsert` (optional): perform an upsert operation
-          - `manipulate` (optional): monipulate the document before updating?
-          - `safe` (optional): check that the update succeeded?
-          - `validate`: validate the updated object (usefull to check if update
-            values follow schema)
-          - `reload`: load updated field in the doc
-        """
-        if not self.get('_id'):
-            raise AttributeError("Your document must be saved in the database updating it")
-        for modif_op in document:
-            if modif_op.startswith("$") and modif_op not in ["$inc", "$set", "$push"]:
-                raise ModifierOperatorError("bad modifier operator : %s" % modif_op)
-        self.collection.update(spec={"_id":self['_id']}, document=document,
-          upsert=upsert, manipulate=manipulate, safe=safe )
-        errors = self.collection.database().error()
-        if errors:
-            raise MongoDbError("%s" % errors['err'])
-        if validate or reload:
-            updated_obj = self.get_from_id(self['_id'])
-            if validate:
-                self.__class__(updated_obj).validate()
-            if reload:
-                for k,v in updated_obj.iteritems():
-                    self[k]=v
-
     @classmethod
     def get_from_id(cls, id):
         bson_obj = cls.get_collection().find_one({"_id":id})
         if bson_obj:
-            return cls(bson_obj)
+            return cls(bson_obj, process_signals=False)
 
     @classmethod
     def all(cls, *args, **kwargs):
@@ -683,10 +633,82 @@ class MongoDocument(dict):
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
-            return cls(list(bson_obj)[0])
+            return cls(list(bson_obj)[0], process_signals=False)
     
 #    def __setitem__(self, key, value):
 #        dict.__setitem__(self, key, value)
+
+
+class RevisionDocument(MongoDocument):
+    structure = {
+        "id": unicode,
+        "revision":int,
+        "doc":dict
+    }
+
+class VersionnedDocument(MongoDocument):
+
+    versioning = None
+    _versioning_collection = None
+
+    def __init__(self,*args, **kwargs):
+        super(VersionnedDocument, self).__init__(*args, **kwargs)
+        if type(self.versioning) not in [type(None), str, unicode]:
+            raise ValidationError("versioning attribute must be None or basestring")
+
+    def save(self, versioning=True, *args, **kwargs):
+        if self.versioning and versioning:
+            if '_revision' in self:
+                self.pop('_revision')
+                self['_revision'] = self.get_last_revision_id()
+            else:
+                self['_revision'] = 0
+            self['_revision'] += 1
+            RevisionDocument._collection = self.get_versioning_collection()
+            versionned_doc = RevisionDocument({"id":unicode(self['_id']), "revision":self['_revision']})
+            versionned_doc['doc'] = dict(self)
+            versionned_doc.save()
+        return super(VersionnedDocument, self).save(*args, **kwargs)
+
+    def delete(self, versioning=False, *args, **kwargs):
+        """
+        if versioning is True delete revisions documents as well
+        """
+        if self.versioning and versioning:
+            self.get_versioning_collection().remove({'id':self['_id']})
+        super(VersionnedDocument, self).delete(*args, **kwargs)
+        
+    @classmethod
+    def get_versioning_collection(cls):
+        if not cls._versioning_collection:
+            if not cls.db_name or not cls.versioning:
+                raise ConnectionError( "You must set a db_name and a versioning collection name" )
+            db = Connection(cls.db_host, cls.db_port)[cls.db_name]
+            cls._versioning_collection = Connection(cls.db_host, cls.db_port)[cls.db_name][cls.versioning]
+            if db.collection_names():
+                if not cls.versioning in db.collection_names():
+                    cls._versioning_collection.create_index([('id',1), ('revision', 1)], unique=True)
+        return cls._versioning_collection
+
+    def _get_versioning_collection(self):
+        return self.__class__.get_versioning_collection()
+    versioning_collection = property(_get_versioning_collection)
+
+    def get_revision(self, revision_number):
+        RevisionDocument._collection = self.get_versioning_collection()
+        doc = RevisionDocument.one({"id":self['_id'], 'revision':revision_number})
+        if doc:
+            return self.__class__(doc['doc'], process_signals=False)
+
+    def get_revisions(self):
+        versionned_docs = self.versioning_collection.find({"id":self['_id']})
+        for verdoc in versionned_docs:
+            yield self.__class__(verdoc['doc'], process_signals=False)
+
+    def get_last_revision_id(self):
+        last_doc = self.get_versioning_collection().find({'id':self['_id']}).sort('revision', -1).next()
+        if last_doc:
+            return last_doc['revision']
 
 
 class MongoDocumentCursor(object):

@@ -76,7 +76,7 @@ class ApiTestCase(unittest.TestCase):
         doc.save()
         assert "_version" not in doc
 
-        class MyVersionnedDoc(MongoDocument):
+        class MyVersionnedDoc(VersionnedDocument):
             db_name = "test"
             collection_name = "mongokit"
             structure = {
@@ -89,18 +89,20 @@ class ApiTestCase(unittest.TestCase):
         versionned_doc['foo'] = u'bla'
         versionned_doc.save()
         assert versionned_doc['_revision'] == 1
-        assert versionned_doc.get_revision(1) == {'foo':'bla', "_revision":1, "_id":"mydoc"}, versionned_doc.get_revision(1)
+        assert versionned_doc.get_last_revision_id() == 1
+        assert versionned_doc.get_revision(1) == {'foo':'bla', "_revision":1, "_id":"mydoc"}
         versionned_doc['foo'] = u'bar'
         versionned_doc.save()
         assert versionned_doc['_revision'] == 2
+        assert versionned_doc.get_last_revision_id() == 2
         assert versionned_doc['foo'] == 'bar'
-        assert versionned_doc.get_revision(2) == {'foo':'bar', "_revision":2, "_id":"mydoc"}
+        assert versionned_doc.get_revision(2) == {'foo':'bar', "_revision":2, "_id":"mydoc"}, versionned_doc.get_revision(2)
 
         versionned_doc = MyVersionnedDoc.get_from_id(versionned_doc['_id'])
         assert len(list(versionned_doc.get_revisions())) == 2, len(list(versionned_doc.get_revisions()))
 
     def test_bad_versioning(self):
-        class MyVersionnedDoc(MongoDocument):
+        class MyVersionnedDoc(VersionnedDocument):
             db_name = "test"
             collection_name = "mongokit"
             structure = {
@@ -110,7 +112,6 @@ class ApiTestCase(unittest.TestCase):
  
         self.assertRaises(ValidationError, MyVersionnedDoc)
  
-
     def test_save_without_collection(self):
         class MyDoc(MongoDocument):
             structure = {
@@ -137,9 +138,40 @@ class ApiTestCase(unittest.TestCase):
         mydoc.delete()
         assert MyDoc.all().count() == 0
         
+    def test_delete_versioning(self):
+        class MyVersionnedDoc(VersionnedDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo" : unicode,
+            }
+            versioning = "versionned_mongokit"
+ 
+        versionned_doc = MyVersionnedDoc()
+        versionned_doc['_id'] = "mydoc"
+        versionned_doc['foo'] = u'bla'
+        versionned_doc.save()
+        assert MyVersionnedDoc.get_versioning_collection().find().count() == 1
+        versionned_doc['foo'] = u'bar'
+        versionned_doc.save()
+        assert MyVersionnedDoc.get_versioning_collection().find().count() == 2
+        versionned_doc.delete(versioning=True)
+        assert MyVersionnedDoc.get_versioning_collection().find().count() == 0
+        assert MyVersionnedDoc.all().count() == 0
 
+        versionned_doc = MyVersionnedDoc()
+        versionned_doc['_id'] = "mydoc"
+        versionned_doc['foo'] = u'bla'
+        versionned_doc.save()
+        assert MyVersionnedDoc.get_versioning_collection().find().count() == 1
+        versionned_doc['foo'] = u'bar'
+        versionned_doc.save()
+        assert MyVersionnedDoc.get_versioning_collection().find().count() == 2
+        versionned_doc.delete()
+        assert MyVersionnedDoc.get_versioning_collection().find().count() == 2
+        assert MyVersionnedDoc.all().count() == 0
 
-  
+ 
     def test_generate_skeleton(self):
         class A(MongoDocument):
             structure = {
@@ -173,22 +205,6 @@ class ApiTestCase(unittest.TestCase):
         a.generate_skeleton()
         assert a == {"a":{"foo":[], "spam":{"bla":None}}, "bar":{}}, a
 
-    def test_update(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "foo":int
-            }
-        mydoc = MyDoc()
-        mydoc["foo"] = 3
-        self.assertRaises(AttributeError, mydoc.db_update, {"$inc":{"foo":1}})
-        mydoc['_id'] = "4"
-        mydoc.save()
-        self.assertRaises(ModifierOperatorError, mydoc.db_update, {"$foo":{"$inc":1}})
-        mydoc.db_update({"$inc":{"foo":1}})
-        assert mydoc["foo"] == 4, mydoc
-        
     def test_get_from_id(self):
         class MyDoc(MongoDocument):
             db_name = "test"
@@ -222,6 +238,16 @@ class ApiTestCase(unittest.TestCase):
         # using limit/count
         assert MyDoc.all().count() == 10, MyDoc.all().count()
         assert MyDoc.all().limit(1).count() == 10, MyDoc.all().limit(1).count()
+        assert MyDoc.all().where('this.foo').count() == 9 #{'foo':0} is not taken
+        assert MyDoc.all().hint('foo')
+        assert [i['foo'] for i in MyDoc.all().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
+        allPlans = MyDoc.all().explain()['allPlans']
+        assert allPlans == [{u'cursor': u'BasicCursor', u'startKey': {}, u'endKey': {}}]
+        next_doc =  MyDoc.all().sort('foo',1).next()
+        assert isinstance(next_doc, MyDoc)
+        assert next_doc['foo'] == 0
+        assert len(list(MyDoc.all().skip(3))) == 7, len(list(MyDoc.all().skip(3)))
+        assert isinstance(MyDoc.all().skip(3), MongoDocumentCursor)
 
     def test_one(self):
         class MyDoc(MongoDocument):
