@@ -97,6 +97,10 @@ class ApiTestCase(unittest.TestCase):
         assert versionned_doc.get_last_revision_id() == 2
         assert versionned_doc['foo'] == 'bar'
         assert versionned_doc.get_revision(2) == {'foo':'bar', "_revision":2, "_id":"mydoc"}, versionned_doc.get_revision(2)
+        old_doc =  versionned_doc.get_revision(1)
+        old_doc.save()
+        assert old_doc['_revision'] == 3
+
 
         versionned_doc = MyVersionnedDoc.get_from_id(versionned_doc['_id'])
         assert len(list(versionned_doc.get_revisions())) == 2, len(list(versionned_doc.get_revisions()))
