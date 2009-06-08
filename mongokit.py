@@ -195,7 +195,7 @@ class MongoDocument(dict):
             raise StructureError("your document must have a structure defined")
         self._validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
-        self.__validate_descriptors()
+        self._validate_descriptors()
         self.__signals = {}
         for k,v in doc.iteritems():
             self[k] = v
@@ -269,10 +269,13 @@ class MongoDocument(dict):
                 self.signals = parent.signals.copy()
                 self.signals.update(obj_signals)
 
-    def __validate_descriptors(self):
+    def _validate_descriptors(self):
         for dv in self.default_values:
             if dv not in self._namespaces:
                 raise ValueError("Error in default_values: can't find %s in structure" % dv )
+        for required in self.required_fields:
+            if required not in self._namespaces:
+                raise ValueError("Error in required_fields: can't find %s in structure" % required )
         for signal in self.signals:
             if signal not in self._namespaces:
                 raise ValueError("Error in signals: can't find %s in structure" % signal )

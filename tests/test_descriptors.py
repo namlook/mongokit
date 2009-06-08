@@ -349,4 +349,18 @@ class DescriptorsTestCase(unittest.TestCase):
             validators = {"foo.bla":lambda x:x}
         self.assertRaises(ValueError, MyDoc)
 
- 
+    def test_bad_required(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "profil":{
+                    "screen_name":unicode,
+                    "age":int
+                }
+            }
+            required_fields = ['profil.screen_nam']
+
+        self.assertRaises( ValueError, MyDoc )
+        
+  
