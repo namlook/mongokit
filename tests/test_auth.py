@@ -38,7 +38,7 @@ class AuthTestCase(unittest.TestCase):
             collection_name = "mongokit"
 
         user = SimpleUser()
-        user['_id'] = u"user"
+        user.login = u"user"
         self.assertRaises(RequireFieldError, user.validate)
         user.password = "myp4$$ord"
 
@@ -51,8 +51,8 @@ class AuthTestCase(unittest.TestCase):
             collection_name = "mongokit"
 
         user = SimpleUser()
-        user['_id'] = u"user"
-        user['user']['email'] = u"user@foo.bar"
+        user.login = u"user"
+        user.email = u"user@foo.bar"
         user.password = "u$ser_p4$$w0rd"
         user.save()
 

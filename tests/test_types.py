@@ -185,4 +185,13 @@ class TypesTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
         
+    def test_adding_custom_type(self):
+        import mongokit
+        mongokit.authorized_types.append(str)
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":str,
+            }
+        mydoc = MyDoc()
+        mongokit.authorized_types.remove(str)
  
