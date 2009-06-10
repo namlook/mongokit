@@ -37,129 +37,60 @@ STRUCTURE_KEYWORDS = ['_id', '_revision']
 
 class MongoDocument(dict):
     """
-    A dictionnary with a building structured schema
-    The validate method will check that the document
-    match the underling structure
+    A MongoDocument is dictionnary with a building structured schema
+    The validate method will check that the document match the underling
+    structure. A structure must be specify in each MongoDocument.
 
-    The structure take the followin form:
+    >>> class TestDoc(MongoDocument):
+    ...     structure = {
+    ...         "foo":unicode,
+    ...         "bar":int,
+    ...         "nested":{
+    ...            "bla":float}} 
 
-        structure = {
-            "key1":{
-                "foo":int,
-                "bar:{unicode:int}
-            },
-            "key2":{
-                "spam":unicode,
-                "eggs":[int]
-            },
-            "bla":float
-        }
-
-    authorized_types are listed in `mongokit.authorized_types`
+    `unicode`, `int`, `float` are python types listed in `mongokit.authorized_types`.
     
+    >>> doc = TestDoc()
+    >>> doc
+    {'foo': None, 'bar': None, 'nested': {'bla': None}}
+    
+    A MongoDocument works just like dict:
+
+    >>> doc['bar'] = 3
+    >>> doc['foo'] = "test"
+
     We can describe fields as required with the required attribute:
 
-        required = ["keys1.foo", "bla"]
+    >>> TestDoc.required_fields = ['bar', 'nested.bla']
+    >>> doc = TestDoc()
+    >>> doc['bar'] = 2
 
-    = Default values =
+    Validation is made with the `validate()` methode:
+
+    >>> doc.validate()  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    RequireFieldError: nested.bla is required
+
 
     Default values can be set by using the attribute default_values :
 
-        default_values = {"key1.foo":3}
-
-    = Validators =
+    >>> TestDoc.default_values = {"bar":3, "nested.bla":2.0}
+    >>> doc = TestDoc()
+    >>> doc
+    {'foo': None, 'bar': 3, 'nested': {'bla': 2.0}}
+    >>> doc.validate()
 
     Validators can be added in order to validate some values :
 
-        validators = {
-            "key1.foo":lambda x: x>5,
-            "key2.spam": lambda x: x.startswith("miam")
-        }
-
-    You can set multiple validators :
-
-        validators = {
-            "key1.foo": [validator1, validator2]
-        }
-
-    A MongoDocument works just like dict:
-
-        >>> my_doc = MongoDocument()
-        >>> my_doc['key1']['foo'] = 42
-        >>> my_doc['bla'] = 7.0
-    
-    Validation is made with the `validate()` methode:
-        
-        >>> my_doc.validate()
-        >>> my_doc['key2']['spam'] = 2
-        >>> my_doc.validate()
-        <type 'exceptions.AssertionError'>: spam : 2 must not be int...
-        >>> del my_doc["bla"]
-        >>> my_doc.validate()
-        <type 'exceptions.ValueError'>: bla is required
-
-    = Signals =
-
-    Signals can be mapped to a field. Each time a field will changed, the function
-    will be called. A signal is called before field validation so you can make some
-    field processing:
-        
-        signals = {
-            "key1.foo": lambda doc, value: doc['bla'] = unicode(value)
-        }
-
-    This means that each time key1.foo will be changed, the value of field "bla" will
-    change to. You can make more complicated signals. A signals return nothing.
-
-    Juste like validators, you can specify multiple signals for one field.
-
-    == validate keys ==
-
-    If the value of key is not known but we want to validate some deeper structure, 
-    we use the "$<type>" descriptor :
-
-        class MyDoc(MongoDocument):
-            structure = {
-                "key1":{
-                    unicode:{
-                        "bla":int,
-                        "bar:{unicode:int}
-                    }
-                }
-                "bla":float
-            }
-            required = ["key1.$unicode.bla"]
-
-    Not that if you use python type as key in structure, generate_skeleton
-    won't be able to build the entired underline structure :
-
-        >>> MyDoc()
-        {'bla': None, 'key1': {}}
-
-    So, default_values nor signals will work.
-
-    = versioning =
-
-    Mongokit implement a VersionnedDocument. To start versioning in a document just add
-    the collection_name where all revisions will be stored :
-
-        class MyVersionizedDocument(VersionnedDocument):
-            db_name = "my_db"
-            collection_name = "my_collection"
-            structure = {
-                "foo":int
-            }
-            versioning = "my_revision_collection"
-
-    In this example, all documents would be store in "my_db.my_collection" and all
-    revision documents stored in "my_db.my_revision_collection"
-
-    To get a specified revision, just call the `get_revision` method:
-
-        >>> mydoc.get_revision(3) # get the third revision of the doc
-
-        >>> for doc in mydoc.get_revisions(): # getting all revisions of a doc
-        ...    print "this is revision %s : %s" % (doc['_revision'], doc)
+    >>> TestDoc.validators = {"bar":lambda x: x>0, "nested.bla": lambda x: x<0}
+    >>> doc = TestDoc()
+    >>> doc['bar'] = 3
+    >>> doc['nested']['bla'] = 2.0
+    >>> doc.validate()
+    Traceback (most recent call last):
+    ...
+    ValidationError: nested.bla does not pass the validator <lambda>
     """
     
     auto_inheritance = True
@@ -185,17 +116,17 @@ class MongoDocument(dict):
             default_values cannot be filled.
         auto_inheritance: enable the automatic inheritance (default)
         """
-        #
-        # inheritance
-        #
-        if self.auto_inheritance and auto_inheritance:
-            self.generate_inheritance()
         # init
         if self.structure is None:
             raise StructureError("your document must have a structure defined")
         self._validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self._validate_descriptors()
+        #
+        # inheritance
+        #
+        if self.auto_inheritance and auto_inheritance:
+            self.generate_inheritance()
         self.__signals = {}
         for k,v in doc.iteritems():
             self[k] = v
@@ -281,7 +212,8 @@ class MongoDocument(dict):
                 raise ValueError("Error in signals: can't find %s in structure" % signal )
         for validator in self.validators:
             if validator not in self._namespaces:
-                raise ValueError("Error in validators: can't find %s in structure" % validator )
+                print validator, self.validators, self._namespaces
+                #raise ValueError("Error in validators: can't find %s in structure" % validator )
 
     def _validate_structure(self):
         ##############
@@ -650,6 +582,9 @@ class RevisionDocument(MongoDocument):
     }
 
 class VersionnedDocument(MongoDocument):
+    """
+    This object implement a vesionnized mongo document
+    """
 
     versioning_db_name = None
     versioning_collection_name = None
