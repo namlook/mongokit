@@ -38,7 +38,7 @@ class InheritanceTestCase(unittest.TestCase):
                 "b":{"bar":unicode}
             }
 
-        assert B() == {"a":{"foo":None}, "b":{"bar":None}}
+        assert B() == {"a":{"foo":None}, "b":{"bar":None}}, B()
  
     def test_required_inheritance(self):
         class A(MongoDocument):
@@ -165,7 +165,7 @@ class InheritanceTestCase(unittest.TestCase):
         c["b"]["bar"] = u"bla"
         c.validate()
 
-    def test_polymorphisme(self):
+    def test_polymorphism(self):
         class A(MongoDocument):
             structure = {
                 "a":{"foo":int}
@@ -183,14 +183,10 @@ class InheritanceTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, b.validate)
  
         class C(A,B):
-            auto_inheritance = False
             structure = {
                 "c":{"spam":unicode}
             }
-            structure.update(A.structure)
-            structure.update(B.structure)
             default_values = {"a.foo":5}
-            required_fields = B.required_fields
 
         c =  C()
         assert c == {"a":{"foo":5}, "b":{"bar":None}, "c":{"spam":None}}, C()

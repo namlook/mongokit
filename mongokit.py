@@ -33,8 +33,37 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
   type(re.compile("")),
 ]
 
+__all__ = ['MongoDocument', 'VersionnedDocument']
+
 STRUCTURE_KEYWORDS = ['_id', '_revision']
 
+class SchemaProperties(type):
+    def __new__(cls, name, bases, attrs):
+        for base in bases:
+            parent = base.__mro__[0]
+            if hasattr(parent, "structure") and not parent.__module__.startswith('mongokit.'):
+                parent = parent()
+                if parent.structure:
+                    if 'structure' not in attrs and parent.structure:
+                        attrs['structure'] = parent.structure
+                    else:
+                        attrs['structure'].update(parent.structure)
+                if parent.required_fields:
+                    attrs['required_fields'] = list(set(attrs.get('required_fields', [])+parent.required_fields))
+                if parent.default_values:
+                    obj_default_values = attrs.get('default_values', {}).copy()
+                    attrs['default_values'] = parent.default_values.copy()
+                    attrs['default_values'].update(obj_default_values)
+                if parent.validators:
+                    obj_validators = attrs.get('validators', {}).copy()
+                    attrs['validators'] = parent.validators.copy()
+                    attrs['validators'].update(obj_validators)
+                if parent.signals:
+                    obj_signals = attrs.get('signals', {}).copy()
+                    attrs['signals'] = parent.signals.copy()
+                    attrs['signals'].update(obj_signals)
+        return type.__new__(cls, name, bases, attrs)        
+    
 class MongoDocument(dict):
     """
     A MongoDocument is dictionnary with a building structured schema
@@ -92,6 +121,7 @@ class MongoDocument(dict):
     ...
     ValidationError: nested.bla does not pass the validator <lambda>
     """
+    __metaclass__ = SchemaProperties
     
     auto_inheritance = True
     structure = None
@@ -122,11 +152,6 @@ class MongoDocument(dict):
         self._validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self._validate_descriptors()
-        #
-        # inheritance
-        #
-        if self.auto_inheritance and auto_inheritance:
-            self.generate_inheritance()
         self.__signals = {}
         for k,v in doc.iteritems():
             self[k] = v
@@ -212,8 +237,7 @@ class MongoDocument(dict):
                 raise ValueError("Error in signals: can't find %s in structure" % signal )
         for validator in self.validators:
             if validator not in self._namespaces:
-                print validator, self.validators, self._namespaces
-                #raise ValueError("Error in validators: can't find %s in structure" % validator )
+                raise ValueError("Error in validators: can't find %s in structure" % validator )
 
     def _validate_structure(self):
         ##############
@@ -569,7 +593,7 @@ class MongoDocument(dict):
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
             return cls(list(bson_obj)[0], process_signals=False)
-    
+
 #    def __setitem__(self, key, value):
 #        dict.__setitem__(self, key, value)
 

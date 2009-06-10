@@ -1,8 +1,5 @@
 
-= polymorphisme with mongokit =
-
-In order to build an object wich inherite from two or more object,
-we have to do it by hand.
+= polymorphism with mongokit =
 
 In the following example, we have to object A and B wich herite from Root.
 And we want to build an object C from A and B. Let's build Root, A and B
@@ -13,12 +10,13 @@ first :
 ...     structure = {
 ...         "root":int,
 ...     }
-...
+...     required_fields = ['root']
 
 >>> class A(Root):
 ...     structure = {
 ...         "a_field":unicode,
 ...     }
+...     required_fields = ['a_field']
 ...
 
 >>> class B(Root):
@@ -27,28 +25,15 @@ first :
 ...     }
 ...
 
-Now, let's build C. We have to disable auto_inheritance :
+Polymorphisme just work as expected:
 
 >>> class C(A,B):
-...     auto_inheritance = False
-...     structure = A.structure
-...     structure.update(B.structure)
-...     structure.update({"c_field":float})
-...
-
-We first get the structure from A and update it with the structure from B.
-And then, we update the structure with the C structure.
-
-Same thing append with required_fields and default_values :
-
->>> class C(A,B):
-...     auto_inheritance = False
-...     structure = A.structure
-...     structure.update(B.structure)
-...     structure.update({"c_field":float})
-...     required_fields = A.required_fields + B.required_fields
-...
+...     structure = {"c_field":float}
 
 >>> c = C()
->>> c == {'b_field': None, 'c_field': None, 'a_field': None}
+>>> c == {'b_field': None, 'root': None, 'c_field': None, 'a_field': None}
 True
+>>> C.required_fields
+['root', 'a_field']
+
+
