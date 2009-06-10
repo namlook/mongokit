@@ -1,0 +1,106 @@
+= MongoKit Tutorial =
+
+== Simple Example == 
+
+>>> from mongokit import *
+
+>>> import datetime
+
+>>> class BlogPost(MongoDocument):
+...     db_name = 'test'
+...     collection_name = 'tutorial'
+...     structure = {
+...             'title':unicode,
+...             'body':unicode,
+...             'author':unicode,
+...             'date_creation':datetime.datetime,
+...             'rank':int
+...     }
+...     required_fields = ['title','author', 'date_creation']
+...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
+... 
+
+A MongoDocument take a `db_name` and a `collection_name` as attribute. Next, you have to specify a structure.
+The structure is a simply dictionnary with python type. In this example, `title` must be unicode and `rank`
+must be an int.
+
+Optionaly, you can add some descriptors. In order to specify fields wich are required, just add a `required_fields`
+attribute. This is a simple list wich list all required_fields (ie, those field must not be None when validating).
+
+Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
+you can pass callable object (like a datetime).
+
+>>> bp = BlogPost()
+>>> bp # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+{'body': None, 'title': None, 'date_creation': datetime.datetime(...), 'rank': 0, 'author': None} 
+
+Not that `date_creation` was automaticly filled by `utcnow()` and rank is 0.
+
+>>> bp['title'] = "my first blog post"
+>>> bp.validate() 
+Traceback (most recent call last):
+...
+SchemaTypeError: title must be an instance of unicode not str
+
+`str` type is not authorized, you must use unicode : 
+
+>>> bp['title'] = u"my first blog post"
+
+`validate` method will check if required fields are set :
+
+>>> bp.validate()
+Traceback (most recent call last):
+...
+RequireFieldError: author is required
+
+>>> bp['author'] = u'myself'
+>>> bp.validate()
+
+Note that `save` will call the `validate` method, so you don't have to validate each time.
+
+>>> bp.save() # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+{'body': None, 'title': u'my first blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
+
+
+== Adding custom types ==
+
+>>> import mongokit
+>>> mongokit.authorized_types.append(str)
+
+>>> class MyDoc(MongoDocument):
+...     structure = {
+...             'foo':str,
+...     }
+...
+
+>>> mydoc = MyDoc()
+>>> mydoc['foo'] = 'bla'
+>>> mydoc.validate()
+
+== validate keys ==
+
+If the value of key is not known but we want to validate some deeper structure, 
+we use the "$<type>" descriptor :
+
+>>> class MyDoc(MongoDocument):
+...    structure = {
+...        "key1":{
+...            unicode:{
+...                "bla":int,
+...                "bar":{unicode:int}
+...            },
+...        },
+...        "bla":float,
+...    }
+...    required_fields = ["key1.$unicode.bla"]
+...
+
+Not that if you use python type as key in structure, generate_skeleton
+won't be able to build the entired underline structure :
+
+>>> MyDoc() == {'key1': {}, 'bla': None}
+True
+
+So, default_values nor signals will work.
+
+
