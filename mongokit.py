@@ -47,7 +47,9 @@ class SchemaProperties(type):
                     if 'structure' not in attrs and parent.structure:
                         attrs['structure'] = parent.structure
                     else:
-                        attrs['structure'].update(parent.structure)
+                        obj_structure = attrs.get('structure', {}).copy()
+                        attrs['structure'] = parent.structure.copy()
+                        attrs['structure'].update(obj_structure)
                 if parent.required_fields:
                     attrs['required_fields'] = list(set(attrs.get('required_fields', [])+parent.required_fields))
                 if parent.default_values:
