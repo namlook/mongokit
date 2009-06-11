@@ -19,6 +19,7 @@ __author__ = 'n.namlook {at} gmail {dot} com'
 import datetime
 import pymongo
 from pymongo.connection import Connection
+from generators import MongoDocumentCursor
 from mongo_exceptions import *
 import re
 
@@ -41,7 +42,7 @@ class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
         for base in bases:
             parent = base.__mro__[0]
-            if hasattr(parent, "structure") and not parent.__module__.startswith('mongokit.'):
+            if hasattr(parent, "structure") and not parent.__module__.startswith('mongokit.document'):
                 parent = parent()
                 if parent.structure:
                     if 'structure' not in attrs and parent.structure:
@@ -139,14 +140,13 @@ class MongoDocument(dict):
 
     _collection = None
     
-    def __init__(self, doc={}, gen_skel=True, process_signals=True, auto_inheritance=True):
+    def __init__(self, doc={}, gen_skel=True, process_signals=True):
         """
         doc : a document dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
             filled with NoneType each time validate() is called. Note that
             if doc is not {}, gen_skel is always False. If gen_skel is False,
             default_values cannot be filled.
-        auto_inheritance: enable the automatic inheritance (default)
         """
         # init
         if self.structure is None:
@@ -171,7 +171,64 @@ class MongoDocument(dict):
             splited_rf = rf.split('.')
             for index in range(len(splited_rf)):
                 self._required_namespace.add(".".join(splited_rf[:index+1]))
-     
+
+    def validate(self):
+        self._process_signals(self, self.structure)
+        self._validate_doc(self, self.structure)
+        self._validate_required(self, self.structure)
+        self._process_validators(self, self.structure)
+
+    def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
+        if validate:
+            self.validate()
+        if '_id' not in self and uuid:
+            self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
+        id = self.collection.save(self, safe=safe, *args, **kwargs)
+        return self
+
+    def delete(self):
+        self.collection.remove({'_id':self['_id']})
+
+    @classmethod
+    def get_collection(cls):
+        if not cls._collection:
+            if not cls.db_name or not cls.collection_name:
+                raise ConnectionError( "You must set a db_name and a collection_name" )
+            db = Connection(cls.db_host, cls.db_port)[cls.db_name]
+            cls._collection = db[cls.collection_name]
+        return cls._collection
+
+    def _get_collection(self):
+        return self.__class__.get_collection()
+    collection = property(_get_collection)
+
+    @classmethod
+    def get_from_id(cls, id):
+        bson_obj = cls.get_collection().find_one({"_id":id})
+        if bson_obj:
+            return cls(bson_obj, process_signals=False)
+
+    @classmethod
+    def all(cls, *args, **kwargs):
+        return MongoDocumentCursor(cls.get_collection().find(*args, **kwargs), cls)
+
+    @classmethod
+    def one(cls, *args, **kwargs):
+        bson_obj = cls.get_collection().find(*args, **kwargs)
+        count = bson_obj.count()
+        if count > 1:
+            raise MultipleResultsFound("%s results found" % count)
+        elif count == 1:
+            return cls(list(bson_obj)[0], process_signals=False)
+
+    @classmethod
+    def remove(cls, *args, **kwargs):
+        return cls.get_collection().remove(*args, **kwargs)
+
+#    def __setitem__(self, key, value):
+#        dict.__setitem__(self, key, value)
+
+ 
     def __walk_dict(self, dic):
         # thanks jean_b for the patch
         for key, value in dic.items():
@@ -201,31 +258,6 @@ class MongoDocument(dict):
         from the structure (unknown values are set to None)
         """
         self.__generate_skeleton(self, self.structure)
-
-    def generate_inheritance(self):
-        """
-        generate self.structure, self.validators, self.default_values
-        and self.signals from ancestors
-        """
-        parent = self.__class__.__mro__[1]
-        if hasattr(parent, "structure") and parent not in [VersionnedDocument, MongoDocument]:
-            parent = parent()
-            if parent.structure:
-                self.structure.update(parent.structure)
-            if parent.required_fields:
-                self.required_fields = list(set(self.required_fields+parent.required_fields))
-            if parent.default_values:
-                obj_default_values = self.default_values.copy()
-                self.default_values = parent.default_values.copy()
-                self.default_values.update(obj_default_values)
-            if parent.validators:
-                obj_validators = self.validators.copy()
-                self.validators = parent.validators.copy()
-                self.validators.update(obj_validators)
-            if parent.signals:
-                obj_signals = self.signals.copy()
-                self.signals = parent.signals.copy()
-                self.signals.update(obj_signals)
 
     def _validate_descriptors(self):
         for dv in self.default_values:
@@ -544,61 +576,6 @@ class MongoDocument(dict):
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
 
-    def validate(self):
-        self._process_signals(self, self.structure)
-        self._validate_doc(self, self.structure)
-        self._validate_required(self, self.structure)
-        self._process_validators(self, self.structure)
-
-    def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
-        if validate:
-            self.validate()
-        if '_id' not in self and uuid:
-            self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
-        id = self.collection.save(self, safe=safe, *args, **kwargs)
-        return self
-
-    def delete(self, *arg, **kwargs):
-        """
-        if versioning is True delete revisions documents as well
-        """
-        self.collection.remove({'_id':self['_id']})
-
-    @classmethod
-    def get_collection(cls):
-        if not cls._collection:
-            if not cls.db_name or not cls.collection_name:
-                raise ConnectionError( "You must set a db_name and a collection_name" )
-            db = Connection(cls.db_host, cls.db_port)[cls.db_name]
-            cls._collection = db[cls.collection_name]
-        return cls._collection
-
-    def _get_collection(self):
-        return self.__class__.get_collection()
-    collection = property(_get_collection)
-
-    @classmethod
-    def get_from_id(cls, id):
-        bson_obj = cls.get_collection().find_one({"_id":id})
-        if bson_obj:
-            return cls(bson_obj, process_signals=False)
-
-    @classmethod
-    def all(cls, *args, **kwargs):
-        return MongoDocumentCursor(cls.get_collection().find(*args, **kwargs), cls)
-
-    @classmethod
-    def one(cls, *args, **kwargs):
-        bson_obj = cls.get_collection().find(*args, **kwargs)
-        count = bson_obj.count()
-        if count > 1:
-            raise MultipleResultsFound("%s results found" % count)
-        elif count == 1:
-            return cls(list(bson_obj)[0], process_signals=False)
-
-#    def __setitem__(self, key, value):
-#        dict.__setitem__(self, key, value)
-
 
 class RevisionDocument(MongoDocument):
     structure = {
@@ -683,38 +660,4 @@ class VersionnedDocument(MongoDocument):
         last_doc = self.get_versioning_collection().find({'id':self['_id']}).sort('revision', -1).next()
         if last_doc:
             return last_doc['revision']
-
-
-class MongoDocumentCursor(object):
-    def __init__(self, cursor, cls):
-        self._cursor = cursor
-        self._class_object = cls
-
-    def where(self, *args, **kwargs):
-        return self.__class__(self._cursor.where(*args, **kwargs), self._class_object)
-
-    def sort(self, *args, **kwargs):
-        return self.__class__(self._cursor.sort(*args, **kwargs), self._class_object)
-
-    def limit(self, *args, **kwargs):
-        return self.__class__(self._cursor.limit(*args, **kwargs), self._class_object)
-
-    def hint(self, *args, **kwargs):
-        return self.__class__(self._cursor.hint(*args, **kwargs), self._class_object)
-
-    def count(self, *args, **kwargs):
-        return self._cursor.count(*args, **kwargs)
-        
-    def explain(self, *args, **kwargs):
-        return self._cursor.explain(*args, **kwargs)
-
-    def next(self, *args, **kwargs):
-        return self._class_object(self._cursor.next(*args, **kwargs), process_signals=False)
-
-    def skip(self, *args, **kwargs):
-        return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
-
-    def __iter__(self, *args, **kwargs):
-        for obj in self._cursor:
-            yield self._class_object(obj, process_signals=False)
 

@@ -60,4 +60,27 @@ class AuthTestCase(unittest.TestCase):
         assert saved_user.verify_password("bad") == False
         assert saved_user.verify_password("u$ser_p4$$w0rd") == True
 
+    def test_overload_user(self):
+        class SimpleUser(User):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "auth":{
+                    "session_id":unicode,
+                },
+                "profil":{
+                    "name":unicode,
+                }
+            }
+
+        user = SimpleUser()
+        user.login = u"user"
+        user.email = u"user@foo.bar"
+        user.password = "u$ser_p4$$w0rd"
+        user.save()
+
+        saved_user = SimpleUser.get_from_id('user')
+        assert saved_user.verify_password("bad") == False
+        assert saved_user.verify_password("u$ser_p4$$w0rd") == True
+
 
