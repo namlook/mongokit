@@ -45,7 +45,7 @@ setup(
 to keep its simplicity when you manage it in python""",
     author = 'Namlook',
     license = 'New BSD License',
-    url = 'http://hg.e-engura.org/couchdbkit',
+    url = 'http://bitbucket.org/namlook/mongokit/',
 
     classifiers = [
         'Development Status :: 4 - Beta',
