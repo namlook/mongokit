@@ -372,4 +372,14 @@ class DescriptorsTestCase(unittest.TestCase):
 
         self.assertRaises( ValueError, MyDoc )
         
+    def test_nested_structure2(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                unicode:{int:int}
+            }
+
+        mydoc = MyDoc()
+        assert mydoc._namespaces == ['$unicode', '$unicode.$int']
   

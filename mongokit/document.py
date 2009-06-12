@@ -135,7 +135,6 @@ class MongoDocument(dict):
     """
     __metaclass__ = SchemaProperties
     
-    auto_inheritance = True
     structure = None
     required_fields = []
     default_values = {}
@@ -242,7 +241,10 @@ class MongoDocument(dict):
         # thanks jean_b for the patch
         for key, value in dic.items():
             if isinstance(value, dict) and len(value):
-                yield key
+                if type(key) is type:
+                    yield '$%s' % key.__name__
+                else:
+                    yield key
                 for child_key in self.__walk_dict(value):
                     if type(key) is type:
                         new_key = "$%s" % key.__name__
@@ -428,12 +430,13 @@ class MongoDocument(dict):
             # if the value is None, check if a default value exist.
             # if exists, and it is a function then call it otherwise, juste feed it
             #
-            if doc[key] is None and new_path in self.default_values:
-                new_value = self.default_values[new_path]
-                if callable(new_value):
-                    doc[key] = new_value()
-                else:
-                    doc[key] = new_value
+            if type(key) is not type:
+                if doc[key] is None and new_path in self.default_values:
+                    new_value = self.default_values[new_path]
+                    if callable(new_value):
+                        doc[key] = new_value()
+                    else:
+                        doc[key] = new_value
             #
             # if the value is a dict, we have a another structure to validate
             #
