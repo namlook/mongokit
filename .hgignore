@@ -6,4 +6,7 @@ data
 old
 Ekeet.egg-info
 Masheet.egg-info
+dist
+mongokit.egg-info
+.dbshell
 
