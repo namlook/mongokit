@@ -1,5 +1,4 @@
 from mongokit import MongoDocument
-from hashlib import sha512
 import sha, os
 
 class User(MongoDocument):

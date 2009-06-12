@@ -142,7 +142,7 @@ class MongoDocument(dict):
     
     def __init__(self, doc={}, gen_skel=True, process_signals=True):
         """
-        doc : a document dictionnary
+        doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
             filled with NoneType each time validate() is called. Note that
             if doc is not {}, gen_skel is always False. If gen_skel is False,
