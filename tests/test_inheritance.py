@@ -118,25 +118,23 @@ class InheritanceTestCase(unittest.TestCase):
         d["a"]["foo"] = -3
         d.validate()
 
-    def test_signals_inheritance(self):
-        def fill_foo(doc, value):
-            doc["foo"] = unicode(doc["foo"])
-
-        def fill_bar(doc, value):
-            doc["bar"]["bla"] = unicode(doc["bar"]["bla"])
-       
+    def test_complexe_validation_inheritance(self):
         class A(MongoDocument):
             structure = {
                 "foo":unicode,
             }
-            signals = {"foo":fill_foo}
+            def validate(self):
+                self["foo"] = unicode(self["foo"])
+                super(A, self).validate()
 
         class B(A):
             structure = {
                 "bar":{"bla":unicode}
             }
-            signals = {"bar.bla":fill_bar}
             default_values = {"bar.bla":3}
+            def validate(self):
+                self["bar"]["bla"] = unicode(self["bar"]["bla"])
+                super(B, self).validate()
 
         b = B()
         b['foo'] = 4

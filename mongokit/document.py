@@ -70,10 +70,6 @@ class SchemaProperties(type):
                     obj_validators = attrs.get('validators', {}).copy()
                     attrs['validators'] = parent.validators.copy()
                     attrs['validators'].update(obj_validators)
-                if parent.signals:
-                    obj_signals = attrs.get('signals', {}).copy()
-                    attrs['signals'] = parent.signals.copy()
-                    attrs['signals'].update(obj_signals)
         return type.__new__(cls, name, bases, attrs)        
     
 class MongoDocument(dict):
@@ -139,7 +135,6 @@ class MongoDocument(dict):
     required_fields = []
     default_values = {}
     validators = {}
-    signals = {}
 
     db_host = "localhost"
     db_port = 27017
@@ -148,7 +143,7 @@ class MongoDocument(dict):
 
     _collection = None
     
-    def __init__(self, doc={}, gen_skel=True, process_signals=True):
+    def __init__(self, doc={}, gen_skel=True):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -162,7 +157,6 @@ class MongoDocument(dict):
         self._validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self._validate_descriptors()
-        self.__signals = {}
         for k,v in doc.iteritems():
             self[k] = v
         if doc:
@@ -170,8 +164,6 @@ class MongoDocument(dict):
         if gen_skel:
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
-        if process_signals:
-            self._process_signals(self, self.structure)
         self._collection = None
         ## building required fields namespace
         self._required_namespace = set([])
@@ -181,7 +173,6 @@ class MongoDocument(dict):
                 self._required_namespace.add(".".join(splited_rf[:index+1]))
 
     def validate(self):
-        self._process_signals(self, self.structure)
         self._validate_doc(self, self.structure)
         self._validate_required(self, self.structure)
         self._process_validators(self, self.structure)
@@ -214,7 +205,7 @@ class MongoDocument(dict):
     def get_from_id(cls, id):
         bson_obj = cls.get_collection().find_one({"_id":id})
         if bson_obj:
-            return cls(bson_obj, process_signals=False)
+            return cls(bson_obj)
 
     @classmethod
     def all(cls, *args, **kwargs):
@@ -227,7 +218,7 @@ class MongoDocument(dict):
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
-            return cls(list(bson_obj)[0], process_signals=False)
+            return cls(list(bson_obj)[0])
 
     @classmethod
     def remove(cls, *args, **kwargs):
@@ -277,9 +268,6 @@ class MongoDocument(dict):
         for required in self.required_fields:
             if required not in self._namespaces:
                 raise ValueError("Error in required_fields: can't find %s in structure" % required )
-        for signal in self.signals:
-            if signal not in self._namespaces:
-                raise ValueError("Error in signals: can't find %s in structure" % signal )
         for validator in self.validators:
             if validator not in self._namespaces:
                 raise ValueError("Error in validators: can't find %s in structure" % validator )
@@ -461,57 +449,6 @@ class MongoDocument(dict):
                     else:
                         doc[key] = new_value
 
-    def _process_signals(self, doc, struct, path = ""):
-        #################################################
-        def __procsignals(self, new_path, doc):
-            if new_path in self.signals:
-                launch_signals = True
-            else:
-                launch_signals = False
-            if new_path in self.signals and launch_signals:
-                make_signal = False
-                if new_path in self.__signals:
-                    if doc[key] != self.__signals[new_path]:
-                        make_signal = True
-                else:
-                    make_signal = True
-                if make_signal:
-                    if not hasattr(self.signals[new_path], "__iter__"):
-                        signals = [self.signals[new_path]]
-                    else:
-                        signals = self.signals[new_path]
-                    for signal in signals:
-                        signal(self, doc[key])
-                    self.__signals[new_path] = doc[key]
-        ##################################################
-        for key in struct:
-            if type(key) is type:
-                new_key = "$%s" % key.__name__
-            else:
-                new_key = key
-            new_path = ".".join([path, new_key]).strip('.')
-            #
-            # if the value is a dict, we have a another structure to validate
-            #
-            if isinstance(struct[key], dict):
-                #
-                # if the dict is still empty into the document we build it with None values
-                #
-                if key in doc:
-                    self._process_signals(doc[key], struct[key], new_path)
-                else:
-                    pass
-                    # TODO signals_namespace
-            #
-            # It is not a dict nor a list but a simple key:value
-            #
-            else:
-                #
-                # check if the value must not be null
-                #
-                if new_path in self.signals:
-                    __procsignals(self, new_path, doc)
-
     def _validate_required(self, doc, struct, path = ""):
         for key in struct:
             if type(key) is type:
@@ -661,12 +598,12 @@ class VersionnedDocument(MongoDocument):
         RevisionDocument._collection = self.get_versioning_collection()
         doc = RevisionDocument.one({"id":self['_id'], 'revision':revision_number})
         if doc:
-            return self.__class__(doc['doc'], process_signals=False)
+            return self.__class__(doc['doc'])
 
     def get_revisions(self):
         versionned_docs = self.versioning_collection.find({"id":self['_id']})
         for verdoc in versionned_docs:
-            yield self.__class__(verdoc['doc'], process_signals=False)
+            yield self.__class__(verdoc['doc'])
 
     def get_last_revision_id(self):
         last_doc = self.get_versioning_collection().find({'id':self['_id']}).sort('revision', -1).next()

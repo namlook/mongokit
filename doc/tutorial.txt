@@ -103,4 +103,27 @@ True
 
 So, default_values nor signals will work.
 
+== Adding complexe validation == 
+
+If the use of a validator is not enougth, you can overload the validation method
+to feet your needs.
+
+Example the following document:
+
+>>> class MyDoc(MongoDocument):
+...     structure={
+...             "foo":int,
+...             "bar":int,
+...             "baz":unicode,
+...     }
+... 
+
+We want to be sur that before saving our object, foo is greater than bar and baz is
+unicode(foo). Do do that, we juste overload the validation method :
+
+    def validation(self):
+        assert self['foo'] > self['bar']
+        assert self['baz'] == unicode(self['foo'])
+        super(MyDoc, self).validate(self)
+
 

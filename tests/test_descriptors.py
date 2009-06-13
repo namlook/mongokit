@@ -255,13 +255,7 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc["foo"] = u"http://google.com"
         mydoc.validate()
 
-    def test_signals(self):
-        def fill_foo(doc, value):
-            if value is not None:
-                doc['foo'] = unicode(value)
-            else:
-                doc['foo'] = None
-       
+    def test_complexe_validation(self):
         class MyDoc(MongoDocument):
             structure = {
                 "foo":unicode,
@@ -269,50 +263,42 @@ class DescriptorsTestCase(unittest.TestCase):
                     "bla":int
                 }
             }
-            signals = {"bar.bla":fill_foo}
+            def validate(self):
+                if self['bar']['bla']:
+                    self['foo'] = unicode(self['bar']['bla'])
+                else:
+                    self['foo'] = None
+                super(MyDoc, self).validate()
 
         mydoc = MyDoc()
         mydoc['bar']['bla'] = 4
         assert mydoc['foo'] is None
-        print mydoc
         mydoc.validate()
-        assert mydoc['foo'] == "4"
+        assert mydoc['foo'] == "4", mydoc['foo']
         mydoc['bar']['bla'] = None
         mydoc.validate()
         assert mydoc['foo'] is None
 
-    def test_signals2(self):
-        def fill_foo(doc, value):
-            doc["foo"] = unicode(doc["foo"])
-
-        def fill_bar(doc, value):
-            doc["bar"]["bla"] = unicode(doc["bar"]["bla"])
+    def test_complexe_validation2(self):
        
         class MyDoc(MongoDocument):
             structure = {
                 "foo":unicode,
                 "bar":{"bla":unicode}
             }
-            signals = {"foo":fill_foo, "bar.bla":fill_bar}
             default_values = {"bar.bla":3}
+            def validate(self):
+                self["bar"]["bla"] = unicode(self["bar"]["bla"])
+                self["foo"] = unicode(self["foo"])
+                super(MyDoc, self).validate()
 
         mydoc = MyDoc()
         mydoc['foo'] = 4
         mydoc.validate()
-        assert mydoc['foo'] == "4"
+        assert mydoc['foo'] == "4", mydoc['foo']
         assert mydoc["bar"]["bla"] == "3", mydoc
 
-
-    def test_multiple_signals(self):
-        def fill_foo(doc, value):
-            if value is not None:
-                doc['foo'] = unicode(value)
-            else:
-                doc['foo'] = None
-
-        def fill_bla(doc, value):
-            doc["ble"] = doc["foo"]
-       
+    def test_complexe_validation3(self):
         class MyDoc(MongoDocument):
             structure = {
                 "foo":unicode,
@@ -321,7 +307,13 @@ class DescriptorsTestCase(unittest.TestCase):
                 },
                 "ble":unicode,
             }
-            signals = {"bar.bla":[fill_foo, fill_bla]}
+            def validate(self):
+                if self['bar']['bla'] is not None:
+                    self['foo'] = unicode(self['bar']['bla'])
+                else:
+                    self['foo'] = None
+                self["ble"] = self["foo"]
+                super(MyDoc, self).validate()
 
         mydoc = MyDoc()
         mydoc['bar']['bla'] = 4
@@ -333,14 +325,6 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc.validate()
         assert mydoc['foo'] is None
         assert mydoc['ble'] is None
-
-    def test_bad_signals(self):
-        class MyDoc(MongoDocument):
-            structure = {
-                "foo":{"bar":int},
-            }
-            signals = {"foo.bla":lambda x:x}
-        self.assertRaises(ValueError, MyDoc)
 
     def test_bad_default_values(self):
         class MyDoc(MongoDocument):
