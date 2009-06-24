@@ -81,4 +81,34 @@ class StructureTestCase(unittest.TestCase):
         mydoc["bar"] = 4
         self.assertRaises(StructureError, mydoc.validate)
 
+    def test_big_nested_structure(self):
+        class MyDoc(MongoDocument):
+            structure = {
+                "1":{
+                    "2":{
+                        "3":{
+                            "4":{
+                                "5":{
+                                    "6":{
+                                        "7":int,
+                                        "8":{
+                                            unicode:{int:int}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        mydoc = MyDoc()
+        assert mydoc._namespaces == ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$int', '1.2.3.4.5.6.7']
+        mydoc['1']['2']['3']['4']['5']['6']['7'] = 8
+        mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{3:u"bla"}}
+        self.assertRaises(SchemaTypeError,  mydoc.validate)
+        mydoc['1']['2']['3']['4']['5']['6']['8'] = {9:{3:10}}
+        self.assertRaises(SchemaTypeError,  mydoc.validate)
+        mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{3:4}}
+        mydoc.validate()
+            
 
