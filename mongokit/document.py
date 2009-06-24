@@ -51,7 +51,8 @@ class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
         for base in bases:
             parent = base.__mro__[0]
-            if hasattr(parent, "structure") and not parent.__module__.startswith('mongokit.document'):
+            if hasattr(parent, "structure") and\
+              not parent.__module__.startswith('mongokit.document'):
                 parent = parent()
                 if parent.structure:
                     if 'structure' not in attrs and parent.structure:
@@ -61,7 +62,8 @@ class SchemaProperties(type):
                         attrs['structure'] = parent.structure.copy()
                         attrs['structure'].update(obj_structure)
                 if parent.required_fields:
-                    attrs['required_fields'] = list(set(attrs.get('required_fields', [])+parent.required_fields))
+                    attrs['required_fields'] = list(set(
+                      attrs.get('required_fields', [])+parent.required_fields))
                 if parent.default_values:
                     obj_default_values = attrs.get('default_values', {}).copy()
                     attrs['default_values'] = parent.default_values.copy()
@@ -143,7 +145,7 @@ class MongoDocument(dict):
 
     _collection = None
     
-    def __init__(self, doc={}, gen_skel=True):
+    def __init__(self, doc=None, gen_skel=True):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -152,12 +154,14 @@ class MongoDocument(dict):
             default_values cannot be filled.
         """
         # init
+        if doc is None:
+            doc = {}
         if self.structure is None:
             raise StructureError("your document must have a structure defined")
         self._validate_structure()
         self._namespaces = list(self.__walk_dict(self.structure))
         self._validate_descriptors()
-        for k,v in doc.iteritems():
+        for k, v in doc.iteritems():
             self[k] = v
         if doc:
             gen_skel = False
@@ -171,6 +175,13 @@ class MongoDocument(dict):
             splited_rf = rf.split('.')
             for index in range(len(splited_rf)):
                 self._required_namespace.add(".".join(splited_rf[:index+1]))
+
+    def generate_skeleton(self):
+        """
+        validate and generate the skeleton of the document
+        from the structure (unknown values are set to None)
+        """
+        self.__generate_skeleton(self, self.structure)
 
     def validate(self):
         self._validate_doc(self, self.structure)
@@ -186,13 +197,21 @@ class MongoDocument(dict):
         return self
 
     def delete(self):
+        """
+        delete the document from the collection
+        """
         self.collection.remove({'_id':self['_id']})
+
+    #
+    # class methods, they work on collection
+    #
 
     @classmethod
     def get_collection(cls):
         if not cls._collection:
             if not cls.db_name or not cls.collection_name:
-                raise ConnectionError( "You must set a db_name and a collection_name" )
+                raise ConnectionError( 
+                  "You must set a db_name and a collection_name" )
             db = Connection(cls.db_host, cls.db_port)[cls.db_name]
             cls._collection = db[cls.collection_name]
         return cls._collection
@@ -209,7 +228,8 @@ class MongoDocument(dict):
 
     @classmethod
     def all(cls, *args, **kwargs):
-        return MongoDocumentCursor(cls.get_collection().find(*args, **kwargs), cls)
+        return MongoDocumentCursor(
+          cls.get_collection().find(*args, **kwargs), cls)
 
     @classmethod
     def one(cls, *args, **kwargs):
@@ -224,9 +244,13 @@ class MongoDocument(dict):
     def remove(cls, *args, **kwargs):
         return cls.get_collection().remove(*args, **kwargs)
 
+    
 #    def __setitem__(self, key, value):
 #        dict.__setitem__(self, key, value)
 
+    #
+    # Public API end
+    #
  
     def __walk_dict(self, dic):
         # thanks jean_b for the patch
@@ -254,23 +278,19 @@ class MongoDocument(dict):
                 else:
                     yield ""
 
-    def generate_skeleton(self):
-        """
-        validate and generate the skeleton of the document
-        from the structure (unknown values are set to None)
-        """
-        self.__generate_skeleton(self, self.structure)
-
     def _validate_descriptors(self):
         for dv in self.default_values:
             if dv not in self._namespaces:
-                raise ValueError("Error in default_values: can't find %s in structure" % dv )
+                raise ValueError(
+                  "Error in default_values: can't find %s in structure" % dv )
         for required in self.required_fields:
             if required not in self._namespaces:
-                raise ValueError("Error in required_fields: can't find %s in structure" % required )
+                raise ValueError( "Error in required_fields: "
+                  "can't find %s in structure" % required )
         for validator in self.validators:
             if validator not in self._namespaces:
-                raise ValueError("Error in validators: can't find %s in structure" % validator )
+                raise ValueError("Error in validators: can't"
+                  "find %s in structure" % validator )
 
     def _validate_structure(self):
         ##############
@@ -281,19 +301,24 @@ class MongoDocument(dict):
             elif isinstance(struct, dict):
                 for key in struct:
                     if isinstance(key, basestring):
-                        if "." in key: raise BadKeyError("%s must not contain '.'" % key)
-                        if key.startswith('$'): raise BadKeyError("%s must not start with '$'" % key)
+                        if "." in key: raise BadKeyError(
+                          "%s must not contain '.'" % key)
+                        if key.startswith('$'): raise BadKeyError(
+                          "%s must not start with '$'" % key)
                     elif type(key) is type:
                         if not key in authorized_types:
-                            raise AuthorizedTypeError("%s is not an authorized type" % key)
+                            raise AuthorizedTypeError(
+                              "%s is not an authorized type" % key)
                     else:
-                        raise StructureError("%s must be a basestring or a type" % key)
+                        raise StructureError(
+                          "%s must be a basestring or a type" % key)
                     if isinstance(struct[key], dict):
                         __validate_structure(struct[key])
                     elif isinstance(struct[key], list):
                         __validate_structure(struct[key])
                     elif struct[key] not in authorized_types:
-                        raise StructureError("%s is not an authorized type" % struct[key])
+                        raise StructureError(
+                          "%s is not an authorized type" % struct[key])
             elif isinstance(struct, list):
                 for item in struct:
                     __validate_structure(item)
@@ -304,29 +329,37 @@ class MongoDocument(dict):
             raise StructureError("self.structure must be a dict instance")
         if self.required_fields:
             if len(self.required_fields) != len(set(self.required_fields)):
-                raise DuplicateRequiredError("duplicate required_fields : %s" % self.required_fields)
+                raise DuplicateRequiredError(
+                  "duplicate required_fields : %s" % self.required_fields)
         __validate_structure(self.structure)
                     
     def _validate_doc(self, doc, struct, path = ""):
         if type(struct) is type or struct is None:
             if struct is None:
                 if type(doc) not in authorized_types:
-                    raise AuthorizedTypeError("%s is not an authorized types" % type(doc).__name__)
+                    raise AuthorizedTypeError(
+                      "%s is not an authorized types" % type(doc).__name__)
             elif not isinstance(doc, struct) and doc is not None:
-                raise SchemaTypeError("%s must be an instance of %s not %s" % (path, struct.__name__, type(doc).__name__))
+                raise SchemaTypeError(
+                  "%s must be an instance of %s not %s" % (
+                    path, struct.__name__, type(doc).__name__))
         elif isinstance(struct, dict):
             if not isinstance(doc, type(struct)):
-                raise SchemaTypeError("%s must be an instance of %s not %s" %(path, type(struct).__name__, type(doc).__name__))
+                raise SchemaTypeError(
+                  "%s must be an instance of %s not %s" %(
+                    path, type(struct).__name__, type(doc).__name__))
             if len(doc) != len(struct):
                 struct_doc_diff = list(set(struct).difference(set(doc)))
                 if struct_doc_diff:
                     for field in struct_doc_diff:
                         if type(field) is not type:
-                            raise StructureError( "missed fields : %s" % struct_doc_diff )
+                            raise StructureError(
+                              "missed fields : %s" % struct_doc_diff )
                 else:
                     struct_struct_diff = list(set(doc).difference(set(struct)))
                     if not sum( 1 for s in struct_struct_diff if s in STRUCTURE_KEYWORDS):
-                        raise StructureError( "unknown fields : %s" % struct_struct_diff)
+                        raise StructureError( 
+                          "unknown fields : %s" % struct_struct_diff)
             for key in struct:
                 if type(key) is type:
                     new_key = "$%s" % key.__name__
@@ -336,13 +369,17 @@ class MongoDocument(dict):
                 if new_key.split('.')[-1].startswith("$"):
                     for doc_key in doc:
                         if not isinstance(doc_key, key):
-                            raise SchemaTypeError("key of %s must be an instance of %s not %s" % (path, key.__name__, type(doc_key).__name__))
+                            raise SchemaTypeError(
+                              "key of %s must be an instance of %s not %s" % (
+                                path, key.__name__, type(doc_key).__name__))
                         self._validate_doc(doc[doc_key], struct[key], new_path)
                 else:
                     self._validate_doc(doc[key], struct[key],  new_path)
         elif isinstance(struct, list):
             if not isinstance(doc, list):
-                raise SchemaTypeError("%s must be an instance of list not %s" % (path, type(doc).__name__))
+                raise SchemaTypeError(
+                  "%s must be an instance of list not %s" % (
+                    path, type(doc).__name__))
             if not len(struct):
                 struct = None
             else:
@@ -353,17 +390,19 @@ class MongoDocument(dict):
     def _process_validators(self, doc, struct, path = ""):
         #################################################
         def __processval( self, new_path, doc, key ):
-                #
-                # check that the value pass througt the validator process
-                #
-                if new_path in self.validators and doc[key] is not None:
-                    if not hasattr(self.validators[new_path], "__iter__"):
-                        validators = [self.validators[new_path]]
-                    else:
-                        validators = self.validators[new_path]
-                    for validator in validators:
-                        if not validator(doc[key]):
-                            raise ValidationError("%s does not pass the validator %s" % (new_path, validator.__name__))
+            #
+            # check that the value pass througt the validator process
+            #
+            if new_path in self.validators and doc[key] is not None:
+                if not hasattr(self.validators[new_path], "__iter__"):
+                    validators = [self.validators[new_path]]
+                else:
+                    validators = self.validators[new_path]
+                for validator in validators:
+                    if not validator(doc[key]):
+                        raise ValidationError(
+                          "%s does not pass the validator %s" % (
+                            new_path, validator.__name__))
         #################################################
         for key in struct:
             if type(key) is type:
@@ -376,14 +415,15 @@ class MongoDocument(dict):
             #
             if isinstance(struct[key], dict):
                 #
-                # if the dict is still empty into the document we build it with None values
+                # if the dict is still empty into the document
+                # we build it with None values
                 #
                 if type(key) is not type and key not in doc:
                     __processval(self, new_path, doc)
                 elif type(key) is type:
                     for doc_key in doc:
-                        self._process_validators(doc[doc_key], struct[key], new_path)
-                        #self._process_validators(doc[key], struct[key], new_path)
+                        self._process_validators(
+                          doc[doc_key], struct[key], new_path)
                 else:
                     self._process_validators(doc[key], struct[key], new_path)
             #
@@ -416,7 +456,8 @@ class MongoDocument(dict):
             #
             # default_values :
             # if the value is None, check if a default value exist.
-            # if exists, and it is a function then call it otherwise, juste feed it
+            # if exists, and it is a function then call it otherwise,
+            # juste feed it
             #
             if type(key) is not type:
                 if doc[key] is None and new_path in self.default_values:
@@ -430,9 +471,11 @@ class MongoDocument(dict):
             #
             if isinstance(struct[key], dict):
                 #
-                # if the dict is still empty into the document we build it with None values
+                # if the dict is still empty into the document we build
+                # it with None values
                 #
-                if len(struct[key]) and not [i for i in struct[key].keys() if type(i) is type]:
+                if len(struct[key]) and\
+                  not [i for i in struct[key].keys() if type(i) is type]:
                     self._set_default_fields(doc[key], struct[key], new_path)
                 else:
                     if new_path in self.default_values:
@@ -461,7 +504,8 @@ class MongoDocument(dict):
             #
             if isinstance(struct[key], dict):
                 #
-                # if the dict is still empty into the document we build it with None values
+                # if the dict is still empty into the document we build
+                # it with None values
                 #
                 if type(key) is not type and key not in doc:
                     if new_path in self._required_namespace:
@@ -472,7 +516,8 @@ class MongoDocument(dict):
                             raise RequireFieldError("%s is required" % new_path)
                     else:
                         for doc_key in doc:
-                            self._validate_required(doc[doc_key], struct[key], new_path)
+                            self._validate_required(
+                              doc[doc_key], struct[key], new_path)
                 elif not len(doc[key]) and new_path in self._required_namespace:
                     raise RequireFieldError( "%s is required" % new_path )
                 else:
@@ -543,16 +588,21 @@ class VersionnedDocument(MongoDocument):
 
     _versioning_collection = None
 
-    def __init__(self,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(VersionnedDocument, self).__init__(*args, **kwargs)
         if not ( self.versioning_db_name or self.db_name):
-            raise ValidationError( "you must specify versioning_db_name or db_name" )
+            raise ValidationError( 
+              "you must specify versioning_db_name or db_name" )
         if not (self.versioning_collection_name or self.collection_name):
-            raise ValidationError( "you must specify versioning_collection_name or collection_name" )
+            raise ValidationError( 
+              "you must specify versioning_collection_name or collection_name" )
         if type(self.versioning_db_name) not in [type(None), str, unicode]:
-            raise ValidationError("versioning_db attribute must be None or basestring")
-        if type(self.versioning_collection_name) not in [type(None), str, unicode]:
-            raise ValidationError("versioning_collection attribute must be None or basestring")
+            raise ValidationError(
+              "versioning_db attribute must be None or basestring")
+        if type(self.versioning_collection_name) not in\
+          [type(None), str, unicode]:
+            raise ValidationError(
+              "versioning_collection attribute must be None or basestring")
 
     def save(self, versioning=True, *args, **kwargs):
         if versioning:
@@ -563,7 +613,8 @@ class VersionnedDocument(MongoDocument):
                 self['_revision'] = 0
             self['_revision'] += 1
             RevisionDocument._collection = self.get_versioning_collection()
-            versionned_doc = RevisionDocument({"id":unicode(self['_id']), "revision":self['_revision']})
+            versionned_doc = RevisionDocument(
+              {"id":unicode(self['_id']), "revision":self['_revision']})
             versionned_doc['doc'] = dict(self)
             versionned_doc.save()
         return super(VersionnedDocument, self).save(*args, **kwargs)
@@ -580,14 +631,17 @@ class VersionnedDocument(MongoDocument):
     def get_versioning_collection(cls):
         if not cls._versioning_collection:
             db_name = cls.versioning_db_name or cls.db_name
-            collection_name = cls.versioning_collection_name or cls.collection_name
+            collection_name = cls.versioning_collection_name or\
+              cls.collection_name
             if not  db_name and not collection_name:
-                raise ConnectionError( "You must set a db_name and a versioning collection name" )
+                raise ConnectionError( 
+                  "You must set a db_name and a versioning collection name" )
             db = Connection(cls.db_host, cls.db_port)[db_name]
             cls._versioning_collection = db[collection_name]
             if db.collection_names():
                 if not collection_name in db.collection_names():
-                    cls._versioning_collection.create_index([('id',1), ('revision', 1)], unique=True)
+                    cls._versioning_collection.create_index(
+                      [('id', 1), ('revision', 1)], unique=True)
         return cls._versioning_collection
 
     def _get_versioning_collection(self):
@@ -596,7 +650,8 @@ class VersionnedDocument(MongoDocument):
 
     def get_revision(self, revision_number):
         RevisionDocument._collection = self.get_versioning_collection()
-        doc = RevisionDocument.one({"id":self['_id'], 'revision':revision_number})
+        doc = RevisionDocument.one(
+          {"id":self['_id'], 'revision':revision_number})
         if doc:
             return self.__class__(doc['doc'])
 
@@ -606,7 +661,8 @@ class VersionnedDocument(MongoDocument):
             yield self.__class__(verdoc['doc'])
 
     def get_last_revision_id(self):
-        last_doc = self.get_versioning_collection().find({'id':self['_id']}).sort('revision', -1).next()
+        last_doc = self.get_versioning_collection().find(
+          {'id':self['_id']}).sort('revision', -1).next()
         if last_doc:
             return last_doc['revision']
 
