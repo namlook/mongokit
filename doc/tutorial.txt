@@ -62,6 +62,51 @@ Note that `save` will call the `validate` method, so you don't have to validate 
 {'body': None, 'title': u'my first blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
 
 
+== Différence beetween {} and the type dict ==
+
+{} is used for describing the structure like {"foo":unicode, "bar":int}
+
+>>> class Person(MongoDocument):
+...    structure = {
+...        "biography": {"foo":unicode", "bar":int"}
+...    }
+
+
+If you don't specify the structure :
+
+>>> class Person(MongoDocument):
+...    structure = {
+...        "biography": {}
+...    }
+
+You won't be able to do that because "foo" is not defined into the structure.
+
+>>> bob = Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+mongokit.mongo_exceptions.StructureError: unknown fields : ['foo']
+
+
+If you want to add new items to a dict if they're not defined, you must use the dict type instead :
+
+>>> class Person(MongoDocument):
+...    structure = {
+...        "biography": dict
+...    }
+
+>>> bob = Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+>>> bob.save()
+
+Using dict type is useful if you don't know what field will be added *and* what will be the type of the field.
+If you know the type of the field, it's better to do that :
+
+>>> class Person(MongoDocument):
+...    structure = {
+...        "biography": {unicode:unicode}
+...    }
+
+This will add another layer to validate the content. See "validate keys" section for more informations.
+
 == Adding custom types ==
 
 >>> import mongokit
