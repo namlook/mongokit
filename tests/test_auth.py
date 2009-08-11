@@ -53,6 +53,11 @@ class AuthTestCase(unittest.TestCase):
 
         assert user.verify_password("bla") == False
         assert user.verify_password("myp4$$ord") == True
+        assert len(user.password) == len(user['user']['password']) == 80
+        
+        del user.password
+        assert user.password is None
+        assert user['user']['password'] is None
     
     def test_create_user(self):
         class SimpleUser(User):
@@ -62,12 +67,25 @@ class AuthTestCase(unittest.TestCase):
         user = SimpleUser()
         user.login = u"user"
         user.email = u"user@foo.bar"
-        user.password = "u$ser_p4$$w0rd"
+        user.password = u"u$ser_p4$$w0rd"
         user.save()
 
         saved_user = SimpleUser.get_from_id('user')
         assert saved_user.verify_password("bad") == False
-        assert saved_user.verify_password("u$ser_p4$$w0rd") == True
+        assert saved_user.verify_password(u"u$ser_p4$$w0rd") == True
+
+        assert user.login == u"user"
+        assert user['_id'] == u'user'
+        assert user['user']['login'] == u'user'
+        del user.login
+        assert user['_id'] is None
+        assert user['user']['login'] is None
+        assert user.login is None
+
+        assert user.email == user['user']['email'] == u'user@foo.bar'
+        del user.email
+        assert user['user']['email'] is None
+        assert user.email is None
 
     def test_overload_user(self):
         class SimpleUser(User):
