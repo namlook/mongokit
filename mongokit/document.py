@@ -28,7 +28,7 @@
 import datetime
 import pymongo
 from pymongo.connection import Connection
-from pylons_env import MongoPylonsEnv
+from mongokit.ext.pylons_env import MongoPylonsEnv
 from generators import MongoDocumentCursor
 from mongo_exceptions import *
 import re
