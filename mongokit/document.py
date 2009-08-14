@@ -28,11 +28,15 @@
 import datetime
 import pymongo
 from pymongo.connection import Connection
+from pylons_env import MongoPylonsEnv
 from generators import MongoDocumentCursor
 from mongo_exceptions import *
 import re
+import logging
 
 from uuid import uuid4
+
+log = logging.getLogger(__name__)
 
 authorized_types = [type(None), bool, int, float, unicode, list, dict,
   datetime.datetime, 
@@ -73,7 +77,8 @@ class SchemaProperties(type):
                     attrs['validators'] = parent.validators.copy()
                     attrs['validators'].update(obj_validators)
         return type.__new__(cls, name, bases, attrs)        
-    
+
+      
 class MongoDocument(dict):
     """
     A MongoDocument is dictionnary with a building structured schema
@@ -137,15 +142,22 @@ class MongoDocument(dict):
     required_fields = []
     default_values = {}
     validators = {}
+    
 
+    
     db_host = "localhost"
     db_port = 27017
     db_name = None
     collection_name = None
 
     _collection = None
-    
-    def __init__(self, doc=None, gen_skel=True):
+
+    # If you are using Pylons, 
+    # Connection will be overridden with the Pylons version
+    # which sets up and manages the connection 
+    _use_pylons = False
+        
+    def __init__(self, doc=None, gen_skel=True, **kwargs):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -153,6 +165,13 @@ class MongoDocument(dict):
             if doc is not {}, gen_skel is always False. If gen_skel is False,
             default_values cannot be filled.
         """
+        # If they passed a kwargs, then set it
+        #self._use_pylons = use_pylons
+        log.debug("Use Pylons? %s" % self._use_pylons)
+        if kwargs.has_key('use_pylons'):
+            log.debug("KWArg use_pylons set (val %s)" % kwargs['use_pylons'])
+            self._use_pylons = kwargs['use_pylons']
+            
         # init
         if doc is None:
             doc = {}
@@ -175,7 +194,7 @@ class MongoDocument(dict):
             splited_rf = rf.split('.')
             for index in range(len(splited_rf)):
                 self._required_namespace.add(".".join(splited_rf[:index+1]))
-
+        
     def generate_skeleton(self):
         """
         validate and generate the skeleton of the document
@@ -202,17 +221,40 @@ class MongoDocument(dict):
         """
         self.collection.remove({'_id':self['_id']})
 
+
     #
     # class methods, they work on collection
     #
-
+    @classmethod
+    def _get_connection(cls):
+        """
+        Utility method to abstract away the determination
+        of which connection to utilize.
+        If Pylons is setup and enabled for the class,
+        it returns the threadlocal Pylons connection
+        """
+        conn = None
+        if cls._use_pylons:
+            conn = MongoPylonsEnv.mongo_conn()
+        else:
+            conn = Connection(cls.db_host, cls.db_port)
+            
+        # class level db overrides
+        # defaults at pylons
+        if cls.db_name:
+            db = cls.db_name
+        else:
+            db = MongoPylonsEnv.get_default_db()
+            
+        return conn[db]
+            
     @classmethod
     def get_collection(cls):
         if not cls._collection:
-            if not cls.db_name or not cls.collection_name:
+            if not (cls.db_name or MongoPylonsEnv.get_default_db()) or not cls.collection_name:
                 raise ConnectionError( 
                   "You must set a db_name and a collection_name" )
-            db = Connection(cls.db_host, cls.db_port)[cls.db_name]
+            db = cls._get_connection()
             cls._collection = db[cls.collection_name]
         return cls._collection
 
@@ -570,7 +612,6 @@ class MongoDocument(dict):
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
 
-
 class RevisionDocument(MongoDocument):
     structure = {
         "id": unicode,
@@ -633,10 +674,11 @@ class VersionnedDocument(MongoDocument):
             db_name = cls.versioning_db_name or cls.db_name
             collection_name = cls.versioning_collection_name or\
               cls.collection_name
-            if not  db_name and not collection_name:
+            if not (db_name or MongoPylonsEnv.get_default_db()) and not collection_name:
                 raise ConnectionError( 
-                  "You must set a db_name and a versioning collection name" )
-            db = Connection(cls.db_host, cls.db_port)[db_name]
+                  "You must set a db_name and a versioning collection name"
+                )
+            db = cls._get_connection()
             cls._versioning_collection = db[collection_name]
             if db.collection_names():
                 if not collection_name in db.collection_names():
@@ -666,3 +708,9 @@ class VersionnedDocument(MongoDocument):
         if last_doc:
             return last_doc['revision']
 
+class MongoPylonsDocument(MongoDocument):
+    """Lazy helper base class to inherit from if you are
+    sure you will always live in / require the pylons evironment.
+    Keep in mind if you need CLI testing, "paster shell" will allow 
+    you to test within a pylons environment (via an ipython shell)"""
+    _use_pylons = True
