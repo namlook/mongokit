@@ -157,7 +157,7 @@ class MongoDocument(dict):
     # which sets up and manages the connection 
     _use_pylons = False
         
-    def __init__(self, doc=None, gen_skel=True, **kwargs):
+    def __init__(self, doc=None, gen_skel=True):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -165,13 +165,6 @@ class MongoDocument(dict):
             if doc is not {}, gen_skel is always False. If gen_skel is False,
             default_values cannot be filled.
         """
-        # If they passed a kwargs, then set it
-        #self._use_pylons = use_pylons
-        log.debug("Use Pylons? %s" % self._use_pylons)
-        if kwargs.has_key('use_pylons'):
-            log.debug("KWArg use_pylons set (val %s)" % kwargs['use_pylons'])
-            self._use_pylons = kwargs['use_pylons']
-            
         # init
         if doc is None:
             doc = {}
