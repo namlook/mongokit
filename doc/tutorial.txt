@@ -61,6 +61,21 @@ Note that `save` will call the `validate` method, so you don't have to validate 
 >>> bp.save() # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
 {'body': None, 'title': u'my first blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
 
+== Dot notation == 
+
+If you want to use the dot notation (ala json), you must set the
+`use_dot_notation` attribute to True:
+
+>>> class TestDotNotation(MongoDocument):
+...     structure = {
+...         "foo":{ "bar":unicode}
+...     }
+...     use_dot_notation=True
+
+>>> doc = TestDotNotation()
+>>> doc.foo.bar = u"bla"
+>>> doc
+{"foo":{"bar":u"bla}}
 
 == Différence beetween {} and the type dict ==
 

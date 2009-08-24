@@ -191,7 +191,7 @@ class ApiTestCase(unittest.TestCase):
         a = A(gen_skel=False)
         assert a == {}
         a.generate_skeleton()
-        assert a == {"a":{"foo":None}, "bar":None}
+        assert a == {"a":{"foo":None}, "bar":None}, a
 
     def test_generate_skeleton2(self):
         class A(MongoDocument):

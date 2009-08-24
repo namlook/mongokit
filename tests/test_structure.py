@@ -147,3 +147,41 @@ class StructureTestCase(unittest.TestCase):
         mydoc['bar'] = 25
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
+
+    def test_dot_notation(self):
+        class MyDoc(MongoDocument):
+            use_dot_notation = True
+            structure = {
+                "foo":int,
+                "bar":unicode
+            }
+
+        mydoc = MyDoc()
+        mydoc.foo = "3"
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc.foo = 3
+        assert mydoc['foo'] == 3
+        assert mydoc == {'foo':3, 'bar':None}
+        mydoc.validate()
+        mydoc.bar = u"bar"
+        assert mydoc == {'foo':3, 'bar':'bar'}
+        mydoc.validate()
+        
+    def test_dot_notation_nested(self):
+        class MyDoc(MongoDocument):
+            use_dot_notation = True
+            structure = {
+                "foo":{
+                    "bar":unicode
+                }
+            }
+
+        mydoc = MyDoc()
+        mydoc.foo.bar = 3
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc.foo.bar = u"bar"
+        assert mydoc['foo'] == {"bar":"bar"}
+        assert mydoc['foo']['bar'] == 'bar'
+        assert mydoc == {'foo':{'bar':'bar'}}
+        mydoc.validate()
+  

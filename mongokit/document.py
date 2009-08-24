@@ -54,8 +54,16 @@ __all__ = ['MongoDocument', 'VersionnedDocument']
 
 STRUCTURE_KEYWORDS = ['_id', '_revision']
 
+class DotedDict(dict):
+    def __setattr__(self, key, value):
+        self[key] = value
+    def __getattr__(self, key):
+        return self[key]
+
+
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
+        attrs['_protected_field_names'] = set(['_protected_field_names', '_namespaces', '_required_namespace'])
         for base in bases:
             parent = base.__mro__[0]
             if hasattr(parent, "structure") and\
@@ -79,6 +87,9 @@ class SchemaProperties(type):
                     obj_validators = attrs.get('validators', {}).copy()
                     attrs['validators'] = parent.validators.copy()
                     attrs['validators'].update(obj_validators)
+        for mro in bases[0].__mro__:
+            attrs['_protected_field_names'] = attrs['_protected_field_names'].union(list(mro.__dict__))
+        attrs['_protected_field_names'] = list(attrs['_protected_field_names'])
         return type.__new__(cls, name, bases, attrs)        
 
       
@@ -138,6 +149,20 @@ class MongoDocument(dict):
     Traceback (most recent call last):
     ...
     ValidationError: nested.bla does not pass the validator <lambda>
+
+    If you want to use the dot notation (ala json), you must set the
+    `use_dot_notation` attribute to True:
+
+    >>> class TestDotNotation(MongoDocument):
+    ...     structure = {
+    ...         "foo":{ "bar":unicode}
+    ...     }
+    ...     use_dot_notation=True
+
+    >>> doc = TestDotNotation()
+    >>> doc.foo.bar = u"bla"
+    >>> doc
+    {"foo":{"bar":u"bla}}
     """
     __metaclass__ = SchemaProperties
     
@@ -160,6 +185,9 @@ class MongoDocument(dict):
     # which sets up and manages the connection 
     _use_pylons = False
         
+    # If you want to use the dot notation, set this to True:
+    use_dot_notation = False
+
     def __init__(self, doc=None, gen_skel=True):
         """
         doc : a dictionnary
@@ -607,7 +635,10 @@ class MongoDocument(dict):
             #
             if type(key) is not type and key not in doc:
                 if isinstance(struct[key], dict):
-                    doc[key] = type(struct[key])()
+                    if type(struct[key]) is dict and self.use_dot_notation:
+                        doc[key] = DotedDict()
+                    else:
+                        doc[key] = type(struct[key])()
                 elif struct[key] is dict:
                     doc[key] = {}
                 elif isinstance(struct[key], list):
@@ -621,6 +652,18 @@ class MongoDocument(dict):
             #
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
+
+    def __setattr__(self, key, value):
+        if key not in self._protected_field_names and self.use_dot_notation:
+            self[key] = value
+        else:
+           dict.__setattr__(self, key, value) 
+
+    def __getattr__(self, key):
+        if key not in self._protected_field_names and self.use_dot_notation:
+            return self[key]
+        else:
+           dict.__getattr__(self, key) 
 
 class RevisionDocument(MongoDocument):
     structure = {
