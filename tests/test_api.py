@@ -249,7 +249,7 @@ class ApiTestCase(unittest.TestCase):
         assert MyDoc.all().count() == 10, MyDoc.all().count()
         assert MyDoc.all().limit(1).count() == 10, MyDoc.all().limit(1).count()
         assert MyDoc.all().where('this.foo').count() == 9 #{'foo':0} is not taken
-        assert MyDoc.all().hint('foo')
+        assert MyDoc.all().hint([('foo', 1)])
         assert [i['foo'] for i in MyDoc.all().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
         allPlans = MyDoc.all().explain()['allPlans']
         assert allPlans == [{u'cursor': u'BasicCursor', u'startKey': {}, u'endKey': {}}]

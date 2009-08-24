@@ -25,7 +25,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from operators import OR
-from document import Connection, MongoDocument, authorized_types, MongoDocumentCursor, VersionnedDocument
-from mongo_exceptions import *
+class MongokitOperator(object):
+    repr = None
 
+    def __init__(self, *args):
+        assert self.repr is not None
+        self._operands = list(args)
+
+    def __repr__(self):
+        repr = ' %s ' % self.repr
+        return '<'+ repr.join([i.__name__ for i in self._operands]) + '>'
+
+    def __str__(self):
+        repr = ' %s ' % self.repr
+        return '<'+ repr.join([i.__name__ for i in self._operands]) + '>'
+
+    def __iter__(self):
+        for operand in self._operands:
+            yield operand 
+    
+    def validate(self, value):
+        raise NotImplementedError
+
+class OR(MongokitOperator):
+    repr = 'or'
+
+    def __init__(self, *args):
+        super(OR, self).__init__(*args)
+
+    def validate(self, value):
+        if type(value) in self._operands:
+            return True
+        return False
+
+   
