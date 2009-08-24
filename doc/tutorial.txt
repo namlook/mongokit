@@ -192,7 +192,7 @@ Example the following document:
 We want to be sur that before saving our object, foo is greater than bar and baz is
 unicode(foo). Do do that, we juste overload the validation method :
 
-    def validation(self):
+    def validate(self):
         assert self['foo'] > self['bar']
         assert self['baz'] == unicode(self['foo'])
         super(MyDoc, self).validate(self)
