@@ -33,12 +33,7 @@ class MongokitOperator(object):
         self._operands = list(args)
 
     def __repr__(self):
-        repr = ' %s ' % self.repr
-        return '<'+ repr.join([i.__name__ for i in self._operands]) + '>'
-
-    def __str__(self):
-        repr = ' %s ' % self.repr
-        return '<'+ repr.join([i.__name__ for i in self._operands]) + '>'
+        return str(self)
 
     def __iter__(self):
         for operand in self._operands:
@@ -53,9 +48,28 @@ class OR(MongokitOperator):
     def __init__(self, *args):
         super(OR, self).__init__(*args)
 
+    def __str__(self):
+        repr = ' %s ' % self.repr
+        return '<'+ repr.join([i.__name__ for i in self._operands]) + '>'
+
     def validate(self, value):
         if type(value) in self._operands:
             return True
         return False
+
+class NOT(MongokitOperator):
+    repr = 'not'
+
+    def __init__(self, *args):
+        super(NOT, self).__init__(*args)
+
+    def __str__(self):
+        repr = ', %s ' % self.repr
+        return '<not '+ repr.join([i.__name__ for i in self._operands]) + '>'
+
+    def validate(self, value):
+        if type(value) in self._operands:
+            return False
+        return True
 
    

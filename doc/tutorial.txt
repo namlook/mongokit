@@ -189,6 +189,34 @@ Traceback (most recent call last):
 ...
 SchemaTypeError: 'foo' must be an instance of <unicode or int or float> not datetime
 
+You can also use the NOT operator to tell MongoKit that you don't want a such type
+for a field :
+
+>>> from mongokit import NOT
+>>> from datetime import datetime
+>>> class Account(MongoDocument): 
+...     structure = { 
+...         "balance": {'foo': NOT(unicode, datetime)} 
+...     } 
+
+>>> account = Account()
+>>> account['foo'] = 3
+>>> account.validate()
+>>> account['foo'] = 3.0
+>>> account.validate()
+
+and :
+
+>>> account['foo'] = datetime.now()
+Traceback (most recent call last):
+...
+SchemaTypeError: 'foo' must be an instance of <not unicode, not datetime> not datetime
+
+>>> account['foo'] = u'3.0'
+Traceback (most recent call last):
+...
+SchemaTypeError: 'foo' must be an instance of <not unicode, not datetime> not unicode
+
 == Adding complexe validation == 
 
 If the use of a validator is not enougth, you can overload the validation method

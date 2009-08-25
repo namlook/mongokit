@@ -113,7 +113,7 @@ class StructureTestCase(unittest.TestCase):
             
 
     def test_or_type(self):
-        from mongokit.document import OR
+        from mongokit import OR
         class BadMyDoc(MongoDocument):
             structure = {"bla":OR(unicode,str)}
         self.assertRaises(StructureError, BadMyDoc)
@@ -126,8 +126,9 @@ class StructureTestCase(unittest.TestCase):
             }
 
         mydoc = MyDoc()
-        assert mydoc['foo'] is None
-        assert mydoc['bar'] is None
+        assert str(mydoc.structure['foo']) == '<unicode or int>'
+        assert str(mydoc.structure['bar']) == '<unicode or datetime>'
+        assert mydoc == {'foo': None, 'bar': None}
         mydoc['foo'] = 3.0
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = u"foo"
@@ -146,6 +147,42 @@ class StructureTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['bar'] = 25
         self.assertRaises(SchemaTypeError, mydoc.validate)
+
+    def test_not_type(self):
+        from mongokit import NOT
+        class BadMyDoc(MongoDocument):
+            structure = {"bla":NOT(unicode,str)}
+        self.assertRaises(StructureError, BadMyDoc)
+
+        from datetime import datetime
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":NOT(unicode,int),
+                "bar":NOT(datetime)
+            }
+
+        mydoc = MyDoc()
+        assert str(mydoc.structure['foo']) == '<not unicode, not int>', str(mydoc.structure['foo'])
+        assert str(mydoc.structure['bar']) == '<not datetime>'
+        assert mydoc == {'foo': None, 'bar': None}
+        assert mydoc['foo'] is None
+        assert mydoc['bar'] is None
+        mydoc['foo'] = 3
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = u"foo"
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = 3.0
+        mydoc.validate()
+        mydoc['foo'] = datetime.now()
+        mydoc.validate()
+
+        mydoc['bar'] = datetime.now()
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['bar'] = u"today"
+        mydoc.validate()
+        mydoc['bar'] = 25
+        mydoc.validate()
+
 
 
     def test_dot_notation(self):

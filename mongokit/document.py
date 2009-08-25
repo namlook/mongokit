@@ -38,7 +38,7 @@ from uuid import uuid4
 
 log = logging.getLogger(__name__)
 
-from operators import MongokitOperator, OR
+from operators import MongokitOperator
 
 authorized_types = [type(None), bool, int, float, unicode, list, dict,
   datetime.datetime, 
@@ -47,7 +47,6 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
   pymongo.dbref.DBRef,
   pymongo.code.Code,
   type(re.compile("")),
-  OR,
 ]
 
 __all__ = ['MongoDocument', 'VersionnedDocument']
