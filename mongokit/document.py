@@ -56,10 +56,15 @@ STRUCTURE_KEYWORDS = ['_id', '_revision']
 
 class DotedDict(dict):
     def __setattr__(self, key, value):
-        self[key] = value
+        if key in self:
+            self[key] = value
+        else:
+           dict.__setattr__(self, key, value) 
     def __getattr__(self, key):
-        return self[key]
-
+        if key in self:
+            return self[key]
+        else:
+           dict.__getattribute__(self, key)
 
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
@@ -244,7 +249,6 @@ class MongoDocument(dict):
         delete the document from the collection
         """
         self.collection.remove({'_id':self['_id']})
-
 
     #
     # class methods, they work on collection
@@ -654,16 +658,16 @@ class MongoDocument(dict):
                 self.__generate_skeleton(doc[key], struct[key], path)
 
     def __setattr__(self, key, value):
-        if key not in self._protected_field_names and self.use_dot_notation:
+        if key not in self._protected_field_names and self.use_dot_notation and key in self:
             self[key] = value
         else:
            dict.__setattr__(self, key, value) 
 
     def __getattr__(self, key):
-        if key not in self._protected_field_names and self.use_dot_notation:
+        if key not in self._protected_field_names and self.use_dot_notation and key in self:
             return self[key]
         else:
-           dict.__getattr__(self, key) 
+           dict.__getattribute__(self, key) 
 
 class RevisionDocument(MongoDocument):
     structure = {

@@ -184,4 +184,26 @@ class StructureTestCase(unittest.TestCase):
         assert mydoc['foo']['bar'] == 'bar'
         assert mydoc == {'foo':{'bar':'bar'}}
         mydoc.validate()
-  
+
+    def test_dot_notation_field_not_in_structure(self):
+        class MyDoc(MongoDocument):
+            use_dot_notation = True
+            structure = {
+                "foo":{
+                    "bar":unicode,
+                },
+                "spam":int,
+            }
+
+        mydoc = MyDoc()
+        mydoc.eggs = 4
+        assert mydoc == {'foo':{'bar':None}, 'spam':None}
+        assert mydoc.eggs == 4
+        try:
+            mydoc.not_found
+        except AttributeError, e:
+            print str(e)
+        mydoc.foo.eggs = 4
+        assert mydoc == {'foo':{'bar':None}, 'spam':None}, mydoc
+        mydoc.validate()
+
