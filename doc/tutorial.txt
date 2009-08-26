@@ -165,7 +165,9 @@ So, default_values nor signals will work.
 
 == MongokitOperator ==
 
-It is possible to specify multiples type with the OR operator.
+It is possible to add another layer of validation to fields.
+
+=== OR operator ==
 
 Let's say that we have a field wich can be unicode or int or a float.
 We can use the OR operator to tell MongoKit to validate the field :
@@ -188,6 +190,8 @@ but :
 Traceback (most recent call last):
 ...
 SchemaTypeError: 'foo' must be an instance of <unicode or int or float> not datetime
+
+=== NOT operator ===
 
 You can also use the NOT operator to tell MongoKit that you don't want a such type
 for a field :
@@ -216,6 +220,30 @@ SchemaTypeError: 'foo' must be an instance of <not unicode, not datetime> not da
 Traceback (most recent call last):
 ...
 SchemaTypeError: 'foo' must be an instance of <not unicode, not datetime> not unicode
+
+=== IS operator ===
+
+Sometime, you might want to force a fields to be in a specifique value. The IS operator
+must be use for this purpose :
+
+>>> from mongokit import IS
+>>> class Account(MongoDocument): 
+...     structure = { 
+...         "flag": {'foo': IS(u'spam', u'controversy', u'phishing')} 
+...     } 
+
+>>> account = Account()
+>>> account['foo'] = u'spam'
+>>> account.validate()
+>>> account['flag'] = u'phishing'
+>>> account.validate()
+
+and :
+
+>>> account['flag'] = u'foo'
+Traceback (most recent call last):
+...
+SchemaTypeError: 'flag' must be in [u'spam', u'controversy', u'phishing'] not foo
 
 == Adding complexe validation == 
 

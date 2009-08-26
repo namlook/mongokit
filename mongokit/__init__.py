@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from operators import MongokitOperator, OR, NOT
+from operators import MongokitOperator, OR, NOT, IS
 from document import Connection, MongoDocument, authorized_types, MongoDocumentCursor, VersionnedDocument, DotedDict
 from mongo_exceptions import *
 

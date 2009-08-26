@@ -72,4 +72,24 @@ class NOT(MongokitOperator):
             return False
         return True
 
+class IS(MongokitOperator):
+    repr = 'is'
+
+    def __init__(self, *args):
+        super(IS, self).__init__(*args)
+
+    def __str__(self):
+        representation = ' or %s ' % self.repr
+        return '<is '+ representation.join([repr(i) for i in self._operands]) + '>'
+
+    def validate(self, value):
+        if value in self._operands:
+            for op in self._operands:
+                if value == op and isinstance(value, type(op)):
+                    return True
+        return False
+
+
+
+
    

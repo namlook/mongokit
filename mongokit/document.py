@@ -38,7 +38,7 @@ from uuid import uuid4
 
 log = logging.getLogger(__name__)
 
-from operators import MongokitOperator
+from operators import MongokitOperator, IS
 
 authorized_types = [type(None), bool, int, float, unicode, list, dict,
   datetime.datetime, 
@@ -394,10 +394,16 @@ class MongoDocument(dict):
                 for item in struct:
                     __validate_structure(item)
             elif isinstance(struct, MongokitOperator):
-                for operand in struct:
-                    if operand not in authorized_types: 
-                        raise StructureError(
-                          "%s in %s is not an authorized type" % (operand, struct))
+                if isinstance(struct, IS):
+                    for operand in struct:
+                        if type(operand) not in authorized_types:
+                            raise StructureError(
+                              "%s in %s is not an authorized type" % (operand, struct))
+                else:
+                    for operand in struct:
+                        if operand not in authorized_types: 
+                            raise StructureError(
+                              "%s in %s is not an authorized type" % (operand, struct))
             else:
                 raise StructureError("%s is not an authorized_types" % key)
         #################
@@ -423,9 +429,14 @@ class MongoDocument(dict):
                     path, struct.__name__, type(doc).__name__))
         elif isinstance(struct, MongokitOperator):
             if not struct.validate(doc) and doc is not None:
-                raise SchemaTypeError(
-                  "%s must be an instance of %s not %s" % (
-                    path, struct, type(doc).__name__))
+                if isinstance(struct, IS):
+                    raise SchemaTypeError(
+                      "%s must be in %s not %s" % (
+                        path, struct._operands, doc))
+                else:
+                    raise SchemaTypeError(
+                      "%s must be an instance of %s not %s" % (
+                        path, struct, type(doc).__name__))
         elif isinstance(struct, dict):
             if not isinstance(doc, type(struct)):
                 raise SchemaTypeError(
