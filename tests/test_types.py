@@ -316,4 +316,25 @@ class TypesTestCase(unittest.TestCase):
         mydoc['bar'] = u"3"
         mydoc.validate()
 
+    def _test_dbref(self):
+        class MyDocA(MongoDocument):
+            structure = {"foo":unicode}
 
+        class MyDocB(MongoDocument):
+            structure = {
+                "doc_a": MyDocA(),
+                "bar": unicode
+            }
+
+        mydoc = MyDocB()
+        assert  mydoc == {"bar":None, "doc_a":None}
+        doc_a = MyDocA()
+        doc_a['foo'] = u"bla"
+        mydoc['doc_a'] = doc_a
+        self.assertRaises(DBRefError, mydoc.validate)
+        doc_a.save()
+        mydoc['doc_a'] = doc_a
+        mydoc.validate()
+        assert mydoc == {"bar":None, "doc_a":None} # XXX TODO
+        print mydoc['doc_a']
+        assert False

@@ -28,7 +28,6 @@
 import datetime
 import pymongo
 from pymongo.connection import Connection
-from mongokit.ext.pylons_env import MongoPylonsEnv
 from generators import MongoDocumentCursor
 from mongo_exceptions import *
 import re
@@ -262,6 +261,7 @@ class MongoDocument(dict):
         """
         conn = None
         if cls._use_pylons:
+            from mongokit.ext.pylons_env import MongoPylonsEnv
             conn = MongoPylonsEnv.mongo_conn()
         else:
             conn = Connection(cls.db_host, cls.db_port)
@@ -278,7 +278,12 @@ class MongoDocument(dict):
     @classmethod
     def get_collection(cls):
         if not cls._collection:
-            if not (cls.db_name or MongoPylonsEnv.get_default_db()) or not cls.collection_name:
+            if cls._use_pylons:
+                from mongokit.ext.pylons_env import MongoPylonsEnv
+                db_name = MongoPylonsEnv.get_default_db()
+            else:
+                db_name = cls.db_name
+            if not db_name or not cls.collection_name:
                 raise ConnectionError( 
                   "You must set a db_name and a collection_name" )
             db = cls._get_connection()
@@ -743,10 +748,15 @@ class VersionnedDocument(MongoDocument):
     @classmethod
     def get_versioning_collection(cls):
         if not cls._versioning_collection:
-            db_name = cls.versioning_db_name or cls.db_name
+            if cls._use_pylons:
+                from mongokit.ext.pylons_env import MongoPylonsEnv
+                db_name = MongoPylonsEnv.get_default_db()
+            else:
+                db_name = cls.db_name
+            db_name = cls.versioning_db_name or db_name
             collection_name = cls.versioning_collection_name or\
               cls.collection_name
-            if not (db_name or MongoPylonsEnv.get_default_db()) and not collection_name:
+            if not db_name and not collection_name:
                 raise ConnectionError( 
                   "You must set a db_name and a versioning collection name"
                 )
