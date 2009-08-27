@@ -203,4 +203,117 @@ class TypesTestCase(unittest.TestCase):
             }
         mydoc = MyDoc()
         mongokit.authorized_types.remove(str)
- 
+
+    def test_or_operator(self):
+        from mongokit import OR
+        class BadMyDoc(MongoDocument):
+            structure = {"bla":OR(unicode,str)}
+        self.assertRaises(StructureError, BadMyDoc)
+
+        from datetime import datetime
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":OR(unicode,int),
+                "bar":OR(unicode, datetime)
+            }
+
+        mydoc = MyDoc()
+        assert str(mydoc.structure['foo']) == '<unicode or int>'
+        assert str(mydoc.structure['bar']) == '<unicode or datetime>'
+        assert mydoc == {'foo': None, 'bar': None}
+        mydoc['foo'] = 3.0
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = u"foo"
+        mydoc.validate()
+        mydoc['foo'] = 3
+        mydoc.validate()
+        mydoc['foo'] = 'bar'
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+
+        mydoc['foo'] = datetime.now()
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = u"foo"
+        mydoc['bar'] = datetime.now()
+        mydoc.validate()
+        mydoc['bar'] = u"today"
+        mydoc.validate()
+        mydoc['bar'] = 25
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+
+    def test_not_operator(self):
+        from mongokit import NOT
+        class BadMyDoc(MongoDocument):
+            structure = {"bla":NOT(unicode,str)}
+        self.assertRaises(StructureError, BadMyDoc)
+
+        from datetime import datetime
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":NOT(unicode,int),
+                "bar":NOT(datetime)
+            }
+
+        mydoc = MyDoc()
+        assert str(mydoc.structure['foo']) == '<not unicode, not int>', str(mydoc.structure['foo'])
+        assert str(mydoc.structure['bar']) == '<not datetime>'
+        assert mydoc == {'foo': None, 'bar': None}
+        assert mydoc['foo'] is None
+        assert mydoc['bar'] is None
+        mydoc['foo'] = 3
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = u"foo"
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = 3.0
+        mydoc.validate()
+        mydoc['foo'] = datetime.now()
+        mydoc.validate()
+
+        mydoc['bar'] = datetime.now()
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['bar'] = u"today"
+        mydoc.validate()
+        mydoc['bar'] = 25
+        mydoc.validate()
+
+    def test_is_operator(self):
+        from mongokit import IS
+        class BadMyDoc(MongoDocument):
+            structure = {"bla":IS('bla',3)}
+        self.assertRaises(StructureError, BadMyDoc)
+
+        from datetime import datetime
+        class MyDoc(MongoDocument):
+            structure = {
+                "foo":IS(u'spam',u'eggs'),
+                "bar":IS(u'3', 3)
+            }
+
+        mydoc = MyDoc()
+        assert str(mydoc.structure['foo']) == "<is u'spam' or is u'eggs'>"
+        assert str(mydoc.structure['bar']) == "<is u'3' or is 3>"
+        assert mydoc == {'foo': None, 'bar': None}
+        assert mydoc['foo'] is None
+        assert mydoc['bar'] is None
+        mydoc['foo'] = 3
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = u"bla"
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = datetime.now()
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = u"spam"
+        mydoc.validate()
+        mydoc['foo'] = u"eggs"
+        mydoc.validate()
+
+        mydoc['bar'] = datetime.now()
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['bar'] = u"today"
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['bar'] = 'foo'
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['bar'] = 3
+        mydoc.validate()
+        mydoc['bar'] = u"3"
+        mydoc.validate()
+
+

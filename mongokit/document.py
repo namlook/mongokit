@@ -49,7 +49,7 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
   type(re.compile("")),
 ]
 
-__all__ = ['MongoDocument', 'VersionnedDocument']
+__all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument']
 
 STRUCTURE_KEYWORDS = ['_id', '_revision']
 
@@ -299,6 +299,11 @@ class MongoDocument(dict):
     def all(cls, *args, **kwargs):
         return MongoDocumentCursor(
           cls.get_collection().find(*args, **kwargs), cls)
+
+    @classmethod
+    def group(cls, *args, **kwargs):
+        return MongoDocumentCursor(
+          cls.get_collection().group(*args, **kwargs), cls)
 
     @classmethod
     def one(cls, *args, **kwargs):
