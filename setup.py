@@ -37,7 +37,7 @@ import sys
 
 setup(
     name = 'mongokit',
-    version = '0.2.1',
+    version = '0.3',
 
     description = 'Python mongodb kit',
     long_description = \
@@ -63,7 +63,7 @@ to keep its simplicity when you manage it in python""",
     zip_safe = False,
 
     install_requires = [
-        'pymongo>=0.11',
+        'pymongo>=0.13',
     ]
 
 )
