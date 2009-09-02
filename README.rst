@@ -1,3 +1,5 @@
+-*- restructuredtext -*-
+
 ========
 MongoKit
 ========
@@ -15,6 +17,7 @@ Features
 ========
 
  * schema validation (wich use simple python type for the declaration)
+ * doted notation
  * nested and complex schema declaration
  * required fields validation
  * default values
@@ -22,6 +25,8 @@ Features
  * inheritance and polymorphisme support
  * versionized document support (still in alpha stage)
  * partial auth support (it brings a simple User model) 
+ * Pylons Web Framework integration support
+ * Operator for validation (currently : OR, NOT and IS)
 
 A quick example
 ===============
