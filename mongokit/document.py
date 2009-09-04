@@ -375,7 +375,6 @@ class MongoDocument(dict):
                 spec[key].update({'$exists':True})
             else:
                 spec[key] = {'$exists':True}
-        print spec
         return MongoDocumentCursor(
           cls.get_collection().find(
             spec=spec, 
