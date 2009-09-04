@@ -2,29 +2,29 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2009, Brendan W. McAdams <bwmcadams@gmail.com>
 # All rights reserved.
-# 
-# Redistribution and use in source and binary forms, with or without 
+#
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
-#     * Redistributions of source code must retain the above copyright 
+#
+#     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright 
-#       notice, this list of conditions and the following disclaimer in the 
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
 #     * Neither the name of the author nor the names of any future
-#       contributors may be used to endorse or promote products derived from 
+#       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
 # CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR 
-# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import threading
@@ -34,16 +34,20 @@ from pymongo.errors import ConnectionFailure, InvalidName
 
 from pylons import config, tmpl_context as c
 
+from mongokit.ext.mongodb_auth import parse_mongo_url
+
 log = logging.getLogger(__name__)
 
-# NOTE: ThreadLocal will become problematic in the issue of running concurrent pylons apps
-# in the same webserver.  The alternative is Pylons' StackedObjectProxy, but I found it 
-# to act slightly weird for this type of use.  
+# NOTE: ThreadLocal will become problematic in the issue of running
+# concurrent pylons apps in the same webserver.
+# The alternative is Pylons' StackedObjectProxy, but I found it
+# to act slightly weird for this type of use.
 # As SQLAlchemy uses threadlocal and works like a charm, so shall we.
-# For details of the debate, see: 
+# For details of the debate, see:
 # http://groups.google.com/group/pylons-devel/browse_thread/thread/508e7365164cc254
 
 _threadlocal = threading.local()
+
 
 class MongoPylonsEnv(object):
     """
@@ -51,19 +55,21 @@ class MongoPylonsEnv(object):
     The recommended deployment is to add a call to init_mongo()
     in config/environment.py for your pylons project.
     Like with SQLAlchemy, this will setup your connections
-    at Pylons boot; the MongoDB Pool code should ensure you have enough connections.
-    
+    at Pylons boot; the MongoDB Pool code should ensure you have enough
+    connections.
+
     Add the import at the top:
-    
+
         >>> from mongokit.pylons_env import MongoPylonsEnv
-    
+
     And lower down, in load_environment():
 
         >>> MongoPylonsEnv.init_mongo()
-        
-    Additionally, you'll need to add several items to your configuration ini file:
-    
-    
+
+    Additionally, you'll need to add several items to your configuration
+    ini file:
+
+
         ... # Mongo Database settings
         ... mongodb.host = localhost
         ... mongodb.port = 27017
@@ -72,17 +78,40 @@ class MongoPylonsEnv(object):
         ... mongodb.pool.enable = True
         ... mongodb.pool.size = 20
 
-    Then, you can pass keyword argument 'use_pylons' to your Document constructor, or 
-    define attribute
-        >>> _use_pylons = True 
-    on your subclass.
+    You may also define a URL to connect to MongoDB.  For succinctness,
+    I've chosen to define a RFC 1738 URL.  Your url must start with mongodb://.
+    The syntax is hostname:port/database#collection. You must define a collection
+    for MongoDB to store data in, in addition to a database.
+ 
+    **** NOT YET USED (Due to needing to config DB) ***
+    If you want to use MongoDB's optional authentication support,
+    it is supported but requires the URL syntax (the old config syntax
+    is deprecated).  Simply define your URL as such::
+
+        >>> mongodb.url = \
+                mongodb://bwmcadams@passW0Rd?@localhost:27017/blog
+
+    The mongodb_beaker backend will attempt to authenticate with the username 
+    and password.  You must configure MongoDB's optional authentication 
+    support[2] for this to work (By default MongoDB doesn't use authentication).
+
+    .. [2] MongoDB Authentication Documentation
+
+    *** NOT YET USED ****
     
-    Alternately, for the ultimate in lazy: 
-        
+    Then, you can pass keyword argument 'use_pylons' to your Document constructor, or
+    define attribute
+        >>> _use_pylons = True
+    on your subclass.
+
+    Alternately, for the ultimate in lazy:
+
         >>> from mongokit.document import MongoPylonsDocument
-        
-    And then subclass from that (It's a proxy subclass of MongoDocument that enables use_pylons)    
+
+    And then subclass from that (It's a proxy subclass of MongoDocument that enables use_pylons)
     """
+
+
     @staticmethod
     def init_mongo():
         """
@@ -97,43 +126,52 @@ class MongoPylonsEnv(object):
     @staticmethod
     def get_default_db():
         return config.get("mongodb.db", None)
-        
+
     @staticmethod
     def mongo_conn():
         """
         Returns a copy of the threadlocal mongo connection.
-        
+
         If one does not exist, it creates one and saves it in the threadlocal.
-        
-        The parameters for the connection are defined in the ini file, and pulled using 
+
+        The parameters for the connection are defined in the ini file, and pulled using
         pylons.config()
-        
-        
+
+
         """
         if not hasattr(_threadlocal, 'mongo_conn'):
             try:
                 conn_params = {'auto_start_request': True}
-                conn_params['host'] = config.get('mongodb.host', 'localhost')
-                conn_params['port'] = int(config.get('mongodb.port', 27017))
-                conn_params['timeout'] = int(config.get('mongodb.connection_timeout', -1))
+                if config.get("mongodb.url", None):
+                    conn_params.update(parse_mongo_url(config['mongodb.url']))
+                else:
+                    conn_params['host'] = config.get(
+                                            'mongodb.host', 'localhost')
+                    conn_params['port'] = int(config.get(
+                                            'mongodb.port', 27017))
+
+                conn_params['timeout'] = int(config.get(
+                                            'mongodb.connection_timeout', -1))
                 if config.get('mongodb.pool.enable', False):
-                    conn_params['pool_size'] = int(config.get('mongodb.pool.size', 0))
+                    conn_params['pool_size'] = int(config.get(
+                                                   'mongodb.pool.size', 0))
 
                 # Make a connection to Mongo.
                 try:
-                    log.info("Attempting to open a Mongo connection with params: %s" % conn_params)
+                    log.info("Attempting to open a Mongo connection with "
+                             "params: %s" % conn_params)
                     mongo_conn = Connection(**conn_params)
                 except ConnectionFailure:
-                    log.error("Failed to connect to Mongo with params %s.  Please check the service and try again." % conn_params)
+                    log.error("Failed to connect to Mongo with "
+                              "params %s. " % conn_params)
                     raise
-            
+
                 _threadlocal.mongo_conn = mongo_conn
             except:
                 log.exception("Error during Mongo connection / setup.")
-                # Probably not ideal to kill the whole app, allow the upper stack to determine
-                # An alternative
+                # Probably not ideal to kill the whole app,
+                # allow the upper stack to determine an alternative
                 #abort(500, 'Unable to connect to MongoDB Backend.')
                 raise
-            
-        return _threadlocal.mongo_conn
 
+        return _threadlocal.mongo_conn

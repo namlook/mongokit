@@ -30,6 +30,7 @@ import pymongo
 from pymongo.connection import Connection
 from generators import MongoDocumentCursor
 from mongo_exceptions import *
+from mongokit.ext.mongodb_auth import authenticate_mongodb
 import re
 import logging
 
@@ -66,7 +67,7 @@ class DotedDict(dict):
 
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
-        attrs['_protected_field_names'] = set(['_protected_field_names', '_namespaces', '_required_namespace'])
+        attrs['_protected_field_names'] = set(['_protected_field_names', '_namespaces', '_required_namespace', '__connection'])
         for base in bases:
             parent = base.__mro__[0]
             if hasattr(parent, "structure") and\
@@ -181,6 +182,10 @@ class MongoDocument(dict):
     db_name = None
     collection_name = None
 
+    # Optional auth support
+    db_username = None
+    db_password = None
+    
     _collection = None
 
     # If you are using Pylons, 
@@ -288,6 +293,7 @@ class MongoDocument(dict):
             conn = MongoPylonsEnv.mongo_conn()
         else:
             conn = Connection(cls.db_host, cls.db_port)
+        self.__connection = conn
             
         # class level db overrides
         # defaults at pylons
@@ -312,7 +318,14 @@ class MongoDocument(dict):
             if not db_name or not cls.collection_name:
                 raise ConnectionError( 
                   "You must set a db_name and a collection_name" )
-            db = cls._get_connection()
+            db = cls._get_connection() 
+            if cls.db_username and cls.db_password:
+                # Password can't be empty or none or we ignore it
+                # This *CAN* fail, in which case it throws ConnectionError
+                if ConnectionError
+                log.debug("Username + Passwd set.  Authing against MongoDB.")
+                authenticate_mongodb(db, cls.db_username, cls.db_password)
+                
             cls._collection = db[cls.collection_name]
         return cls._collection
 
