@@ -30,7 +30,7 @@
 import logging
 
 import pymongo.database
-from mongokit.mongo_exceptions import ConnectionError
+from mongokit.mongo_exceptions import ConnectionError, MongoAuthException
 
 log = logging.getLogger(__name__)
 
@@ -94,17 +94,16 @@ def authenticate_mongodb(dbh, username, password):
     DBH should be a Database object, and not a Connection,
     as MongoDB's authentication hooks go on a db basis.
     """
+    if not dbh._Database__connection.admin.system.users.find().count():
+        raise MongoAuthException('no admin user found in database')
     if not isinstance(dbh, pymongo.database.Database):
         raise TypeError("authenicate_mongodb excepts an object of " +
                         " pymongo.database.Database for param 'dbh'." +
                         " Supplied type '%s' is invalid. " % type(dbh))
 
     log.info("Attempting to authenticate %s/%s " % (username, password))
-    try:
-        if not dbh.authenticate(username, password):
-            raise Exception()
-        log.debug("Auth success.")
-    except: # catch auth failed and any auth exception
+    if not dbh.authenticate(username, password):
         log.exception("Failed to authenticate.")
-        raise ConnectionError('Cannot authenticate to MongoDB.')
+        raise MongoAuthException('bad username or password')
+    log.debug("Auth success.")
     

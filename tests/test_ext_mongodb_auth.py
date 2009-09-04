@@ -35,6 +35,8 @@ from pymongo.objectid import ObjectId
 
 CONNECTION = Connection()
 
+admin_created = False
+
 class ExtMongoDBAuthTestCase(unittest.TestCase):
     """Tests MongoDB Authentication.
     To prevent possibly screwing someone's DB, does NOT confirm "strict"
@@ -43,12 +45,18 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
     with it in the case of proper configuration.
     """
     def setUp(self):
+        # if no admin user is defined, create one
+        if not CONNECTION.admin.system.users.find().count():
+            CONNECTION.admin.eval('db.addUser("theadmin", "anadminpassword")')
+            admin_created = True
         self.db = CONNECTION['test']
         # Toss in a user
         self.db.eval('db.addUser("foo", "bar")')
         self.collection = self.db['mongokit_auth']
         
     def tearDown(self):
+        if admin_created:
+            CONNECTION.admin.system.users.remove({})
         self.db.eval('db.system.users.remove({name: "foo"})')
         CONNECTION['test'].drop_collection('mongokit_auth')
 
@@ -87,8 +95,10 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
         self.db.logout()
-        
-    def test_badauth(self):
+
+    def _test_badauth_no_admin(self):
+        # XXX WARNING : uncommented this test will remove the root password of the mongodb instance !!!!
+        CONNECTION.admin.system.users.remove({})
         class MyDoc(MongoDocument):
             db_name = "test"
             db_username = "foo"
@@ -104,8 +114,27 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
         mydoc = MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
-        mydoc.save()
-        self.assertRaises(ConnectionError, mydoc.save)
+        self.assertRaises(MongoAuthException, mydoc.save)
+        self.db.logout()
+
+        
+    def test_badauth(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            db_username = "foo"
+            db_password = "spam"
+            collection_name = "mongokit_auth"
+            structure = {
+                "bla":{
+                    "foo":unicode,
+                    "bar":int,
+                },
+                "spam":[],
+            }
+        mydoc = MyDoc()
+        mydoc["bla"]["foo"] = u"bar"
+        mydoc["bla"]["bar"] = 42
+        self.assertRaises(MongoAuthException, mydoc.save)
         self.db.logout()
 
  

@@ -67,7 +67,7 @@ class DotedDict(dict):
 
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
-        attrs['_protected_field_names'] = set(['_protected_field_names', '_namespaces', '_required_namespace', '__connection'])
+        attrs['_protected_field_names'] = set(['_protected_field_names', '_namespaces', '_required_namespace'])
         for base in bases:
             parent = base.__mro__[0]
             if hasattr(parent, "structure") and\
@@ -293,7 +293,6 @@ class MongoDocument(dict):
             conn = MongoPylonsEnv.mongo_conn()
         else:
             conn = Connection(cls.db_host, cls.db_port)
-        self.__connection = conn
             
         # class level db overrides
         # defaults at pylons
@@ -322,7 +321,6 @@ class MongoDocument(dict):
             if cls.db_username and cls.db_password:
                 # Password can't be empty or none or we ignore it
                 # This *CAN* fail, in which case it throws ConnectionError
-                if ConnectionError
                 log.debug("Username + Passwd set.  Authing against MongoDB.")
                 authenticate_mongodb(db, cls.db_username, cls.db_password)
                 
