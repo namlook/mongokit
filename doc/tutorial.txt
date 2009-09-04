@@ -61,6 +61,71 @@ Note that `save` will call the `validate` method, so you don't have to validate 
 >>> bp.save() # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
 {'body': None, 'title': u'my first blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
 
+== Query ==
+
+There 4 way to query a collection `all()`, `one()`, `fetch()`, `fetch_one`.
+`all()` and `fetch()` return a cursor of collection.  A cursor is an container
+wich lazy evaluate the results. A cursor is acting like an iterator.
+`one()` and `fetch_one()` return the document itself.
+
+All theses method can take a query as argument. A query is a simple dict. Please,
+see the mongodb and the pymongo documentation for further details.
+
+=== all() ===
+
+`all()` without argument will return a cursor of all documents of the collection.
+If a query is passed, it will return a cursor all documents wich match the query.
+The query is launch against the db and collection of the object.
+
+`all()` takes the same arguments than the the pymongo.collection.find method.
+
+>>> bp = BlogPost()
+>>> bp['title'] = u"my second blog post"
+>>> bp['author'] = u"myself"
+>>> bp.save()
+
+>>> for post in  BlogPost.all():
+...     print post['title']
+u'my first blog post'
+u'my second blog post'
+
+
+>>> for post in  BlogPost.all({'title':'my first blog post'}):
+...     print post['title']
+u'my first blog post'
+
+
+=== one() ===
+
+`one()` act like `all()` but will raise a `mongokit.MultipleResultsFound` exception if
+there is more than one result.
+
+>>> BlogPost.one()
+Traceback (most recent call last):
+...
+MultipleResultsFound: 2 results found
+
+>>> BlogPost.one({'title':'my first blog post'}) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+{'body': None, 'title': u'my first blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
+
+If no document is found, `one()` returns None
+
+=== fetch() ===
+
+Unlike `all()`, `fetch()` will return only documents wich match the structure of the Document.
+
+>>> all_blog_posts = BlogPost.fetch()
+
+This will return only all blog post (wich have 'title', 'body', 'author', 'date_creation', 'rank' as fields).
+This is an helper for :
+
+>>> BlogPost.all({'$where':"'title' in this && 'body' in this && 'author' in this && 'date_creation' in this && 'rank' in this"})
+
+=== fetch_one() ===
+
+Juste like `fetch()` but raise a  `mongokit.MultipleResultsFound` exception if
+there is more than one result.
+
 == Dot notation == 
 
 If you want to use the dot notation (ala json), you must set the

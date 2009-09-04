@@ -236,10 +236,12 @@ class ApiTestCase(unittest.TestCase):
             collection_name = "mongokit"
             structure = {
                 "foo":int,
+                "bar":{"bla":int},
             }
         for i in range(10):
             mydoc = MyDoc()
             mydoc["foo"] = i
+            mydoc["bar"]['bla'] = i
             mydoc.save()
         for i in MyDoc.all({"foo":{"$gt":4}}):
             assert isinstance(i, MyDoc)
@@ -249,6 +251,7 @@ class ApiTestCase(unittest.TestCase):
         assert MyDoc.all().count() == 10, MyDoc.all().count()
         assert MyDoc.all().limit(1).count() == 10, MyDoc.all().limit(1).count()
         assert MyDoc.all().where('this.foo').count() == 9 #{'foo':0} is not taken
+        assert MyDoc.all().where('this.bar.bla').count() == 9 #{'foo':0} is not taken
         assert MyDoc.all().hint([('foo', 1)])
         assert [i['foo'] for i in MyDoc.all().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
         allPlans = MyDoc.all().explain()['allPlans']
@@ -279,5 +282,112 @@ class ApiTestCase(unittest.TestCase):
         self.assertRaises(MultipleResultsFound, MyDoc.one)
 
 
- 
+    def test_fetch(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc_a":{'foo':int},
+            }
+        class DocB(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc_b":{"bar":int},
+            }
+        # creating DocA
+        for i in range(10):
+            mydoc = DocA()
+            mydoc['doc_a']["foo"] = i
+            mydoc.save()
+        # creating DocB
+        for i in range(5):
+            mydoc = DocB()
+            mydoc['doc_b']["bar"] = i
+            mydoc.save()
+
+        # all get all documents present in the collection (ie: 15 here)
+        assert DocA.all().count() == 15
+
+        # fetch get only the corresponding documents:
+        assert DocA.fetch().count() == 10, DocA.fetch().count()
+        assert DocB.fetch().count() == 5
+        index = 0
+        for doc in DocA.fetch():
+            assert doc == {'_id':doc['_id'], 'doc_a':{'foo':index}}, doc
+            index += 1
+
+        #assert DocA.fetch().limit(12).count() == 10, DocA.fetch().limit(1).count() # ???
+        assert DocA.fetch().where('this.doc_a.foo > 3').count() == 6
+
+    def test_fetch_inheritance(self):
+        class Doc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc":{'bla':int},
+            }
+        class DocA(Doc):
+            structure = {
+                "doc_a":{'foo':int},
+            }
+        class DocB(DocA):
+            structure = {
+                "doc_b":{"bar":int},
+            }
+        # creating DocA
+        for i in range(10):
+            mydoc = DocA()
+            mydoc['doc']["bla"] = i+1
+            mydoc['doc_a']["foo"] = i
+            mydoc.save()
+        # creating DocB
+        for i in range(5):
+            mydoc = DocB()
+            mydoc['doc']["bla"] = i+1
+            mydoc['doc_a']["foo"] = i
+            mydoc['doc_b']["bar"] = i+2
+            mydoc.save()
+
+        # all get all documents present in the collection (ie: 15 here)
+        assert DocA.all().count() == 15
+
+        # fetch get only the corresponding documents:
+        # DocB is a subclass of DocA and have all fields of DocA so
+        # we get all doc here
+        assert DocA.fetch().count() == 15, DocA.fetch().count()
+        # but only the DocB as DocA does not have a 'doc_a' field
+        assert DocB.fetch().count() == 5
+        index = 0
+        for doc in DocB.fetch():
+            assert doc == {'_id':doc['_id'], 'doc_a':{'foo':index}, 'doc':{'bla':index+1}, "doc_b":{'bar':index+2}}, (doc, index)
+            index += 1
+
+        #assert DocA.fetch().limit(12).count() == 10, DocA.fetch().limit(1).count() # ???
+        assert DocA.fetch().where('this.doc_a.foo > 3').count() == 7
+
+    def test_fetch_one(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc_a":{'foo':int},
+            }
+        class DocB(DocA):
+            structure = {
+                "doc_b":{"bar":int},
+            }
+
+        # creating DocA
+        mydoc = DocA()
+        mydoc['doc_a']["foo"] = 1
+        mydoc.save()
+        # creating DocB
+        mydoc = DocB()
+        mydoc['doc_b']["bar"] = 2
+        mydoc.save()
+
+        assert DocB.fetch_one()
+        self.assertRaises(MultipleResultsFound, DocA.fetch_one)
+
 

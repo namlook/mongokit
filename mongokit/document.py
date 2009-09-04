@@ -230,11 +230,34 @@ class MongoDocument(dict):
         self.__generate_skeleton(self, self.structure)
 
     def validate(self):
+        """
+        validate the document.
+
+        This method will verify if :
+          * the doc follow the structure,
+          * all required fields are filled
+        
+        Additionnaly, this method will process all
+        validators.
+        
+        """
         self._validate_doc(self, self.structure)
         self._validate_required(self, self.structure)
         self._process_validators(self, self.structure)
 
     def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
+        """
+        save the document into the db.
+
+        if uuid is True, a uuid4 will be automatiquely generated
+        else, the pymongo.ObjectId will be used.
+
+        If validate is True, the `validate` method will be called before
+        saving. Not that the `validate` method will be called *before* the
+        uuid is generated.
+
+        `save()` follow the pymongo.collection.save arguments
+        """
         if validate:
             self.validate()
         if '_id' not in self and uuid:
@@ -277,6 +300,9 @@ class MongoDocument(dict):
             
     @classmethod
     def get_collection(cls):
+        """
+        return the collection associated to the object
+        """
         if not cls._collection:
             if cls._use_pylons:
                 from mongokit.ext.pylons_env import MongoPylonsEnv
@@ -296,14 +322,87 @@ class MongoDocument(dict):
 
     @classmethod
     def get_from_id(cls, id):
+        """
+        return the document wich has the id
+
+        The query is launch against the db and collection of the object.
+        """
         bson_obj = cls.get_collection().find_one({"_id":id})
         if bson_obj:
             return cls(bson_obj)
 
     @classmethod
     def all(cls, *args, **kwargs):
+        """
+        return all document wich match the query.
+        `all()` takes the same arguments than the the pymongo.collection.find method.
+
+        The query is launch against the db and collection of the object.
+        """
         return MongoDocumentCursor(
           cls.get_collection().find(*args, **kwargs), cls)
+
+    @classmethod
+    def fetch(cls, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
+        """
+        return all document wich match the structure of the object
+        `fetch()` takes the same arguments than the the pymongo.collection.find method.
+
+        The query is launch against the db and collection of the object.
+        """
+#        where = " && ".join(["('%s' in this)" % i for i in cls.structure.keys()])
+#        if spec is not None:
+#            if '$where' in spec:
+#                where = where+' && ('+spec['$where']+')'
+#            spec.update({'$where':where})
+#        else:
+#            spec = {'$where':where}
+        if spec is None:
+            spec = {}
+        for key in cls.structure:
+            if key in spec:
+                spec[key].update({'$exists':True})
+            else:
+                spec[key] = {'$exists':True}
+        print spec
+        return MongoDocumentCursor(
+          cls.get_collection().find(
+            spec=spec, 
+            fields=fields, 
+            skip=skip,
+            limit=limit,
+            slave_okay=slave_okay,
+            timeout=timeout,
+            snapshot=snapshot,
+            _sock=_sock),
+          cls)
+
+    @classmethod
+    def fetch_one(cls, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
+        """
+        return one document wich match the structure of the object
+        `fetch_one()` takes the same arguments than the the pymongo.collection.find method.
+
+        If multiple documents are found, raise a MultipleResultsFound exception.
+        If no document is found, return None
+
+        The query is launch against the db and collection of the object.
+        """
+        bson_obj = cls.fetch(
+            spec=spec, 
+            fields=fields, 
+            skip=skip,
+            limit=limit,
+            slave_okay=slave_okay,
+            timeout=timeout,
+            snapshot=snapshot,
+            _sock=_sock)
+        count = bson_obj.count()
+        if count > 1:
+            raise MultipleResultsFound("%s results found" % count)
+        elif count == 1:
+            return cls(list(bson_obj)[0])
+
 
     @classmethod
     def group(cls, *args, **kwargs):
@@ -312,6 +411,15 @@ class MongoDocument(dict):
 
     @classmethod
     def one(cls, *args, **kwargs):
+        """
+        return on document wich match the query.
+        `one()` takes the same arguments than the the pymongo.collection.find method.
+
+        If multiple documents are found, raise a MultipleResultsFound exception.
+        If no document is found, return None
+
+        The query is launch against the db and collection of the object.
+        """
         bson_obj = cls.get_collection().find(*args, **kwargs)
         count = bson_obj.count()
         if count > 1:
@@ -321,6 +429,12 @@ class MongoDocument(dict):
 
     @classmethod
     def remove(cls, *args, **kwargs):
+        """
+        remove all document wich match the query
+        `remove()` takes the same arguments than the the pymongo.collection.remove method.
+
+        The query is launch against the db and collection of the object.
+        """
         return cls.get_collection().remove(*args, **kwargs)
 
     
