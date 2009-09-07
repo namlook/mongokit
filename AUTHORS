@@ -3,5 +3,8 @@ Initial author :
 
 Great contributors:
   Brendan McAdams (bwmcadams) <bwmcadams@gmail.com>
+    * pylons support
+    * mongodb auth support
+    * dot notation initial idea
 
 

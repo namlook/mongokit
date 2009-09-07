@@ -288,18 +288,22 @@ class MongoDocument(dict):
         it returns the threadlocal Pylons connection
         """
         conn = None
+        db = None
         if cls._use_pylons:
             from mongokit.ext.pylons_env import MongoPylonsEnv
+            log.debug("Pylons mode...")
             conn = MongoPylonsEnv.mongo_conn()
+            # class level db overrides
+            # defaults at pylons
+            if cls.db_name:
+                db = cls.db_name
+            else:
+                db = MongoPylonsEnv.get_default_db()
         else:
             conn = Connection(cls.db_host, cls.db_port)
-            
-        # class level db overrides
-        # defaults at pylons
-        if cls.db_name:
-            db = cls.db_name
-        else:
-            db = MongoPylonsEnv.get_default_db()
+            db = cls.db_name 
+
+        log.debug("DB Name: %s" % db)
             
         return conn[db]
             

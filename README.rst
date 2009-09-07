@@ -27,6 +27,7 @@ Features
  * partial auth support (it brings a simple User model) 
  * Pylons Web Framework integration support
  * Operator for validation (currently : OR, NOT and IS)
+ * Mongodb auth support
 
 A quick example
 ===============
