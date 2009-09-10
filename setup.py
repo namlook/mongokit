@@ -37,7 +37,7 @@ import sys
 
 setup(
     name = 'mongokit',
-    version = '0.3.1',
+    version = '0.3.2',
 
     description = 'Python mongodb kit',
     long_description = \
