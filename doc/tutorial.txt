@@ -6,6 +6,7 @@
 
 >>> import datetime
 
+
 >>> class BlogPost(MongoDocument):
 ...     db_name = 'test'
 ...     collection_name = 'tutorial'
@@ -29,6 +30,10 @@ attribute. This is a simple list wich list all required_fields (ie, those field 
 
 Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
 you can pass callable object (like a datetime).
+
+But before, we cleanup the collection:
+
+>>> BlogPost.remove({})
 
 >>> bp = BlogPost()
 >>> bp # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
@@ -82,17 +87,18 @@ The query is launch against the db and collection of the object.
 >>> bp = BlogPost()
 >>> bp['title'] = u"my second blog post"
 >>> bp['author'] = u"myself"
->>> bp.save()
+>>> bp.save() # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+{'body': None, 'title': u'my second blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
 
 >>> for post in  BlogPost.all():
 ...     print post['title']
-u'my first blog post'
-u'my second blog post'
+my first blog post
+my second blog post
 
 
 >>> for post in  BlogPost.all({'title':'my first blog post'}):
 ...     print post['title']
-u'my first blog post'
+my first blog post
 
 
 === one() ===
@@ -106,7 +112,7 @@ Traceback (most recent call last):
 MultipleResultsFound: 2 results found
 
 >>> BlogPost.one({'title':'my first blog post'}) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-{'body': None, 'title': u'my first blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
+{u'body': None, u'title': u'my first blog post', u'author': u'myself', u'rank': 0, u'_id': ..., u'date_creation': datetime.datetime(...)}
 
 If no document is found, `one()` returns None
 
@@ -119,7 +125,7 @@ Unlike `all()`, `fetch()` will return only documents wich match the structure of
 This will return only all blog post (wich have 'title', 'body', 'author', 'date_creation', 'rank' as fields).
 This is an helper for :
 
->>> BlogPost.all({'$where':"'title' in this && 'body' in this && 'author' in this && 'date_creation' in this && 'rank' in this"})
+>>> all_blog_posts = BlogPost.all({'$where':"'title' in this && 'body' in this && 'author' in this && 'date_creation' in this && 'rank' in this"})
 
 === fetch_one() ===
 
@@ -140,7 +146,7 @@ If you want to use the dot notation (ala json), you must set the
 >>> doc = TestDotNotation()
 >>> doc.foo.bar = u"bla"
 >>> doc
-{"foo":{"bar":u"bla}}
+{'foo': {'bar': u'bla'}}
 
 == Différence beetween {} and the type dict ==
 
@@ -148,7 +154,7 @@ If you want to use the dot notation (ala json), you must set the
 
 >>> class Person(MongoDocument):
 ...    structure = {
-...        "biography": {"foo":unicode", "bar":int"}
+...        "biography": {"foo":unicode, "bar":int}
 ...    }
 
 
@@ -163,7 +169,10 @@ You won't be able to do that because "foo" is not defined into the structure.
 
 >>> bob = Person()
 >>> bob[u"biography"][u"foo"] = u"bla"
-mongokit.mongo_exceptions.StructureError: unknown fields : ['foo']
+>>> bob.validate()
+Traceback (most recent call last):
+...
+StructureError: unknown fields : [u'foo']
 
 
 If you want to add new items to a dict if they're not defined, you must use the dict type instead :
@@ -175,7 +184,7 @@ If you want to add new items to a dict if they're not defined, you must use the 
 
 >>> bob = Person()
 >>> bob[u"biography"][u"foo"] = u"bla"
->>> bob.save()
+>>> bob.validate()
 
 Using dict type is useful if you don't know what field will be added *and* what will be the type of the field.
 If you know the type of the field, it's better to do that :
@@ -238,23 +247,25 @@ Let's say that we have a field wich can be unicode or int or a float.
 We can use the OR operator to tell MongoKit to validate the field :
 
 >>> from mongokit import OR
+>>> from datetime import datetime
 >>> class Account(MongoDocument): 
 ...     structure = { 
 ...         "balance": {'foo': OR(unicode, int, float)} 
 ...     } 
 
 >>> account = Account()
->>> account['foo'] = u'3.0'
+>>> account['balance']['foo'] = u'3.0'
 >>> account.validate()
->>> account['foo'] = 3.0
+>>> account['balance']['foo'] = 3.0
 >>> account.validate()
 
 but :
 
->>> account['foo'] = datetime.now()
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
 Traceback (most recent call last):
 ...
-SchemaTypeError: 'foo' must be an instance of <unicode or int or float> not datetime
+SchemaTypeError: balance.foo must be an instance of <unicode or int or float> not datetime
 
 === NOT operator ===
 
@@ -262,29 +273,30 @@ You can also use the NOT operator to tell MongoKit that you don't want a such ty
 for a field :
 
 >>> from mongokit import NOT
->>> from datetime import datetime
 >>> class Account(MongoDocument): 
 ...     structure = { 
 ...         "balance": {'foo': NOT(unicode, datetime)} 
 ...     } 
 
 >>> account = Account()
->>> account['foo'] = 3
+>>> account['balance']['foo'] = 3
 >>> account.validate()
->>> account['foo'] = 3.0
+>>> account['balance']['foo'] = 3.0
 >>> account.validate()
 
 and :
 
->>> account['foo'] = datetime.now()
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
 Traceback (most recent call last):
 ...
-SchemaTypeError: 'foo' must be an instance of <not unicode, not datetime> not datetime
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not datetime
 
->>> account['foo'] = u'3.0'
+>>> account['balance']['foo'] = u'3.0'
+>>> account.validate()
 Traceback (most recent call last):
 ...
-SchemaTypeError: 'foo' must be an instance of <not unicode, not datetime> not unicode
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not unicode
 
 === IS operator ===
 
@@ -298,19 +310,20 @@ must be use for this purpose :
 ...     } 
 
 >>> account = Account()
->>> account['foo'] = u'spam'
+>>> account['flag']['foo'] = u'spam'
 >>> account.validate()
->>> account['flag'] = u'phishing'
+>>> account['flag']['foo'] = u'phishing'
 >>> account.validate()
 
 and :
 
->>> account['flag'] = u'foo'
+>>> account['flag']['foo'] = u'foo'
+>>> account.validate()
 Traceback (most recent call last):
 ...
-SchemaTypeError: 'flag' must be in [u'spam', u'controversy', u'phishing'] not foo
+SchemaTypeError: flag.foo must be in [u'spam', u'controversy', u'phishing'] not foo
 
-== Adding complexe validation == 
+== Adding complex validation == 
 
 If the use of a validator is not enougth, you can overload the validation method
 to feet your needs.
@@ -325,7 +338,7 @@ Example the following document:
 ...     }
 ... 
 
-We want to be sur that before saving our object, foo is greater than bar and baz is
+We want to be sure that before saving our object, foo is greater than bar and baz is
 unicode(foo). Do do that, we juste overload the validation method :
 
     def validate(self):
@@ -333,5 +346,172 @@ unicode(foo). Do do that, we juste overload the validation method :
         assert self['baz'] == unicode(self['foo'])
         super(MyDoc, self).validate(self)
 
+== Embedding MongoDocuments as values ==
 
+MongoKit has optional support for MongoDB's autoreferencing/dbref 
+features. Autoreferencing allows you to embed MongoKit objects/instances
+inside another MongoKit object.  With autoreferencing enabled, MongoKit and
+the pymongo driver will translate the embedded MongoKit object
+values into internal MongoDB DBRefs.  The (de)serialization is
+handled automatically by the pymongo driver.
 
+.. _autoref_sample: http://github.com/mongodb/mongo-python-driver/blob/cd47b2475c5fe567e98696e6bc5af3c402891d12/examples/auto_reference.py
+
+Autoreferences allow you to pass other MongoDocuments as values.
+pymongo_.  (with help from MongoKit) automatically
+translates these object values into DBRefs before persisting to
+Mongo.  When fetching, it translates them back, so that you have
+the data values for your referenced object. See the autoref_sample_. for 
+further details/internals  on this driver-level functionality. As for 
+enabling it in your own MongoKit code, simply define the following class 
+attribute upon your Document subclass::
+
+        use_autorefs = True
+
+With autoref enabled, MongoKit's connection management will attach the
+appropriate BSON manipulators to your document's connection handles.  We 
+require you to explicitly enable autoref for two reasons:
+
+    - Using autoref and it's BSON manipulators (As well as DBRefs) can 
+carry a performance penalty.  We opt for performance and simplicity first,
+so you must explicitly enable autoreferencing.
+    - You may not wish to use auto-referencing in some cases where you're
+ using DBRefs.
+
+Once you have autoref enabled, MongoKit will allow you to define
+any valid subclass of MongoDocument as part of your document
+structure.  **If your class does not define `use_autorefs` as 
+True, MongoKit's structure validation code will REJECT your 
+structure.**
+
+==== A detailed example ====
+
+First let's create a simple doc:
+
+    >>> class DocA(MongoDocument):
+    ...    db_name = "test"
+    ...    collection_name = "tutorial"
+    ...    structure = {
+    ...        "a":{'foo':int},
+    ...        "abis":{'bar':int},
+    ...    }
+    ...    default_values = {'a.foo':2}
+    ...    required_fields = ['abis.bar']
+
+    >>> doca = DocA()
+    >>> doca['_id'] = 'doca'
+    >>> doca['abis']['bar'] = 3
+    >>> doca.save()
+    {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}
+
+Now, let's create a DocB wich have a reference to DocA:
+
+    >>> class DocB(MongoDocument):
+    ...    db_name = "test"
+    ...    collection_name = "tutorial"
+    ...    structure = {
+    ...        "b":{"doc_a":DocA},
+    ...    }
+    ...    use_autorefs = True
+
+Note that to be able to specify a MongoDocument into the structure, we must
+set `use_autorefs` as `True`.
+
+    >>> docb = DocB()
+
+The default value for an embeded doc is None:
+
+    >>> docb
+    {'b': {'doc_a': None}}
+
+The validation act as expected:
+
+    >>> docb['b']['doc_a'] = 4
+    >>> docb.validate()
+    Traceback (most recent call last):
+    ...
+    SchemaTypeError: b.doc_a must be an instance of DocA not int
+
+    >>> docb['_id'] = 'docb'
+    >>> docb['b']['doc_a'] = doca
+    >>> docb 
+    {'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
+
+While saving, the "_ns" field is added to docb:
+
+    >>> docb.save()
+    {'_ns': u'tutorial', 'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
+
+Now the interresting part. If we change a field in an embeded doc, the change will be done
+for all DocA wich have the same '_id':
+
+    >>> docb['b']['doc_a']['a']['foo'] = 4
+    >>> docb.save()
+    {'_ns': u'tutorial', 'b': {'doc_a': {'a': {'foo': 4}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
+
+    >>> doca['a']['foo']
+    4
+
+Required fields are also supported in embeded documents.i
+Remember DocA have the 'abis.bar' field required. If we set it to None
+via the docb document, the RequireFieldError is raised with the full path
+'b.doc_a.abis.bar':
+
+    >>> docb['b']['doc_a']['abis']['bar'] = None
+    >>> docb.validate()
+    Traceback (most recent call last):
+    ...
+    RequireFieldError: b.doc_a.abis.bar is required
+
+== Indexes ==
+
+Sometimes, it's desirable to have indexes on your dataset - especially unique ones.
+In order to do that, you must fill the `indexes` attribute. The `indexes` attribute
+is a liste of dictionnary with the following structure:
+
+{
+    "fields": # take a list of fields or a field name (required)
+    "unique":  should this index guarantee uniqueness? (optional, False by default)
+    "ttl": (optional, 300 by default) time window (in seconds) during which this index will be
+recognized by subsequent calls to `ensure_index` - see pymongo documentation for
+`ensure_index` for details.
+}
+
+Example:
+
+>>> class MyDoc(MongoDocument):
+...     structure = {
+...         'standard':unicode,
+...         'other':{
+...             'deep':unicode,
+...         },
+...         'notindexed':unicode,
+...     }
+...     
+...     indexes = [
+...         {
+...             'fields':['standard', 'other.deep'],
+...             'unique':True,
+...         },
+...     ]
+
+or if you have more than one index:
+
+>>> class Movie(MongoDocument):
+...     db_name = 'test'
+...     collection_name = 'mongokit'
+...     structure = {
+...         'standard':unicode,
+...         'other':{
+...             'deep':unicode,
+...         },
+...         'alsoindexed':unicode,
+...     }
+... 
+...     indexes = [
+...         {
+...             'fields':'standard',
+...             'unique':True,
+...         },
+...         {'fields': ['alsoindexed', 'other.deep']},
+...     ]

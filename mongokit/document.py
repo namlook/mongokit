@@ -31,6 +31,7 @@ from pymongo.connection import Connection
 from generators import MongoDocumentCursor
 from mongo_exceptions import *
 from mongokit.ext.mongodb_auth import authenticate_mongodb
+from pymongo.son_manipulator import AutoReference, NamespaceInjector
 import re
 import logging
 
@@ -51,7 +52,7 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
 
 __all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument']
 
-STRUCTURE_KEYWORDS = ['_id', '_revision']
+STRUCTURE_KEYWORDS = ['_id', '_ns', '_revision']
 
 class DotedDict(dict):
     def __setattr__(self, key, value):
@@ -174,8 +175,7 @@ class MongoDocument(dict):
     required_fields = []
     default_values = {}
     validators = {}
-    
-
+    indexes = []
     
     db_host = "localhost"
     db_port = 27017
@@ -195,6 +195,15 @@ class MongoDocument(dict):
         
     # If you want to use the dot notation, set this to True:
     use_dot_notation = False
+
+    # Support autoreference
+    # When enabled, your DB will get NamespaceInjector
+    # and AutoReference attached to it, to automatically resolve
+    # See the autoreference example in the pymongo driver for more info
+    # At the risk of overdocing, *ONLY* when your class has this
+    # set to true, will a MongoDocument subclass be permitted
+    # as a valid type
+    use_autorefs = False
 
     def __init__(self, doc=None, gen_skel=True):
         """
@@ -327,8 +336,24 @@ class MongoDocument(dict):
                 # This *CAN* fail, in which case it throws ConnectionError
                 log.debug("Username + Passwd set.  Authing against MongoDB.")
                 authenticate_mongodb(db, cls.db_username, cls.db_password)
-                
+            if cls.use_autorefs:
+                db.add_son_manipulator(NamespaceInjector()) # inject _ns
+                db.add_son_manipulator(AutoReference(db))
             cls._collection = db[cls.collection_name]
+        # creating index if needed
+        for index in cls.indexes:
+            unique = False
+            if 'unique' in index.keys():
+                unique = index['unique']
+            ttl = 300
+            if 'ttl' in index.keys():
+                ttl = index['ttl']
+            if isinstance(index['fields'], list):
+                fields = [(i, 1) for i in index['fields']]
+            else:
+                fields = index['fields']
+            log.debug('Creating index for %s' % index['fields'])
+            cls._collection.ensure_index(fields, unique=unique, ttl=ttl)
         return cls._collection
 
     def _get_collection(self):
@@ -451,10 +476,6 @@ class MongoDocument(dict):
         """
         return cls.get_collection().remove(*args, **kwargs)
 
-    
-#    def __setitem__(self, key, value):
-#        dict.__setitem__(self, key, value)
-
     #
     # Public API end
     #
@@ -525,6 +546,16 @@ class MongoDocument(dict):
                         __validate_structure(struct[key])
                     elif isinstance(struct[key], MongokitOperator):
                         __validate_structure(struct[key])
+                    elif hasattr(struct[key], 'structure'):
+                        if not issubclass(struct[key], MongoDocument):
+                            raise StructureError(
+                              "%s is not an authorized type" % struct[key])
+                        elif issubclass(struct[key], MongoDocument) and not self.use_autorefs:
+                            raise StructureError(
+                              "%s seems to be a embeded document wich is not permitted.\n"
+                              "To be able to use autoreference, set the"
+                              "'use_autorefs' as True" % (key)
+                            )
                     elif struct[key] not in authorized_types:
                         raise StructureError(
                           "%s is not an authorized type" % struct[key])
@@ -565,6 +596,15 @@ class MongoDocument(dict):
                 raise SchemaTypeError(
                   "%s must be an instance of %s not %s" % (
                     path, struct.__name__, type(doc).__name__))
+        elif isinstance(struct, SchemaProperties): #DBRef
+            if not isinstance(doc, struct) and doc is not None:
+                raise SchemaTypeError(
+                  "%s must be an instance of %s not %s" % (
+                    path, struct.__name__, type(doc).__name__))
+            if doc is not None:
+                doc._validate_doc(doc, doc.structure, path=path)
+                doc._validate_required(doc, doc.structure, path="", root_path=path)
+                doc._process_validators(doc, doc.structure, path=path)
         elif isinstance(struct, MongokitOperator):
             if not struct.validate(doc) and doc is not None:
                 if isinstance(struct, IS):
@@ -724,7 +764,7 @@ class MongoDocument(dict):
                     else:
                         doc[key] = new_value
 
-    def _validate_required(self, doc, struct, path = ""):
+    def _validate_required(self, doc, struct, path = "", root_path=""):
         for key in struct:
             if type(key) is type:
                 new_key = "$%s" % key.__name__
@@ -741,19 +781,25 @@ class MongoDocument(dict):
                 #
                 if type(key) is not type and key not in doc:
                     if new_path in self._required_namespace:
+                        if root_path:
+                            new_path = ".".join([root_path, new_path])
                         raise RequireFieldError("%s is required" % new_path)
                 elif type(key) is type:
                     if not len(doc):
                         if new_path in self._required_namespace:
+                            if root_path:
+                                new_path = ".".join([root_path, new_path])
                             raise RequireFieldError("%s is required" % new_path)
                     else:
                         for doc_key in doc:
                             self._validate_required(
                               doc[doc_key], struct[key], new_path)
                 elif not len(doc[key]) and new_path in self._required_namespace:
+                    if root_path:
+                        new_path = ".".join([root_path, new_path])
                     raise RequireFieldError( "%s is required" % new_path )
                 else:
-                    self._validate_required(doc[key], struct[key], new_path)
+                    self._validate_required(doc[key], struct[key], new_path, root_path)
             #
             # If the struct is a list, we have to validate all values into it
             #
@@ -763,8 +809,12 @@ class MongoDocument(dict):
                 #
                 if not key in doc:
                     if new_path in self._required_namespace:
+                        if root_path:
+                            new_path = ".".join([root_path, new_path])
                         raise RequireFieldError( "%s is required" % new_path )
                 elif not len(doc[key]) and new_path in self.required_fields:
+                    if root_path:
+                        new_path = ".".join([root_path, new_path])
                     raise RequireFieldError( "%s is required" % new_path )
             #
             # It is not a dict nor a list but a simple key:value
@@ -775,8 +825,12 @@ class MongoDocument(dict):
                 #
                 if not key in doc:
                     if new_path in self._required_namespace:
+                        if root_path:
+                            new_path = ".".join([root_path, new_path])
                         raise RequireFieldError( "%s is required" % new_path )
                 elif doc[key] is None and new_path in self._required_namespace:
+                    if root_path:
+                        new_path = ".".join([root_path, new_path])
                     raise RequireFieldError( "%s is required" % new_path )
 
 

@@ -6,5 +6,9 @@ Great contributors:
     * pylons support
     * mongodb auth support
     * dot notation initial idea
+    * original autorefs patch
+
+  marcammann
+    * original index patch
 
 
