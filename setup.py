@@ -63,7 +63,7 @@ to keep its simplicity when you manage it in python""",
     zip_safe = False,
 
     install_requires = [
-        'pymongo>=0.13',
+        'pymongo>=0.15.1',
     ]
 
 )

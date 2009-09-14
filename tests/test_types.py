@@ -203,6 +203,7 @@ class TypesTestCase(unittest.TestCase):
             }
         mydoc = MyDoc()
         mongokit.authorized_types.remove(str)
+    
 
     def test_or_operator(self):
         from mongokit import OR
@@ -316,25 +317,20 @@ class TypesTestCase(unittest.TestCase):
         mydoc['bar'] = u"3"
         mydoc.validate()
 
-    def _test_dbref(self):
-        class MyDocA(MongoDocument):
-            structure = {"foo":unicode}
-
-        class MyDocB(MongoDocument):
+    def test_subclassed_type(self):
+        """
+        accept all subclass of supported type
+        """
+        class CustomFloat(float):
+            def __init__(self, float):
+                self = float + 2
+        class MyDoc(MongoDocument):
             structure = {
-                "doc_a": MyDocA(),
-                "bar": unicode
+                "foo":float,
             }
-
-        mydoc = MyDocB()
-        assert  mydoc == {"bar":None, "doc_a":None}
-        doc_a = MyDocA()
-        doc_a['foo'] = u"bla"
-        mydoc['doc_a'] = doc_a
-        self.assertRaises(DBRefError, mydoc.validate)
-        doc_a.save()
-        mydoc['doc_a'] = doc_a
+        mydoc = MyDoc()
+        mydoc['foo'] = CustomFloat(4)
         mydoc.validate()
-        assert mydoc == {"bar":None, "doc_a":None} # XXX TODO
-        print mydoc['doc_a']
-        assert False
+        
+
+

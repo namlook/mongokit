@@ -556,9 +556,14 @@ class MongoDocument(dict):
                               "To be able to use autoreference, set the"
                               "'use_autorefs' as True" % (key)
                             )
-                    elif struct[key] not in authorized_types:
-                        raise StructureError(
-                          "%s is not an authorized type" % struct[key])
+                    elif (struct[key] not in authorized_types):
+                        ok = False
+                        for auth_type in authorized_types:
+                            if issubclass(struct[key], auth_type):
+                                ok = True
+                        if not ok:
+                            raise StructureError(
+                              "%s is not an authorized type" % struct[key])
             elif isinstance(struct, list):
                 for item in struct:
                     __validate_structure(item)
