@@ -41,6 +41,8 @@ log = logging.getLogger(__name__)
 
 from operators import MongokitOperator, IS
 
+class CustomType(object): pass
+
 authorized_types = [type(None), bool, int, float, unicode, list, dict,
   datetime.datetime, 
   pymongo.binary.Binary,
@@ -48,9 +50,10 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
   pymongo.dbref.DBRef,
   pymongo.code.Code,
   type(re.compile("")),
+  CustomType,
 ]
 
-__all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument']
+__all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument', 'CustomType']
 
 STRUCTURE_KEYWORDS = ['_id', '_ns', '_revision']
 
@@ -205,6 +208,8 @@ class MongoDocument(dict):
     # as a valid type
     use_autorefs = False
 
+    custom_types = {}
+
     def __init__(self, doc=None, gen_skel=True):
         """
         doc : a dictionnary
@@ -228,6 +233,7 @@ class MongoDocument(dict):
         if gen_skel:
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
+        self._process_custom_type(False, self, self.structure)
         self._collection = None
         ## building required fields namespace
         self._required_namespace = set([])
@@ -255,9 +261,15 @@ class MongoDocument(dict):
         validators.
         
         """
+        if self.custom_types:
+            self._process_custom_type(True, self, self.structure)
         self._validate_doc(self, self.structure)
-        self._validate_required(self, self.structure)
-        self._process_validators(self, self.structure)
+        if self.required_fields:
+            self._validate_required(self, self.structure)
+        if self.validators:
+            self._process_validators(self, self.structure)
+        if self.custom_types:
+            self._process_custom_type(False, self, self.structure)
 
     def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
         """
@@ -276,7 +288,11 @@ class MongoDocument(dict):
             self.validate()
         if '_id' not in self and uuid:
             self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
+        if self.custom_types:
+            self._process_custom_type(True, self, self.structure)
         id = self.collection.save(self, safe=safe, *args, **kwargs)
+        if self.custom_types:
+            self._process_custom_type(False, self, self.structure)
         return self
 
     def delete(self):
@@ -519,6 +535,11 @@ class MongoDocument(dict):
             if validator not in self._namespaces:
                 raise ValueError("Error in validators: can't"
                   "find %s in structure" % validator )
+        for custom_type in self.custom_types:
+            if custom_type not in self._namespaces:
+                raise ValueError("Error in custom_types: can't"
+                  "find %s in structure" % custom_type )
+        
 
     def _validate_structure(self):
         ##############
@@ -722,6 +743,40 @@ class MongoDocument(dict):
                 # check if the value must not be null
                 #
                 __processval(self, new_path, doc, key)
+
+    def _process_custom_type(self, to_bson, doc, struct, path=""):
+        """
+        if to_bson is True, then use the "to_bson" fonction from CustomType
+        """
+        for key in struct:
+            if type(key) is type:
+                new_key = "$%s" % key.__name__
+            else:
+                new_key = key
+            new_path = ".".join([path, new_key]).strip('.')
+            #
+            # if the value is a dict, we have a another structure to validate
+            #
+            if isinstance(struct[key], dict):
+                #
+                # if the dict is still empty into the document we build
+                # it with None values
+                #
+                if len(struct[key]) and\
+                  not [i for i in struct[key].keys() if type(i) is type]: 
+                    if key in doc:
+                        self._process_custom_type(to_bson, doc[key], struct[key], new_path)
+                else:# case {unicode:int}
+                    pass
+            else:
+                if new_path in self.custom_types:
+                    Custom_Type = self.custom_types[new_path]
+                    ct = Custom_Type()
+                    if to_bson:
+                        doc[key] = ct.to_bson(doc[key])
+                    else:
+                        doc[key] = ct.to_python(doc[key])
+
             
     def _set_default_fields(self, doc, struct, path = ""):
         for key in struct:

@@ -26,6 +26,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from operators import MongokitOperator, OR, NOT, IS
-from document import Connection, MongoDocument, authorized_types, MongoDocumentCursor, VersionnedDocument, DotedDict
+from document import Connection, MongoDocument, authorized_types, MongoDocumentCursor, VersionnedDocument, DotedDict, CustomType
 from mongo_exceptions import *
 

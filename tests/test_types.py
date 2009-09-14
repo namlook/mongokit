@@ -184,7 +184,6 @@ class TypesTestCase(unittest.TestCase):
                 "bla":{"blo":{"bli":[{"arf":unicode}]}},
             }
         mydoc = MyDoc()
-        print mydoc
         mydoc['foo'].update({u"bir":[1,2,3]})
         mydoc['foo'][u'bar'][u'spam'] = {1:[u'bla', u'ble'], 3:[u'foo', u'bar']}
         mydoc.validate()
@@ -333,4 +332,99 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         
 
+    def test_custom_type(self):
+        import datetime
 
+        class CustomDate(CustomType):
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                "date": unicode,
+            }
+            custom_types = {'date':CustomDate}
+            default_values = {'date':'08-06-07'}
+            
+        foo = Foo()
+        foo['_id'] = 1
+        foo['date'] = datetime.datetime(2003,2,1)
+        foo.save()
+        foo.save()
+
+        foo2 = Foo()
+        foo2['_id'] = 2
+        foo2.save()
+        foo2.save()
+        assert foo['date'] == datetime.datetime(2003,2,1), foo['date']
+        foo = Foo.get_from_id(1)
+        assert foo['date'] == datetime.datetime(2003,2,1)
+        saved_foo =  foo.collection.find({'_id':1}).next()
+        assert saved_foo['date'] == CustomDate().to_bson(datetime.datetime(2003,2,1)), saved_foo['date']
+        foo2 = Foo.get_from_id(2)
+        assert foo2['date'] == datetime.datetime(2008,6,7), foo2
+
+    def test_custom_type_nested(self):
+        import datetime
+        class CustomDate(CustomType):
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'foo':{'date': unicode},
+            }
+            custom_types = {'foo.date':CustomDate}
+            default_values = {'foo.date':'08-06-07'}
+            
+        foo = Foo()
+        foo['_id'] = 1
+        foo['foo']['date'] = datetime.datetime(2003,2,1)
+        foo.save()
+        foo.save()
+
+        foo2 = Foo()
+        foo2['_id'] = 2
+        foo2.save()
+        assert foo['foo']['date'] == datetime.datetime(2003,2,1), foo['foo']['date']
+        foo = Foo.get_from_id(1)
+        assert foo['foo']['date'] == datetime.datetime(2003,2,1)
+        saved_foo =  foo.collection.find({'_id':1}).next()
+        assert saved_foo['foo']['date'] == CustomDate().to_bson(datetime.datetime(2003,2,1)), foo['foo']['date']
+        foo2 = Foo.get_from_id(2)
+        assert foo2['foo']['date'] == datetime.datetime(2008,6,7), foo2
+
+    def test_bad_custom_types(self):
+        import datetime
+        class CustomDate(CustomType):
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'foo':{'date': unicode},
+            }
+            custom_types = {'bar.date':CustomDate}
+         
+        self.assertRaises(ValueError, Foo)

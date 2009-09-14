@@ -131,18 +131,18 @@ class DescriptorsTestCase(unittest.TestCase):
 
     def _test_default_values_from_function_througt_types(self):
         # XXX TODO
-        import time
-        class MyDoc(MongoDocument):
-            structure = {
-                "foo":{int:float}
-            }
-            default_values = {"foo.$int":time.time}
-        mydoc = MyDoc()
-        mydoc.validate()
-        # can't go througt types, because no values
-        assert mydoc['foo'] == {}
+#        class MyDoc(MongoDocument):
+#            structure = {
+#                "foo":{int:float}
+#            }
+#            default_values = {"foo.$int":time.time}
+#        mydoc = MyDoc()
+#        mydoc.validate()
+#        # can't go througt types, because no values
+#        assert mydoc['foo'] == {}
 
         # but
+        import time
         class MyDoc(MongoDocument):
             structure = {
                 "foo":{int:float}

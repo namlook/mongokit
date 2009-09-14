@@ -196,7 +196,27 @@ If you know the type of the field, it's better to do that :
 
 This will add another layer to validate the content. See "validate keys" section for more informations.
 
-== Adding custom types ==
+== Adding more authorized types ==
+
+By default, MongoKit allow the following types :
+
+authorized_types = [type(None),
+  bool, 
+  int, 
+  float,
+  unicode,
+  list,
+  dict,
+  datetime.datetime, 
+  pymongo.binary.Binary,
+  pymongo.objectid.ObjectId,
+  pymongo.dbref.DBRef,
+  pymongo.code.Code,
+  type(re.compile("")),
+  CustomType,
+]
+
+It's possible to add more type in authorized_types: 
 
 >>> import mongokit
 >>> mongokit.authorized_types.append(str)
@@ -345,6 +365,73 @@ unicode(foo). Do do that, we juste overload the validation method :
         assert self['foo'] > self['bar']
         assert self['baz'] == unicode(self['foo'])
         super(MyDoc, self).validate(self)
+
+== Custom types ==
+
+Sometime, we need to work with complexe object while their
+footprint in the database is fairly simple. Let's take a  
+datetime object. Datetime object can be usefull to compute
+complexe date but while mongodb can deal with datetime object,
+let's say that we just want to store the unicode representation.
+
+MongoKit allow the use to work on a datetime object and store the unicode
+representation on the fly. In order to do this, we have to implement a CustomType
+and fill the custom_types attributes:
+
+>>> import datetime
+
+A CustomType object must implement to method:
+
+ - `to_bson(self, value)`: this method will convert the value
+    to fit the correct authorized type before beeing saved in the db.
+ - `to_python(self, value)`: this method will convert the value
+    taken from the db into a python object
+ 
+>>> class CustomDate(CustomType):
+...     def to_bson(self, value):
+...         """convert type to a mongodb type"""
+...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+...     def to_python(self, value):
+...         """convert type to a python object"""
+...         if value is not None:
+...            return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+
+Now, let's create a MongoDocument:
+
+>>> class Foo(MongoDocument):
+...     db_name = 'test'
+...     collection_name = 'tutorial'
+...     structure = {
+...         'foo':{
+...             'date': unicode,
+...         },
+...     }
+...     custom_types = {'foo.date':CustomDate}
+...     default_values = {'foo.date':'08-06-07'}
+
+The custom type attribute work just other descriptor (`default_values`, `required_fields`...)
+but take a CustomType object.
+            
+Now, we can create Foo's objects and working with python datetime objects
+
+>>> foo = Foo()
+>>> foo['_id'] = 1
+>>> foo['foo']['date'] = datetime.datetime(2003,2,1)
+>>> foo.save()
+{'foo': {'date': datetime.datetime(2003, 2, 1, 0, 0)}, '_id': 1}
+
+The saved object in db has the unicode footprint as expected:
+
+>>> foo.collection.find_one({'_id':1})
+{u'_id': 1, u'foo': {u'date': u'03-02-01'}}
+
+Quering an object will convert automaticly the CustomType into the correct
+python object:
+
+>>> foo = Foo.get_from_id(1)
+>>> foo['foo']['date']
+datetime.datetime(2003, 2, 1, 0, 0)
 
 == Embedding MongoDocuments as values ==
 
