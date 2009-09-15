@@ -428,3 +428,38 @@ class TypesTestCase(unittest.TestCase):
             custom_types = {'bar.date':CustomDate}
          
         self.assertRaises(ValueError, Foo)
+
+    def test_custom_type_nested_list(self):
+        import datetime
+
+        class CustomPrice(CustomType):
+            def to_bson(self, value):
+                return float(value)
+            def to_python(self, value):
+                return str(value)
+
+        class Receipt(MongoDocument):
+            use_dot_notation = True
+            db_name = 'test'
+            collection_name = 'test'
+            structure = {
+                'products': [
+                      {
+                        'sku': unicode,
+                        'qty': int,
+                        'price': float,
+                      }
+                ]
+            }
+            custom_types = {
+                'products.price': CustomPrice
+            }
+          
+        r = Receipt()
+        r['_id'] = 'bla'
+        r.products = []
+        r.products.append({ 'sku': u'X-25A5F58B-61', 'qty': 1, 'price': '9.99' })
+        r.save()
+        r_saved = r.collection.find_one({'_id':'bla'})
+        assert r_saved == {u'_id': u'bla', u'products': [{u'sku': u'X-25A5F58B-61', u'price': 9.9900000000000002, u'qty': 1}]}
+

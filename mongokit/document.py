@@ -516,6 +516,23 @@ class MongoDocument(dict):
                     yield '%s.%s' % (new_key, new_child_key)
             elif type(key) is type:
                 yield '$%s' % key.__name__
+            elif isinstance(value, list) and len(value):
+                if isinstance(value[0], dict):
+                    for child_key in self.__walk_dict(value[0]):
+                        if type(key) is type:
+                            new_key = "$%s" % key.__name__
+                        else:
+                            new_key = key
+                        if type(child_key) is type:
+                            new_child_key = "$%s" % child_key.__name__
+                        else:
+                            new_child_key = child_key
+                        yield '%s.%s' % (new_key, new_child_key)
+                else:
+                    if type(key) is not type:
+                        yield key
+                    else:
+                        yield ""
             else:
                 if type(key) is not type:
                     yield key
@@ -768,6 +785,10 @@ class MongoDocument(dict):
                         self._process_custom_type(to_bson, doc[key], struct[key], new_path)
                 else:# case {unicode:int}
                     pass
+            elif isinstance(struct[key], list) and len(struct[key]):
+                if isinstance( struct[key][0], dict):
+                    for obj in doc[key]:
+                        self._process_custom_type(to_bson=to_bson, doc=obj, struct=struct[key][0], path=new_path)
             else:
                 if new_path in self.custom_types:
                     Custom_Type = self.custom_types[new_path]
