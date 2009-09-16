@@ -459,7 +459,8 @@ class TypesTestCase(unittest.TestCase):
         r['_id'] = 'bla'
         r.products = []
         r.products.append({ 'sku': u'X-25A5F58B-61', 'qty': 1, 'price': '9.99' })
+        r.products.append({ 'sku': u'Z-25A5F58B-62', 'qty': 2, 'price': '2.99' })
         r.save()
         r_saved = r.collection.find_one({'_id':'bla'})
-        assert r_saved == {u'_id': u'bla', u'products': [{u'sku': u'X-25A5F58B-61', u'price': 9.9900000000000002, u'qty': 1}]}
+        assert r_saved == {u'_id': u'bla', u'products': [{u'sku': u'X-25A5F58B-61', u'price': 9.9900000000000002, u'qty': 1}, {u'sku': u'Z-25A5F58B-62', u'price': 2.9900000000000002, u'qty': 2}]}
 

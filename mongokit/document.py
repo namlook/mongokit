@@ -297,7 +297,9 @@ class MongoDocument(dict):
 
     def delete(self):
         """
-        delete the document from the collection
+        delete the document from the collection from his _id.
+
+        This is equivalent to "self.remove({'_id':self['_id']})"
         """
         self.collection.remove({'_id':self['_id']})
 
