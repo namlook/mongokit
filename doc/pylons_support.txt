@@ -19,7 +19,7 @@ at Pylons boot; the MongoDB_ Pool code should ensure you have enough connections
 
 Add the import at the top:
 
-    >>> from mongokit.pylons_env import MongoPylonsEnv
+    >>> from mongokit.ext.pylons_env import MongoPylonsEnv
 
 And lower down, in load_environment():
 
