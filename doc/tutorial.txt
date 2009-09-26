@@ -1,11 +1,11 @@
 = MongoKit Tutorial =
 
+
 == Simple Example == 
 
 >>> from mongokit import *
 
 >>> import datetime
-
 
 >>> class BlogPost(MongoDocument):
 ...     db_name = 'test'
@@ -31,9 +31,11 @@ attribute. This is a simple list wich list all required_fields (ie, those field 
 Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
 you can pass callable object (like a datetime).
 
-But before, we cleanup the collection:
+But before, some cleanup:
 
->>> BlogPost.remove({})
+>>> Connection().test.tutorial.remove({})
+
+Now, let's create a blogpost:
 
 >>> bp = BlogPost()
 >>> bp # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
