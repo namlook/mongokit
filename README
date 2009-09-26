@@ -74,7 +74,7 @@ And you can use more complex structure::
      
 Please, see the tutorial_ for more examples.
 
-.. _tutorial : http://bitbucket.org/namlook/mongokit/src/tip/doc/_build/html/tutorial.html
+.. _tutorial : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html
 
 Suggestion and patches are really welcome. If you find mistakes in the documentation
 (english is not my primary langage) feel free to contact me. You can find me (namlook) 

@@ -34,13 +34,14 @@ except ImportError:
 
 import os
 import sys
+import codecs
 
 setup(
     name = 'mongokit',
     version = '0.3.3',
 
     description = 'Python mongodb kit',
-    long_description = codecs.open('README', "r", "utf-8").read()
+    long_description = codecs.open('README', "r", "utf-8").read(),
     author = 'Namlook',
     license = 'New BSD License',
     url = 'http://bitbucket.org/namlook/mongokit/',

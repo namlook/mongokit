@@ -1,6 +1,10 @@
 MongoKit Documentation
 ======================
 
+Browse the `source code`_
+
+.. _`source code` : http://bitbucket.org/namlook/mongokit/overview/
+
 Contents:
 
 .. toctree::
