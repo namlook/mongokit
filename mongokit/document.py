@@ -180,6 +180,8 @@ class MongoDocument(dict):
     default_values = {}
     validators = {}
     indexes = []
+
+    skip_validation = False
     
     db_host = "localhost"
     db_port = 27017
@@ -224,9 +226,10 @@ class MongoDocument(dict):
             doc = {}
         if self.structure is None:
             raise StructureError("your document must have a structure defined")
-        self._validate_structure()
-        self._namespaces = list(self.__walk_dict(self.structure))
-        self._validate_descriptors()
+        if not self.skip_validation: 
+            self._validate_structure()
+            self._namespaces = list(self.__walk_dict(self.structure))
+            self._validate_descriptors()
         for k, v in doc.iteritems():
             self[k] = v
         if doc:
@@ -234,13 +237,15 @@ class MongoDocument(dict):
         if gen_skel:
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
-        self._process_custom_type(False, self, self.structure)
+        if self.custom_types:
+            self._process_custom_type(False, self, self.structure)
         ## building required fields namespace
-        self._required_namespace = set([])
-        for rf in self.required_fields:
-            splited_rf = rf.split('.')
-            for index in range(len(splited_rf)):
-                self._required_namespace.add(".".join(splited_rf[:index+1]))
+        if not self.skip_validation:
+            self._required_namespace = set([])
+            for rf in self.required_fields:
+                splited_rf = rf.split('.')
+                for index in range(len(splited_rf)):
+                    self._required_namespace.add(".".join(splited_rf[:index+1]))
         
     def generate_skeleton(self):
         """
@@ -271,7 +276,7 @@ class MongoDocument(dict):
         if self.custom_types:
             self._process_custom_type(False, self, self.structure)
 
-    def save(self, uuid=True, validate=True, safe=True, *args, **kwargs):
+    def save(self, uuid=True, validate=None, safe=True, *args, **kwargs):
         """
         save the document into the db.
 
@@ -284,8 +289,12 @@ class MongoDocument(dict):
 
         `save()` follow the pymongo.collection.save arguments
         """
-        if validate:
-            self.validate()
+        if validate is not None:
+            if validate:
+                self.validate()
+        else:
+            if not self.skip_validation:
+                self.validate()
         if '_id' not in self and uuid:
             self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         if self.custom_types:
@@ -408,13 +417,6 @@ class MongoDocument(dict):
 
         The query is launch against the db and collection of the object.
         """
-#        where = " && ".join(["('%s' in this)" % i for i in cls.structure.keys()])
-#        if spec is not None:
-#            if '$where' in spec:
-#                where = where+' && ('+spec['$where']+')'
-#            spec.update({'$where':where})
-#        else:
-#            spec = {'$where':where}
         if spec is None:
             spec = {}
         for key in cls.structure:

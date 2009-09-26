@@ -376,6 +376,36 @@ unicode(foo). Do do that, we juste overload the validation method :
         assert self['baz'] == unicode(self['foo'])
         super(MyDoc, self).validate(self)
 
+== Skipping validation ==
+
+Once your application is ready for production and you are sure that the data is consistant,
+you might want to skip the validation layer. This will make mongokit significant faster
+(as fast as pymongo). In order to do that, just set the `skip_validation` attribute to `True`.
+
+TIP: this is a good idea to create a "RootDocument" and to inherite all you object from it.
+This will allow you to control the behavior of all your objects by setting the RootDocument:
+
+>>> class RootDocument(MongoDocument):
+...     structure = {}
+...     skip_validation = True
+...     use_dot_notation = True
+...     use_autorefs = True
+
+>>> class MyDoc(RootDocument):
+...     structure={
+...             "foo":int,
+...     }
+
+
+Note that you can always force the validation at any moment on saving even if `skip_validation` is `True`:
+
+>>> mydoc = MyDoc()
+>>> mydoc['foo'] = u'bar'
+>>> mydoc.save(validate=True)
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
+
 == Custom types ==
 
 Sometime, we need to work with complexe object while their

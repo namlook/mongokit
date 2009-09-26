@@ -433,3 +433,28 @@ class ApiTestCase(unittest.TestCase):
         self.assertRaises(MultipleResultsFound, DocA.fetch_one)
 
 
+    def test_skip_validation(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc_a":{'foo':int},
+            }
+
+        # creating DocA
+        mydoc = DocA()
+        mydoc['doc_a']["foo"] = u'bar' 
+        self.assertRaises(SchemaTypeError, mydoc.save)
+        mydoc.save(validate=False)
+
+        DocA.skip_validation = True
+
+        # creating DocA
+        mydoc = DocA()
+        mydoc['doc_a']["foo"] = u'foo' 
+        self.assertRaises(SchemaTypeError, mydoc.save, validate=True)
+        mydoc.save()
+
+
+
+
