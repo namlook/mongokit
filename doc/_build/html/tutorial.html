@@ -1,0 +1,805 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MongoKit Tutorial &mdash; MongoKit v0.3.3 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.3',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.3.3 documentation" href="index.html" />
+    <link rel="next" title="Polymorphism with MongoKit" href="inheritance.html" />
+    <link rel="prev" title="MongoKit" href="introduction.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="MongoKit"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.3.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="">MongoKit Tutorial</a><ul>
+<li><a class="reference external" href="#simple-example">Simple Example</a></li>
+<li><a class="reference external" href="#query">Query</a><ul>
+<li><a class="reference external" href="#all">all()</a></li>
+<li><a class="reference external" href="#one">one()</a></li>
+<li><a class="reference external" href="#fetch">fetch()</a></li>
+<li><a class="reference external" href="#fetch-one">fetch_one()</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#dot-notation">Dot notation</a></li>
+<li><a class="reference external" href="#diff-rence-beetween-and-the-type-dict">Différence beetween {} and the type dict</a></li>
+<li><a class="reference external" href="#adding-more-authorized-types">Adding more authorized types</a></li>
+<li><a class="reference external" href="#validate-keys">validate keys</a></li>
+<li><a class="reference external" href="#mongokitoperator">MongokitOperator</a><ul>
+<li><a class="reference external" href="#or-operator">OR operator</a></li>
+<li><a class="reference external" href="#not-operator">NOT operator</a></li>
+<li><a class="reference external" href="#is-operator">IS operator</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#adding-complex-validation">Adding complex validation</a></li>
+<li><a class="reference external" href="#skipping-validation">Skipping validation</a></li>
+<li><a class="reference external" href="#custom-types">Custom types</a></li>
+<li><a class="reference external" href="#embedding-mongodocuments-as-values">Embedding MongoDocuments as values</a><ul>
+<li><a class="reference external" href="#a-detailed-example">A detailed example</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#indexes">Indexes</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="introduction.html"
+                                  title="previous chapter">MongoKit</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="inheritance.html"
+                                  title="next chapter">Polymorphism with MongoKit</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/tutorial.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mongokit-tutorial">
+<h1>MongoKit Tutorial<a class="headerlink" href="#mongokit-tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="simple-example">
+<h2>Simple Example<a class="headerlink" href="#simple-example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">db_name</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="gp">... </span>    <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&#39;tutorial&#39;</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;body&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;author&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;date_creation&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;rank&#39;</span><span class="p">:</span><span class="nb">int</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">,</span><span class="s">&#39;author&#39;</span><span class="p">,</span> <span class="s">&#39;date_creation&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;rank&#39;</span><span class="p">:</span><span class="mf">0</span><span class="p">,</span> <span class="s">&#39;date_creation&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">}</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>A MongoDocument take a <cite>db_name</cite> and a <cite>collection_name</cite> as attribute. Next, you have to specify a structure.
+The structure is a simply dictionnary with python type. In this example, <cite>title</cite> must be unicode and <cite>rank</cite>
+must be an int.</p>
+<p>Optionaly, you can add some descriptors. In order to specify fields wich are required, just add a <cite>required_fields</cite>
+attribute. This is a simple list wich list all required_fields (ie, those field must not be None when validating).</p>
+<p>Same thing with the <cite>default_values</cite> attribute. This is a dict where you can specify default values. Note that
+you can pass callable object (like a datetime).</p>
+<p>But before, some cleanup:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Connection</span><span class="p">()</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">remove</span><span class="p">({})</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s create a blogpost:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="c"># doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE</span>
+<span class="go">{&#39;body&#39;: None, &#39;title&#39;: None, &#39;date_creation&#39;: datetime.datetime(...), &#39;rank&#39;: 0, &#39;author&#39;: None}</span>
+</pre></div>
+</div>
+<p>Not that <cite>date_creation</cite> was automaticly filled by <cite>utcnow()</cite> and rank is 0.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;my first blog post&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">SchemaTypeError: title must be an instance of unicode not str</span>
+</pre></div>
+</div>
+<p><cite>str</cite> type is not authorized, you must use unicode :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;my first blog post&quot;</span>
+</pre></div>
+</div>
+<p><cite>validate</cite> method will check if required fields are set :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">RequireFieldError: author is required</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;myself&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note that <cite>save</cite> will call the <cite>validate</cite> method, so you don&#8217;t have to validate each time.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c"># doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE</span>
+<span class="go">{&#39;body&#39;: None, &#39;title&#39;: u&#39;my first blog post&#39;, &#39;author&#39;: u&#39;myself&#39;, &#39;rank&#39;: 0, &#39;_id&#39;: ..., &#39;date_creation&#39;: datetime.datetime(...)}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="query">
+<h2>Query<a class="headerlink" href="#query" title="Permalink to this headline">¶</a></h2>
+<p>There 4 way to query a collection <cite>all()</cite>, <cite>one()</cite>, <cite>fetch()</cite>, <cite>fetch_one</cite>.
+<cite>all()</cite> and <cite>fetch()</cite> return a cursor of collection.  A cursor is an container
+wich lazy evaluate the results. A cursor is acting like an iterator.
+<cite>one()</cite> and <cite>fetch_one()</cite> return the document itself.</p>
+<p>All theses method can take a query as argument. A query is a simple dict. Please,
+see the mongodb and the pymongo documentation for further details.</p>
+<div class="section" id="all">
+<h3>all()<a class="headerlink" href="#all" title="Permalink to this headline">¶</a></h3>
+<p><cite>all()</cite> without argument will return a cursor of all documents of the collection.
+If a query is passed, it will return a cursor all documents wich match the query.
+The query is launch against the db and collection of the object.</p>
+<p><cite>all()</cite> takes the same arguments than the the pymongo.collection.find method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;my second blog post&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;myself&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c"># doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE</span>
+<span class="go">{&#39;body&#39;: None, &#39;title&#39;: u&#39;my second blog post&#39;, &#39;author&#39;: u&#39;myself&#39;, &#39;rank&#39;: 0, &#39;_id&#39;: ..., &#39;date_creation&#39;: datetime.datetime(...)}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span>  <span class="n">BlogPost</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span>
+<span class="go">my first blog post</span>
+<span class="go">my second blog post</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span>  <span class="n">BlogPost</span><span class="o">.</span><span class="n">all</span><span class="p">({</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="s">&#39;my first blog post&#39;</span><span class="p">}):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span>
+<span class="go">my first blog post</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="one">
+<h3>one()<a class="headerlink" href="#one" title="Permalink to this headline">¶</a></h3>
+<p><cite>one()</cite> act like <cite>all()</cite> but will raise a <cite>mongokit.MultipleResultsFound</cite> exception if
+there is more than one result.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">BlogPost</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">MultipleResultsFound: 2 results found</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">BlogPost</span><span class="o">.</span><span class="n">one</span><span class="p">({</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="s">&#39;my first blog post&#39;</span><span class="p">})</span> <span class="c"># doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE</span>
+<span class="go">{u&#39;body&#39;: None, u&#39;title&#39;: u&#39;my first blog post&#39;, u&#39;author&#39;: u&#39;myself&#39;, u&#39;rank&#39;: 0, u&#39;_id&#39;: ..., u&#39;date_creation&#39;: datetime.datetime(...)}</span>
+</pre></div>
+</div>
+<p>If no document is found, <cite>one()</cite> returns None</p>
+</div>
+<div class="section" id="fetch">
+<h3>fetch()<a class="headerlink" href="#fetch" title="Permalink to this headline">¶</a></h3>
+<p>Unlike <cite>all()</cite>, <cite>fetch()</cite> will return only documents wich match the structure of the Document.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">all_blog_posts</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will return only all blog post (wich have &#8216;title&#8217;, &#8216;body&#8217;, &#8216;author&#8217;, &#8216;date_creation&#8217;, &#8216;rank&#8217; as fields).
+This is an helper for :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">all_blog_posts</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="o">.</span><span class="n">all</span><span class="p">({</span><span class="s">&#39;body&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;date_creation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;author&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}})</span>
+</pre></div>
+</div>
+<p>Note, like <cite>all()</cite> and and <cite>one()</cite>, you can pass advanced queries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">my_blog_posts</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="o">.</span><span class="n">fetch</span><span class="p">({</span><span class="s">&#39;author&#39;</span><span class="p">:</span><span class="s">&#39;myself&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>wich is equivalent to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">all_blog_posts</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="o">.</span><span class="n">all</span><span class="p">({</span><span class="s">&#39;body&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;date_creation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;author&#39;</span><span class="p">:</span> <span class="s">&#39;myself&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fetch-one">
+<h3>fetch_one()<a class="headerlink" href="#fetch-one" title="Permalink to this headline">¶</a></h3>
+<p>Juste like <cite>fetch()</cite> but raise a  <cite>mongokit.MultipleResultsFound</cite> exception if
+there is more than one result.</p>
+</div>
+</div>
+<div class="section" id="dot-notation">
+<h2>Dot notation<a class="headerlink" href="#dot-notation" title="Permalink to this headline">¶</a></h2>
+<p>If you want to use the dot notation (ala json), you must set the
+<cite>use_dot_notation</cite> attribute to True:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">TestDotNotation</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;foo&quot;</span><span class="p">:{</span> <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">use_dot_notation</span><span class="o">=</span><span class="bp">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">TestDotNotation</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">bar</span> <span class="o">=</span> <span class="s">u&quot;bla&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
+<span class="go">{&#39;foo&#39;: {&#39;bar&#39;: u&#39;bla&#39;}}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="diff-rence-beetween-and-the-type-dict">
+<h2>Différence beetween {} and the type dict<a class="headerlink" href="#diff-rence-beetween-and-the-type-dict" title="Permalink to this headline">¶</a></h2>
+<p>{} is used for describing the structure like {&#8220;foo&#8221;:unicode, &#8220;bar&#8221;:int}</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span> <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<p>If you don&#8217;t specify the structure :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="p">{}</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<p>You won&#8217;t be able to do that because &#8220;foo&#8221; is not defined into the structure.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="p">[</span><span class="s">u&quot;biography&quot;</span><span class="p">][</span><span class="s">u&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bla&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">StructureError: unknown fields : [u&#39;foo&#39;]</span>
+</pre></div>
+</div>
+<p>If you want to add new items to a dict if they&#8217;re not defined, you must use the dict type instead :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="p">[</span><span class="s">u&quot;biography&quot;</span><span class="p">][</span><span class="s">u&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bla&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Using dict type is useful if you don&#8217;t know what field will be added <em>and</em> what will be the type of the field.
+If you know the type of the field, it&#8217;s better to do that :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nb">unicode</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<p>This will add another layer to validate the content. See &#8220;validate keys&#8221; section for more informations.</p>
+</div>
+<div class="section" id="adding-more-authorized-types">
+<h2>Adding more authorized types<a class="headerlink" href="#adding-more-authorized-types" title="Permalink to this headline">¶</a></h2>
+<p>By default, MongoKit allow the following types:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">authorized_types</span> <span class="o">=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="bp">None</span><span class="p">),</span>
+  <span class="nb">bool</span><span class="p">,</span>
+  <span class="nb">int</span><span class="p">,</span>
+  <span class="nb">float</span><span class="p">,</span>
+  <span class="nb">unicode</span><span class="p">,</span>
+  <span class="nb">list</span><span class="p">,</span>
+  <span class="nb">dict</span><span class="p">,</span>
+  <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">binary</span><span class="o">.</span><span class="n">Binary</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">objectid</span><span class="o">.</span><span class="n">ObjectId</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">dbref</span><span class="o">.</span><span class="n">DBRef</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">Code</span><span class="p">,</span>
+  <span class="nb">type</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)),</span>
+  <span class="n">CustomType</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>It&#8217;s possible to add more type in authorized_types:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mongokit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mongokit</span><span class="o">.</span><span class="n">authorized_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;foo&#39;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;bla&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="validate-keys">
+<h2>validate keys<a class="headerlink" href="#validate-keys" title="Permalink to this headline">¶</a></h2>
+<p>If the value of key is not known but we want to validate some deeper structure,
+we use the &#8220;$&lt;type&gt;&#8221; descriptor :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;key1&quot;</span><span class="p">:{</span>
+<span class="gp">... </span>           <span class="nb">unicode</span><span class="p">:{</span>
+<span class="gp">... </span>               <span class="s">&quot;bla&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>               <span class="s">&quot;bar&quot;</span><span class="p">:{</span><span class="nb">unicode</span><span class="p">:</span><span class="nb">int</span><span class="p">}</span>
+<span class="gp">... </span>           <span class="p">},</span>
+<span class="gp">... </span>       <span class="p">},</span>
+<span class="gp">... </span>       <span class="s">&quot;bla&quot;</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;key1.$unicode.bla&quot;</span><span class="p">]</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>Not that if you use python type as key in structure, generate_skeleton
+won&#8217;t be able to build the entired underline structure :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MyDoc</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;key1&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s">&#39;bla&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>So, default_values nor signals will work.</p>
+</div>
+<div class="section" id="mongokitoperator">
+<h2>MongokitOperator<a class="headerlink" href="#mongokitoperator" title="Permalink to this headline">¶</a></h2>
+<p>It is possible to add another layer of validation to fields.</p>
+<div class="section" id="or-operator">
+<h3>OR operator<a class="headerlink" href="#or-operator" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s say that we have a field wich can be unicode or int or a float.
+We can use the OR operator to tell MongoKit to validate the field :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">OR</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Account</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;balance&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="n">OR</span><span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)}</span>
+<span class="gp">... </span>    <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;3.0&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>but :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">SchemaTypeError: balance.foo must be an instance of &lt;unicode or int or float&gt; not datetime</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="not-operator">
+<h3>NOT operator<a class="headerlink" href="#not-operator" title="Permalink to this headline">¶</a></h3>
+<p>You can also use the NOT operator to tell MongoKit that you don&#8217;t want a such type
+for a field :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">NOT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Account</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;balance&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="n">NOT</span><span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="n">datetime</span><span class="p">)}</span>
+<span class="gp">... </span>    <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">SchemaTypeError: balance.foo must be an instance of &lt;not unicode, not datetime&gt; not datetime</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;balance&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;3.0&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">SchemaTypeError: balance.foo must be an instance of &lt;not unicode, not datetime&gt; not unicode</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="is-operator">
+<h3>IS operator<a class="headerlink" href="#is-operator" title="Permalink to this headline">¶</a></h3>
+<p>Sometime, you might want to force a fields to be in a specifique value. The IS operator
+must be use for this purpose :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">IS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Account</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;flag&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="n">IS</span><span class="p">(</span><span class="s">u&#39;spam&#39;</span><span class="p">,</span> <span class="s">u&#39;controversy&#39;</span><span class="p">,</span> <span class="s">u&#39;phishing&#39;</span><span class="p">)}</span>
+<span class="gp">... </span>    <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;flag&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;spam&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;flag&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;phishing&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="p">[</span><span class="s">&#39;flag&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;foo&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">account</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">SchemaTypeError: flag.foo must be in [u&#39;spam&#39;, u&#39;controversy&#39;, u&#39;phishing&#39;] not foo</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="adding-complex-validation">
+<h2>Adding complex validation<a class="headerlink" href="#adding-complex-validation" title="Permalink to this headline">¶</a></h2>
+<p>If the use of a validator is not enougth, you can overload the validation method
+to feet your needs.</p>
+<p>Example the following document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&quot;baz&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>We want to be sure that before saving our object, foo is greater than bar and baz is
+unicode(foo). Do do that, we juste overload the validation method :</p>
+<blockquote>
+<dl class="docutils">
+<dt>def validate(self):</dt>
+<dd>assert self[&#8216;foo&#8217;] &gt; self[&#8216;bar&#8217;]
+assert self[&#8216;baz&#8217;] == unicode(self[&#8216;foo&#8217;])
+super(MyDoc, self).validate(self)</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="skipping-validation">
+<h2>Skipping validation<a class="headerlink" href="#skipping-validation" title="Permalink to this headline">¶</a></h2>
+<p>Once your application is ready for production and you are sure that the data is consistant,
+you might want to skip the validation layer. This will make mongokit significant faster
+(as fast as pymongo). In order to do that, just set the <cite>skip_validation</cite> attribute to <cite>True</cite>.</p>
+<p>TIP: this is a good idea to create a &#8220;RootDocument&#8221; and to inherite all you object from it.
+This will allow you to control the behavior of all your objects by setting the RootDocument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">RootDocument</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">... </span>    <span class="n">skip_validation</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">... </span>    <span class="n">use_dot_notation</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">... </span>    <span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">RootDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that you can always force the validation at any moment on saving even if <cite>skip_validation</cite> is <cite>True</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;bar&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">validate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">SchemaTypeError: foo must be an instance of int not unicode</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-types">
+<h2>Custom types<a class="headerlink" href="#custom-types" title="Permalink to this headline">¶</a></h2>
+<p>Sometime, we need to work with complexe object while their
+footprint in the database is fairly simple. Let&#8217;s take a
+datetime object. Datetime object can be usefull to compute
+complexe date but while mongodb can deal with datetime object,
+let&#8217;s say that we just want to store the unicode representation.</p>
+<p>MongoKit allow the use to work on a datetime object and store the unicode
+representation on the fly. In order to do this, we have to implement a CustomType
+and fill the custom_types attributes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+</pre></div>
+</div>
+<p>A CustomType object must implement to method:</p>
+<blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt><cite>to_bson(self, value)</cite>: this method will convert the value</dt>
+<dd><p class="first last">to fit the correct authorized type before beeing saved in the db.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>to_python(self, value)</cite>: this method will convert the value</dt>
+<dd><p class="first last">taken from the db into a python object</p>
+</dd>
+</dl>
+</li>
+</ul>
+</blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomDate</span><span class="p">(</span><span class="n">CustomType</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">to_bson</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="sd">&quot;&quot;&quot;convert type to a mongodb type&quot;&quot;&quot;</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="s">&#39;%y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="sd">&quot;&quot;&quot;convert type to a python object&quot;&quot;&quot;</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+<span class="gp">... </span>           <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;%y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s create a MongoDocument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">db_name</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="gp">... </span>    <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&#39;tutorial&#39;</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;foo&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;date&#39;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">custom_types</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;foo.date&#39;</span><span class="p">:</span><span class="n">CustomDate</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;foo.date&#39;</span><span class="p">:</span><span class="s">&#39;08-06-07&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The custom type attribute work just other descriptor (<cite>default_values</cite>, <cite>required_fields</cite>...)
+but take a CustomType object.</p>
+<p>Now, we can create Foo&#8217;s objects and working with python datetime objects</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mf">2003</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="go">{&#39;foo&#39;: {&#39;date&#39;: datetime.datetime(2003, 2, 1, 0, 0)}, &#39;_id&#39;: 1}</span>
+</pre></div>
+</div>
+<p>The saved object in db has the unicode footprint as expected:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s">&#39;_id&#39;</span><span class="p">:</span><span class="mf">1</span><span class="p">})</span>
+<span class="go">{u&#39;_id&#39;: 1, u&#39;foo&#39;: {u&#39;date&#39;: u&#39;03-02-01&#39;}}</span>
+</pre></div>
+</div>
+<p>Quering an object will convert automaticly the CustomType into the correct
+python object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="o">.</span><span class="n">get_from_id</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;date&#39;</span><span class="p">]</span>
+<span class="go">datetime.datetime(2003, 2, 1, 0, 0)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="embedding-mongodocuments-as-values">
+<h2>Embedding MongoDocuments as values<a class="headerlink" href="#embedding-mongodocuments-as-values" title="Permalink to this headline">¶</a></h2>
+<p>MongoKit has optional support for MongoDB&#8217;s autoreferencing/dbref
+features. Autoreferencing allows you to embed MongoKit objects/instances
+inside another MongoKit object.  With autoreferencing enabled, MongoKit and
+the pymongo driver will translate the embedded MongoKit object
+values into internal MongoDB DBRefs.  The (de)serialization is
+handled automatically by the pymongo driver.</p>
+<p>Autoreferences allow you to pass other MongoDocuments as values.
+<a href="#id1"><span class="problematic" id="id2">pymongo_</span></a>.  (with help from MongoKit) automatically
+translates these object values into DBRefs before persisting to
+Mongo.  When fetching, it translates them back, so that you have
+the data values for your referenced object. See the <a class="reference external" href="http://github.com/mongodb/mongo-python-driver/blob/cd47b2475c5fe567e98696e6bc5af3c402891d12/examples/auto_reference.py">autoref_sample</a>. for
+further details/internals  on this driver-level functionality. As for
+enabling it in your own MongoKit code, simply define the following class
+attribute upon your Document subclass:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>With autoref enabled, MongoKit&#8217;s connection management will attach the
+appropriate BSON manipulators to your document&#8217;s connection handles.  We
+require you to explicitly enable autoref for two reasons:</p>
+<blockquote>
+<ul class="simple">
+<li>Using autoref and it&#8217;s BSON manipulators (As well as DBRefs) can carry a performance penalty.  We opt for performance and simplicity first, so you must explicitly enable autoreferencing.</li>
+<li>You may not wish to use auto-referencing in some cases where you&#8217;re using DBRefs.</li>
+</ul>
+</blockquote>
+<p>Once you have autoref enabled, MongoKit will allow you to define
+any valid subclass of MongoDocument as part of your document
+structure.  <strong>If your class does not define `use_autorefs` as
+True, MongoKit&#8217;s structure validation code will REJECT your
+structure.</strong></p>
+<div class="section" id="a-detailed-example">
+<h3>A detailed example<a class="headerlink" href="#a-detailed-example" title="Permalink to this headline">¶</a></h3>
+<p>First let&#8217;s create a simple doc:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">DocA</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">db_name</span> <span class="o">=</span> <span class="s">&quot;test&quot;</span>
+<span class="gp">... </span>   <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&quot;tutorial&quot;</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;a&quot;</span><span class="p">:{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
+<span class="gp">... </span>       <span class="s">&quot;abis&quot;</span><span class="p">:{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;a.foo&#39;</span><span class="p">:</span><span class="mf">2</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;abis.bar&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span> <span class="o">=</span> <span class="n">DocA</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;doca&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="p">[</span><span class="s">&#39;abis&#39;</span><span class="p">][</span><span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="go">{&#39;a&#39;: {&#39;foo&#39;: 2}, &#39;abis&#39;: {&#39;bar&#39;: 3}, &#39;_id&#39;: &#39;doca&#39;}</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s create a DocB wich have a reference to DocA:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">DocB</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">db_name</span> <span class="o">=</span> <span class="s">&quot;test&quot;</span>
+<span class="gp">... </span>   <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&quot;tutorial&quot;</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;b&quot;</span><span class="p">:{</span><span class="s">&quot;doc_a&quot;</span><span class="p">:</span><span class="n">DocA</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>Note that to be able to specify a MongoDocument into the structure, we must
+set <cite>use_autorefs</cite> as <cite>True</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span> <span class="o">=</span> <span class="n">DocB</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The default value for an embeded doc is None:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span>
+<span class="go">{&#39;b&#39;: {&#39;doc_a&#39;: None}}</span>
+</pre></div>
+</div>
+<p>The validation act as expected:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">SchemaTypeError: b.doc_a must be an instance of DocA not int</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;docb&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">doca</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span>
+<span class="go">{&#39;b&#39;: {&#39;doc_a&#39;: {&#39;a&#39;: {&#39;foo&#39;: 2}, &#39;abis&#39;: {&#39;bar&#39;: 3}, &#39;_id&#39;: &#39;doca&#39;}}, &#39;_id&#39;: &#39;docb&#39;}</span>
+</pre></div>
+</div>
+<p>While saving, the &#8220;_ns&#8221; field is added to docb:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="go">{&#39;_ns&#39;: u&#39;tutorial&#39;, &#39;b&#39;: {&#39;doc_a&#39;: {&#39;a&#39;: {&#39;foo&#39;: 2}, &#39;abis&#39;: {&#39;bar&#39;: 3}, &#39;_id&#39;: &#39;doca&#39;}}, &#39;_id&#39;: &#39;docb&#39;}</span>
+</pre></div>
+</div>
+<p>Now the interresting part. If we change a field in an embeded doc, the change will be done
+for all DocA wich have the same &#8216;_id&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">][</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="go">{&#39;_ns&#39;: u&#39;tutorial&#39;, &#39;b&#39;: {&#39;doc_a&#39;: {&#39;a&#39;: {&#39;foo&#39;: 4}, &#39;abis&#39;: {&#39;bar&#39;: 3}, &#39;_id&#39;: &#39;doca&#39;}}, &#39;_id&#39;: &#39;docb&#39;}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+<p>Required fields are also supported in embeded documents.i
+Remember DocA have the &#8216;abis.bar&#8217; field required. If we set it to None
+via the docb document, the RequireFieldError is raised with the full path
+&#8216;b.doc_a.abis.bar&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">][</span><span class="s">&#39;abis&#39;</span><span class="p">][</span><span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">RequireFieldError: b.doc_a.abis.bar is required</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="indexes">
+<h2>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes, it&#8217;s desirable to have indexes on your dataset - especially unique ones.
+In order to do that, you must fill the <cite>indexes</cite> attribute. The <cite>indexes</cite> attribute
+is a liste of dictionnary with the following structure:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">&#8220;fields&#8221;:</th><td class="field-body"># take a list of fields or a field name (required)</td>
+</tr>
+<tr class="field"><th class="field-name">&#8220;unique&#8221;:</th><td class="field-body">should this index guarantee uniqueness? (optional, False by default)</td>
+</tr>
+<tr class="field"><th class="field-name">&#8220;ttl&#8221;:</th><td class="field-body">(optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to <cite>ensure_index</cite> - see pymongo documentation for <cite>ensure_index</cite> for details.</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;standard&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s">&#39;other&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;deep&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;notindexed&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;fields&#39;</span><span class="p">:[</span><span class="s">&#39;standard&#39;</span><span class="p">,</span> <span class="s">&#39;other.deep&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;unique&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">]</span>
+</pre></div>
+</div>
+<p>or if you have more than one index:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Movie</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">db_name</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="gp">... </span>    <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&#39;mongokit&#39;</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;standard&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s">&#39;other&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;deep&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;alsoindexed&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;fields&#39;</span><span class="p">:</span><span class="s">&#39;standard&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;unique&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;alsoindexed&#39;</span><span class="p">,</span> <span class="s">&#39;other.deep&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>    <span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="MongoKit"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.3.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>

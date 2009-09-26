@@ -1,0 +1,17 @@
+MongoKit Documentation
+======================
+
+Contents:
+
+.. toctree::
+    :maxdepth: 3
+
+    introduction
+    tutorial
+    inheritance
+    cascade
+    pylons_support
+    mongodb_auth
+
+
+

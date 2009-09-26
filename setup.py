@@ -37,12 +37,10 @@ import sys
 
 setup(
     name = 'mongokit',
-    version = '0.3.2',
+    version = '0.3.3',
 
     description = 'Python mongodb kit',
-    long_description = \
-"""MongoDB is document oriented database. MongoKit framework try
-to keep its simplicity when you manage it in python""",
+    long_description = codecs.open('README', "r", "utf-8").read()
     author = 'Namlook',
     license = 'New BSD License',
     url = 'http://bitbucket.org/namlook/mongokit/',

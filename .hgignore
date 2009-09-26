@@ -9,4 +9,7 @@ Masheet.egg-info
 dist
 mongokit.egg-info
 .dbshell
-
+doc/_templates
+doc/_theme
+doc/_static
+doc/_build/doctrees/*
