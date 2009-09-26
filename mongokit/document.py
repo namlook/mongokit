@@ -101,7 +101,7 @@ class SchemaProperties(type):
         attrs['_protected_field_names'] = list(attrs['_protected_field_names'])
         return type.__new__(cls, name, bases, attrs)        
 
-      
+
 class MongoDocument(dict):
     """
     A MongoDocument is dictionnary with a building structured schema
@@ -180,6 +180,7 @@ class MongoDocument(dict):
     default_values = {}
     validators = {}
     indexes = []
+    belong_to = {}
 
     skip_validation = False
     
@@ -192,6 +193,7 @@ class MongoDocument(dict):
     db_username = None
     db_password = None
     
+    _connection = None
     _collection = None
 
     # If you are using Pylons, 
@@ -246,6 +248,7 @@ class MongoDocument(dict):
                 splited_rf = rf.split('.')
                 for index in range(len(splited_rf)):
                     self._required_namespace.add(".".join(splited_rf[:index+1]))
+        self._belong_to = None
         
     def generate_skeleton(self):
         """
@@ -290,13 +293,20 @@ class MongoDocument(dict):
         `save()` follow the pymongo.collection.save arguments
         """
         if validate is not None:
-            if validate:
+            if validate or self.belong_to:
                 self.validate()
         else:
-            if not self.skip_validation:
+            if not self.skip_validation or self.belong_to:
                 self.validate()
-        if '_id' not in self and uuid:
-            self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
+        if '_id' not in self:
+            if uuid:
+                self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
+        if self._belong_to:
+            db_name, full_collection_path, doc_id = self._belong_to
+            self._get_connection()[db_name]['_mongometa'].insert({
+              '_id': '%s-%s' % (full_collection_path, self['_id']),
+              'pobj':{'id':doc_id, 'col':full_collection_path},
+              'cobj':{'id':self['_id'], 'col':self.collection.full_name()}})
         if self.custom_types:
             self._process_custom_type(True, self, self.structure)
         id = self.collection.save(self, safe=safe, *args, **kwargs)
@@ -304,13 +314,16 @@ class MongoDocument(dict):
             self._process_custom_type(False, self, self.structure)
         return self
 
-    def delete(self):
+    def delete(self, cascade=False):
         """
         delete the document from the collection from his _id.
 
         This is equivalent to "self.remove({'_id':self['_id']})"
         """
-        self.collection.remove({'_id':self['_id']})
+        if cascade:
+            self._delete_cascade(self, self.db_name, self.collection_name, self._get_connection())
+        else:
+            self.collection.remove({'_id':self['_id']})
 
     #
     # class methods, they work on collection
@@ -323,25 +336,14 @@ class MongoDocument(dict):
         If Pylons is setup and enabled for the class,
         it returns the threadlocal Pylons connection
         """
-        conn = None
-        db = None
-        if cls._use_pylons:
-            from mongokit.ext.pylons_env import MongoPylonsEnv
-            log.debug("Pylons mode...")
-            conn = MongoPylonsEnv.mongo_conn()
-            # class level db overrides
-            # defaults at pylons
-            if cls.db_name:
-                db = cls.db_name
+        if cls._connection is None:
+            if cls._use_pylons:
+                from mongokit.ext.pylons_env import MongoPylonsEnv
+                log.debug("Pylons mode...")
+                cls._connection = MongoPylonsEnv.mongo_conn()
             else:
-                db = MongoPylonsEnv.get_default_db()
-        else:
-            conn = Connection(cls.db_host, cls.db_port)
-            db = cls.db_name 
-
-        log.debug("DB Name: %s" % db)
-            
-        return conn[db]
+                cls._connection = Connection(cls.db_host, cls.db_port)
+        return cls._connection
             
     @classmethod
     def get_collection(cls):
@@ -357,7 +359,7 @@ class MongoDocument(dict):
             if not db_name or not cls.collection_name:
                 raise ConnectionError( 
                   "You must set a db_name and a collection_name" )
-            db = cls._get_connection() 
+            db = cls._get_connection()[db_name]
             if cls.db_username and cls.db_password:
                 # Password can't be empty or none or we ignore it
                 # This *CAN* fail, in which case it throws ConnectionError
@@ -495,7 +497,11 @@ class MongoDocument(dict):
 
         The query is launch against the db and collection of the object.
         """
-        return cls.get_collection().remove(*args, **kwargs)
+        if kwargs.pop('cascade', None):
+            for obj in  cls.get_collection().find(*args, **kwargs):
+                cls._delete_cascade(obj, cls.db_name, cls.collection_name, cls._get_connection())
+        else:
+            return cls.get_collection().remove(*args, **kwargs)
 
     #
     # Public API end
@@ -635,6 +641,12 @@ class MongoDocument(dict):
         __validate_structure(self.structure)
                     
     def _validate_doc(self, doc, struct, path = ""):
+        if path in self.belong_to:
+            if not self._belong_to:
+                db_name = self.belong_to[path].db_name
+                collection_name = self.belong_to[path].collection_name
+                full_collection_path = "%s.%s" % (db_name, collection_name)
+                self._belong_to = (db_name, full_collection_path, doc)
         if type(struct) is type or struct is None:
             if struct is None:
                 if type(doc) not in authorized_types:
@@ -945,6 +957,22 @@ class MongoDocument(dict):
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
 
+    @classmethod 
+    def _delete_cascade(cls, doc, db_name, collection_name, connection):
+        full_collection_path = "%s.%s" % (db_name, collection_name)
+        rel_list = connection[db_name]['_mongometa'].find({'pobj.id':doc['_id'], 'pobj.col':full_collection_path})
+        if rel_list.count():
+            for rel_doc in rel_list:
+                belong_db_name, belong_collection_name = rel_doc['cobj']['col'].split('.', 1)
+                belonging_doc = connection[belong_db_name][belong_collection_name].find_one({'_id':rel_doc['cobj']['id']})
+                if belonging_doc:
+                    cls._delete_cascade(belonging_doc, belong_db_name, belong_collection_name, connection)
+                connection[db_name][collection_name].remove({'_id':doc['_id']})
+                connection[db_name]['_mongometa'].remove({'_id':rel_doc['_id']})
+        else:
+            connection[db_name][collection_name].remove({'_id':doc['_id']})
+        
+
     def __setattr__(self, key, value):
         if key not in self._protected_field_names and self.use_dot_notation and key in self:
             self[key] = value
@@ -1028,7 +1056,7 @@ class VersionnedDocument(MongoDocument):
                 raise ConnectionError( 
                   "You must set a db_name and a versioning collection name"
                 )
-            db = cls._get_connection()
+            db = cls._get_connection()[db_name]
             cls._versioning_collection = db[collection_name]
             if db.collection_names():
                 if not collection_name in db.collection_names():
