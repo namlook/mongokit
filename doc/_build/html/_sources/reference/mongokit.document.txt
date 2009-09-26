@@ -1,7 +1,0 @@
-The :mod:`document` Module
---------------------------
-
-.. automodule:: mongokit.document
-    :members:
-
-
