@@ -55,6 +55,7 @@ authorized_types = [type(None), bool, int, float, unicode, list, dict,
 
 __all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument', 'CustomType']
 
+# field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = ['_id', '_ns', '_revision']
 
 class DotedDict(dict):
@@ -234,7 +235,6 @@ class MongoDocument(dict):
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
         self._process_custom_type(False, self, self.structure)
-        self._collection = None
         ## building required fields namespace
         self._required_namespace = set([])
         for rf in self.required_fields:
