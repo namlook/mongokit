@@ -127,7 +127,15 @@ Unlike `all()`, `fetch()` will return only documents wich match the structure of
 This will return only all blog post (wich have 'title', 'body', 'author', 'date_creation', 'rank' as fields).
 This is an helper for :
 
->>> all_blog_posts = BlogPost.all({'$where':"'title' in this && 'body' in this && 'author' in this && 'date_creation' in this && 'rank' in this"})
+>>> all_blog_posts = BlogPost.all({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': {'$exists': True}})
+
+Note, like `all()` and and `one()`, you can pass advanced queries:
+
+>>> my_blog_posts = BlogPost.fetch({'author':'myself'})
+
+wich is equivalent to:
+
+>>> all_blog_posts = BlogPost.all({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': 'myself'})
 
 === fetch_one() ===
 

@@ -419,7 +419,8 @@ class MongoDocument(dict):
             spec = {}
         for key in cls.structure:
             if key in spec:
-                spec[key].update({'$exists':True})
+                if isinstance(spec[key], dict):
+                    spec[key].update({'$exists':True})
             else:
                 spec[key] = {'$exists':True}
         return MongoDocumentCursor(

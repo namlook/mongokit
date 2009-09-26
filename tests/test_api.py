@@ -281,7 +281,6 @@ class ApiTestCase(unittest.TestCase):
             mydoc.save()
         self.assertRaises(MultipleResultsFound, MyDoc.one)
 
-
     def test_fetch(self):
         class DocA(MongoDocument):
             db_name = "test"
@@ -319,6 +318,49 @@ class ApiTestCase(unittest.TestCase):
 
         #assert DocA.fetch().limit(12).count() == 10, DocA.fetch().limit(1).count() # ???
         assert DocA.fetch().where('this.doc_a.foo > 3').count() == 6
+
+    def test_fetch_with_query(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "bar":unicode,
+                "doc_a":{'foo':int},
+            }
+        class DocB(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "bar":unicode,
+                "doc_b":{"bar":int},
+            }
+
+        # creating DocA
+        for i in range(10):
+            mydoc = DocA()
+            if i % 2 == 0:
+                mydoc['bar'] = u"spam"
+            else:
+                mydoc['bar'] = u"egg"
+            mydoc['doc_a']["foo"] = i
+            mydoc.save()
+        # creating DocB
+        for i in range(5):
+            mydoc = DocB()
+            if i % 2 == 0:
+                mydoc['bar'] = u"spam"
+            else:
+                mydoc['bar'] = u"egg"
+            mydoc['doc_b']["bar"] = i
+            mydoc.save()
+
+        # all get all documents present in the collection (ie: 15 here)
+        assert DocA.all().count() == 15
+        assert DocA.fetch().count() == 10, DocA.fetch().count()
+        assert DocB.fetch().count() == 5
+
+        assert DocA.fetch({'bar':'spam'}).count() == 5
+        assert DocB.fetch({'bar':'spam'}).count() == 3
 
     def test_fetch_inheritance(self):
         class Doc(MongoDocument):
