@@ -201,3 +201,28 @@ class CascadeTestCase(unittest.TestCase):
         Connection().drop_database('bla')
 
 
+    def test_bad_belong_to(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "spam":{"egg":int}
+            }
+
+        class DocB(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo":{"bar":unicode},
+            }
+            belong_to = {'foo.bar':int}
+
+        doca = DocA()
+        doca['spam']['egg'] = 3
+        doca.save()
+
+        self.assertRaises(ValueError, DocB)
+
+
+
+

@@ -567,6 +567,16 @@ class MongoDocument(dict):
             if custom_type not in self._namespaces:
                 raise ValueError("Error in custom_types: can't"
                   "find %s in structure" % custom_type )
+        if self.belong_to:
+            if not len(self.belong_to) == 1:
+                raise ValueError("belong_to must contain only one item")
+            if not issubclass(self.belong_to.values()[0], MongoDocument):
+                raise ValueError("self.belong_to['%s'] must have a MongoDocument subclass (got %s instead)" % (
+                  self.belong_to.keys()[0], self.belong_to.values()[0]))
+        for validator in self.validators:
+            if validator not in self._namespaces:
+                raise ValueError("Error in validators: can't"
+                  "find %s in structure" % validator )
         
 
     def _validate_structure(self):
