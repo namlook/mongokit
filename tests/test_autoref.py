@@ -262,4 +262,57 @@ class AutoRefTestCase(unittest.TestCase):
         id = mydoc.save()
         assert id
 
+    def test_autoref_in_list(self):
+        """Test the basic functionality.
+        If autoreferencing is enabled, can we embed a document?
+        """
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "a":{'foo':int},
+            }
+
+        doca = DocA()
+        doca['_id'] = 'doca'
+        doca['a']['foo'] = 3
+        doca.save()
+
+        doca2 = DocA()
+        doca2['_id'] = 'doca2'
+        doca2['a']['foo'] = 5
+        doca2.save()
+
+        class DocB(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "b":{"doc_a":[DocA]},
+            }
+            use_autorefs = True
+
+        docb = DocB()
+        # the structure is automaticly filled by the corresponding structure
+        assert docb == {'b': {'doc_a':[]}}, docb
+        docb.validate()
+        docb['_id'] = 'docb'
+        docb['b']['doc_a'].append(u'bla')
+        self.assertRaises(SchemaTypeError, docb.validate)
+        docb['b']['doc_a'] = []
+        docb['b']['doc_a'].append(doca)
+        assert docb == {'b': {'doc_a': [{'a': {'foo': 3}, '_id': 'doca'}]}, '_id': 'docb'}
+        docb.save()
+
+        # the '_ns' field is added to the docb
+        assert docb == {'_ns': u'mongokit', 'b': {'doc_a': [{'a': {'foo': 3}, '_id': 'doca'}]}, '_id': 'docb'}
+        assert docb['b']['doc_a'][0]['a']['foo'] == 3
+        docb['b']['doc_a'][0]['a']['foo'] = 4
+        docb.save()
+        assert docb['b']['doc_a'][0]['a']['foo'] == 4
+        assert doca['a']['foo'] == 4
+
+        docb['b']['doc_a'].append(doca2)
+        assert docb == {'_ns': u'mongokit', 'b': {'doc_a': [{'a': {'foo': 4}, '_id': 'doca'}, {'a': {'foo': 5}, '_id': 'doca2'}]}, '_id': 'docb'}
+        docb.validate()
+
 

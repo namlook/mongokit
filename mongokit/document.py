@@ -606,15 +606,7 @@ class MongoDocument(dict):
                     elif isinstance(struct[key], MongokitOperator):
                         __validate_structure(struct[key])
                     elif hasattr(struct[key], 'structure'):
-                        if not issubclass(struct[key], MongoDocument):
-                            raise StructureError(
-                              "%s is not an authorized type" % struct[key])
-                        elif issubclass(struct[key], MongoDocument) and not self.use_autorefs:
-                            raise StructureError(
-                              "%s seems to be a embeded document wich is not permitted.\n"
-                              "To be able to use autoreference, set the"
-                              "'use_autorefs' as True" % (key)
-                            )
+                        __validate_structure(struct[key])
                     elif (struct[key] not in authorized_types):
                         ok = False
                         for auth_type in authorized_types:
@@ -637,8 +629,18 @@ class MongoDocument(dict):
                         if operand not in authorized_types: 
                             raise StructureError(
                               "%s in %s is not an authorized type" % (operand, struct))
+            elif hasattr(struct, 'structure'):
+                if not issubclass(struct, MongoDocument):
+                    raise StructureError(
+                      "%s is not an authorized type" % struct)
+                elif issubclass(struct, MongoDocument) and not self.use_autorefs:
+                    raise StructureError(
+                      "%s seems to be a embeded document wich is not permitted.\n"
+                      "To be able to use autoreference, set the"
+                      "'use_autorefs' as True" % (struct)
+                    )
             else:
-                raise StructureError("%s is not an authorized_types" % key)
+                raise StructureError("%s is not an authorized_types" % struct)
         #################
         if self.structure is None:
             raise StructureError("self.structure must not be None")
