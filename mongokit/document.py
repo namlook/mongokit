@@ -377,8 +377,10 @@ class MongoDocument(dict):
             ttl = 300
             if 'ttl' in index.keys():
                 ttl = index['ttl']
-            if isinstance(index['fields'], list):
-                fields = [(i, 1) for i in index['fields']]
+            if isinstance(index['fields'], dict):
+                fields = [(name, direction) for (name, direction) in sorted(index['fields'].items())]
+            elif hasattr(index['fields'], '__iter__'):
+                fields = [(name, 1) for name in index['fields']]
             else:
                 fields = index['fields']
             log.debug('Creating index for %s' % index['fields'])

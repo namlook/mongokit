@@ -27,6 +27,7 @@
 
 from operators import MongokitOperator, OR, NOT, IS
 from document import Connection, MongoDocument, authorized_types, MongoDocumentCursor, VersionnedDocument, DotedDict, CustomType
+from pymongo import ASCENDING as INDEX_ASCENDING, DESCENDING as INDEX_DESCENDING
 from mongo_exceptions import *
 from pymongo.binary import Binary
 from pymongo.code import Code

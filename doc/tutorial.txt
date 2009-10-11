@@ -658,5 +658,28 @@ or if you have more than one index:
 ...             'fields':'standard',
 ...             'unique':True,
 ...         },
-...         {'fields': ['alsoindexed', 'other.deep']},
+...         {
+...             'fields': ['alsoindexed', 'other.deep']
+...         },
 ...     ]
+
+By default, the index direction is set to 1. You can change the direction by passing a dictionnary. 
+Direction must be one of `INDEX_ASCENDING` (or 1) or `INDEX_DESCENDING` (or -1):
+
+>>> class MyDoc(MongoDocument):
+...     structure = {
+...         'standard':unicode,
+...         'other':{
+...             'deep':unicode,
+...         },
+...         'notindexed':unicode,
+...     }
+...     
+...     indexes = [
+...         {
+...             'fields':{'standard':INDEX_ASCENDING, 'other.deep':INDEX_DESCENDING},
+...             'unique':True,
+...         },
+...     ]
+
+

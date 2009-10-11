@@ -90,3 +90,63 @@ class ApiTestCase(unittest.TestCase):
         item = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'standard_1', 'unique':True, 'key':{'standard':1}})
         
         assert item is not None, 'No Index Found'
+
+    def test_index_multi(self):
+        class Movie(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'standard':unicode,
+            }
+            
+            indexes = [
+                {
+                    'fields':'standard',
+                    'unique':True,
+                },
+                {
+                    'fields':['alsoindexed', 'other.deep'],
+                    'unique':True,
+                },
+            ]
+        movie = Movie()
+        movie['standard'] = u'test'
+        movie.save()
+        
+        db = CONNECTION['test']
+        item = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'standard_1', 'unique':True, 'key':{'standard':1}})
+        index2 = db.system.indexes.find_one({'ns':'test.mongokit', 'name': 'alsoindexed_1_other.deep_1', 'unique':True})
+        
+        assert item is not None, 'No Index Found'
+        assert index2 is not None, 'Index not found'
+
+    def test_index_direction(self):
+        class Movie(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'standard':unicode,
+            }
+            
+            indexes = [
+                {
+                    'fields':{'standard':INDEX_DESCENDING},
+                    'unique':True,
+                },
+                {
+                    'fields':{'alsoindexed':INDEX_ASCENDING, 'other.deep':INDEX_DESCENDING},
+                    'unique':True,
+                },
+            ]
+        movie = Movie()
+        movie['standard'] = u'test'
+        movie.save()
+        
+        db = CONNECTION['test']
+        index1 = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'standard_-1', 'unique':True})
+        index2 = db.system.indexes.find_one({'ns':'test.mongokit', 'name': 'alsoindexed_1_other.deep_-1', 'unique':True})
+        
+        assert index1 is not None, 'No Index Found'
+        assert index2 is not None, 'Index not found'
+
+
