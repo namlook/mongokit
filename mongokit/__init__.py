@@ -26,7 +26,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from operators import MongokitOperator, OR, NOT, IS
-from document import Connection, MongoDocument, authorized_types, MongoDocumentCursor, VersionnedDocument, DotedDict, CustomType
+from schema_document import SchemaDocument, DotedDict, CustomType, authorized_types
+from mongo_document import Connection, MongoDocument, MongoDocumentCursor
+from versioned_document import VersionedDocument
 from pymongo import ASCENDING as INDEX_ASCENDING, DESCENDING as INDEX_DESCENDING
 from mongo_exceptions import *
 from pymongo.binary import Binary

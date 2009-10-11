@@ -26,16 +26,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
-import pymongo
-from pymongo.connection import Connection
-from generators import MongoDocumentCursor
 from mongo_exceptions import *
-from mongokit.ext.mongodb_auth import authenticate_mongodb
-from pymongo.son_manipulator import AutoReference, NamespaceInjector
 import re
 import logging
-
-from uuid import uuid4
+import pymongo
 
 log = logging.getLogger(__name__)
 
@@ -43,17 +37,19 @@ from operators import MongokitOperator, IS
 
 class CustomType(object): pass
 
-authorized_types = [type(None), bool, int, float, unicode, list, dict,
+authorized_types = [
+  type(None),
+  bool,
+  int,
+  float,
+  unicode,
+  list, 
+  dict,
   datetime.datetime, 
-  pymongo.binary.Binary,
-  pymongo.objectid.ObjectId,
-  pymongo.dbref.DBRef,
-  pymongo.code.Code,
-  type(re.compile("")),
   CustomType,
 ]
 
-__all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument', 'CustomType']
+#__all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument', 'CustomType']
 
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = ['_id', '_ns', '_revision']
@@ -75,40 +71,40 @@ class SchemaProperties(type):
         attrs['_protected_field_names'] = set(['_protected_field_names', '_namespaces', '_required_namespace'])
         for base in bases:
             parent = base.__mro__[0]
-            if hasattr(parent, "structure") and\
-              not parent.__module__.startswith('mongokit.document'):
-                parent = parent()
-                if parent.structure:
-                    if 'structure' not in attrs and parent.structure:
-                        attrs['structure'] = parent.structure
-                    else:
-                        obj_structure = attrs.get('structure', {}).copy()
-                        attrs['structure'] = parent.structure.copy()
-                        attrs['structure'].update(obj_structure)
-                if parent.required_fields:
-                    attrs['required_fields'] = list(set(
-                      attrs.get('required_fields', [])+parent.required_fields))
-                if parent.default_values:
-                    obj_default_values = attrs.get('default_values', {}).copy()
-                    attrs['default_values'] = parent.default_values.copy()
-                    attrs['default_values'].update(obj_default_values)
-                if parent.validators:
-                    obj_validators = attrs.get('validators', {}).copy()
-                    attrs['validators'] = parent.validators.copy()
-                    attrs['validators'].update(obj_validators)
+            if hasattr(parent, 'structure'):
+                if parent.structure is not None:
+                    parent = parent()
+                    if parent.structure:
+                        if 'structure' not in attrs and parent.structure:
+                            attrs['structure'] = parent.structure
+                        else:
+                            obj_structure = attrs.get('structure', {}).copy()
+                            attrs['structure'] = parent.structure.copy()
+                            attrs['structure'].update(obj_structure)
+                    if parent.required_fields:
+                        attrs['required_fields'] = list(set(
+                          attrs.get('required_fields', [])+parent.required_fields))
+                    if parent.default_values:
+                        obj_default_values = attrs.get('default_values', {}).copy()
+                        attrs['default_values'] = parent.default_values.copy()
+                        attrs['default_values'].update(obj_default_values)
+                    if parent.validators:
+                        obj_validators = attrs.get('validators', {}).copy()
+                        attrs['validators'] = parent.validators.copy()
+                        attrs['validators'].update(obj_validators)
         for mro in bases[0].__mro__:
             attrs['_protected_field_names'] = attrs['_protected_field_names'].union(list(mro.__dict__))
         attrs['_protected_field_names'] = list(attrs['_protected_field_names'])
         return type.__new__(cls, name, bases, attrs)        
 
 
-class MongoDocument(dict):
+class SchemaDocument(dict):
     """
-    A MongoDocument is dictionnary with a building structured schema
+    A SchemaDocument is dictionnary with a building structured schema
     The validate method will check that the document match the underling
-    structure. A structure must be specify in each MongoDocument.
+    structure. A structure must be specify in each SchemaDocument.
 
-    >>> class TestDoc(MongoDocument):
+    >>> class TestDoc(SchemaDocument):
     ...     structure = {
     ...         "foo":unicode,
     ...         "bar":int,
@@ -121,7 +117,7 @@ class MongoDocument(dict):
     >>> doc
     {'foo': None, 'bar': None, 'nested': {'bla': None}}
     
-    A MongoDocument works just like dict:
+    A SchemaDocument works just like dict:
 
     >>> doc['bar'] = 3
     >>> doc['foo'] = "test"
@@ -162,7 +158,7 @@ class MongoDocument(dict):
     If you want to use the dot notation (ala json), you must set the
     `use_dot_notation` attribute to True:
 
-    >>> class TestDotNotation(MongoDocument):
+    >>> class TestDotNotation(SchemaDocument):
     ...     structure = {
     ...         "foo":{ "bar":unicode}
     ...     }
@@ -179,41 +175,22 @@ class MongoDocument(dict):
     required_fields = []
     default_values = {}
     validators = {}
-    indexes = []
-    belong_to = {}
+
+    custom_types = {}
 
     skip_validation = False
-    
-    db_host = "localhost"
-    db_port = 27017
-    db_name = None
-    collection_name = None
-
-    # Optional auth support
-    db_username = None
-    db_password = None
-    
-    _connection = None
-    _collection = None
-
-    # If you are using Pylons, 
-    # Connection will be overridden with the Pylons version
-    # which sets up and manages the connection 
-    _use_pylons = False
-        
-    # If you want to use the dot notation, set this to True:
-    use_dot_notation = False
 
     # Support autoreference
     # When enabled, your DB will get NamespaceInjector
     # and AutoReference attached to it, to automatically resolve
     # See the autoreference example in the pymongo driver for more info
     # At the risk of overdocing, *ONLY* when your class has this
-    # set to true, will a MongoDocument subclass be permitted
+    # set to true, will a SchemaDocument subclass be permitted
     # as a valid type
     use_autorefs = False
 
-    custom_types = {}
+    # If you want to use the dot notation, set this to True:
+    use_dot_notation = False
 
     def __init__(self, doc=None, gen_skel=True):
         """
@@ -248,8 +225,7 @@ class MongoDocument(dict):
                 splited_rf = rf.split('.')
                 for index in range(len(splited_rf)):
                     self._required_namespace.add(".".join(splited_rf[:index+1]))
-        self._belong_to = None
-        
+
     def generate_skeleton(self):
         """
         validate and generate the skeleton of the document
@@ -279,231 +255,18 @@ class MongoDocument(dict):
         if self.custom_types:
             self._process_custom_type(False, self, self.structure)
 
-    def save(self, uuid=True, validate=None, safe=True, *args, **kwargs):
-        """
-        save the document into the db.
-
-        if uuid is True, a uuid4 will be automatiquely generated
-        else, the pymongo.ObjectId will be used.
-
-        If validate is True, the `validate` method will be called before
-        saving. Not that the `validate` method will be called *before* the
-        uuid is generated.
-
-        `save()` follow the pymongo.collection.save arguments
-        """
-        if validate is not None:
-            if validate or self.belong_to:
-                self.validate()
+    def __setattr__(self, key, value):
+        if key not in self._protected_field_names and self.use_dot_notation and key in self:
+            self[key] = value
         else:
-            if not self.skip_validation or self.belong_to:
-                self.validate()
-        if '_id' not in self:
-            if uuid:
-                self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
-        if self._belong_to:
-            db_name, full_collection_path, doc_id = self._belong_to
-            self._get_connection()[db_name]['_mongometa'].insert({
-              '_id': '%s-%s' % (full_collection_path, self['_id']),
-              'pobj':{'id':doc_id, 'col':full_collection_path},
-              'cobj':{'id':self['_id'], 'col':self.collection.full_name()}})
-        if self.custom_types:
-            self._process_custom_type(True, self, self.structure)
-        id = self.collection.save(self, safe=safe, *args, **kwargs)
-        if self.custom_types:
-            self._process_custom_type(False, self, self.structure)
-        return self
+           dict.__setattr__(self, key, value) 
 
-    def delete(self, cascade=False):
-        """
-        delete the document from the collection from his _id.
-
-        This is equivalent to "self.remove({'_id':self['_id']})"
-        """
-        if cascade:
-            self._delete_cascade(self, self.db_name, self.collection_name, self._get_connection())
+    def __getattr__(self, key):
+        if key not in self._protected_field_names and self.use_dot_notation and key in self:
+            return self[key]
         else:
-            self.collection.remove({'_id':self['_id']})
+           dict.__getattribute__(self, key) 
 
-    #
-    # class methods, they work on collection
-    #
-    @classmethod
-    def _get_connection(cls):
-        """
-        Utility method to abstract away the determination
-        of which connection to utilize.
-        If Pylons is setup and enabled for the class,
-        it returns the threadlocal Pylons connection
-        """
-        if cls._connection is None:
-            if cls._use_pylons:
-                from mongokit.ext.pylons_env import MongoPylonsEnv
-                log.debug("Pylons mode...")
-                cls._connection = MongoPylonsEnv.mongo_conn()
-            else:
-                cls._connection = Connection(cls.db_host, cls.db_port)
-        return cls._connection
-            
-    @classmethod
-    def get_collection(cls):
-        """
-        return the collection associated to the object
-        """
-        if not cls._collection:
-            if cls._use_pylons:
-                from mongokit.ext.pylons_env import MongoPylonsEnv
-                db_name = MongoPylonsEnv.get_default_db()
-            else:
-                db_name = cls.db_name
-            if not db_name or not cls.collection_name:
-                raise ConnectionError( 
-                  "You must set a db_name and a collection_name" )
-            db = cls._get_connection()[db_name]
-            if cls.db_username and cls.db_password:
-                # Password can't be empty or none or we ignore it
-                # This *CAN* fail, in which case it throws ConnectionError
-                log.debug("Username + Passwd set.  Authing against MongoDB.")
-                authenticate_mongodb(db, cls.db_username, cls.db_password)
-            if cls.use_autorefs:
-                db.add_son_manipulator(NamespaceInjector()) # inject _ns
-                db.add_son_manipulator(AutoReference(db))
-            cls._collection = db[cls.collection_name]
-        # creating index if needed
-        for index in cls.indexes:
-            unique = False
-            if 'unique' in index.keys():
-                unique = index['unique']
-            ttl = 300
-            if 'ttl' in index.keys():
-                ttl = index['ttl']
-            if isinstance(index['fields'], dict):
-                fields = [(name, direction) for (name, direction) in sorted(index['fields'].items())]
-            elif hasattr(index['fields'], '__iter__'):
-                fields = [(name, 1) for name in index['fields']]
-            else:
-                fields = index['fields']
-            log.debug('Creating index for %s' % index['fields'])
-            cls._collection.ensure_index(fields, unique=unique, ttl=ttl)
-        return cls._collection
-
-    def _get_collection(self):
-        return self.__class__.get_collection()
-    collection = property(_get_collection)
-
-    @classmethod
-    def get_from_id(cls, id):
-        """
-        return the document wich has the id
-
-        The query is launch against the db and collection of the object.
-        """
-        bson_obj = cls.get_collection().find_one({"_id":id})
-        if bson_obj:
-            return cls(bson_obj)
-
-    @classmethod
-    def all(cls, *args, **kwargs):
-        """
-        return all document wich match the query.
-        `all()` takes the same arguments than the the pymongo.collection.find method.
-
-        The query is launch against the db and collection of the object.
-        """
-        return MongoDocumentCursor(
-          cls.get_collection().find(*args, **kwargs), cls)
-
-    @classmethod
-    def fetch(cls, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
-        """
-        return all document wich match the structure of the object
-        `fetch()` takes the same arguments than the the pymongo.collection.find method.
-
-        The query is launch against the db and collection of the object.
-        """
-        if spec is None:
-            spec = {}
-        for key in cls.structure:
-            if key in spec:
-                if isinstance(spec[key], dict):
-                    spec[key].update({'$exists':True})
-            else:
-                spec[key] = {'$exists':True}
-        return MongoDocumentCursor(
-          cls.get_collection().find(
-            spec=spec, 
-            fields=fields, 
-            skip=skip,
-            limit=limit,
-            slave_okay=slave_okay,
-            timeout=timeout,
-            snapshot=snapshot,
-            _sock=_sock),
-          cls)
-
-    @classmethod
-    def fetch_one(cls, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
-        """
-        return one document wich match the structure of the object
-        `fetch_one()` takes the same arguments than the the pymongo.collection.find method.
-
-        If multiple documents are found, raise a MultipleResultsFound exception.
-        If no document is found, return None
-
-        The query is launch against the db and collection of the object.
-        """
-        bson_obj = cls.fetch(
-            spec=spec, 
-            fields=fields, 
-            skip=skip,
-            limit=limit,
-            slave_okay=slave_okay,
-            timeout=timeout,
-            snapshot=snapshot,
-            _sock=_sock)
-        count = bson_obj.count()
-        if count > 1:
-            raise MultipleResultsFound("%s results found" % count)
-        elif count == 1:
-            return cls(list(bson_obj)[0])
-
-
-    @classmethod
-    def group(cls, *args, **kwargs):
-        return MongoDocumentCursor(
-          cls.get_collection().group(*args, **kwargs), cls)
-
-    @classmethod
-    def one(cls, *args, **kwargs):
-        """
-        return on document wich match the query.
-        `one()` takes the same arguments than the the pymongo.collection.find method.
-
-        If multiple documents are found, raise a MultipleResultsFound exception.
-        If no document is found, return None
-
-        The query is launch against the db and collection of the object.
-        """
-        bson_obj = cls.get_collection().find(*args, **kwargs)
-        count = bson_obj.count()
-        if count > 1:
-            raise MultipleResultsFound("%s results found" % count)
-        elif count == 1:
-            return cls(list(bson_obj)[0])
-
-    @classmethod
-    def remove(cls, *args, **kwargs):
-        """
-        remove all document wich match the query
-        `remove()` takes the same arguments than the the pymongo.collection.remove method.
-
-        The query is launch against the db and collection of the object.
-        """
-        if kwargs.pop('cascade', None):
-            for obj in  cls.get_collection().find(*args, **kwargs):
-                cls._delete_cascade(obj, cls.db_name, cls.collection_name, cls._get_connection())
-        else:
-            return cls.get_collection().remove(*args, **kwargs)
 
     #
     # Public API end
@@ -569,12 +332,6 @@ class MongoDocument(dict):
             if custom_type not in self._namespaces:
                 raise ValueError("Error in custom_types: can't"
                   "find %s in structure" % custom_type )
-        if self.belong_to:
-            if not len(self.belong_to) == 1:
-                raise ValueError("belong_to must contain only one item")
-            if not issubclass(self.belong_to.values()[0], MongoDocument):
-                raise ValueError("self.belong_to['%s'] must have a MongoDocument subclass (got %s instead)" % (
-                  self.belong_to.keys()[0], self.belong_to.values()[0]))
         for validator in self.validators:
             if validator not in self._namespaces:
                 raise ValueError("Error in validators: can't"
@@ -582,6 +339,7 @@ class MongoDocument(dict):
         
 
     def _validate_structure(self):
+        # XXX
         ##############
         def __validate_structure( struct):
             if type(struct) is type:
@@ -631,11 +389,11 @@ class MongoDocument(dict):
                         if operand not in authorized_types: 
                             raise StructureError(
                               "%s in %s is not an authorized type" % (operand, struct))
-            elif hasattr(struct, 'structure'):
-                if not issubclass(struct, MongoDocument):
+            elif hasattr(struct, 'structure'): # DBRef
+                if not issubclass(struct, SchemaDocument):
                     raise StructureError(
                       "%s is not an authorized type" % struct)
-                elif issubclass(struct, MongoDocument) and not self.use_autorefs:
+                elif issubclass(struct, SchemaDocument) and not self.use_autorefs:
                     raise StructureError(
                       "%s seems to be a embeded document wich is not permitted.\n"
                       "To be able to use autoreference, set the"
@@ -655,12 +413,6 @@ class MongoDocument(dict):
         __validate_structure(self.structure)
                     
     def _validate_doc(self, doc, struct, path = ""):
-        if path in self.belong_to:
-            if not self._belong_to:
-                db_name = self.belong_to[path].db_name
-                collection_name = self.belong_to[path].collection_name
-                full_collection_path = "%s.%s" % (db_name, collection_name)
-                self._belong_to = (db_name, full_collection_path, doc)
         if type(struct) is type or struct is None:
             if struct is None:
                 if type(doc) not in authorized_types:
@@ -971,138 +723,3 @@ class MongoDocument(dict):
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
 
-    @classmethod 
-    def _delete_cascade(cls, doc, db_name, collection_name, connection):
-        full_collection_path = "%s.%s" % (db_name, collection_name)
-        rel_list = connection[db_name]['_mongometa'].find({'pobj.id':doc['_id'], 'pobj.col':full_collection_path})
-        if rel_list.count():
-            for rel_doc in rel_list:
-                belong_db_name, belong_collection_name = rel_doc['cobj']['col'].split('.', 1)
-                belonging_doc = connection[belong_db_name][belong_collection_name].find_one({'_id':rel_doc['cobj']['id']})
-                if belonging_doc:
-                    cls._delete_cascade(belonging_doc, belong_db_name, belong_collection_name, connection)
-                connection[db_name][collection_name].remove({'_id':doc['_id']})
-                connection[db_name]['_mongometa'].remove({'_id':rel_doc['_id']})
-        else:
-            connection[db_name][collection_name].remove({'_id':doc['_id']})
-        
-
-    def __setattr__(self, key, value):
-        if key not in self._protected_field_names and self.use_dot_notation and key in self:
-            self[key] = value
-        else:
-           dict.__setattr__(self, key, value) 
-
-    def __getattr__(self, key):
-        if key not in self._protected_field_names and self.use_dot_notation and key in self:
-            return self[key]
-        else:
-           dict.__getattribute__(self, key) 
-
-class RevisionDocument(MongoDocument):
-    structure = {
-        "id": unicode,
-        "revision":int,
-        "doc":dict
-    }
-
-class VersionnedDocument(MongoDocument):
-    """
-    This object implement a vesionnized mongo document
-    """
-
-    versioning_db_name = None
-    versioning_collection_name = None
-
-    _versioning_collection = None
-
-    def __init__(self, *args, **kwargs):
-        super(VersionnedDocument, self).__init__(*args, **kwargs)
-        if not ( self.versioning_db_name or self.db_name):
-            raise ValidationError( 
-              "you must specify versioning_db_name or db_name" )
-        if not (self.versioning_collection_name or self.collection_name):
-            raise ValidationError( 
-              "you must specify versioning_collection_name or collection_name" )
-        if type(self.versioning_db_name) not in [type(None), str, unicode]:
-            raise ValidationError(
-              "versioning_db attribute must be None or basestring")
-        if type(self.versioning_collection_name) not in\
-          [type(None), str, unicode]:
-            raise ValidationError(
-              "versioning_collection attribute must be None or basestring")
-
-    def save(self, versioning=True, *args, **kwargs):
-        if versioning:
-            if '_revision' in self:
-                self.pop('_revision')
-                self['_revision'] = self.get_last_revision_id()
-            else:
-                self['_revision'] = 0
-            self['_revision'] += 1
-            RevisionDocument._collection = self.get_versioning_collection()
-            versionned_doc = RevisionDocument(
-              {"id":unicode(self['_id']), "revision":self['_revision']})
-            versionned_doc['doc'] = dict(self)
-            versionned_doc.save()
-        return super(VersionnedDocument, self).save(*args, **kwargs)
-
-    def delete(self, versioning=False, *args, **kwargs):
-        """
-        if versioning is True delete revisions documents as well
-        """
-        if versioning:
-            self.get_versioning_collection().remove({'id':self['_id']})
-        super(VersionnedDocument, self).delete(*args, **kwargs)
-        
-    @classmethod
-    def get_versioning_collection(cls):
-        if not cls._versioning_collection:
-            if cls._use_pylons:
-                from mongokit.ext.pylons_env import MongoPylonsEnv
-                db_name = MongoPylonsEnv.get_default_db()
-            else:
-                db_name = cls.db_name
-            db_name = cls.versioning_db_name or db_name
-            collection_name = cls.versioning_collection_name or\
-              cls.collection_name
-            if not db_name and not collection_name:
-                raise ConnectionError( 
-                  "You must set a db_name and a versioning collection name"
-                )
-            db = cls._get_connection()[db_name]
-            cls._versioning_collection = db[collection_name]
-            if db.collection_names():
-                if not collection_name in db.collection_names():
-                    cls._versioning_collection.create_index(
-                      [('id', 1), ('revision', 1)], unique=True)
-        return cls._versioning_collection
-
-    def _get_versioning_collection(self):
-        return self.__class__.get_versioning_collection()
-    versioning_collection = property(_get_versioning_collection)
-
-    def get_revision(self, revision_number):
-        RevisionDocument._collection = self.get_versioning_collection()
-        doc = RevisionDocument.one(
-          {"id":self['_id'], 'revision':revision_number})
-        if doc:
-            return self.__class__(doc['doc'])
-
-    def get_revisions(self):
-        versionned_docs = self.versioning_collection.find({"id":self['_id']})
-        for verdoc in versionned_docs:
-            yield self.__class__(verdoc['doc'])
-
-    def get_last_revision_id(self):
-        last_doc = self.get_versioning_collection().find(
-          {'id':self['_id']}).sort('revision', -1).next()
-        if last_doc:
-            return last_doc['revision']
-
-class MongoPylonsDocument(MongoDocument):
-    """Lazy helper base class to inherit from if you are
-    sure you will always live in / require the pylons evironment.
-    Keep in mind if you need CLI testing, "paster shell" will allow 
-    you to test within a pylons environment (via an ipython shell)"""
-    _use_pylons = True

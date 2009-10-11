@@ -72,56 +72,6 @@ class ApiTestCase(unittest.TestCase):
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
 
-    def test_save_versionning(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "bla" : unicode,
-            }
-
-        doc = MyDoc()
-        doc['bla'] =  u"bli"
-        doc.save()
-        assert "_version" not in doc
-
-        class MyVersionnedDoc(VersionnedDocument):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "foo" : unicode,
-            }
-            versioning = "versionned_mongokit"
- 
-        versionned_doc = MyVersionnedDoc()
-        versionned_doc['_id'] = "mydoc"
-        versionned_doc['foo'] = u'bla'
-        versionned_doc.save()
-        assert versionned_doc['_revision'] == 1
-        assert versionned_doc.get_last_revision_id() == 1
-        assert versionned_doc.get_revision(1) == {'foo':'bla', "_revision":1, "_id":"mydoc"}
-        versionned_doc['foo'] = u'bar'
-        versionned_doc.save()
-        assert versionned_doc['_revision'] == 2
-        assert versionned_doc.get_last_revision_id() == 2
-        assert versionned_doc['foo'] == 'bar'
-        assert versionned_doc.get_revision(2) == {'foo':'bar', "_revision":2, "_id":"mydoc"}, versionned_doc.get_revision(2)
-        old_doc =  versionned_doc.get_revision(1)
-        old_doc.save()
-        assert old_doc['_revision'] == 3
-
-        versionned_doc = MyVersionnedDoc.get_from_id(versionned_doc['_id'])
-        assert len(list(versionned_doc.get_revisions())) == 3, len(list(versionned_doc.get_revisions()))
-
-    def test_bad_versioning(self):
-        class MyVersionnedDoc(VersionnedDocument):
-            structure = {
-                "foo" : unicode,
-            }
-            versioning = True
- 
-        self.assertRaises(ValidationError, MyVersionnedDoc)
- 
     def test_save_without_collection(self):
         class MyDoc(MongoDocument):
             structure = {
@@ -148,40 +98,6 @@ class ApiTestCase(unittest.TestCase):
         mydoc.delete()
         assert MyDoc.all().count() == 0
         
-    def test_delete_versioning(self):
-        class MyVersionnedDoc(VersionnedDocument):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "foo" : unicode,
-            }
-            versioning_collection_name = "versionned_mongokit"
- 
-        versionned_doc = MyVersionnedDoc()
-        versionned_doc['_id'] = "mydoc"
-        versionned_doc['foo'] = u'bla'
-        versionned_doc.save()
-        assert MyVersionnedDoc.get_versioning_collection().find().count() == 1
-        versionned_doc['foo'] = u'bar'
-        versionned_doc.save()
-        assert MyVersionnedDoc.get_versioning_collection().find().count() == 2
-        versionned_doc.delete(versioning=True)
-        assert MyVersionnedDoc.get_versioning_collection().find().count() == 0
-        assert MyVersionnedDoc.all().count() == 0
-
-        versionned_doc = MyVersionnedDoc()
-        versionned_doc['_id'] = "mydoc"
-        versionned_doc['foo'] = u'bla'
-        versionned_doc.save()
-        assert MyVersionnedDoc.get_versioning_collection().find().count() == 1
-        versionned_doc['foo'] = u'bar'
-        versionned_doc.save()
-        assert MyVersionnedDoc.get_versioning_collection().find().count() == 2
-        versionned_doc.delete()
-        assert MyVersionnedDoc.get_versioning_collection().find().count() == 2
-        assert MyVersionnedDoc.all().count() == 0
-
- 
     def test_generate_skeleton(self):
         class A(MongoDocument):
             structure = {
