@@ -25,9 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongo_exceptions import *
-
-from mongokit.mongo_document import MongoDocument
+from mongokit import *
 
 class RevisionDocument(MongoDocument):
     structure = {
@@ -70,9 +68,12 @@ class VersionedDocument(MongoDocument):
             else:
                 self['_revision'] = 0
             self['_revision'] += 1
-            RevisionDocument._collection = self.get_versioning_collection()
+            _col = self.get_versioning_collection()
+            collection_name = _col.name()
+            db_name = _col.database().name()
             versionned_doc = RevisionDocument(
-              {"id":unicode(self['_id']), "revision":self['_revision']})
+              {"id":unicode(self['_id']), "revision":self['_revision']},
+              db_name = db_name, collection_name = collection_name)
             versionned_doc['doc'] = dict(self)
             versionned_doc.save()
         return super(VersionedDocument, self).save(*args, **kwargs)
@@ -100,7 +101,7 @@ class VersionedDocument(MongoDocument):
                 raise ConnectionError( 
                   "You must set a db_name and a versioning collection name"
                 )
-            db = cls._get_connection()[db_name]
+            db = cls.connection[db_name]
             cls._versioning_collection = db[collection_name]
             if db.collection_names():
                 if not collection_name in db.collection_names():
@@ -113,9 +114,9 @@ class VersionedDocument(MongoDocument):
     versioning_collection = property(_get_versioning_collection)
 
     def get_revision(self, revision_number):
-        RevisionDocument._collection = self.get_versioning_collection()
+        _col = self.get_versioning_collection()
         doc = RevisionDocument.one(
-          {"id":self['_id'], 'revision':revision_number})
+          {"id":self['_id'], 'revision':revision_number}, collection=_col)
         if doc:
             return self.__class__(doc['doc'])
 

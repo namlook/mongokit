@@ -99,7 +99,7 @@ class ApiTestCase(unittest.TestCase):
         assert MyDoc.all().count() == 0
         
     def test_generate_skeleton(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":int},
                 "bar":unicode
@@ -110,7 +110,7 @@ class ApiTestCase(unittest.TestCase):
         assert a == {"a":{"foo":None}, "bar":None}, a
 
     def test_generate_skeleton2(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":[int]},
                 "bar":{unicode:{"egg":int}}
@@ -121,7 +121,7 @@ class ApiTestCase(unittest.TestCase):
         assert a == {"a":{"foo":[]}, "bar":{}}, a
 
     def test_generate_skeleton3(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":[int], "spam":{"bla":unicode}},
                 "bar":{unicode:{"egg":int}}
@@ -372,5 +372,45 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
 
 
+    def test_connection(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc_a":{'foo':int},
+            }
+        assert DocA.connection == Connection("localhost", 27017)
+        assert DocA.collection == Connection("localhost", 27017)['test']['mongokit']
 
+ 
+        class DocB(DocA):pass
+        assert DocB.connection == Connection("localhost", 27017)
+        assert DocB.collection == Connection("localhost", 27017)['test']['mongokit']
+
+        class DocC(DocB):
+            db_host = "127.0.0.2"
+        assert DocC.connection == Connection("127.0.0.2", 27017)
+        assert DocC.collection == Connection("127.0.0.2", 27017)['test']['mongokit']
+
+        class DocD(DocC):
+            db_name = "foo"
+        assert DocD.connection == Connection("127.0.0.2", 27017), DocD.connection
+        assert DocD.collection == Connection("127.0.0.2", 27017)['foo']['mongokit'], DocD.collection
+
+        class BadDoc(MongoDocument):
+            structure = {}
+
+        assert not hasattr(BadDoc, 'connection')
+
+    def test_get_collection(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc_a":{'foo':int},
+            }
+        assert DocA.collection == Connection("localhost", 27017)['test']['mongokit']
+        assert DocA.get_collection(db_name="foo", collection_name="bar") == Connection('localhost', 27017)['foo']['bar']
+        assert DocA.get_collection(collection_name="bar") == Connection('localhost', 27017)['test']['bar']
+        assert DocA.get_collection(db_host="127.0.0.2", collection_name="bar") == Connection('127.0.0.2', 27017)['test']['bar']
 

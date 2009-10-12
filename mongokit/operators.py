@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-class MongokitOperator(object):
+class SchemaOperator(object):
     repr = None
 
     def __init__(self, *args):
@@ -42,7 +42,7 @@ class MongokitOperator(object):
     def validate(self, value):
         raise NotImplementedError
 
-class OR(MongokitOperator):
+class OR(SchemaOperator):
     repr = 'or'
 
     def __init__(self, *args):
@@ -57,7 +57,7 @@ class OR(MongokitOperator):
             return True
         return False
 
-class NOT(MongokitOperator):
+class NOT(SchemaOperator):
     repr = 'not'
 
     def __init__(self, *args):
@@ -72,7 +72,7 @@ class NOT(MongokitOperator):
             return False
         return True
 
-class IS(MongokitOperator):
+class IS(SchemaOperator):
     repr = 'is'
 
     def __init__(self, *args):
@@ -89,7 +89,3 @@ class IS(MongokitOperator):
                     return True
         return False
 
-
-
-
-   

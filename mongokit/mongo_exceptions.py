@@ -25,16 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-class RequireFieldError(Exception):pass
-class StructureError(Exception):pass
-class BadKeyError(Exception):pass
-class AuthorizedTypeError(Exception):pass
-class ValidationError(Exception):pass
-class DuplicateRequiredError(Exception):pass
-class DuplicateDefaultValueError(Exception):pass
-class ModifierOperatorError(Exception):pass
-class MultipleResultsFound(Exception):pass
-class SchemaTypeError(Exception):pass
-
 class ConnectionError(Exception):pass
 class MongoAuthException(Exception):pass
+class MultipleResultsFound(Exception):pass

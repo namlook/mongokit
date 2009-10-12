@@ -26,14 +26,17 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
-from mongo_exceptions import *
 import re
 import logging
-import pymongo
 
 log = logging.getLogger(__name__)
 
-from operators import MongokitOperator, IS
+from operators import SchemaOperator, IS
+
+__all__ = ['CustomType', 'authorized_types', 'SchemaProperties', 'SchemaDocument', 'DotedDict',
+  'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
+  'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
+  'SchemaTypeError']
 
 class CustomType(object): pass
 
@@ -49,10 +52,18 @@ authorized_types = [
   CustomType,
 ]
 
-#__all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument', 'CustomType']
-
 # field wich does not need to be declared into the structure
-STRUCTURE_KEYWORDS = ['_id', '_ns', '_revision']
+STRUCTURE_KEYWORDS = []
+
+class RequireFieldError(Exception):pass
+class StructureError(Exception):pass
+class BadKeyError(Exception):pass
+class AuthorizedTypeError(Exception):pass
+class ValidationError(Exception):pass
+class DuplicateRequiredError(Exception):pass
+class DuplicateDefaultValueError(Exception):pass
+class ModifierOperatorError(Exception):pass
+class SchemaTypeError(Exception):pass
 
 class DotedDict(dict):
     def __setattr__(self, key, value):
@@ -265,8 +276,7 @@ class SchemaDocument(dict):
         if key not in self._protected_field_names and self.use_dot_notation and key in self:
             return self[key]
         else:
-           dict.__getattribute__(self, key) 
-
+            dict.__getattribute__(self, key) 
 
     #
     # Public API end
@@ -339,7 +349,6 @@ class SchemaDocument(dict):
         
 
     def _validate_structure(self):
-        # XXX
         ##############
         def __validate_structure( struct):
             if type(struct) is type:
@@ -363,7 +372,7 @@ class SchemaDocument(dict):
                         __validate_structure(struct[key])
                     elif isinstance(struct[key], list):
                         __validate_structure(struct[key])
-                    elif isinstance(struct[key], MongokitOperator):
+                    elif isinstance(struct[key], SchemaOperator):
                         __validate_structure(struct[key])
                     elif hasattr(struct[key], 'structure'):
                         __validate_structure(struct[key])
@@ -378,7 +387,7 @@ class SchemaDocument(dict):
             elif isinstance(struct, list):
                 for item in struct:
                     __validate_structure(item)
-            elif isinstance(struct, MongokitOperator):
+            elif isinstance(struct, SchemaOperator):
                 if isinstance(struct, IS):
                     for operand in struct:
                         if type(operand) not in authorized_types:
@@ -431,7 +440,7 @@ class SchemaDocument(dict):
                 doc._validate_doc(doc, doc.structure, path=path)
                 doc._validate_required(doc, doc.structure, path="", root_path=path)
                 doc._process_validators(doc, doc.structure, path=path)
-        elif isinstance(struct, MongokitOperator):
+        elif isinstance(struct, SchemaOperator):
             if not struct.validate(doc) and doc is not None:
                 if isinstance(struct, IS):
                     raise SchemaTypeError(

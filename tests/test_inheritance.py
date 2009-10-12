@@ -37,7 +37,7 @@ class InheritanceTestCase(unittest.TestCase):
         Connection()['test'].drop_collection('mongokit')
 
     def test_simple_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":int}
             }
@@ -50,7 +50,7 @@ class InheritanceTestCase(unittest.TestCase):
         assert B() == {"a":{"foo":None}, "b":{"bar":None}}, B()
  
     def test_required_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":int}
             }
@@ -67,7 +67,7 @@ class InheritanceTestCase(unittest.TestCase):
         b.validate()
  
     def test_default_values_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":int}
             }
@@ -89,7 +89,7 @@ class InheritanceTestCase(unittest.TestCase):
         assert C() == {"a":{"foo":5}, "c":{"spam":None}}, C()
 
     def test_validators_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":int}
             }
@@ -119,7 +119,7 @@ class InheritanceTestCase(unittest.TestCase):
         d.validate()
 
     def test_complexe_validation_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "foo":unicode,
             }
@@ -144,7 +144,7 @@ class InheritanceTestCase(unittest.TestCase):
 
  
     def test_complete_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":int}
             }
@@ -173,13 +173,13 @@ class InheritanceTestCase(unittest.TestCase):
         c.validate()
 
     def test_polymorphism(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             structure = {
                 "a":{"foo":int}
             }
             default_values = {"a.foo":3}
 
-        class B(MongoDocument):
+        class B(SchemaDocument):
             structure = {
                 "b":{"bar":unicode}
             }
@@ -202,7 +202,7 @@ class InheritanceTestCase(unittest.TestCase):
         c.validate()
    
     def test_simple_manual_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             auto_inheritance = False
             structure = {
                 "a":{"foo":int}
@@ -217,7 +217,7 @@ class InheritanceTestCase(unittest.TestCase):
         assert B() == {"a":{"foo":None}, "b":{"bar":None}}
  
     def test_required_manual_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             auto_inheritance = False
             structure = {
                 "a":{"foo":int}
@@ -237,7 +237,7 @@ class InheritanceTestCase(unittest.TestCase):
         b.validate()
  
     def test_default_values_manual_inheritance(self):
-        class A(MongoDocument):
+        class A(SchemaDocument):
             auto_inheritance = False
             structure = {
                 "a":{"foo":int}

@@ -25,8 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from operators import MongokitOperator, OR, NOT, IS
-from schema_document import SchemaDocument, DotedDict, CustomType, authorized_types
+from operators import SchemaOperator, OR, NOT, IS
+from schema_document import *
 from mongo_document import Connection, MongoDocument, MongoDocumentCursor
 from versioned_document import VersionedDocument
 from pymongo import ASCENDING as INDEX_ASCENDING, DESCENDING as INDEX_DESCENDING
@@ -35,4 +35,3 @@ from pymongo.binary import Binary
 from pymongo.code import Code
 from pymongo.dbref import DBRef
 from pymongo.objectid import ObjectId
-

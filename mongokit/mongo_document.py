@@ -35,7 +35,7 @@ from pymongo.son_manipulator import AutoReference, NamespaceInjector
 import re
 import logging
 
-from mongokit.schema_document import SchemaDocument, SchemaProperties
+from mongokit.schema_document import SchemaDocument, SchemaProperties, STRUCTURE_KEYWORDS
 
 from mongokit import authorized_types
 
@@ -51,9 +51,62 @@ from uuid import uuid4
 
 log = logging.getLogger(__name__)
 
-#__all__ = ['DotedDict', 'MongoDocument', 'VersionnedDocument', 'CustomType']
+# field wich does not need to be declared into the structure
+STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
+
+class MongoProperties(SchemaProperties):
+    def __new__(cls, name, bases, attrs):
+        obj = super(MongoProperties, cls).__new__(cls, name, bases, attrs)
+        if obj.db_name and obj.collection_name:
+            #### init connection ####
+            if obj._use_pylons:
+                from mongokit.ext.pylons_env import MongoPylonsEnv
+                log.debug("Pylons mode...")
+                obj.connection = MongoPylonsEnv.mongo_conn()
+            elif not obj.db_host:
+                raise ConnectionError('You must specify a db_host')
+            elif not obj.db_port:
+                raise ConnectionError('You must specify a db_port')
+            else:
+                obj.connection = Connection(obj.db_host, obj.db_port)
+            #### init db ####
+            if obj._use_pylons:
+                from mongokit.ext.pylons_env import MongoPylonsEnv
+                db_name = MongoPylonsEnv.get_default_db()
+            elif not obj.db_name:
+                raise ConnectionError('You must specify a db_name')
+            else:
+                db_name = obj.db_name
+            db = obj.connection[db_name]
+            # check auth if db_username and db_password are filled
+            if obj.db_username and obj.db_password:
+                # Password can't be empty or none or we ignore it
+                # This *CAN* fail, in which case it throws ConnectionError
+                log.debug("Username + Passwd set.  Authing against MongoDB.")
+                authenticate_mongodb(db, obj.db_username, obj.db_password)
+            # DBRef magic
+            if obj.use_autorefs:
+                db.add_son_manipulator(NamespaceInjector()) # inject _ns
+                db.add_son_manipulator(AutoReference(db))
+            obj.db = db
+            #### init collection ####
+            if not obj.collection_name:
+                raise ConnectionError('You must specify a collection_name')
+            collection = db[obj.collection_name]
+            obj.create_index(collection)
+            obj.collection = collection
+            attrs['connection'] = obj.connection
+            attrs['db'] = obj.db
+            attrs['collection'] = obj.collection
+        return type.__new__(cls, name, bases, attrs)        
 
 class MongoDocument(SchemaDocument):
+    """
+    A MongoDocument brings all mongodb related staff to the SchemaDocument.
+    This object defines all methods to deal with a mongod server.
+    """
+    __metaclass__ = MongoProperties
+    
     indexes = []
     belong_to = {}
 
@@ -66,17 +119,53 @@ class MongoDocument(SchemaDocument):
     db_username = None
     db_password = None
     
-    _connection = None
-    _collection = None
-
     # If you are using Pylons, 
     # Connection will be overridden with the Pylons version
     # which sets up and manages the connection 
     _use_pylons = False
-        
-    def __init__(self, doc=None, gen_skel=True):
+
+    def __init__(self, doc=None, gen_skel=True, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None):
+        """
+        :doc: a dictionnary. Usefull to convert a simple dict into a full MongoDocument
+        :db_host: overide this if you don't want to use MongoDocument.db_host
+        :db_port: overide this if you don't want to use MongoDocument.db_port
+        :db_name: overide this if you don't want to use MongoDocument.db_name
+        :collection_name: overide this if you don't want to use MongoDocument.collection_name
+        :db_username: overide this if you don't want to use MongoDocument.db_username
+        :db_password: overide this if you don't want to use MongoDocument.db_password
+        :gen_skel: generate the skeleton by filling the doc with empty default values
+        """
         super(MongoDocument, self).__init__(doc=doc, gen_skel=gen_skel)
         self._belong_to = None
+        reset_connection = False
+        if db_host is not None:
+            self.db_host = db_host
+            reset_connection = True
+        if db_port is not None:
+            self.db_port = db_port
+            reset_connection = True
+        if db_name is not None:
+            self.db_name = db_name
+            reset_connection = True
+        if collection_name is not None:
+            self.collection_name = collection_name
+            reset_connection = True
+        if db_username is not None:
+            self.db_username = db_username
+            reset_connection = True
+        if db_password is not None:
+            self.db_password = db_password
+            reset_connection = True
+        if reset_connection:
+            self.connection = Connection(self.db_host, self.db_port)
+            self.db = self.connection[self.db_name]
+            self.collection = self.db[self.collection_name]
+            MongoDocument.create_index(self.collection)
+
+    def __getattr__(self, key):
+        if key in ['connection', 'collection', 'db'] and not hasattr(self, 'connection'):
+            raise ConnectionError('You must specify a db_name and collection_name attribute') 
+        return super(MongoDocument, self).__getattr__(key)
         
     def save(self, uuid=True, validate=None, safe=True, *args, **kwargs):
         """
@@ -102,7 +191,7 @@ class MongoDocument(SchemaDocument):
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         if self._belong_to:
             db_name, full_collection_path, doc_id = self._belong_to
-            self._get_connection()[db_name]['_mongometa'].insert({
+            self.connection[db_name]['_mongometa'].insert({
               '_id': '%s-%s' % (full_collection_path, self['_id']),
               'pobj':{'id':doc_id, 'col':full_collection_path},
               'cobj':{'id':self['_id'], 'col':self.collection.full_name()}})
@@ -120,7 +209,7 @@ class MongoDocument(SchemaDocument):
         This is equivalent to "self.remove({'_id':self['_id']})"
         """
         if cascade:
-            self._delete_cascade(self, self.db_name, self.collection_name, self._get_connection())
+            self._delete_cascade(self, self.db_name, self.collection_name, self.connection)
         else:
             self.collection.remove({'_id':self['_id']})
 
@@ -128,46 +217,39 @@ class MongoDocument(SchemaDocument):
     # class methods, they work on collection
     #
     @classmethod
-    def _get_connection(cls):
+    def get_collection(cls, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None, create_index=False):
         """
-        Utility method to abstract away the determination
-        of which connection to utilize.
-        If Pylons is setup and enabled for the class,
-        it returns the threadlocal Pylons connection
+        return a collection filled by the passed variables. If a variable is None, it the
+        value will be filled by the default value (ie set in class attribute)
+        
+        if create_index is True, the collection will be indexed using the indexes class attribute
         """
-        if cls._connection is None:
-            if cls._use_pylons:
-                from mongokit.ext.pylons_env import MongoPylonsEnv
-                log.debug("Pylons mode...")
-                cls._connection = MongoPylonsEnv.mongo_conn()
-            else:
-                cls._connection = Connection(cls.db_host, cls.db_port)
-        return cls._connection
-            
+        if db_host is None:
+            db_host = cls.db_host
+        if db_port is None:
+            db_port = cls.db_port
+        if db_name is None:
+            db_name = cls.db_name
+        if collection_name is None:
+            collection_name = cls.collection_name
+        if db_username is None:
+            db_username = cls.db_username
+        if db_password is None:
+            db_password = cls.db_password
+        connection = Connection(db_host, db_port)
+        db = connection[db_name]
+        collection = db[collection_name]
+        if db_username and db_password:
+            # Password can't be empty or none or we ignore it
+            # This *CAN* fail, in which case it throws ConnectionError
+            log.debug("Username + Passwd set.  Authing against MongoDB.")
+            authenticate_mongodb(db, db_username, db_password)
+        if create_index:
+            MongoDocument.create_index(collection)
+        return collection
+
     @classmethod
-    def get_collection(cls):
-        """
-        return the collection associated to the object
-        """
-        if not cls._collection:
-            if cls._use_pylons:
-                from mongokit.ext.pylons_env import MongoPylonsEnv
-                db_name = MongoPylonsEnv.get_default_db()
-            else:
-                db_name = cls.db_name
-            if not db_name or not cls.collection_name:
-                raise ConnectionError( 
-                  "You must set a db_name and a collection_name" )
-            db = cls._get_connection()[db_name]
-            if cls.db_username and cls.db_password:
-                # Password can't be empty or none or we ignore it
-                # This *CAN* fail, in which case it throws ConnectionError
-                log.debug("Username + Passwd set.  Authing against MongoDB.")
-                authenticate_mongodb(db, cls.db_username, cls.db_password)
-            if cls.use_autorefs:
-                db.add_son_manipulator(NamespaceInjector()) # inject _ns
-                db.add_son_manipulator(AutoReference(db))
-            cls._collection = db[cls.collection_name]
+    def create_index(cls, collection):
         # creating index if needed
         for index in cls.indexes:
             unique = False
@@ -183,21 +265,18 @@ class MongoDocument(SchemaDocument):
             else:
                 fields = index['fields']
             log.debug('Creating index for %s' % index['fields'])
-            cls._collection.ensure_index(fields, unique=unique, ttl=ttl)
-        return cls._collection
-
-    def _get_collection(self):
-        return self.__class__.get_collection()
-    collection = property(_get_collection)
+            collection.ensure_index(fields, unique=unique, ttl=ttl)
 
     @classmethod
-    def get_from_id(cls, id):
+    def get_from_id(cls, id, collection=None):
         """
         return the document wich has the id
 
         The query is launch against the db and collection of the object.
         """
-        bson_obj = cls.get_collection().find_one({"_id":id})
+        if collection is None:
+            collection = cls.collection
+        bson_obj = collection.find_one({"_id":id})
         if bson_obj:
             return cls(bson_obj)
 
@@ -209,17 +288,22 @@ class MongoDocument(SchemaDocument):
 
         The query is launch against the db and collection of the object.
         """
+        collection = kwargs.pop('collection', None)
+        if collection is None:
+            collection = cls.collection
         return MongoDocumentCursor(
-          cls.get_collection().find(*args, **kwargs), cls)
+          collection.find(*args, **kwargs), cls)
 
     @classmethod
-    def fetch(cls, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
+    def fetch(cls, spec=None, fields=None, skip=0, limit=0, collection=None, slave_okay=None, timeout=True, snapshot=False, _sock=None):
         """
         return all document wich match the structure of the object
         `fetch()` takes the same arguments than the the pymongo.collection.find method.
 
         The query is launch against the db and collection of the object.
         """
+        if collection is None:
+            collection = cls.collection
         if spec is None:
             spec = {}
         for key in cls.structure:
@@ -229,7 +313,7 @@ class MongoDocument(SchemaDocument):
             else:
                 spec[key] = {'$exists':True}
         return MongoDocumentCursor(
-          cls.get_collection().find(
+          collection.find(
             spec=spec, 
             fields=fields, 
             skip=skip,
@@ -241,7 +325,7 @@ class MongoDocument(SchemaDocument):
           cls)
 
     @classmethod
-    def fetch_one(cls, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
+    def fetch_one(cls, spec=None, fields=None, skip=0, limit=0, collection=None, slave_okay=None, timeout=True, snapshot=False, _sock=None):
         """
         return one document wich match the structure of the object
         `fetch_one()` takes the same arguments than the the pymongo.collection.find method.
@@ -256,6 +340,7 @@ class MongoDocument(SchemaDocument):
             fields=fields, 
             skip=skip,
             limit=limit,
+            collection=collection,
             slave_okay=slave_okay,
             timeout=timeout,
             snapshot=snapshot,
@@ -269,8 +354,11 @@ class MongoDocument(SchemaDocument):
 
     @classmethod
     def group(cls, *args, **kwargs):
+        collection = kwargs.pop('collection', None)
+        if collection is None:
+            collection = cls.collection
         return MongoDocumentCursor(
-          cls.get_collection().group(*args, **kwargs), cls)
+          collection.group(*args, **kwargs), cls)
 
     @classmethod
     def one(cls, *args, **kwargs):
@@ -283,7 +371,10 @@ class MongoDocument(SchemaDocument):
 
         The query is launch against the db and collection of the object.
         """
-        bson_obj = cls.get_collection().find(*args, **kwargs)
+        collection = kwargs.pop('collection', None)
+        if collection is None:
+            collection = cls.collection
+        bson_obj = collection.find(*args, **kwargs)
         count = bson_obj.count()
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
@@ -298,11 +389,21 @@ class MongoDocument(SchemaDocument):
 
         The query is launch against the db and collection of the object.
         """
-        if kwargs.pop('cascade', None):
-            for obj in  cls.get_collection().find(*args, **kwargs):
-                cls._delete_cascade(obj, cls.db_name, cls.collection_name, cls._get_connection())
+        collection = kwargs.pop('collection', None)
+        if collection is None:
+            collection = cls.collection
+            collection_name = cls.collection_name
+            db_name = cls.db_name
+            connection = cls.connection
         else:
-            return cls.get_collection().remove(*args, **kwargs)
+            collection_name = collection.name()
+            db_name = collection.database().name()
+            connection = collection.database().connection()
+        if kwargs.pop('cascade', None):
+            for obj in  collection.find(*args, **kwargs):
+                cls._delete_cascade(obj, db_name, collection_name, connection)
+        else:
+            return collection.remove(*args, **kwargs)
 
     @classmethod 
     def _delete_cascade(cls, doc, db_name, collection_name, connection):

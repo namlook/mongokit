@@ -37,25 +37,25 @@ class StructureTestCase(unittest.TestCase):
         Connection()['test'].drop_collection('mongokit')
 
     def test_no_structure(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             pass
         self.assertRaises(StructureError, MyDoc)
 
     def test_empty_structure(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {}
         assert MyDoc() == {}
 
     def test_load_with_dict(self):
         doc = {"foo":1, "bla":{"bar":u"spam"}}
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {"foo":int, "bla":{"bar":unicode}}
         mydoc = MyDoc(doc)
         assert mydoc == doc
         mydoc.validate()
         
     def test_simple_structure(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":unicode,
                 "bar":int
@@ -64,7 +64,7 @@ class StructureTestCase(unittest.TestCase):
 
     def test_missed_field(self):
         doc = {"foo":u"arf"}
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":unicode,
                 "bar":{"bla":int}
@@ -73,7 +73,7 @@ class StructureTestCase(unittest.TestCase):
         self.assertRaises(StructureError, mydoc.validate)
 
     def test_unknown_field(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":unicode,
             }
@@ -82,7 +82,7 @@ class StructureTestCase(unittest.TestCase):
         self.assertRaises(StructureError, mydoc.validate)
 
     def test_big_nested_structure(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "1":{
                     "2":{
@@ -112,7 +112,7 @@ class StructureTestCase(unittest.TestCase):
         mydoc.validate()
             
     def test_dot_notation(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             use_dot_notation = True
             structure = {
                 "foo":int,
@@ -131,7 +131,7 @@ class StructureTestCase(unittest.TestCase):
         mydoc.validate()
         
     def test_dot_notation_nested(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             use_dot_notation = True
             structure = {
                 "foo":{
@@ -149,7 +149,7 @@ class StructureTestCase(unittest.TestCase):
         mydoc.validate()
 
     def test_dot_notation_field_not_in_structure(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             use_dot_notation = True
             structure = {
                 "foo":{

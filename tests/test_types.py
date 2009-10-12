@@ -40,7 +40,7 @@ class TypesTestCase(unittest.TestCase):
        for auth_type in authorized_types:
             if auth_type is dict:
                 auth_type = {}
-            class MyDoc(MongoDocument):
+            class MyDoc(SchemaDocument):
                 structure = { "foo":auth_type }
             if type(auth_type) is dict:
                 assert MyDoc() == {"foo":{}}, MyDoc()
@@ -51,13 +51,13 @@ class TypesTestCase(unittest.TestCase):
  
     def test_not_authorized_type(self):
        for unauth_type in [set, str]:
-            class MyDoc(MongoDocument):
+            class MyDoc(SchemaDocument):
                 structure = { "foo":unauth_type }
             self.assertRaises( StructureError, MyDoc )
 
     def test_type_from_functions(self):
         from datetime import datetime
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":datetime,
             }
@@ -67,7 +67,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
 
     def test_non_typed_list(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":[]
             }
@@ -79,7 +79,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [set([1,2]), "bla"]
         self.assertRaises(AuthorizedTypeError, mydoc.validate)
 
-#        class MyDoc(MongoDocument):
+#        class MyDoc(SchemaDocument):
 #            structure = {
 #                "foo":list
 #            }
@@ -92,7 +92,7 @@ class TypesTestCase(unittest.TestCase):
 #        self.assertRaises(AuthorizedTypeError, mydoc.validate)
   
     def test_typed_list(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":[int]
             }
@@ -105,7 +105,7 @@ class TypesTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_typed_list_with_dict(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":[{unicode:int}]
             }
@@ -116,7 +116,7 @@ class TypesTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_typed_list_with_list(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":[[unicode]]
             }
@@ -127,7 +127,7 @@ class TypesTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_dict_unicode_typed_list(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":{unicode:[int]}
             }
@@ -142,7 +142,7 @@ class TypesTestCase(unittest.TestCase):
     def test_with_custom_object(self):
         class MyDict(dict):
             pass
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":{unicode:int}
             }
@@ -155,7 +155,7 @@ class TypesTestCase(unittest.TestCase):
     def test_custom_object_as_type(self):
         class MyDict(dict):
             pass
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":MyDict({unicode:int})
             }
@@ -168,7 +168,7 @@ class TypesTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
     def test_list_instead_of_dict(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":{unicode:[unicode]}
             }
@@ -178,7 +178,7 @@ class TypesTestCase(unittest.TestCase):
 
     def _test_big_nested_example(self):
         # XXX TODO
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":{unicode:[int], u"bar":{"spam":{int:[unicode]}}},
                 "bla":{"blo":{"bli":[{"arf":unicode}]}},
@@ -196,7 +196,7 @@ class TypesTestCase(unittest.TestCase):
     def test_adding_custom_type(self):
         import mongokit
         mongokit.authorized_types.append(str)
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":str,
             }
@@ -206,12 +206,12 @@ class TypesTestCase(unittest.TestCase):
 
     def test_or_operator(self):
         from mongokit import OR
-        class BadMyDoc(MongoDocument):
+        class BadMyDoc(SchemaDocument):
             structure = {"bla":OR(unicode,str)}
         self.assertRaises(StructureError, BadMyDoc)
 
         from datetime import datetime
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":OR(unicode,int),
                 "bar":OR(unicode, datetime)
@@ -242,12 +242,12 @@ class TypesTestCase(unittest.TestCase):
 
     def test_not_operator(self):
         from mongokit import NOT
-        class BadMyDoc(MongoDocument):
+        class BadMyDoc(SchemaDocument):
             structure = {"bla":NOT(unicode,str)}
         self.assertRaises(StructureError, BadMyDoc)
 
         from datetime import datetime
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":NOT(unicode,int),
                 "bar":NOT(datetime)
@@ -277,12 +277,12 @@ class TypesTestCase(unittest.TestCase):
 
     def test_is_operator(self):
         from mongokit import IS
-        class BadMyDoc(MongoDocument):
+        class BadMyDoc(SchemaDocument):
             structure = {"bla":IS('bla',3)}
         self.assertRaises(StructureError, BadMyDoc)
 
         from datetime import datetime
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":IS(u'spam',u'eggs'),
                 "bar":IS(u'3', 3)
@@ -323,7 +323,7 @@ class TypesTestCase(unittest.TestCase):
         class CustomFloat(float):
             def __init__(self, float):
                 self = float + 2
-        class MyDoc(MongoDocument):
+        class MyDoc(SchemaDocument):
             structure = {
                 "foo":float,
             }
@@ -419,7 +419,7 @@ class TypesTestCase(unittest.TestCase):
                 if value is not None:
                     return datetime.datetime.strptime(value, '%y-%m-%d')
                 
-        class Foo(MongoDocument):
+        class Foo(SchemaDocument):
             db_name = 'test'
             collection_name = 'mongokit'
             structure = {
