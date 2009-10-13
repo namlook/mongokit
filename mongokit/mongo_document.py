@@ -195,11 +195,9 @@ class MongoDocument(SchemaDocument):
               '_id': '%s-%s' % (full_collection_path, self['_id']),
               'pobj':{'id':doc_id, 'col':full_collection_path},
               'cobj':{'id':self['_id'], 'col':self.collection.full_name()}})
-        if self.custom_types:
-            self._process_custom_type(True, self, self.structure)
+        self._process_custom_type(True, self, self.structure)
         id = self.collection.save(self, safe=safe, *args, **kwargs)
-        if self.custom_types:
-            self._process_custom_type(False, self, self.structure)
+        self._process_custom_type(False, self, self.structure)
         return self
 
     def delete(self, cascade=False):

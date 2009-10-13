@@ -336,6 +336,7 @@ class TypesTestCase(unittest.TestCase):
         import datetime
 
         class CustomDate(CustomType):
+            mongo_type = unicode
             def to_bson(self, value):
                 """convert type to a mongodb type"""
                 return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -348,15 +349,16 @@ class TypesTestCase(unittest.TestCase):
             db_name = 'test'
             collection_name = 'mongokit'
             structure = {
-                "date": unicode,
+                "date": CustomDate(),
             }
-            custom_types = {'date':CustomDate}
-            default_values = {'date':'08-06-07'}
+            default_values = {'date':u'08-06-07'}
             
         foo = Foo()
         foo['_id'] = 1
         foo['date'] = datetime.datetime(2003,2,1)
         foo.save()
+        saved_foo =  foo.collection.find({'_id':1}).next()
+        assert saved_foo == {u'date': u'03-02-01', u'_id': 1}
         foo.save()
 
         foo2 = Foo()
@@ -365,7 +367,7 @@ class TypesTestCase(unittest.TestCase):
         foo2.save()
         assert foo['date'] == datetime.datetime(2003,2,1), foo['date']
         foo = Foo.get_from_id(1)
-        assert foo['date'] == datetime.datetime(2003,2,1)
+        assert foo['date'] == datetime.datetime(2003,2,1), foo['date']
         saved_foo =  foo.collection.find({'_id':1}).next()
         assert saved_foo['date'] == CustomDate().to_bson(datetime.datetime(2003,2,1)), saved_foo['date']
         foo2 = Foo.get_from_id(2)
@@ -374,6 +376,7 @@ class TypesTestCase(unittest.TestCase):
     def test_custom_type_nested(self):
         import datetime
         class CustomDate(CustomType):
+            mongo_type = unicode
             def to_bson(self, value):
                 """convert type to a mongodb type"""
                 return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -386,10 +389,9 @@ class TypesTestCase(unittest.TestCase):
             db_name = 'test'
             collection_name = 'mongokit'
             structure = {
-                'foo':{'date': unicode},
+                'foo':{'date': CustomDate()},
             }
-            custom_types = {'foo.date':CustomDate}
-            default_values = {'foo.date':'08-06-07'}
+            default_values = {'foo.date':u'08-06-07'}
             
         foo = Foo()
         foo['_id'] = 1
@@ -419,20 +421,13 @@ class TypesTestCase(unittest.TestCase):
                 if value is not None:
                     return datetime.datetime.strptime(value, '%y-%m-%d')
                 
-        class Foo(SchemaDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
-            structure = {
-                'foo':{'date': unicode},
-            }
-            custom_types = {'bar.date':CustomDate}
-         
-        self.assertRaises(ValueError, Foo)
+        self.assertRaises(TypeError, CustomDate)
 
     def test_custom_type_nested_list(self):
         import datetime
 
         class CustomPrice(CustomType):
+            mongo_type = float
             def to_bson(self, value):
                 return float(value)
             def to_python(self, value):
@@ -447,12 +442,9 @@ class TypesTestCase(unittest.TestCase):
                       {
                         'sku': unicode,
                         'qty': int,
-                        'price': float,
+                        'price': CustomPrice(),
                       }
                 ]
-            }
-            custom_types = {
-                'products.price': CustomPrice
             }
           
         r = Receipt()

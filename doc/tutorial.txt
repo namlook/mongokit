@@ -503,6 +503,39 @@ Now, let's create a MongoDocument:
 
 The custom type attribute work just other descriptor (`default_values`, `required_fields`...)
 but take a CustomType object.
+
+.. topic:: new in developpement version
+
+    The `CustomType` api has little changed. 
+     * You must specify a `mongo_type` property in the `CustomType` class. this
+       will describes the type of the value stored in the mongodb.  
+     * There is no `custom_types` descriptor anymore. The `CustomType` is set
+       directly in the field. Plus, the `CustomType` must be instanciated.
+    So, the new way of using `CustomType` look like this::
+                
+        >>> class CustomDate(CustomType):
+        ...     mongo_type = unicode
+        ...     def to_bson(self, value):
+        ...         """convert type to a mongodb type"""
+        ...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+        ...     def to_python(self, value):
+        ...         """convert type to a python object"""
+        ...         if value is not None:
+        ...            return datetime.datetime.strptime(value, '%y-%m-%d')
+
+        Now, let's create a MongoDocument:
+
+        >>> class Foo(MongoDocument):
+        ...     db_name = 'test'
+        ...     collection_name = 'tutorial'
+        ...     structure = {
+        ...         'foo':{
+        ...             'date': CustomDate(),
+        ...         },
+        ...     }
+        ...     default_values = {'foo.date':u'08-06-07'}
+
+
             
 Now, we can create Foo's objects and working with python datetime objects
 
