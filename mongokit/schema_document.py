@@ -33,13 +33,14 @@ log = logging.getLogger(__name__)
 
 from operators import SchemaOperator, IS
 
-__all__ = ['CustomType', 'authorized_types', 'SchemaProperties', 'SchemaDocument', 'DotedDict',
+__all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict',
   'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
   'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
   'SchemaTypeError', 'DefaultFieldTypeError']
 
 class CustomType(object): 
     mongo_type = None
+    python_type = None
     
     def __init__(self):
         if self.mongo_type is None:
@@ -53,17 +54,6 @@ class CustomType(object):
         """convert type to a mongodb type"""
         raise NotImplementedError
 
-authorized_types = [
-  type(None),
-  bool,
-  int,
-  float,
-  unicode,
-  list, 
-  dict,
-  datetime.datetime, 
-  CustomType,
-]
 
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = []
@@ -205,27 +195,34 @@ class SchemaDocument(dict):
 
     skip_validation = False
 
-    # Support autoreference
-    # When enabled, your DB will get NamespaceInjector
-    # and AutoReference attached to it, to automatically resolve
-    # See the autoreference example in the pymongo driver for more info
-    # At the risk of overdocing, *ONLY* when your class has this
-    # set to true, will a SchemaDocument subclass be permitted
-    # as a valid type
-    use_autorefs = False
-
     # If you want to use the dot notation, set this to True:
     use_dot_notation = False
 
-    def __init__(self, doc=None, gen_skel=True):
+    authorized_types = [
+      type(None),
+      bool,
+      int,
+      float,
+      unicode,
+      list, 
+      dict,
+      datetime.datetime, 
+      CustomType,
+    ]
+
+    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
             filled with NoneType each time validate() is called. Note that
             if doc is not {}, gen_skel is always False. If gen_skel is False,
             default_values cannot be filled.
+        gen_auth_types: if True, generate automaticly the self._authorized_types
+            attribute from self.authorized_types
         """
         # init
+        if gen_auth_types:
+            self._authorized_types = self.authorized_types[:]
         if doc is None:
             doc = {}
         if self.structure is None:
@@ -356,10 +353,13 @@ class SchemaDocument(dict):
         
 
     def _validate_structure(self):
+        """
+        validate if all fields in self.structure are in authorized types.
+        """
         ##############
         def __validate_structure( struct):
             if type(struct) is type:
-                if struct not in authorized_types:
+                if struct not in self._authorized_types:
                     raise StructureError("%s is not an authorized_types" % key)
             elif isinstance(struct, dict):
                 for key in struct:
@@ -369,7 +369,7 @@ class SchemaDocument(dict):
                         if key.startswith('$'): raise BadKeyError(
                           "%s must not start with '$'" % key)
                     elif type(key) is type:
-                        if not key in authorized_types:
+                        if not key in self._authorized_types:
                             raise AuthorizedTypeError(
                               "%s is not an authorized type" % key)
                     else:
@@ -385,9 +385,9 @@ class SchemaDocument(dict):
                         __validate_structure(struct[key])
                     elif hasattr(struct[key], 'structure'):
                         __validate_structure(struct[key])
-                    elif (struct[key] not in authorized_types):
+                    elif (struct[key] not in self._authorized_types):
                         ok = False
-                        for auth_type in authorized_types:
+                        for auth_type in self._authorized_types:
                             if issubclass(struct[key], auth_type):
                                 ok = True
                         if not ok:
@@ -399,26 +399,21 @@ class SchemaDocument(dict):
             elif isinstance(struct, SchemaOperator):
                 if isinstance(struct, IS):
                     for operand in struct:
-                        if type(operand) not in authorized_types:
+                        if type(operand) not in self._authorized_types:
                             raise StructureError(
                               "%s in %s is not an authorized type" % (operand, struct))
                 else:
                     for operand in struct:
-                        if operand not in authorized_types: 
+                        if operand not in self._authorized_types: 
                             raise StructureError(
                               "%s in %s is not an authorized type" % (operand, struct))
-            elif hasattr(struct, 'structure'): # DBRef
-                if not issubclass(struct, SchemaDocument):
-                    raise StructureError(
-                      "%s is not an authorized type" % struct)
-                elif issubclass(struct, SchemaDocument) and not self.use_autorefs:
-                    raise StructureError(
-                      "%s seems to be a embeded document wich is not permitted.\n"
-                      "To be able to use autoreference, set the"
-                      "'use_autorefs' property as True" % (struct)
-                    )
             else:
-                raise StructureError("%s is not an authorized_types" % struct)
+                ok = False
+                for auth_type in self._authorized_types:
+                    if isinstance(struct, auth_type):
+                        ok = True
+                if not ok:
+                    raise StructureError("%s is not an authorized_types" % struct)
         #################
         if self.structure is None:
             raise StructureError("self.structure must not be None")
@@ -431,9 +426,12 @@ class SchemaDocument(dict):
         __validate_structure(self.structure)
                     
     def _validate_doc(self, doc, struct, path = ""):
+        """
+        check it doc field types match the doc field structure
+        """
         if type(struct) is type or struct is None:
             if struct is None:
-                if type(doc) not in authorized_types:
+                if type(doc) not in self._authorized_types:
                     raise AuthorizedTypeError(
                       "%s is not an authorized types" % type(doc).__name__)
             elif not isinstance(doc, struct) and doc is not None:
@@ -445,15 +443,6 @@ class SchemaDocument(dict):
                 raise SchemaTypeError(
                   "%s must be an instance of %s not %s" % (
                     path, struct.mongo_type.__name__, type(doc).__name__))
-        elif isinstance(struct, SchemaProperties): #DBRef
-            if not isinstance(doc, struct) and doc is not None:
-                raise SchemaTypeError(
-                  "%s must be an instance of %s not %s" % (
-                    path, struct.__name__, type(doc).__name__))
-            if doc is not None:
-                doc._validate_doc(doc, doc.structure, path=path)
-                doc._validate_required(doc, doc.structure, path="", root_path=path)
-                doc._process_validators(doc, doc.structure, path=path)
         elif isinstance(struct, SchemaOperator):
             if not struct.validate(doc) and doc is not None:
                 if isinstance(struct, IS):
@@ -507,6 +496,11 @@ class SchemaDocument(dict):
                 struct = struct[0]
             for obj in doc:
                 self._validate_doc(obj, struct, path)
+        elif not isinstance(doc, struct):
+            raise SchemaTypeError(
+              "%s must be an instance of %s not %s" % (
+                path, struct.__name__, type(doc).__name__))
+            
 
     def _process_validators(self, doc, struct, path = ""):
         #################################################
@@ -582,6 +576,11 @@ class SchemaDocument(dict):
             #
             if isinstance(struct[key], CustomType):
                 if to_bson:
+                    if struct[key].python_type is not None:
+                        if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
+                            raise SchemaTypeError(
+                              "%s must be an instance of %s not %s" % (
+                                new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
                     doc[key] = struct[key].to_bson(doc[key])
                 else:
                     doc[key] = struct[key].to_python(doc[key])
@@ -602,6 +601,7 @@ class SchemaDocument(dict):
                         self._process_custom_type(to_bson=to_bson, doc=obj, struct=struct[key][0], path=new_path)
             
     def _set_default_fields(self, doc, struct, path = ""):
+        # TODO check this out, this method must be restructured
         for key in struct:
             if type(key) is type:
                 new_key = "$%s" % key.__name__
@@ -625,6 +625,7 @@ class SchemaDocument(dict):
                               "%s must be an instance of %s not %s" % (
                                 new_path, struct[key].mongo_type.__name__, type(new_value).__name__))
                     doc[key] = new_value
+                    return # XXX added to prevent the value's been set twice
             #
             # if the value is a dict, we have a another structure to validate
             #
@@ -640,16 +641,24 @@ class SchemaDocument(dict):
                     if new_path in self.default_values:
                         new_value = self.default_values[new_path]
                         if callable(new_value):
-                            doc[key] = new_value()
-                        else:
-                            doc[key] = new_value
+                            new_value = new_value()
+                        if isinstance(struct[key], CustomType):
+                            if not isinstance(new_value, struct[key].mongo_type):
+                                raise DefaultFieldTypeError(
+                                  "%s must be an instance of %s not %s" % (
+                                    new_path, struct[key].mongo_type.__name__, type(new_value).__name__))
+                        doc[key] = new_value
             else: # list or what else
                 if new_path in self.default_values:
                     new_value = self.default_values[new_path]
                     if callable(new_value):
-                        doc[key] = new_value()
-                    else:
-                        doc[key] = new_value
+                        new_value = new_value()
+                    if isinstance(struct[key], CustomType):
+                        if not isinstance(new_value, struct[key].mongo_type):
+                            raise DefaultFieldTypeError(
+                              "%s must be an instance of %s not %s" % (
+                                new_path, struct[key].mongo_type.__name__, type(new_value).__name__))
+                    doc[key] = new_value
 
     def _validate_required(self, doc, struct, path = "", root_path=""):
         for key in struct:

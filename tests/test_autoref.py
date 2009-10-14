@@ -31,6 +31,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 from mongokit import *
+from mongokit.mongo_document import *
 from pymongo.objectid import ObjectId
 
 CONNECTION = Connection()
@@ -77,14 +78,22 @@ class AutoRefTestCase(unittest.TestCase):
         docb['b']['doc_a'] = doca
         assert docb == {'b': {'doc_a': {'a': {'foo': 3}, '_id': 'doca'}}, '_id': 'docb'}
         docb.save()
+        saved_docb = DocB.collection.find_one({'_id':'docb'})
+        assert saved_docb['b']['doc_a'] == DBRef(collection='mongokit', id='doca'), saved_docb['b']['doc_a']
 
-        # the '_ns' field is added to the docb
-        assert docb == {'_ns': u'mongokit', 'b': {'doc_a': {'a': {'foo': 3}, '_id': 'doca'}}, '_id': 'docb'}
+        docb_list = list(DocB.fetch())
+        assert len(docb_list) == 1
+        new_docb = docb_list[0]
+        assert isinstance(new_docb['b']['doc_a'], DocA)
+        assert docb == {'b': {'doc_a': {'a': {'foo': 3}, '_id': 'doca'}}, '_id': 'docb'}, docb
         assert docb['b']['doc_a']['a']['foo'] == 3
         docb['b']['doc_a']['a']['foo'] = 4
         docb.save()
-        assert docb['b']['doc_a']['a']['foo'] == 4
-        assert doca['a']['foo'] == 4
+        assert docb['b']['doc_a']['a']['foo'] == 4, docb
+        assert DocA.fetch().next()['a']['foo'] == 4
+        assert doca['a']['foo'] == 4, doca['a']['foo']
+        saved_docb = DocB.collection.find_one({'_id':'docb'})
+        assert saved_docb['b']['doc_a'] == DBRef(collection='mongokit', id='doca'), saved_docb['b']['doc_a']
 
     def test_autoref_with_default_values(self):
         class DocA(MongoDocument):
@@ -143,6 +152,9 @@ class AutoRefTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, docb.validate)
         docb['b']['doc_a']['a']['foo'] = 4 
         docb.save()
+    
+        docb['b']['doc_a'] = None
+        docb.save()
 
     def test_badautoref(self):
         """Test autoref enabled, but embed the wrong kind of document.
@@ -181,6 +193,7 @@ class AutoRefTestCase(unittest.TestCase):
                 },
                 "spam": EmbedDoc,
             }
+            use_autorefs = True
         mydoc = MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
@@ -303,8 +316,7 @@ class AutoRefTestCase(unittest.TestCase):
         assert docb == {'b': {'doc_a': [{'a': {'foo': 3}, '_id': 'doca'}]}, '_id': 'docb'}
         docb.save()
 
-        # the '_ns' field is added to the docb
-        assert docb == {'_ns': u'mongokit', 'b': {'doc_a': [{'a': {'foo': 3}, '_id': 'doca'}]}, '_id': 'docb'}
+        assert docb == {'b': {'doc_a': [{'a': {'foo': 3}, '_id': 'doca'}]}, '_id': 'docb'}
         assert docb['b']['doc_a'][0]['a']['foo'] == 3
         docb['b']['doc_a'][0]['a']['foo'] = 4
         docb.save()
@@ -312,7 +324,117 @@ class AutoRefTestCase(unittest.TestCase):
         assert doca['a']['foo'] == 4
 
         docb['b']['doc_a'].append(doca2)
-        assert docb == {'_ns': u'mongokit', 'b': {'doc_a': [{'a': {'foo': 4}, '_id': 'doca'}, {'a': {'foo': 5}, '_id': 'doca2'}]}, '_id': 'docb'}
+        assert docb == {'b': {'doc_a': [{'a': {'foo': 4}, '_id': 'doca'}, {'a': {'foo': 5}, '_id': 'doca2'}]}, '_id': 'docb'}
         docb.validate()
+    
+    def test_autoref_retrieval(self):
+        """Test the basic functionality.
+        If autoreferencing is enabled, can we embed a document?
+        """
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "a":{'foo':int},
+            }
+
+        doca = DocA()
+        doca['_id'] = 'doca'
+        doca['a']['foo'] = 3
+        doca.save()
+
+        class DocB(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "b":{
+                    "doc_a":DocA,
+                    "deep": {"doc_a_deep":DocA}, 
+                    "deeper": {"doc_a_deeper":DocA,
+                               "inner":{"doc_a_deepest":DocA}}
+                },
+                
+            }
+            use_autorefs = True
+
+        docb = DocB()
+        # the structure is automaticly filled by the corresponding structure
+        docb['_id'] = 'docb'
+        docb['b']['doc_a'] = doca
+    
+        # create a few deeper  docas
+        deep = DocA()
+        #deep['_id'] = 'deep'
+        deep['a']['foo'] = 5
+        deep.save()
+        docb['b']['deep']['doc_a_deep'] = deep
+        deeper = DocA()
+        deeper['_id'] = 'deeper'
+        deeper['a']['foo'] = 8
+        deeper.save()
+        docb['b']['deeper']['doc_a_deeper'] = deeper
+        deepest = DocA()
+        deepest['_id'] = 'deepest'
+        deepest['a']['foo'] = 18
+        deepest.save()
+        docb['b']['deeper']['inner']['doc_a_deepest'] = deepest
+
+        docb.save()
+
+        # now, does retrieval function as expected?
+        test_doc = DocB.get_from_id(docb['_id'])
+        assert isinstance(test_doc['b']['doc_a'], DocA), type(test_doc['b']['doc_a'])
+        assert test_doc['b']['doc_a']['a']['foo'] == 3
+        assert isinstance(test_doc['b']['deep']['doc_a_deep'], DocA)
+        assert test_doc['b']['deep']['doc_a_deep']['a']['foo'] == 5
+        assert isinstance(test_doc['b']['deeper']['doc_a_deeper'], DocA)
+        assert test_doc['b']['deeper']['doc_a_deeper']['a']['foo'] == 8, test_doc
+        assert isinstance(test_doc['b']['deeper']['inner']['doc_a_deepest'], DocA)
+        assert test_doc['b']['deeper']['inner']['doc_a_deepest']['a']['foo'] == 18
+
+    def test_autoref_with_same_embed_id(self):
+        """Test the basic functionality.
+        In this case, 'b.deep.doc_a_deep' and 'b.deeper.doc_a_deeper'
+        as the same '_id'. So, if we modify the 
+        """
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "a":{'foo':int},
+            }
+
+        doca = DocA()
+        doca['_id'] = 'doca'
+        doca['a']['foo'] = 3
+        doca.save()
+
+        class DocB(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "b":{
+                    "doc_a":DocA,
+                    "deep": {"doc_a_deep":DocA}, 
+                },
+                
+            }
+            use_autorefs = True
+
+        docb = DocB()
+        docb['_id'] = 'docb'
+        docb['b']['doc_a'] = doca
+        # create a few deeper  docas
+        deep = DocA()
+        deep['_id'] = 'doca'
+        deep['a']['foo'] = 5
+        deep.save()
+        docb['b']['deep']['doc_a_deep'] = deep
+
+        docb.save()
+
+        test_doc = DocB.get_from_id(docb['_id'])
+        assert test_doc['b']['doc_a']['a']['foo'] == 5
+        assert test_doc['b']['deep']['doc_a_deep']['a']['foo'] == 5
 
 

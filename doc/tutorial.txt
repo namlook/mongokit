@@ -284,6 +284,24 @@ It's possible to add more type in authorized_types:
 >>> mydoc['foo'] = 'bla'
 >>> mydoc.validate()
 
+.. topic:: new in developpement version
+    
+    `authorized_types` is not in the mongokit module anymore
+    but has been integrated to the `MongoDocument` object.
+    This allow to changed dynamically the authorized_types list at
+    runtime.
+
+    So, if you wan to add more types in authorized_types, you need to do:
+
+    >>> class MyDoc(MongoDocument):
+    ...     structure = {
+    ...         "foo":str,
+    ...     }
+    ...     authorized_types = MongoDocument.authorized_types + [str]
+    >>> mydoc = MyDoc()
+    >>> mydoc['foo'] = 'bla'
+    >>> mydoc.validate()
+
 validate keys
 =============
 
@@ -509,12 +527,16 @@ but take a CustomType object.
     The `CustomType` api has little changed. 
      * You must specify a `mongo_type` property in the `CustomType` class. this
        will describes the type of the value stored in the mongodb.  
+     * If you want more validation, you can specify a `python_type` property wich is
+       the python type the value will be converted. This is a good thing to specify it
+       as it make a good documentation.
      * There is no `custom_types` descriptor anymore. The `CustomType` is set
        directly in the field. Plus, the `CustomType` must be instanciated.
     So, the new way of using `CustomType` look like this::
                 
         >>> class CustomDate(CustomType):
         ...     mongo_type = unicode
+        ...     python_type = datetime.datetime # optional, just for more validation
         ...     def to_bson(self, value):
         ...         """convert type to a mongodb type"""
         ...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -651,6 +673,12 @@ While saving, the "_ns" field is added to docb:
 
 >>> docb.save()
 {'_ns': u'tutorial', 'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
+
+.. topic:: new in developpement version
+
+    The internal structure of processing embeded document as changed and use the `CustomType` way.
+    The advantage is that your data are not pollued by extra field anymore. So the '_ns' field is not
+    added
 
 Now the interresting part. If we change a field in an embeded doc, the change will be done
 for all DocA wich have the same '_id':

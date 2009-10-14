@@ -35,17 +35,7 @@ from pymongo.son_manipulator import AutoReference, NamespaceInjector
 import re
 import logging
 
-from mongokit.schema_document import SchemaDocument, SchemaProperties, STRUCTURE_KEYWORDS
-
-from mongokit import authorized_types
-
-authorized_types += [
-  pymongo.binary.Binary,
-  pymongo.objectid.ObjectId,
-  pymongo.dbref.DBRef,
-  pymongo.code.Code,
-  type(re.compile("")),
-]
+from mongokit.schema_document import SchemaDocument, SchemaProperties, STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
 
 from uuid import uuid4
 
@@ -84,10 +74,6 @@ class MongoProperties(SchemaProperties):
                 # This *CAN* fail, in which case it throws ConnectionError
                 log.debug("Username + Passwd set.  Authing against MongoDB.")
                 authenticate_mongodb(db, obj.db_username, obj.db_password)
-            # DBRef magic
-            if obj.use_autorefs:
-                db.add_son_manipulator(NamespaceInjector()) # inject _ns
-                db.add_son_manipulator(AutoReference(db))
             obj.db = db
             #### init collection ####
             if not obj.collection_name:
@@ -124,6 +110,23 @@ class MongoDocument(SchemaDocument):
     # which sets up and manages the connection 
     _use_pylons = False
 
+    # Support autoreference
+    # When enabled, your DB will get NamespaceInjector
+    # and AutoReference attached to it, to automatically resolve
+    # See the autoreference example in the pymongo driver for more info
+    # At the risk of overdocing, *ONLY* when your class has this
+    # set to true, will a SchemaDocument subclass be permitted
+    # as a valid type
+    use_autorefs = False
+
+    authorized_types = SchemaDocument.authorized_types + [
+      pymongo.binary.Binary,
+      pymongo.objectid.ObjectId,
+      pymongo.dbref.DBRef,
+      pymongo.code.Code,
+      type(re.compile("")),
+    ]
+
     def __init__(self, doc=None, gen_skel=True, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None):
         """
         :doc: a dictionnary. Usefull to convert a simple dict into a full MongoDocument
@@ -135,8 +138,19 @@ class MongoDocument(SchemaDocument):
         :db_password: overide this if you don't want to use MongoDocument.db_password
         :gen_skel: generate the skeleton by filling the doc with empty default values
         """
-        super(MongoDocument, self).__init__(doc=doc, gen_skel=gen_skel)
+        self._authorized_types = self.authorized_types[:]
+        # If using autorefs, we need another authorized
+        # types : type(MongoDocument) (with is MongoProperties)
+        if self.use_autorefs:
+            self._authorized_types += [MongoProperties]
+        super(MongoDocument, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False)
+        # indexing all embed doc if any
+        self._dbrefs = {}
+        if self.use_autorefs:
+            self._make_reference(self, self.structure)
         self._belong_to = None
+        # Check if a custom connection is pass to the constructor.
+        # If yes, build the custom connection
         reset_connection = False
         if db_host is not None:
             self.db_host = db_host
@@ -166,6 +180,12 @@ class MongoDocument(SchemaDocument):
         if key in ['connection', 'collection', 'db'] and not hasattr(self, 'connection'):
             raise ConnectionError('You must specify a db_name and collection_name attribute') 
         return super(MongoDocument, self).__getattr__(key)
+
+    def validate(self):
+        if self.use_autorefs:
+            self._make_reference(self, self.structure)
+        super(MongoDocument, self).validate()
+
         
     def save(self, uuid=True, validate=None, safe=True, *args, **kwargs):
         """
@@ -186,6 +206,9 @@ class MongoDocument(SchemaDocument):
         else:
             if not self.skip_validation or self.belong_to:
                 self.validate()
+            else:
+                if self.use_autorefs:
+                    self._make_reference(self, self.structure)
         if '_id' not in self:
             if uuid:
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
@@ -429,6 +452,9 @@ class MongoDocument(SchemaDocument):
                   self.belong_to.keys()[0], self.belong_to.values()[0]))
 
     def _validate_doc(self, doc, struct, path = ""):
+        """
+        check it doc field types match the doc field structure
+        """
         if path in self.belong_to:
             if not self._belong_to:
                 db_name = self.belong_to[path].db_name
@@ -436,10 +462,86 @@ class MongoDocument(SchemaDocument):
                 full_collection_path = "%s.%s" % (db_name, collection_name)
                 self._belong_to = (db_name, full_collection_path, doc)
         super(MongoDocument, self)._validate_doc(doc, struct, path)
- 
+
+    def _make_reference(self, doc, struct, path=""):
+        """
+        * wrap all MongoDocument with the CustomType "R()"
+        * create the list of Reference in self._dbrefs
+        * track the embed doc changes and save it when self.save() is called
+        """
+        for key in struct:
+            if type(key) is type:
+                new_key = "$%s" % key.__name__
+            else:
+                new_key = key
+            new_path = ".".join([path, new_key]).strip('.')
+            #
+            # if the value is a dict, we have a another structure to validate
+            #
+            if isinstance(struct[key], MongoProperties) or isinstance(struct[key], R):
+                # if struct[key] is a MongoDocument, so we have to convert it into the
+                # CustomType : R
+                if not isinstance(struct[key], R):
+                    struct[key] = R(struct[key])
+                # be sure that we have an instance of MongoDocument
+                if not isinstance(doc[key], struct[key]._doc) and doc[key] is not None:
+                    raise SchemaTypeError(
+                      "%s must be an instance of MongoDocument not %s" % (
+                        new_path, type(doc[key]).__name__))
+                # validate the embed doc
+                if not self.skip_validation and doc[key] is not None:
+                    doc[key].validate()
+                # if we didn't index the embed obj yet, well, we do it
+                if new_path not in self._dbrefs:
+                    self._dbrefs[new_path] = doc[key]
+                else:
+                    # if the embed doc indexed was None but not the new embed one,
+                    # we update the index
+                    if self._dbrefs[new_path] is None and doc[key] is not None:
+                        self._dbrefs[new_path] = doc[key]
+                    # if the embed obj is already indexed, we check is the
+                    # one we get has not changed. If so, we save the embed
+                    # obj and update the reference
+                    elif self._dbrefs[new_path] != doc[key] and doc[key] is not None:
+                        doc[key].save()
+                        self._dbrefs[new_path].update(doc[key])
+            elif isinstance(struct[key], dict):
+                #
+                # if the dict is still empty into the document we build
+                # it with None values
+                #
+                if len(struct[key]) and\
+                  not [i for i in struct[key].keys() if type(i) is type]: 
+                    if key in doc:
+                        self._make_reference(doc[key], struct[key], new_path)
+                else:# case {unicode:int}
+                    pass
+            elif isinstance(struct[key], list) and len(struct[key]):
+                if isinstance( struct[key][0], dict):
+                    for obj in doc[key]:
+                        self._make_reference(doc=obj, struct=struct[key][0], path=new_path)
+
 class MongoPylonsDocument(MongoDocument):
     """Lazy helper base class to inherit from if you are
     sure you will always live in / require the pylons evironment.
     Keep in mind if you need CLI testing, "paster shell" will allow 
     you to test within a pylons environment (via an ipython shell)"""
     _use_pylons = True
+
+class R(CustomType):
+    mongo_type = pymongo.dbref.DBRef
+    python_type = MongoDocument
+
+    def __init__(self, doc):
+        super(R, self).__init__()
+        self._doc = doc
+    
+    def to_bson(self, value):
+        if value is not None:
+            return pymongo.dbref.DBRef(collection=value.collection.name(), id=value['_id'])
+        
+    def to_python(self, value):
+        if value is not None:
+            return self._doc.get_from_id(value.id)
+
+
