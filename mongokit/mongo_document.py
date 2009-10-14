@@ -47,38 +47,35 @@ STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
 class MongoProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
         obj = super(MongoProperties, cls).__new__(cls, name, bases, attrs)
-        if obj.db_name and obj.collection_name:
-            #### init connection ####
-            if obj._use_pylons:
+        if obj.collection_name:
+            if not obj.db_name and not obj._use_pylons:
+                raise ConnectionError('You must specify a db_name')
+            elif obj._use_pylons:
                 from mongokit.ext.pylons_env import MongoPylonsEnv
                 log.debug("Pylons mode...")
                 obj.connection = MongoPylonsEnv.mongo_conn()
-            elif not obj.db_host:
-                raise ConnectionError('You must specify a db_host')
-            elif not obj.db_port:
-                raise ConnectionError('You must specify a db_port')
+                if obj.db_name:
+                    obj.db = obj.connection[obj.db_name]
+                else:
+                    db_name = MongoPylonsEnv.get_default_db()
+                    if db_name is None:
+                        raise PylonsEnvError("It seems that you want to use"
+                            " the Pylons environnement. But I can't found the"
+                            " mongodb.db. Please check your configuration file.")
+                    obj.db = obj.connection[db_name]
             else:
+                if not obj.db_host:
+                    raise ConnectionError('You must specify a db_host')
+                if not obj.db_port:
+                    raise ConnectionError('You must specify a db_port')
                 obj.connection = Connection(obj.db_host, obj.db_port)
-            #### init db ####
-            if obj._use_pylons:
-                from mongokit.ext.pylons_env import MongoPylonsEnv
-                db_name = MongoPylonsEnv.get_default_db()
-            elif not obj.db_name:
-                raise ConnectionError('You must specify a db_name')
-            else:
-                db_name = obj.db_name
-            db = obj.connection[db_name]
-            # check auth if db_username and db_password are filled
+                obj.db = obj.connection[obj.db_name]
             if obj.db_username and obj.db_password:
                 # Password can't be empty or none or we ignore it
                 # This *CAN* fail, in which case it throws ConnectionError
                 log.debug("Username + Passwd set.  Authing against MongoDB.")
-                authenticate_mongodb(db, obj.db_username, obj.db_password)
-            obj.db = db
-            #### init collection ####
-            if not obj.collection_name:
-                raise ConnectionError('You must specify a collection_name')
-            collection = db[obj.collection_name]
+                authenticate_mongodb(obj.db, obj.db_username, obj.db_password)
+            collection = obj.db[obj.collection_name]
             obj.create_index(collection)
             obj.collection = collection
             attrs['connection'] = obj.connection

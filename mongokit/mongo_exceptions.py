@@ -28,3 +28,4 @@
 class ConnectionError(Exception):pass
 class MongoAuthException(Exception):pass
 class MultipleResultsFound(Exception):pass
+class PylonsEnvError(Exception):pass
