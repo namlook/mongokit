@@ -152,35 +152,37 @@ there is more than one result.
 
 Changing collection dynamically
 ===============================
+.. topic:: new in developpement version
 
-Each `MongoDocument` must have a `db_host`, a `db_port`, a `db_name` and a `collection_name`.
-Those attributes are set when describing mongo documents. The connection, the db and the
-collection are then automatically created and attached to the object.
 
-But you might need to specify a different db or collection dynamically. For instance,
-say you want to store a User by database. You can't set the `db_name` and `collection_name`
-because it will change at each user.
+    Each `MongoDocument` must have a `db_host`, a `db_port`, a `db_name` and a `collection_name`.
+    Those attributes are set when describing mongo documents. The connection, the db and the
+    collection are then automatically created and attached to the object.
 
->>> class User(MongoDocument):
-...     strucute = {'login':unicode, 'screen_name':unicode}
-...     # we can set `db_name` here...
+    But you might need to specify a different db or collection dynamically. For instance,
+    say you want to store a User by database. You can't set the `db_name` and `collection_name`
+    because it will change at each user.
 
-Mongokit allow you to change those parameters on the fly. For this, you need to create
-another collection with the helper `get_collection`.
+    >>> class User(MongoDocument):
+    ...     strucute = {'login':unicode, 'screen_name':unicode}
+    ...     # we can set `db_name` here...
 
->>> user_col = User.get_collection(db_name='namlook', collection_name='profile')
+    Mongokit allow you to change those parameters on the fly. For this, you need to create
+    another collection with the helper `get_collection`.
 
-Now, we can query the database by passing our new collection :
+    >>> user_col = User.get_collection(db_name='namlook', collection_name='profile')
 
->>> User.all({}, collection=col)
+    Now, we can query the database by passing our new collection :
 
-You can pass those value to the `MongoDocument.__init__` :
+    >>> User.all({}, collection=col)
 
->>> user = User(db_name='namlook', collection_name='profile')
->>> user['login'] = 'namlook'
->>> user['screen_name'] = 'Namlook'
+    You can pass those value to the `MongoDocument.__init__` :
 
-calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
+    >>> user = User(db_name='namlook', collection_name='profile')
+    >>> user['login'] = 'namlook'
+    >>> user['screen_name'] = 'Namlook'
+
+    calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
 
 Dot notation 
 ============
