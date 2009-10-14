@@ -97,6 +97,11 @@ class ApiTestCase(unittest.TestCase):
             collection_name = 'mongokit'
             structure = {
                 'standard':unicode,
+                'other':{
+                    'deep':unicode,
+                },
+                'notindexed':unicode,
+                'alsoindexed':unicode,
             }
             
             indexes = [
@@ -126,6 +131,11 @@ class ApiTestCase(unittest.TestCase):
             collection_name = 'mongokit'
             structure = {
                 'standard':unicode,
+                'other':{
+                    'deep':unicode,
+                },
+                'notindexed':unicode,
+                'alsoindexed':unicode,
             }
             
             indexes = [
@@ -149,4 +159,66 @@ class ApiTestCase(unittest.TestCase):
         assert index1 is not None, 'No Index Found'
         assert index2 is not None, 'Index not found'
 
+    def test_bad_index_descriptor(self):
+        class Movie(MongoDocument):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'unique':True,
+                },
+            ]
+        self.assertRaises(BadIndexError, Movie)
+        class Movie(MongoDocument):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':{'standard':INDEX_DESCENDING},
+                    'uniq':True,
+                },
+            ]
+        self.assertRaises(BadIndexError, Movie)
+        class Movie(MongoDocument):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':'std',
+                },
+            ]
+        self.assertRaises(ValueError, Movie)
+        class Movie(MongoDocument):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':{'standard':2},
+                },
+            ]
+        self.assertRaises(BadIndexError, Movie)
+        class Movie(MongoDocument):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':{'standard':1, 'bla':1},
+                },
+            ]
+        self.assertRaises(ValueError, Movie)
+        class Movie(MongoDocument):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':['std'],
+                },
+            ]
+        self.assertRaises(ValueError, Movie)
 

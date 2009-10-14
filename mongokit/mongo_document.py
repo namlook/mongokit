@@ -441,7 +441,32 @@ class MongoDocument(SchemaDocument):
         
     def _validate_descriptors(self):
         super(MongoDocument, self)._validate_descriptors()
-        # XXX indexes validation
+        if self.indexes:
+            for index in self.indexes:
+                if 'fields' not in index:
+                    raise BadIndexError("'fields' key must be specify in indexes")
+                for key, value in index.iteritems():
+                    if key not in ['fields', 'unique']:
+                        raise BadIndexError("%s is unknown key for indexes" % key)
+                    if key == "fields":
+                        if isinstance(value, dict):
+                            for field, direction in value.iteritems():
+                                if not direction in [1, -1]:
+                                    raise BadIndexError("index direction must be 1 or -1. Got %s" % direction)
+                                if field not in self._namespaces:
+                                    raise ValueError("Error in indexes: can't"
+                                      " find %s in structure" % field )
+                        elif isinstance(value, basestring):
+                            if value not in self._namespaces:
+                                raise ValueError("Error in indexes: can't"
+                                  " find %s in structure" % value )
+                        elif isinstance(value, list):
+                            for field in value:
+                                if field not in self._namespaces:
+                                    raise ValueError("Error in indexes: can't"
+                                      " find %s in structure" % field )
+                    else:
+                        assert value in [False, True], value
         if self.belong_to:
             if not len(self.belong_to) == 1:
                 raise ValueError("belong_to must contain only one item")
