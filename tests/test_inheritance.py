@@ -88,6 +88,30 @@ class InheritanceTestCase(unittest.TestCase):
 
         assert C() == {"a":{"foo":5}, "c":{"spam":None}}, C()
 
+    def test_default_values_inheritance_with_function(self):
+        from datetime import datetime
+        class A(SchemaDocument):
+            structure = {
+                "a":{"foo":datetime}
+            }
+            default_values = {"a.foo":datetime.utcnow}
+
+        class B(A):
+            structure = {
+                "b":{"bar":unicode}
+            }
+
+        assert isinstance(B()['a']['foo'], datetime)
+ 
+        class C(A):
+            structure = {
+                "c":{"spam":unicode}
+            }
+            default_values = {"a.foo":datetime(2008,8,8)}
+
+        assert C() == {"a":{"foo":datetime(2008, 8, 8)}, "c":{"spam":None}}, C()
+
+
     def test_validators_inheritance(self):
         class A(SchemaDocument):
             structure = {

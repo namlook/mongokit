@@ -118,6 +118,23 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc = MyDoc()
         mydoc.validate()
 
+    def test_default_values_from_function2(self):
+        import time
+        class Doc( MongoDocument ):
+            structure = {
+                "doc":{
+                    "creation_date":float,
+                    "updated_date": float,
+                }
+            }
+            default_values = {
+                "doc.creation_date": time.time,
+                "doc.updated_date": time.time
+            }
+        doc = Doc()
+        assert isinstance(doc['doc']['creation_date'], float), doc['doc']['creation_date']
+        assert isinstance(doc['doc']['updated_date'], float)
+
     def test_default_values_from_function_nested(self):
         import time
         class MyDoc(MongoDocument):

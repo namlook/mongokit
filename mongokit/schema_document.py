@@ -625,7 +625,6 @@ class SchemaDocument(dict):
                               "%s must be an instance of %s not %s" % (
                                 new_path, struct[key].mongo_type.__name__, type(new_value).__name__))
                     doc[key] = new_value
-                    return # XXX added to prevent the value's been set twice
             #
             # if the value is a dict, we have a another structure to validate
             #
