@@ -63,6 +63,7 @@ class MongoProperties(SchemaProperties):
                             " the Pylons environnement. But I can't found the"
                             " mongodb.db. Please check your configuration file.")
                     obj.db = obj.connection[db_name]
+                    attrs['db_name'] = db_name
             else:
                 if not obj.db_host:
                     raise ConnectionError('You must specify a db_host')
@@ -243,9 +244,9 @@ class MongoDocument(SchemaDocument):
         if create_index is True, the collection will be indexed using the indexes class attribute
         """
         if db_host is None:
-            db_host = cls.db_host
+            db_host = cls.connection.host()
         if db_port is None:
-            db_port = cls.db_port
+            db_port = cls.connection.port()
         if db_name is None:
             db_name = cls.db_name
         if collection_name is None:
