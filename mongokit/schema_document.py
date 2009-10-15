@@ -561,10 +561,7 @@ class SchemaDocument(dict):
                 #
                 __processval(self, new_path, doc, key)
 
-    def _process_custom_type(self, to_bson, doc, struct, path=""):
-        """
-        if to_bson is True, then use the "to_bson" fonction from CustomType
-        """
+    def _process_custom_type(self, to_bson, doc, struct, path = "", root_path=""):
         for key in struct:
             if type(key) is type:
                 new_key = "$%s" % key.__name__
@@ -574,32 +571,58 @@ class SchemaDocument(dict):
             #
             # if the value is a dict, we have a another structure to validate
             #
-            if isinstance(struct[key], CustomType):
-                if to_bson:
-                    if struct[key].python_type is not None:
-                        if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
-                            raise SchemaTypeError(
-                              "%s must be an instance of %s not %s" % (
-                                new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
-                    doc[key] = struct[key].to_bson(doc[key])
-                else:
-                    doc[key] = struct[key].to_python(doc[key])
-            elif isinstance(struct[key], dict):
+            if isinstance(struct[key], dict):
+                if doc: # we don't need to process an empty doc
+                    if type(key) is type:
+                        for doc_key in doc: # process type's key such {unicode:int}...
+                            self._process_custom_type(to_bson, doc[doc_key], struct[key], new_path, root_path)
+                    else:
+                        if key in doc: # we don't care about missing fields
+                            self._process_custom_type(to_bson, doc[key], struct[key], new_path, root_path)
+            #
+            # If the struct is a list, we have to validate all values into it
+            #
+            elif type(struct[key]) is list:
                 #
-                # if the dict is still empty into the document we build
-                # it with None values
+                # check if the list must not be null
                 #
-                if len(struct[key]) and\
-                  not [i for i in struct[key].keys() if type(i) is type]: 
-                    if key in doc:
-                        self._process_custom_type(to_bson, doc[key], struct[key], new_path)
-                else:# case {unicode:int}
-                    pass
-            elif isinstance(struct[key], list) and len(struct[key]):
-                if isinstance( struct[key][0], dict):
-                    for obj in doc[key]:
-                        self._process_custom_type(to_bson=to_bson, doc=obj, struct=struct[key][0], path=new_path)
-            
+                if struct[key]:
+                    l_objs = []
+                    if isinstance(struct[key][0], CustomType):
+                        for obj in doc[key]:
+                            if to_bson:
+                                if struct[key][0].python_type is not None:
+                                    if not isinstance(obj, struct[key][0].python_type) and obj is not None:
+                                        raise SchemaTypeError(
+                                          "%s must be an instance of %s not %s" % (
+                                            new_path, struct[key][0].python_type.__name__, type(obj).__name__))
+                                obj = struct[key][0].to_bson(obj)
+                            else:
+                                obj = struct[key][0].to_python(obj)
+                            l_objs.append(obj)
+                        doc[key] = l_objs
+                    elif isinstance(struct[key][0], dict):
+                        if doc[key]:
+                            for obj in doc[key]:
+                                self._process_custom_type(to_bson, obj, struct[key][0], new_path, root_path)
+            #
+            # It is not a dict nor a list but a simple key:value
+            #
+            else:
+                #
+                # check if the value must not be null
+                #
+                if isinstance(struct[key], CustomType):
+                    if to_bson:
+                        if struct[key].python_type is not None:
+                            if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
+                                raise SchemaTypeError(
+                                  "%s must be an instance of %s not %s" % (
+                                    new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
+                        doc[key] = struct[key].to_bson(doc[key])
+                    else:
+                        doc[key] = struct[key].to_python(doc[key])
+
     def _set_default_fields(self, doc, struct, path = ""):
         # TODO check this out, this method must be restructured
         for key in struct:

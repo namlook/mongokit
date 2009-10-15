@@ -29,7 +29,7 @@ import unittest
 
 from mongokit import *
 
-class TypesTestCase(unittest.TestCase):
+class CustomTypesTestCase(unittest.TestCase):
     def setUp(self):
         self.collection = Connection()['test']['mongokit']
         
@@ -159,4 +159,35 @@ class TypesTestCase(unittest.TestCase):
         r.save()
         r_saved = r.collection.find_one({'_id':'bla'})
         assert r_saved == {u'_id': u'bla', u'products': [{u'sku': u'X-25A5F58B-61', u'price': 9.9900000000000002, u'qty': 1}, {u'sku': u'Z-25A5F58B-62', u'price': 2.9900000000000002, u'qty': 2}]}
+
+    def test_custom_type_list(self):
+        import datetime
+
+        class CustomPrice(CustomType):
+            mongo_type = float
+            python_type = basestring
+            def to_bson(self, value):
+                print "blaaa"
+                return float(value)
+            def to_python(self, value):
+                return str(value)
+
+        class Receipt(MongoDocument):
+            db_name = 'test'
+            collection_name = 'test'
+            structure = {
+                'foo': CustomPrice(),
+                'price': [CustomPrice()],
+                'bar':{'spam':CustomPrice()},
+            }
+          
+        r = Receipt()
+        r['_id'] = 'bla'
+        r['foo'] = '2.23'
+        r['price'].append('9.99')
+        r['price'].append('2.99')
+        r['bar']['spam'] = '3.33'
+        r.save()
+        r_saved = r.collection.find_one({'_id':'bla'})
+        assert r_saved == {u'price': [9.9900000000000002, 2.9900000000000002], u'_id': u'bla', u'bar': {u'spam': 3.3300000000000001}, u'foo': 2.23}
 
