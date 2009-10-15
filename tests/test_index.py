@@ -31,7 +31,7 @@ from mongokit import *
 
 CONNECTION = Connection()
 
-class ApiTestCase(unittest.TestCase):
+class IndexTestCase(unittest.TestCase):
     def setUp(self):
         self.collection = CONNECTION['test']['mongokit']
         self.collection.drop_indexes()

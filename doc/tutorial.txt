@@ -28,8 +28,8 @@ A MongoDocument take a `db_name` and a `collection_name` as attribute. Next, you
 The structure is a simply dictionnary with python type. In this example, `title` must be unicode and `rank`
 must be an int.
 
-Optionaly, you can add some descriptors. In order to specify fields wich are required, just add a `required_fields`
-attribute. This is a simple list wich list all required_fields (ie, those field must not be None when validating).
+Optionaly, you can add some descriptors. In order to specify fields which are required, just add a `required_fields`
+attribute. This is a simple list which list all required_fields (ie, those field must not be None when validating).
 
 Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
 you can pass callable object (like a datetime).
@@ -76,7 +76,7 @@ Query
 
 There 4 way to query a collection `all()`, `one()`, `fetch()`, `fetch_one`.
 `all()` and `fetch()` return a cursor of collection.  A cursor is an container
-wich lazy evaluate the results. A cursor is acting like an iterator.
+which lazy evaluate the results. A cursor is acting like an iterator.
 `one()` and `fetch_one()` return the document itself.
 
 All theses method can take a query as argument. A query is a simple dict. Please,
@@ -86,7 +86,7 @@ all()
 -----
 
 `all()` without argument will return a cursor of all documents of the collection.
-If a query is passed, it will return a cursor all documents wich match the query.
+If a query is passed, it will return a cursor all documents which match the query.
 The query is launch against the db and collection of the object.
 
 `all()` takes the same arguments than the the pymongo.collection.find method.
@@ -127,11 +127,11 @@ If no document is found, `one()` returns None
 fetch()
 -------
 
-Unlike `all()`, `fetch()` will return only documents wich match the structure of the Document.
+Unlike `all()`, `fetch()` will return only documents which match the structure of the Document.
 
 >>> all_blog_posts = BlogPost.fetch()
 
-This will return only all blog post (wich have 'title', 'body', 'author', 'date_creation', 'rank' as fields).
+This will return only all blog post (which have 'title', 'body', 'author', 'date_creation', 'rank' as fields).
 This is an helper for :
 
 >>> all_blog_posts = BlogPost.all({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': {'$exists': True}})
@@ -140,7 +140,7 @@ Note, like `all()` and and `one()`, you can pass advanced queries:
 
 >>> my_blog_posts = BlogPost.fetch({'author':'myself'})
 
-wich is equivalent to:
+which is equivalent to:
 
 >>> all_blog_posts = BlogPost.all({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': 'myself'})
 
@@ -339,7 +339,7 @@ It is possible to add another layer of validation to fields.
 OR operator
 -----------
 
-Let's say that we have a field wich can be unicode or int or a float.
+Let's say that we have a field which can be unicode or int or a float.
 We can use the OR operator to tell MongoKit to validate the field :
 
 >>> from mongokit import OR
@@ -529,7 +529,7 @@ but take a CustomType object.
     The `CustomType` api has little changed. 
      * You must specify a `mongo_type` property in the `CustomType` class. this
        will describes the type of the value stored in the mongodb.  
-     * If you want more validation, you can specify a `python_type` property wich is
+     * If you want more validation, you can specify a `python_type` property which is
        the python type the value will be converted. This is a good thing to specify it
        as it make a good documentation.
      * There is no `custom_types` descriptor anymore. The `CustomType` is set
@@ -638,7 +638,7 @@ First let's create a simple doc:
 >>> doca.save()
 {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}
 
-Now, let's create a DocB wich have a reference to DocA:
+Now, let's create a DocB which have a reference to DocA:
 
 >>> class DocB(MongoDocument):
 ...    db_name = "test"
@@ -683,7 +683,7 @@ While saving, the "_ns" field is added to docb:
     added
 
 Now the interresting part. If we change a field in an embeded doc, the change will be done
-for all DocA wich have the same '_id':
+for all DocA which have the same '_id':
 
 >>> docb['b']['doc_a']['a']['foo'] = 4
 >>> docb.save()
@@ -779,4 +779,92 @@ or if you have more than one index:
     ...             'unique':True,
     ...         },
     ...     ]
+
+JSON support
+============
+
+.. topic:: new in developpement version
+    
+    While building web application, you might want to create an rest api with json
+    support. Then, you may need to convert all your MongoDocument into a json format
+    in order to pass it via the rest api. Unfortunately (or fortunately), MongoDB
+    support field format which is not supported by json. This is the case for `datetime`
+    but also for all your `CustomTypes` you may have built and your embeded objects.
+
+    MongoDocument support the json import/export. Note that you'll need to install `anyjson`
+    to enable this feature. (`sudo easy_install anyjson`)
+
+    `to_json`
+    ---------
+    
+    `to_json` is a simply method which export you document into a json document:
+
+    >>> class MyDoc(MongoDocument):
+    ...         db_name = "test"
+    ...         collection_name = "mongokit"
+    ...         structure = {
+    ...             "bla":{
+    ...                 "foo":unicode,
+    ...                 "bar":int,
+    ...             },
+    ...             "spam":[],
+    ...         }
+    >>> mydoc = MyDoc()
+    >>> mydoc['_id'] = u'mydoc'
+    >>> mydoc["bla"]["foo"] = u"bar"
+    >>> mydoc["bla"]["bar"] = 42
+    >>> mydoc['spam'] = range(10)
+    >>> mydoc.save()
+    >>> json = mydoc.to_json()
+    >>> json
+    '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+
+    `from_json`
+    ----------
+
+    To load a json string into a MongoDocument, use the `from_json` class method:
+
+    >>> class MyDoc(MongoDocument):
+    ...     db_name = "test"
+    ...     collection_name = "mongokit"
+    ...     structure = {
+    ...         "bla":{
+    ...             "foo":unicode,
+    ...             "bar":int,
+    ...         },
+    ...         "spam":[],
+    ...     }
+    >>> json = '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+    >>> mydoc = MyDoc.from_json(json)
+    >>> mydoc
+    {'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+
+    Not that `from_json` will take care of all your embeded Docs:
+
+    >>> class EmbedDoc(MongoDocument):
+    ...     db_name = "test"
+    ...     collection_name = "mongokit"
+    ...     structure = {
+    ...         "bla":{
+    ...             "foo":unicode,
+    ...             "bar":int,
+    ...         },
+    ...         "spam":[],
+    ...     }
+    >>> class MyDoc(MongoDocument):
+    ...    db_name = "test"
+    ...    collection_name = "mongokit"
+    ...    structure = {
+    ...        "doc":{
+    ...            "embed":EmbedDoc,
+    ...        },
+    ...    }
+    ...    use_autorefs = True
+    >>> json = '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
+    >>> mydoc = MyDoc.from_json(json)
+    >>> mydoc
+    {'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}
+    >>> isinstance(mydoc['doc']['embed'], EmbedDoc)
+    True
+
 

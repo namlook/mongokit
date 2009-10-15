@@ -35,7 +35,9 @@ from pymongo.son_manipulator import AutoReference, NamespaceInjector
 import re
 import logging
 
-from mongokit.schema_document import SchemaDocument, SchemaProperties, STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
+from mongokit.schema_document import SchemaDocument, SchemaProperties
+from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
+from mongokit.schema_document import totimestamp, fromtimestamp
 
 from uuid import uuid4
 
@@ -424,6 +426,93 @@ class MongoDocument(SchemaDocument):
         else:
             return collection.remove(*args, **kwargs)
 
+    def to_json(self):
+        """
+        convert the document into a json string and return it
+        """
+        def _convert_to_json(struct, doc):
+            """
+            convert all datetime to a timestamp from epoch
+            """
+            for key in struct:
+                if isinstance(struct[key], datetime.datetime):
+                    struct[key] = totimestamp(struct[key])
+                elif isinstance(struct[key], pymongo.dbref.DBRef):
+                    struct[key] = doc.get_from_id(struct[key].id)
+                elif isinstance(struct[key], dict):
+                    _convert_to_json(struct[key], doc)
+                elif isinstance(struct[key], list) and len(struct[key]):
+                    if isinstance(struct[key][0], dict):
+                        for obj in struct[key]:
+                            _convert_to_json(obj, doc)
+                    elif isinstance(struct[key][0], datetime.datetime):
+                        struct[key] = [totimestamp(obj) for obj in struct[key]]
+        # we don't want to touch our document so we create another object
+        from copy import deepcopy
+        self._process_custom_type(True, self, self.structure)
+        obj = deepcopy(self)
+        self._process_custom_type(False, self, self.structure)
+        _convert_to_json(obj, obj)
+        try:
+            import anyjson
+        except ImportError:
+            print "can't import anyjson. Please install it before continuing."
+        return anyjson.serialize(obj)
+
+    @classmethod
+    def from_json(cls, json):
+        """
+        convert a json string and return a SchemaDocument
+        """
+        def _convert_to_python(doc, struct, path = "", root_path=""):
+            for key in struct:
+                if type(key) is type:
+                    new_key = "$%s" % key.__name__
+                else:
+                    new_key = key
+                new_path = ".".join([path, new_key]).strip('.')
+                if isinstance(struct[key], dict):
+                    if doc: # we don't need to process an empty doc
+                        if type(key) is type:
+                            for doc_key in doc: # process type's key such {unicode:int}...
+                                _convert_to_python(doc[doc_key], struct[key], new_path, root_path)
+                        else:
+                            if key in doc: # we don't care about missing fields
+                                _convert_to_python(doc[key], struct[key], new_path, root_path)
+                elif type(struct[key]) is list:
+                    if struct[key]:
+                        if struct[key][0] is datetime.datetime:
+                            l_objs = []
+                            for obj in doc[key]:
+                                obj = fromtimestamp(obj)
+                                l_objs.append(obj)
+                            doc[key] = l_objs
+                        elif isinstance(struct[key][0], MongoProperties):
+                            l_objs = []
+                            for obj in doc[key]:
+                                obj = struct[key](obj)
+                                l_objs.append(obj)
+                            doc[key] = l_objs
+                        elif isinstance(struct[key][0], dict):
+                            if doc[key]:
+                                for obj in doc[key]:
+                                    _convert_to_python(obj, struct[key][0], new_path, root_path)
+                else:
+                    if struct[key] is datetime.datetime:
+                            doc[key] = fromtimestamp(doc[key])
+                    elif isinstance(struct[key], MongoProperties):
+                        doc[key] = struct[key](doc[key])
+        try:
+            import anyjson
+        except ImportError:
+            print "can't import anyjson. Please install it before continuing."
+        obj = anyjson.deserialize(json)
+        _convert_to_python(obj, cls.structure)
+        return obj
+ 
+    #
+    # end of public API
+    #
     @classmethod 
     def _delete_cascade(cls, doc, db_name, collection_name, connection):
         full_collection_path = "%s.%s" % (db_name, collection_name)
