@@ -201,6 +201,50 @@ If you want to use the dot notation (ala json), you must set the
 >>> doc
 {'foo': {'bar': u'bla'}}
 
+Case of tuple or immutable field
+================================
+
+.. topic:: new in developpement version
+
+    If you need a structured list with a limited
+    number of field, you can use tuple to describe
+    your object :
+
+    >>> class MyDoc(SchemaDocument):
+    ...     structure = {
+    ...         "foo":(int, unicode, float)
+    ...     }
+    >>> mydoc = MyDoc()
+    >>> mydoc['foo']
+    [None, None, None]
+
+    Tuple are converted into a simple list.
+    They add another validation layer. Field must
+    follow the right type:
+    
+    >>> mydoc['foo'] = [u"bla", 1, 4.0]
+    >>> mydoc.validate()
+    Traceback (most recent call last):
+    ...
+    SchemaTypeError: foo must be an instance of int not unicode
+    
+    and they must have the right number of items:
+    
+    >>> mydoc['foo'] = [1, u"bla"]
+    Traceback (most recent call last):
+    ...
+    SchemaTypeError: foo must have 3 items not 2
+
+    As tuples are converted to list internally, you
+    can make all list operations:
+
+    >>> mydoc['foo'] = [1,u'bar',3.2]
+    mydoc.validate()
+    >>> mydoc['foo'] = [None, u"bla", 3.1]
+    mydoc.validate()
+    >>> mydoc['foo'][0] = 50
+    mydoc.validate()
+
 Différence beetween {} and the type dict
 ========================================
 
@@ -794,8 +838,7 @@ JSON support
     MongoDocument support the json import/export. Note that you'll need to install `anyjson`
     to enable this feature. (`sudo easy_install anyjson`)
 
-    `to_json`
-    ---------
+    :`to_json`:
     
     `to_json` is a simply method which export you document into a json document:
 
@@ -819,8 +862,7 @@ JSON support
     >>> json
     '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
 
-    `from_json`
-    ----------
+    :`from_json`:
 
     To load a json string into a MongoDocument, use the `from_json` class method:
 

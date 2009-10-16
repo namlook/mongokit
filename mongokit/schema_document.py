@@ -466,6 +466,8 @@ class SchemaDocument(dict):
                         __validate_structure(struct[key])
                     elif isinstance(struct[key], list):
                         __validate_structure(struct[key])
+                    elif isinstance(struct[key], tuple):
+                        __validate_structure(struct[key])
                     elif isinstance(struct[key], CustomType):
                         __validate_structure(struct[key].mongo_type)
                     elif isinstance(struct[key], SchemaOperator):
@@ -481,6 +483,9 @@ class SchemaDocument(dict):
                             raise StructureError(
                               "%s is not an authorized type" % struct[key])
             elif isinstance(struct, list):
+                for item in struct:
+                    __validate_structure(item)
+            elif isinstance(struct, tuple):
                 for item in struct:
                     __validate_structure(item)
             elif isinstance(struct, SchemaOperator):
@@ -583,6 +588,17 @@ class SchemaDocument(dict):
                 struct = struct[0]
             for obj in doc:
                 self._validate_doc(obj, struct, path)
+        elif isinstance(struct, tuple):
+            if not isinstance(doc, list):
+                raise SchemaTypeError(
+                  "%s must be an instance of list not %s" % (
+                    path, type(doc).__name__))
+            if len(doc) != len(struct):
+                raise SchemaTypeError(
+                  "%s must have %s items not %s" % (
+                    path, len(struct), len(doc)))
+            for i in range(len(struct)):
+                self._validate_doc(doc[i], struct[i], path)
         elif not isinstance(doc, struct):
             raise SchemaTypeError(
               "%s must be an instance of %s not %s" % (
@@ -856,6 +872,8 @@ class SchemaDocument(dict):
                     doc[key] = type(struct[key])()
                 elif struct[key] is list:
                     doc[key] = []
+                elif isinstance(struct[key], tuple):
+                    doc[key] = [None for i in range(len(struct[key]))]
                 else:
                     doc[key] = None
             #

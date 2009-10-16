@@ -121,6 +121,25 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [[u"bla",1]]
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
+    def test_typed_tuple(self):
+        class MyDoc(SchemaDocument):
+            structure = {
+                "foo":(int, unicode, float)
+            }
+        mydoc = MyDoc()
+        mydoc.validate()
+        assert mydoc['foo'] == [None, None, None]
+        mydoc['foo'] = [u"bla", 1, 4.0]
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = [1, u"bla"]
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = [1,u'bar',3.2]
+        mydoc.validate()
+        mydoc['foo'] = [None, u"bla", 3.1]
+        mydoc.validate()
+        mydoc['foo'][0] = 50
+        mydoc.validate()
+
     def test_dict_unicode_typed_list(self):
         class MyDoc(SchemaDocument):
             structure = {
