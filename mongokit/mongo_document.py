@@ -462,7 +462,7 @@ class MongoDocument(SchemaDocument):
         try:
             import anyjson
         except ImportError:
-            print "can't import anyjson. Please install it before continuing."
+            raise ImportError("can't import anyjson. Please install it before continuing.")
         return anyjson.serialize(obj)
 
     @classmethod
@@ -511,7 +511,7 @@ class MongoDocument(SchemaDocument):
         try:
             import anyjson
         except ImportError:
-            print "can't import anyjson. Please install it before continuing."
+            raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = anyjson.deserialize(json)
         _convert_to_python(obj, cls.structure)
         return obj

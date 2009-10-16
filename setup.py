@@ -63,6 +63,7 @@ setup(
 
     install_requires = [
         'pymongo>=0.15.1',
+        'anyjson>=0.2.2',
     ]
 
 )
