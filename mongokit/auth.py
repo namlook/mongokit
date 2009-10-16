@@ -26,7 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from mongokit import MongoDocument
-import sha, os
+import hashlib, os
 
 class User(MongoDocument):
     structure = {
@@ -56,8 +56,8 @@ class User(MongoDocument):
         """ Hash password on the fly """
         if isinstance(password, unicode):
             password = password.encode('utf-8')
-        password_salt = sha.new(os.urandom(60)).hexdigest()
-        crypt = sha.new(password + password_salt).hexdigest()
+        password_salt = hashlib.sha1(os.urandom(60)).hexdigest()
+        crypt = hashlib.sha1(password + password_salt).hexdigest()
         self['user']['password'] = unicode(password_salt + crypt, 'utf-8')
 
     def get_password(self):
@@ -74,7 +74,7 @@ class User(MongoDocument):
         if isinstance(password, unicode):
             password = password.encode('utf-8')
         password_salt = self['user']['password'][:40]
-        crypt_pass = sha.new(password + password_salt).hexdigest()
+        crypt_pass = hashlib.sha1(password + password_salt).hexdigest()
         if crypt_pass == self['user']['password'][40:]:
             return True
         else:
