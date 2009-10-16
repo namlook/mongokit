@@ -297,7 +297,7 @@ class SchemaDocument(dict):
         if key not in self._protected_field_names and self.use_dot_notation and key in self:
             return self[key]
         else:
-            dict.__getattribute__(self, key) 
+            return dict.__getattribute__(self, key) 
 
     def to_json(self):
         """

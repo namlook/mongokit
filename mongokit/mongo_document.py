@@ -177,9 +177,15 @@ class MongoDocument(SchemaDocument):
             MongoDocument.create_index(self.collection)
 
     def __getattr__(self, key):
-        if key in ['connection', 'collection', 'db'] and not hasattr(self, 'connection'):
+        if key in ['collection', 'db'] and not hasattr(self, 'connection'):
             raise ConnectionError('You must specify a db_name and collection_name attribute') 
-        return super(MongoDocument, self).__getattr__(key)
+        try:
+            return super(MongoDocument, self).__getattr__(key)
+        except:
+            if key == 'connection':
+                raise ConnectionError('You must specify a db_name and collection_name attribute') 
+            return super(MongoDocument, self).__getattr__(key)
+                
 
     def validate(self):
         if self.use_autorefs:
