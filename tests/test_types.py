@@ -140,6 +140,46 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'][0] = 50
         mydoc.validate()
 
+    def test_nested_typed_tuple(self):
+        class MyDoc(SchemaDocument):
+            structure = {
+                "foo":{'bar':(int, unicode, float)}
+            }
+        mydoc = MyDoc()
+        mydoc.validate()
+        assert mydoc['foo']['bar'] == [None, None, None]
+        mydoc['foo']['bar'] = [u"bla", 1, 4.0]
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo']['bar'] = [1, u"bla"]
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo']['bar'] = [1,u'bar',3.2]
+        mydoc.validate()
+        mydoc['foo']['bar'] = [None, u"bla", 3.1]
+        mydoc.validate()
+        mydoc['foo']['bar'][0] = 50
+        mydoc.validate()
+
+    def test_nested_typed_tuple_in_list(self):
+        class MyDoc(SchemaDocument):
+            structure = {
+                "foo":{'bar':[(int, unicode, float)]}
+            }
+        mydoc = MyDoc()
+        mydoc.validate()
+        assert mydoc == {'foo': {'bar': []}}
+        mydoc['foo']['bar'].append([u"bla", 1, 4.0])
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo']['bar'] = []
+        mydoc['foo']['bar'].append([1, u"bla"])
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo']['bar'] = []
+        mydoc['foo']['bar'].append([1,u'bar',3.2])
+        mydoc.validate()
+        mydoc['foo']['bar'].append([None, u"bla", 3.1])
+        mydoc.validate()
+        mydoc['foo']['bar'][1][0] = 50
+        mydoc.validate()
+
     def test_dict_unicode_typed_list(self):
         class MyDoc(SchemaDocument):
             structure = {

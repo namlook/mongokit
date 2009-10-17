@@ -114,6 +114,43 @@ class CustomTypesTestCase(unittest.TestCase):
         foo2 = Foo.get_from_id(2)
         assert foo2['foo']['date'] == datetime.datetime(2008,6,7), foo2
 
+    def test_custom_type_nested_in_list(self):
+        import datetime
+        class CustomDate(CustomType):
+            mongo_type = unicode
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'foo':{'date': [CustomDate()]},
+            }
+            default_values = {'foo.date':[u'08-06-07']}
+            
+        foo = Foo()
+        foo['_id'] = 1
+        foo['foo']['date'].append(datetime.datetime(2003,2,1))
+        foo.save()
+        foo.save()
+
+        foo2 = Foo()
+        foo2['_id'] = 2
+        foo2.save()
+        assert foo == {'foo': {'date': [datetime.datetime(2008, 6, 7, 0, 0), datetime.datetime(2003, 2, 1, 0, 0)]}, '_id': 1}
+        foo = Foo.get_from_id(1)
+        assert foo == {u'_id': 1, u'foo': {u'date': [datetime.datetime(2008, 6, 7, 0, 0), datetime.datetime(2003, 2, 1, 0, 0)]}}
+        saved_foo =  foo.collection.find({'_id':1}).next()
+        assert saved_foo == {u'_id': 1, u'foo': {u'date': [u'08-06-07', u'03-02-01']}}
+        foo2 = Foo.get_from_id(2)
+        assert foo2['foo']['date'] == [datetime.datetime(2008,6,7)], foo2
+
     def test_bad_custom_types(self):
         import datetime
         class CustomDate(CustomType):
