@@ -51,7 +51,7 @@ class CascadeTestCase(unittest.TestCase):
             structure = {
                 "foo":{"bar":unicode},
             }
-            belong_to = {'foo.bar':DocA}
+            belongs_to = {'foo.bar':DocA}
 
         l_a = list(DocA.fetch())
         assert len(l_a) == 0, (len(l_a), l_a)
@@ -97,7 +97,7 @@ class CascadeTestCase(unittest.TestCase):
             structure = {
                 "foo":{"bar":unicode},
             }
-            belong_to = {'foo.bar':DocA}
+            belongs_to = {'foo.bar':DocA}
 
         l_a = list(DocA.fetch())
         assert len(l_a) == 0, (len(l_a), l_a)
@@ -148,7 +148,7 @@ class CascadeTestCase(unittest.TestCase):
             structure = {
                 "foo":{"bar":unicode},
             }
-            belong_to = {'foo.bar':DocA}
+            belongs_to = {'foo.bar':DocA}
 
         class DocC(MongoDocument):
             db_name = "test"
@@ -156,7 +156,7 @@ class CascadeTestCase(unittest.TestCase):
             structure = {
                 "foo":{"bar":unicode},
             }
-            belong_to = {'foo.bar':DocB}
+            belongs_to = {'foo.bar':DocB}
 
 
         l_a = list(DocA.fetch())
@@ -201,7 +201,7 @@ class CascadeTestCase(unittest.TestCase):
         Connection().drop_database('bla')
 
 
-    def test_bad_belong_to(self):
+    def test_bad_belongs_to(self):
         class DocA(MongoDocument):
             db_name = "test"
             collection_name = "mongokit"
@@ -215,7 +215,7 @@ class CascadeTestCase(unittest.TestCase):
             structure = {
                 "foo":{"bar":unicode},
             }
-            belong_to = {'foo.bar':int}
+            belongs_to = {'foo.bar':int}
 
         doca = DocA()
         doca['spam']['egg'] = 3

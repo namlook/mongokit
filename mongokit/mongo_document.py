@@ -94,7 +94,7 @@ class MongoDocument(SchemaDocument):
     __metaclass__ = MongoProperties
     
     indexes = []
-    belong_to = {}
+    belongs_to = {}
 
     db_host = "localhost"
     db_port = 27017
@@ -148,7 +148,7 @@ class MongoDocument(SchemaDocument):
         self._dbrefs = {}
         if self.use_autorefs:
             self._make_reference(self, self.structure)
-        self._belong_to = None
+        self._belongs_to = None
         # Check if a custom connection is pass to the constructor.
         # If yes, build the custom connection
         reset_connection = False
@@ -207,10 +207,10 @@ class MongoDocument(SchemaDocument):
         `save()` follow the pymongo.collection.save arguments
         """
         if validate is not None:
-            if validate or self.belong_to:
+            if validate or self.belongs_to:
                 self.validate()
         else:
-            if not self.skip_validation or self.belong_to:
+            if not self.skip_validation or self.belongs_to:
                 self.validate()
             else:
                 if self.use_autorefs:
@@ -218,8 +218,8 @@ class MongoDocument(SchemaDocument):
         if '_id' not in self:
             if uuid:
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
-        if self._belong_to:
-            db_name, full_collection_path, doc_id = self._belong_to
+        if self._belongs_to:
+            db_name, full_collection_path, doc_id = self._belongs_to
             self.connection[db_name]['_mongometa'].insert({
               '_id': '%s-%s' % (full_collection_path, self['_id']),
               'pobj':{'id':doc_id, 'col':full_collection_path},
@@ -562,23 +562,23 @@ class MongoDocument(SchemaDocument):
                                       " find %s in structure" % field )
                     else:
                         assert value in [False, True], value
-        if self.belong_to:
-            if not len(self.belong_to) == 1:
-                raise ValueError("belong_to must contain only one item")
-            if not issubclass(self.belong_to.values()[0], MongoDocument):
-                raise ValueError("self.belong_to['%s'] must have a MongoDocument subclass (got %s instead)" % (
-                  self.belong_to.keys()[0], self.belong_to.values()[0]))
+        if self.belongs_to:
+            if not len(self.belongs_to) == 1:
+                raise ValueError("belongs_to must contain only one item")
+            if not issubclass(self.belongs_to.values()[0], MongoDocument):
+                raise ValueError("self.belongs_to['%s'] must have a MongoDocument subclass (got %s instead)" % (
+                  self.belongs_to.keys()[0], self.belongs_to.values()[0]))
 
     def _validate_doc(self, doc, struct, path = ""):
         """
         check it doc field types match the doc field structure
         """
-        if path in self.belong_to:
-            if not self._belong_to:
-                db_name = self.belong_to[path].db_name
-                collection_name = self.belong_to[path].collection_name
+        if path in self.belongs_to:
+            if not self._belongs_to:
+                db_name = self.belongs_to[path].db_name
+                collection_name = self.belongs_to[path].collection_name
                 full_collection_path = "%s.%s" % (db_name, collection_name)
-                self._belong_to = (db_name, full_collection_path, doc)
+                self._belongs_to = (db_name, full_collection_path, doc)
         super(MongoDocument, self)._validate_doc(doc, struct, path)
 
     def _make_reference(self, doc, struct, path=""):

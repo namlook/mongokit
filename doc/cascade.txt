@@ -6,7 +6,7 @@ Delete Cascade
 ==============
 
 MongoKit support some relationnal features like "cascade".
-If you create some objects wich belong to other, it would be
+If you create some objects wich belongs to other, it would be
 boring to delete all "belonging" objects by hand.
 
 Say we have a simple object `BlogArticle` :
@@ -32,9 +32,9 @@ object but for this use case, let's say that it is not possible.
 ...         "author":unicode,
 ...         "article":unicode, 
 ...     }
-...     belong_to = {'article': BlogArticle}
+...     belongs_to = {'article': BlogArticle}
 
-The `belong_to` attribute tell mongokit that the field article
+The `belongs_to` attribute tell mongokit that the field article
 will be a `BlogArticle` id. This way, if the `BlogArticle` is
 deleted, all comments related to this article will be deleted too.
 
