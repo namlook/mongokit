@@ -223,6 +223,51 @@ class CascadeTestCase(unittest.TestCase):
 
         self.assertRaises(ValueError, DocB)
 
+    def test_belongs_to_autorefs(self):
+        class DocA(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "spam":{"egg":int}
+            }
 
+        class DocB(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo":{"bar":DocA},
+            }
+            belongs_to = {'foo.bar':DocA}
+            use_autorefs = True
+
+        l_a = list(DocA.fetch())
+        assert len(l_a) == 0, (len(l_a), l_a)
+        l_b = list(DocB.fetch())
+        assert len(l_b) == 0, (len(l_b), l_b)
+
+        doca = DocA()
+        doca['spam']['egg'] = 3
+        doca.save()
+
+        docb = DocB()
+        docb['foo']['bar'] = doca
+        docb.save()
+
+        assert Connection()['test']['_mongometa'].find().count() == 1
+
+        assert len(list(DocB.fetch())) == 1, len(list(DocB.fetch()))
+        assert len(list(DocA.fetch())) == 1, len(list(DocA.fetch()))
+
+        doca.delete(cascade=True)
+
+        assert Connection()['test']['_mongometa'].find({'pobj.id':doca['_id']}).count() == 0, Connection()['test']['_mongometa'].find({'pobj.id':doca['_id']}).count()
+
+        l_a = list(DocA.fetch())
+        assert len(l_a) == 0, (len(l_a), l_a)
+        l_b = list(DocB.fetch())
+        assert len(l_b) == 0, (len(l_b), l_b)
+
+        l = list(docb.collection.find())
+        assert len(l) == 0
 
 

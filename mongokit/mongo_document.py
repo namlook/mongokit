@@ -220,6 +220,8 @@ class MongoDocument(SchemaDocument):
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         if self._belongs_to:
             db_name, full_collection_path, doc_id = self._belongs_to
+            if isinstance(doc_id, pymongo.dbref.DBRef):
+                doc_id = doc_id.id
             self.connection[db_name]['_mongometa'].insert({
               '_id': '%s-%s' % (full_collection_path, self['_id']),
               'pobj':{'id':doc_id, 'col':full_collection_path},
