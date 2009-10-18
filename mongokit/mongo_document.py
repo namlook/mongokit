@@ -46,6 +46,33 @@ log = logging.getLogger(__name__)
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
 
+class RelatedProperties(object):
+    def __init__(self, descriptor, doc):
+        self._descriptor = descriptor
+        self._doc = doc
+        def call_func(self, query=None):
+            _query = {}
+            _query.update(self.query)
+            if query is not None:
+                _query.update(query)
+            return self.obj.fetch(_query)
+        for key in self._descriptor:
+            desc = self._descriptor[key]
+            if not callable(desc['target']):
+                fuc = lambda x: {desc['target']:x}
+            else:
+                fuc = desc['target']
+            if desc.get('autoref',False):
+                desc['query'] = fuc(pymongo.dbref.DBRef(collection=self._doc.collection.name(), id=self._doc['_id']))
+            else:
+                desc['query'] = fuc(self._doc['_id'])
+            methods = {
+              'query':self._descriptor[key]['query'],
+              '__call__':call_func,
+              'obj':self._descriptor[key]['class'],
+            }
+            setattr(self, key, type(key, (object,), methods)())
+
 class MongoProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
         obj = super(MongoProperties, cls).__new__(cls, name, bases, attrs)
@@ -95,6 +122,7 @@ class MongoDocument(SchemaDocument):
     
     indexes = []
     belongs_to = {}
+    related_to = {}
 
     db_host = "localhost"
     db_port = 27017
@@ -149,6 +177,14 @@ class MongoDocument(SchemaDocument):
         if self.use_autorefs:
             self._make_reference(self, self.structure)
         self._belongs_to = None
+        # related feature
+        self._from_doc = False
+        self._related_loaded = False
+        if doc:
+            self._from_doc = True
+            if self.related_to:
+                self.related = RelatedProperties(self.related_to, self)
+                self._related_loaded = True
         # Check if a custom connection is pass to the constructor.
         # If yes, build the custom connection
         reset_connection = False
@@ -228,6 +264,8 @@ class MongoDocument(SchemaDocument):
               'cobj':{'id':self['_id'], 'col':self.collection.full_name()}})
         self._process_custom_type(True, self, self.structure)
         id = self.collection.save(self, safe=safe, *args, **kwargs)
+        if not self._from_doc and self.related_to and not self._related_loaded:
+            self.related = RelatedProperties(self.related_to, self)
         self._process_custom_type(False, self, self.structure)
         return self
 
@@ -649,6 +687,7 @@ class MongoPylonsDocument(MongoDocument):
     _use_pylons = True
 
 class R(CustomType):
+    """ CustomType to deal with autorefs documents """
     mongo_type = pymongo.dbref.DBRef
     python_type = MongoDocument
 
