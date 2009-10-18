@@ -44,10 +44,7 @@ class AutoRefTestCase(unittest.TestCase):
     def tearDown(self):
         CONNECTION.drop_database('test')
 
-    def test_autoref(self):
-        """Test the basic functionality.
-        If autoreferencing is enabled, can we embed a document?
-        """
+    def test_simple_autoref(self):
         class DocA(MongoDocument):
             db_name = "test"
             collection_name = "mongokit"
@@ -276,9 +273,6 @@ class AutoRefTestCase(unittest.TestCase):
         assert id
 
     def test_autoref_in_list(self):
-        """Test the basic functionality.
-        If autoreferencing is enabled, can we embed a document?
-        """
         class DocA(MongoDocument):
             db_name = "test"
             collection_name = "mongokit"
@@ -328,9 +322,6 @@ class AutoRefTestCase(unittest.TestCase):
         docb.validate()
     
     def test_autoref_retrieval(self):
-        """Test the basic functionality.
-        If autoreferencing is enabled, can we embed a document?
-        """
         class DocA(MongoDocument):
             db_name = "test"
             collection_name = "mongokit"
@@ -393,10 +384,6 @@ class AutoRefTestCase(unittest.TestCase):
         assert test_doc['b']['deeper']['inner']['doc_a_deepest']['a']['foo'] == 18
 
     def test_autoref_with_same_embed_id(self):
-        """Test the basic functionality.
-        In this case, 'b.deep.doc_a_deep' and 'b.deeper.doc_a_deeper'
-        as the same '_id'. So, if we modify the 
-        """
         class DocA(MongoDocument):
             db_name = "test"
             collection_name = "mongokit"
