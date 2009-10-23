@@ -123,4 +123,44 @@ class VersionedTestCase(unittest.TestCase):
         assert MyVersionedDoc.get_versioning_collection().find().count() == 2
         assert MyVersionedDoc.all().count() == 0
 
+    def test_remove_versioning(self):
+        class MyVersionedDoc(VersionedDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo" : unicode,
+            }
+            versioning_collection_name = "versioned_mongokit"
+ 
+        versioned_doc = MyVersionedDoc()
+        versioned_doc['_id'] = "mydoc"
+        versioned_doc['foo'] = u'bla'
+        versioned_doc.save()
+        versioned_doc2 = MyVersionedDoc()
+        versioned_doc2['_id'] = "mydoc2"
+        versioned_doc2['foo'] = u'bla'
+        versioned_doc2.save()
+        versioned_doc3 = MyVersionedDoc()
+        versioned_doc3['_id'] = "mydoc3"
+        versioned_doc3['foo'] = u'bla'
+        versioned_doc3.save()
+
+        versioned_doc['foo'] = u'bar'
+        versioned_doc.save()
+        versioned_doc2['foo'] = u'bar'
+        versioned_doc2.save()
+        versioned_doc3['foo'] = u'bar'
+        versioned_doc3.save()
+
+        count =  MyVersionedDoc.get_versioning_collection().find().count()
+        assert count == 6, count
+        count =  MyVersionedDoc.collection.find().count()
+        assert count == 3, count
+
+        versioned_doc.remove({'foo':'bar'}, versioning=True)
+
+        count =  MyVersionedDoc.get_versioning_collection().find().count()
+        assert count == 0, count
+        count =  MyVersionedDoc.collection.find().count()
+        assert count == 0, count
 

@@ -85,7 +85,19 @@ class VersionedDocument(MongoDocument):
         if versioning:
             self.get_versioning_collection().remove({'id':self['_id']})
         super(VersionedDocument, self).delete(*args, **kwargs)
-        
+
+    @classmethod
+    def remove(cls, query, versioning=False, *args, **kwargs):
+        """
+        if versioning is True, remove all revisions documents as well.
+        Be carefull when using this method. If your query match tons of
+        documents, this might be very very slow.
+        """
+        if versioning:
+            id_lists = [i['_id'] for i in  cls.collection.find(query, fields=['_id'])]
+            cls.get_versioning_collection().remove({'id':{'$in':id_lists}})
+        super(VersionedDocument, cls).remove(spec_or_object_id=query, *args, **kwargs)
+                
     @classmethod
     def get_versioning_collection(cls):
         if not cls._versioning_collection:
