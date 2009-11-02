@@ -309,13 +309,14 @@ class AutoRefTestCase(unittest.TestCase):
         docb['b']['doc_a'].append(doca)
         assert docb == {'b': {'doc_a': [{'a': {'foo': 3}, '_id': 'doca'}]}, '_id': 'docb'}
         docb.save()
+        assert isinstance(docb.collection.find_one({'_id':'docb'})['b']['doc_a'][0], DBRef), type(docb.collection.find_one({'_id':'docb'})['b']['doc_a'][0])
 
         assert docb == {'b': {'doc_a': [{'a': {'foo': 3}, '_id': 'doca'}]}, '_id': 'docb'}
         assert docb['b']['doc_a'][0]['a']['foo'] == 3
         docb['b']['doc_a'][0]['a']['foo'] = 4
         docb.save()
-        assert docb['b']['doc_a'][0]['a']['foo'] == 4
-        assert doca['a']['foo'] == 4
+        assert docb['b']['doc_a'][0]['a']['foo'] == 4, type(docb['b']['doc_a'][0])
+        assert doca['a']['foo'] == 4, doca['a']['foo']
 
         docb['b']['doc_a'].append(doca2)
         assert docb == {'b': {'doc_a': [{'a': {'foo': 4}, '_id': 'doca'}, {'a': {'foo': 5}, '_id': 'doca2'}]}, '_id': 'docb'}

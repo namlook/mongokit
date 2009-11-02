@@ -675,9 +675,35 @@ class MongoDocument(SchemaDocument):
                 else:# case {unicode:int}
                     pass
             elif isinstance(struct[key], list) and len(struct[key]):
-                if isinstance( struct[key][0], dict):
-                    for obj in doc[key]:
-                        self._make_reference(doc=obj, struct=struct[key][0], path=new_path)
+                if isinstance( struct[key][0], MongoProperties) or isinstance(struct[key][0], R):
+                    if not isinstance(struct[key][0], R):
+                        struct[key][0] = R(struct[key][0])
+                    l_objs = []
+                    for no, obj in enumerate(doc[key]):
+                        if not isinstance(obj, struct[key][0]._doc) and obj is not None:
+                            raise SchemaTypeError(
+                              "%s must be an instance of MongoDocument not %s" % (
+                                new_path, type(obj).__name__))
+                        full_new_path = "%s.%s" % (new_path, no)
+                        # validate the embed doc
+                        if not self.skip_validation:
+                            obj.validate()
+                        # if we didn't index the embed obj yet, well, we do it
+                        if full_new_path not in self._dbrefs:
+                            self._dbrefs[full_new_path] = obj
+                        else:
+                            # if the embed doc indexed was None but not the new embed one,
+                            # we update the index
+                            if self._dbrefs[full_new_path] is None:
+                                self._dbrefs[full_new_path] = obj
+                            # if the embed obj is already indexed, we check is the
+                            # one we get has not changed. If so, we save the embed
+                            # obj and update the reference
+                            elif self._dbrefs[full_new_path] != obj:
+                                obj.save()
+                                self._dbrefs[full_new_path].update(obj)
+                        l_objs.append(obj)
+                    doc[key] = l_objs
 
 class MongoPylonsDocument(MongoDocument):
     """Lazy helper base class to inherit from if you are
