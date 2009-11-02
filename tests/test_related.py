@@ -447,4 +447,117 @@ class RelatedTestCase(unittest.TestCase):
         assert len(articles) == 1
         assert articles == [article1]
 
+    def test_related_with_complex_target_in_list(self):
+        class Article(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'article': {
+                    'title':unicode,
+                    'tags':[unicode],
+                }
+            }
+        class Tag(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'tag':{
+                    'title':unicode,
+                }
+            }
+            related_to = {'articles':{'class':Article, 'target':'article.tags'}}
+
+        foo = Tag()
+        foo['_id'] = u'foo'
+        foo['tag']['title'] = u'Foo'
+        foo.save()
+
+        bar = Tag()
+        bar['_id'] = u'bar'
+        bar['tag']['title'] = u'Bar'
+        bar.save()
+
+        spam = Tag()
+        spam['_id'] = u'spam'
+        spam['tag']['title'] = u'Spam'
+        spam.save()
+
+
+        article1 = Article()
+        article1['_id'] = u'article1'
+        article1['article']['title'] = u'First article'
+        article1['article']['tags'] = [u'foo', u'spam']
+        article1.save()
+        
+        article2 = Article()
+        article2['_id'] = u'article2'
+        article2['article']['title'] = u'Second article'
+        article2['article']['tags'] = [u'foo', u'bar']
+        article2.save()
+        
+        articles = list(bar.related.articles())
+        assert len(articles) == 1, articles
+        assert articles == [article2]
+        articles = list(foo.related.articles())
+        assert len(articles) == 2
+        assert articles == [article1, article2]
+
+    def test_related_with_complex_target_in_list_with_autorefs(self):
+        class Tag(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'tag':{
+                    'title':unicode,
+                }
+            }
+
+        class Article(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            use_autorefs = True
+            structure = {
+                'article': {
+                    'title':unicode,
+                    'tags':[Tag],
+                }
+            }
+
+        Tag.related_to = {'articles':{'class':Article, 'target':'article.tags', 'autoref':True}}
+
+        foo = Tag()
+        foo['_id'] = u'foo'
+        foo['tag']['title'] = u'Foo'
+        foo.save()
+
+        bar = Tag()
+        bar['_id'] = u'bar'
+        bar['tag']['title'] = u'Bar'
+        bar.save()
+
+        spam = Tag()
+        spam['_id'] = u'spam'
+        spam['tag']['title'] = u'Spam'
+        spam.save()
+
+
+        article1 = Article()
+        article1['_id'] = u'article1'
+        article1['article']['title'] = u'First article'
+        article1['article']['tags'] = [foo, spam]
+        article1.save()
+        
+        article2 = Article()
+        article2['_id'] = u'article2'
+        article2['article']['title'] = u'Second article'
+        article2['article']['tags'] = [foo, bar]
+        article2.save()
+        
+        articles = list(bar.related.articles())
+        assert len(articles) == 1, articles
+        assert articles == [article2]
+        articles = list(foo.related.articles())
+        assert len(articles) == 2
+        assert articles == [article1, article2]
+
 
