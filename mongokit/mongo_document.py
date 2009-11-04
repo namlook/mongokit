@@ -292,13 +292,25 @@ class MongoDocument(SchemaDocument):
         if create_index is True, the collection will be indexed using the indexes class attribute
         """
         if db_host is None:
-            db_host = cls.connection.host()
+            if hasattr(cls, 'connection'):
+                db_host = cls.connection.host()
+            else:
+                db_host = cls.db_host
         if db_port is None:
-            db_port = cls.connection.port()
+            if hasattr(cls, 'connection'):
+                db_port = cls.connection.port()
+            else:
+                db_port = cls.db_port
         if db_name is None:
-            db_name = cls.db_name
+            if cls.db_name:
+                db_name = cls.db_name
+            else:
+                raise ConnectionError('You must specify a db_name')
         if collection_name is None:
-            collection_name = cls.collection_name
+            if cls.collection_name:
+                collection_name = cls.collection_name
+            else:
+                raise ConnectionError('You must specify a db_collection')
         if db_username is None:
             db_username = cls.db_username
         if db_password is None:
