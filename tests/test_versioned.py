@@ -53,7 +53,8 @@ class VersionedTestCase(unittest.TestCase):
         doc = MyDoc()
         doc['bla'] =  u"bli"
         doc.save()
-        assert "_version" not in doc
+        assert "_revision" not in doc
+        doc.delete()
 
         class MyVersionedDoc(VersionedDocument):
             db_name = "test"
@@ -67,6 +68,9 @@ class VersionedTestCase(unittest.TestCase):
         versioned_doc['_id'] = "mydoc"
         versioned_doc['foo'] = u'bla'
         versioned_doc.save()
+
+        docs = list(CONNECTION['test']['mongokit'].find())
+        assert len(docs) == 1
 
         ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
         assert len(ver_doc) == 1
@@ -99,6 +103,29 @@ class VersionedTestCase(unittest.TestCase):
 
         versioned_doc = MyVersionedDoc.get_from_id(versioned_doc['_id'])
         assert len(list(versioned_doc.get_revisions())) == 3, len(list(versioned_doc.get_revisions()))
+
+    def test_save_versionning_without_id(self):
+        class MyVersionedDoc(VersionedDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo" : unicode,
+            }
+            versioning_collection_name = "versioned_mongokit"
+ 
+        versioned_doc = MyVersionedDoc()
+        versioned_doc['foo'] = u'bla'
+        versioned_doc.save()
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 1
+        assert 'doc' in ver_doc[0]
+        assert 'revision' in ver_doc[0], ver_doc[0]
+
+        ver_doc = list(CONNECTION['test']['mongokit'].find())
+        assert len(ver_doc) == 1
+        assert 'doc' not in ver_doc[0]
+        assert '_revision' in ver_doc[0]
 
     def test_bad_versioning(self):
         class MyVersionedDoc(VersionedDocument):

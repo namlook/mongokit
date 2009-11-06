@@ -118,12 +118,15 @@ class VersionedDocument(MongoDocument):
             _col = self.versioning_collection
             collection_name = _col.name()
             db_name = _col.database().name()
+            super(VersionedDocument, self).save(*args, **kwargs)
             versionned_doc = RevisionDocument(
               {"id":unicode(self['_id']), "revision":self['_revision']},
               db_name = db_name, collection_name = collection_name)
             versionned_doc['doc'] = dict(self)
             versionned_doc.save()
-        return super(VersionedDocument, self).save(*args, **kwargs)
+        else:
+            super(VersionedDocument, self).save(*args, **kwargs)
+        return self
 
     def delete(self, versioning=False, *args, **kwargs):
         """
