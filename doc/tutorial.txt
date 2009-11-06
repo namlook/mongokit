@@ -824,6 +824,22 @@ or if you have more than one index:
     ...         },
     ...     ]
 
+Sharing Connection
+==================
+
+.. topic:: new in developpement version
+
+    It is possible to share connection beetween object. To do this, create a
+    RootDocument (the name doesn't matter) and setup the connection in it :
+
+    >>> class RootDocument(MongoDocument):
+    ...     connection = Connection('localhost', '27017')
+
+    Then, make all your objects inherited from the RootDocument. This is
+    useful if you are working in a web framework and you want to share only
+    one connection.
+
+
 JSON support
 ============
 

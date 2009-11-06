@@ -98,7 +98,10 @@ class MongoProperties(SchemaProperties):
                     raise ConnectionError('You must specify a db_host')
                 if not obj.db_port:
                     raise ConnectionError('You must specify a db_port')
-                obj.connection = Connection(obj.db_host, obj.db_port)
+                if not hasattr(obj, 'connection'):
+                    obj.connection = Connection(obj.db_host, obj.db_port)
+                elif obj.db_host != obj.connection.host() or obj.db_port != obj.connection.port():
+                    obj.connection = Connection(obj.db_host, obj.db_port)
                 obj.db = obj.connection[obj.db_name]
             if obj.db_username and obj.db_password:
                 # Password can't be empty or none or we ignore it

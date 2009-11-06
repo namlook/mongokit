@@ -402,6 +402,15 @@ class ApiTestCase(unittest.TestCase):
 
         assert not hasattr(BadDoc, 'connection')
 
+        class ShareConnection(MongoDocument):
+            connection = Connection()
+            structure = {}
+
+        class ShareDocA(ShareConnection):pass
+        class ShareDocB(ShareConnection):pass
+        assert ShareDocA.connection == ShareDocB.connection
+        assert id(ShareDocA.connection) == id(ShareDocB.connection)
+
     def test_get_collection(self):
         class DocA(MongoDocument):
             db_name = "test"
