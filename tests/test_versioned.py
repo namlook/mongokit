@@ -39,6 +39,7 @@ class VersionedTestCase(unittest.TestCase):
     def tearDown(self):
         CONNECTION['test'].drop_collection('mongokit')
         CONNECTION['test'].drop_collection('versioned_mongokit')
+        CONNECTION['test'].drop_collection('versioned_mongokit2')
 
     def test_save_versionning(self):
         class MyDoc(MongoDocument):
@@ -59,17 +60,34 @@ class VersionedTestCase(unittest.TestCase):
             structure = {
                 "foo" : unicode,
             }
-            versioning = "versioned_mongokit"
+            versioning_collection_name = "versioned_mongokit"
  
         versioned_doc = MyVersionedDoc()
         versioned_doc['_id'] = "mydoc"
         versioned_doc['foo'] = u'bla'
         versioned_doc.save()
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 1
+        assert ver_doc[0]['id'] == 'mydoc'
+        assert ver_doc[0]['revision'] == 1
+        assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc'}
+
         assert versioned_doc['_revision'] == 1
         assert versioned_doc.get_last_revision_id() == 1
         assert versioned_doc.get_revision(1) == {'foo':'bla', "_revision":1, "_id":"mydoc"}
         versioned_doc['foo'] = u'bar'
         versioned_doc.save()
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 2
+        assert ver_doc[0]['id'] == 'mydoc'
+        assert ver_doc[0]['revision'] == 1
+        assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc'}
+        assert ver_doc[1]['id'] == 'mydoc'
+        assert ver_doc[1]['revision'] == 2
+        assert ver_doc[1]['doc'] == {u'_revision': 2, u'foo': u'bar', u'_id': u'mydoc'}
+
         assert versioned_doc['_revision'] == 2
         assert versioned_doc.get_last_revision_id() == 2
         assert versioned_doc['foo'] == 'bar'
@@ -103,24 +121,24 @@ class VersionedTestCase(unittest.TestCase):
         versioned_doc['_id'] = "mydoc"
         versioned_doc['foo'] = u'bla'
         versioned_doc.save()
-        assert MyVersionedDoc.get_versioning_collection().find().count() == 1
+        assert MyVersionedDoc.versioning_collection.find().count() == 1
         versioned_doc['foo'] = u'bar'
         versioned_doc.save()
-        assert MyVersionedDoc.get_versioning_collection().find().count() == 2
+        assert MyVersionedDoc.versioning_collection.find().count() == 2
         versioned_doc.delete(versioning=True)
-        assert MyVersionedDoc.get_versioning_collection().find().count() == 0
+        assert MyVersionedDoc.versioning_collection.find().count() == 0
         assert MyVersionedDoc.all().count() == 0
 
         versioned_doc = MyVersionedDoc()
         versioned_doc['_id'] = "mydoc"
         versioned_doc['foo'] = u'bla'
         versioned_doc.save()
-        assert MyVersionedDoc.get_versioning_collection().find().count() == 1
+        assert MyVersionedDoc.versioning_collection.find().count() == 1
         versioned_doc['foo'] = u'bar'
         versioned_doc.save()
-        assert MyVersionedDoc.get_versioning_collection().find().count() == 2
+        assert MyVersionedDoc.versioning_collection.find().count() == 2
         versioned_doc.delete()
-        assert MyVersionedDoc.get_versioning_collection().find().count() == 2
+        assert MyVersionedDoc.versioning_collection.find().count() == 2
         assert MyVersionedDoc.all().count() == 0
 
     def test_remove_versioning(self):
@@ -152,15 +170,59 @@ class VersionedTestCase(unittest.TestCase):
         versioned_doc3['foo'] = u'bar'
         versioned_doc3.save()
 
-        count =  MyVersionedDoc.get_versioning_collection().find().count()
+        count =  MyVersionedDoc.versioning_collection.find().count()
         assert count == 6, count
         count =  MyVersionedDoc.collection.find().count()
         assert count == 3, count
 
         versioned_doc.remove({'foo':'bar'}, versioning=True)
 
-        count =  MyVersionedDoc.get_versioning_collection().find().count()
+        count =  MyVersionedDoc.versioning_collection.find().count()
         assert count == 0, count
         count =  MyVersionedDoc.collection.find().count()
         assert count == 0, count
 
+    def test_versionning_with_dynamic_db(self):
+        class MyVersionedDoc(VersionedDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo" : unicode,
+            }
+            versioning_collection_name = "versioned_mongokit"
+ 
+        versioned_doc = MyVersionedDoc()
+        versioned_doc['_id'] = "mydoc"
+        versioned_doc['foo'] = u'bla'
+        versioned_doc.save()
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 1
+        assert ver_doc[0]['id'] == 'mydoc'
+        assert ver_doc[0]['revision'] == 1
+        assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc'}
+
+        ver_mongokit2 = list(CONNECTION['test']['versioned_mongokit2'].find())
+        assert len(ver_mongokit2) == 0
+
+        versioned_doc2 = MyVersionedDoc(versioning_collection_name="versioned_mongokit2")
+        versioned_doc2['_id'] = "mydoc2"
+        versioned_doc2['foo'] = u'bla'
+        versioned_doc2.save()
+
+        ver_mongokit = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_mongokit) == 1, len(ver_mongokit)
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit2'].find())
+        assert len(ver_doc) == 1
+        assert ver_doc[0]['id'] == 'mydoc2'
+        assert ver_doc[0]['revision'] == 1
+        assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc2'}
+
+        versioned_doc['foo'] = u'bar'
+        versioned_doc.save()
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 2
+        ver_doc = list(CONNECTION['test']['versioned_mongokit2'].find())
+        assert len(ver_doc) == 1

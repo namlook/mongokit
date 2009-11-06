@@ -26,6 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from mongokit import *
+from mongokit.mongo_document import MongoProperties
 
 class RevisionDocument(MongoDocument):
     structure = {
@@ -34,24 +35,59 @@ class RevisionDocument(MongoDocument):
         "doc":dict
     }
 
+class VersionedMongoProperties(MongoProperties):
+    def __new__(cls, name, bases, attrs):
+        obj = super(VersionedMongoProperties, cls).__new__(cls, name, bases, attrs)
+        if obj.collection_name:
+            if obj.versioning_db_name:
+                obj.versioning_db = Connection(obj.db_host, obj.db_port)[obj.versioning_db_name]
+                attrs['versioning_db_name'] = obj.versioning_db_name
+            else:
+                obj.versioning_db = Connection(obj.db_host, obj.db_port)[obj.db_name]
+                attrs['versioning_db_name'] = obj.db_name
+            if obj.versioning_collection_name:
+                obj.versioning_collection = obj.versioning_db[obj.versioning_collection_name]
+                attrs['versioning_collection_name'] = obj.versioning_collection_name
+            else:
+                obj.versioning_collection = obj.versioning_db[obj.collection_name]
+                attrs['versioning_collection_name'] = obj.collection_name
+            attrs['versioning_db'] = obj.versioning_db
+            attrs['versioning_collection'] = obj.versioning_collection
+            # creating index
+            if not obj.versioning_collection_name in obj.versioning_db.collection_names():
+                obj.versioning_collection.ensure_index(
+                  [('id', 1), ('revision', 1)], unique=True)
+        return type.__new__(cls, name, bases, attrs)        
+
 class VersionedDocument(MongoDocument):
     """
     This object implement a vesionnized mongo document
     """
+    __metaclass__ = VersionedMongoProperties
 
     versioning_db_name = None
     versioning_collection_name = None
 
     _versioning_collection = None
 
-    def __init__(self, *args, **kwargs):
-        super(VersionedDocument, self).__init__(*args, **kwargs)
+    def __init__(self, doc=None, versioning_db_name=None, versioning_collection_name=None, *args, **kwargs):
+        super(VersionedDocument, self).__init__(doc=doc, *args, **kwargs)
+        reset_versioning_connection = False
+        if versioning_db_name is not None:
+            self.versioning_db_name = versioning_db_name
+            reset_versioning_connection = True
+        if versioning_collection_name is not None:
+            self.versioning_collection_name = versioning_collection_name
+            reset_versioning_connection = True
+        # check if versioning_db_name exists
         if not ( self.versioning_db_name or self.db_name):
             raise ValidationError( 
               "you must specify versioning_db_name or db_name" )
-        if not (self.versioning_collection_name or self.collection_name):
+        # check if versioning_collection_name exists
+        if not (self.versioning_collection_name or self.collection_name or versioning_collection_name):
             raise ValidationError( 
               "you must specify versioning_collection_name or collection_name" )
+        # check if versioning_db_name and versioning_collection_name are well typed
         if type(self.versioning_db_name) not in [type(None), str, unicode]:
             raise ValidationError(
               "versioning_db attribute must be None or basestring")
@@ -59,6 +95,14 @@ class VersionedDocument(MongoDocument):
           [type(None), str, unicode]:
             raise ValidationError(
               "versioning_collection attribute must be None or basestring")
+        # overload versioning db and collection if needed
+        if reset_versioning_connection:
+            connection = Connection(self.db_host, self.db_port)
+            self.versioning_db = connection[self.versioning_db_name]
+            self.versioning_collection = self.versioning_db[self.versioning_collection_name]
+            if not self.versioning_collection_name in self.versioning_db.collection_names():
+                self.versioning_collection.ensure_index(
+                  [('id', 1), ('revision', 1)], unique=True)
 
     def save(self, versioning=True, *args, **kwargs):
         if versioning:
@@ -68,7 +112,7 @@ class VersionedDocument(MongoDocument):
             else:
                 self['_revision'] = 0
             self['_revision'] += 1
-            _col = self.get_versioning_collection()
+            _col = self.versioning_collection
             collection_name = _col.name()
             db_name = _col.database().name()
             versionned_doc = RevisionDocument(
@@ -83,7 +127,7 @@ class VersionedDocument(MongoDocument):
         if versioning is True delete revisions documents as well
         """
         if versioning:
-            self.get_versioning_collection().remove({'id':self['_id']})
+            self.versioning_collection.remove({'id':self['_id']})
         super(VersionedDocument, self).delete(*args, **kwargs)
 
     @classmethod
@@ -94,41 +138,44 @@ class VersionedDocument(MongoDocument):
         documents, this might be very very slow.
         """
         if versioning:
-            id_lists = [i['_id'] for i in  cls.collection.find(query, fields=['_id'])]
-            cls.get_versioning_collection().remove({'id':{'$in':id_lists}})
+            collection = kwargs.get('collection', cls.collection)
+            id_lists = [i['_id'] for i in  collection.find(query, fields=['_id'])]
+            versioning_collection = kwargs.pop('versioning_collection', cls.versioning_collection)
+            versioning_collection.remove({'id':{'$in':id_lists}})
         super(VersionedDocument, cls).remove(spec_or_object_id=query, *args, **kwargs)
                 
-    @classmethod
-    def get_versioning_collection(cls):
-        if not cls._versioning_collection:
-            if cls._use_pylons:
-                from mongokit.ext.pylons_env import MongoPylonsEnv
-                db_name = MongoPylonsEnv.get_default_db()
-            else:
-                db_name = cls.db_name
-            db_name = cls.versioning_db_name or db_name
-            collection_name = cls.versioning_collection_name or\
-              cls.collection_name
-            if not db_name and not collection_name:
-                raise ConnectionError( 
-                  "You must set a db_name and a versioning collection name"
-                )
-            db = cls.connection[db_name]
-            cls._versioning_collection = db[collection_name]
-            if db.collection_names():
-                if not collection_name in db.collection_names():
-                    cls._versioning_collection.create_index(
-                      [('id', 1), ('revision', 1)], unique=True)
-        return cls._versioning_collection
-
-    def _get_versioning_collection(self):
-        return self.__class__.get_versioning_collection()
-    versioning_collection = property(_get_versioning_collection)
+#    @classmethod
+#    def get_versioning_collection(cls):
+#        return cls.versioning_collection
+#        if not cls._versioning_collection:
+#            if cls._use_pylons:
+#                from mongokit.ext.pylons_env import MongoPylonsEnv
+#                db_name = MongoPylonsEnv.get_default_db()
+#            else:
+#                db_name = cls.db_name
+#            db_name = cls.versioning_db_name or db_name
+#            collection_name = cls.versioning_collection_name or\
+#              cls.collection_name
+#            if not db_name and not collection_name:
+#                raise ConnectionError( 
+#                  "You must set a db_name and a versioning collection name"
+#                )
+#            db = cls.connection[db_name]
+#            cls._versioning_collection = db[collection_name]
+#            if db.collection_names():
+#                if not collection_name in db.collection_names():
+#                    cls._versioning_collection.create_index(
+#                      [('id', 1), ('revision', 1)], unique=True)
+#        return cls._versioning_collection
+#
+#    def _get_versioning_collection(self):
+#        return self.__class__.get_versioning_collection()
+    #versioning_collection = property(_get_versioning_collection)
 
     def get_revision(self, revision_number):
-        _col = self.get_versioning_collection()
         doc = RevisionDocument.one(
-          {"id":self['_id'], 'revision':revision_number}, collection=_col)
+          {"id":self['_id'], 'revision':revision_number},
+          collection=self.versioning_collection)
         if doc:
             return self.__class__(doc['doc'])
 
@@ -138,7 +185,7 @@ class VersionedDocument(MongoDocument):
             yield self.__class__(verdoc['doc'])
 
     def get_last_revision_id(self):
-        last_doc = self.get_versioning_collection().find(
+        last_doc = self.versioning_collection.find(
           {'id':self['_id']}).sort('revision', -1).next()
         if last_doc:
             return last_doc['revision']
