@@ -40,6 +40,7 @@ class VersionedTestCase(unittest.TestCase):
         CONNECTION['test'].drop_collection('mongokit')
         CONNECTION['test'].drop_collection('versioned_mongokit')
         CONNECTION['test'].drop_collection('versioned_mongokit2')
+        CONNECTION['versioned_test'].drop_collection('versioned_mongokit')
 
     def test_save_versionning(self):
         class MyDoc(MongoDocument):
@@ -203,7 +204,7 @@ class VersionedTestCase(unittest.TestCase):
         assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc'}
 
         ver_mongokit2 = list(CONNECTION['versioned_test']['versioned_mongokit'].find())
-        assert len(ver_mongokit2) == 0
+        assert len(ver_mongokit2) == 0, len(ver_mongokit2)
 
         versioned_doc2 = MyVersionedDoc(versioning_db_name="versioned_test")
         versioned_doc2['_id'] = "mydoc2"
