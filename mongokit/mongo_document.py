@@ -754,6 +754,12 @@ class R(CustomType):
         
     def to_python(self, value):
         if value is not None:
-            return self._doc.get_from_id(value.id)
+            doc = self._doc.get_from_id(value.id)
+            if doc is None:
+                raise AutoReferenceError('Something wrong append. You probably change'
+                  ' your object when passing it as a value to an autorefs enable document.\n'
+                  'A document with id "%s" is not saved in the database but was giving as'
+                  ' a reference to a %s document' % (value.id, self._doc.__name__))
+            return doc
 
 

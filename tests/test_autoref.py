@@ -425,4 +425,33 @@ class AutoRefTestCase(unittest.TestCase):
         assert test_doc['b']['doc_a']['a']['foo'] == 5
         assert test_doc['b']['deep']['doc_a_deep']['a']['foo'] == 5
 
+    def test_autorefs_embed_in_list_with_bad_reference(self):
+        class User(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {'name':unicode}
+
+        class Group(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            use_autorefs = True
+            structure = {
+                   'name':unicode,
+                   'members':[User], #users
+               }
+
+        user = User()
+        user['_id'] = u'fixe'
+        user['name'] = u'fixe'
+        user.save()
+
+        user2 = User()
+        user['_id'] = u'namlook'
+        user2['name'] = u'namlook'
+        user2.save()
+
+        group = Group()
+        group['members'].append(user)
+        self.assertRaises(AutoReferenceError, group.save)
+
 
