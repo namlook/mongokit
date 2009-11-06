@@ -152,7 +152,7 @@ there is more than one result.
 
 Changing collection dynamically
 ===============================
-.. topic:: new in developpement version
+.. topic:: new in developpment version
 
 
     Each `MongoDocument` must have a `db_host`, a `db_port`, a `db_name` and a `collection_name`.
@@ -204,7 +204,7 @@ If you want to use the dot notation (ala json), you must set the
 Case of tuple or immutable field
 ================================
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
 
     If you need a structured list with a limited
     number of field, you can use tuple to describe
@@ -330,7 +330,7 @@ It's possible to add more type in authorized_types:
 >>> mydoc['foo'] = 'bla'
 >>> mydoc.validate()
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
     
     `authorized_types` is not in the mongokit module anymore
     but has been integrated to the `MongoDocument` object.
@@ -568,7 +568,7 @@ Now, let's create a MongoDocument:
 The custom type attribute work just other descriptor (`default_values`, `required_fields`...)
 but take a CustomType object.
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
 
     The `CustomType` api has little changed. 
      * You must specify a `mongo_type` property in the `CustomType` class. this
@@ -720,7 +720,7 @@ While saving, the "_ns" field is added to docb:
 >>> docb.save()
 {'_ns': u'tutorial', 'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
 
     The internal structure of processing embeded document as changed and use the `CustomType` way.
     The advantage is that your data are not pollued by extra field anymore. So the '_ns' field is not
@@ -803,7 +803,7 @@ or if you have more than one index:
 ...     ]
 
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
 
     By default, the index direction is set to 1. You can change the direction by passing a dictionnary. 
     Direction must be one of `INDEX_ASCENDING` (or 1) or `INDEX_DESCENDING` (or -1):
@@ -827,7 +827,7 @@ or if you have more than one index:
 Sharing Connection
 ==================
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
 
     It is possible to share connection beetween object. To do this, create a
     RootDocument (the name doesn't matter) and setup the connection in it :
@@ -843,7 +843,7 @@ Sharing Connection
 JSON support
 ============
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
     
     While building web application, you might want to create an rest api with json
     support. Then, you may need to convert all your MongoDocument into a json format

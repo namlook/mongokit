@@ -86,7 +86,7 @@ Note tha "delete cascade" work with the `remove()` method too:
 
 >>> BlogArticle.remove({'_id':article['_id']}, cascade=True)
 
-.. topic:: new in developpement version
+.. topic:: new in developpment version
     
     You can use autorefs with belongs_to:
     
