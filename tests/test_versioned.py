@@ -202,6 +202,51 @@ class VersionedTestCase(unittest.TestCase):
         assert ver_doc[0]['revision'] == 1
         assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc'}
 
+        ver_mongokit2 = list(CONNECTION['versioned_test']['versioned_mongokit'].find())
+        assert len(ver_mongokit2) == 0
+
+        versioned_doc2 = MyVersionedDoc(versioning_db_name="versioned_test")
+        versioned_doc2['_id'] = "mydoc2"
+        versioned_doc2['foo'] = u'bla'
+        versioned_doc2.save()
+
+        ver_mongokit = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_mongokit) == 1, len(ver_mongokit)
+
+        ver_doc = list(CONNECTION['versioned_test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 1
+        assert ver_doc[0]['id'] == 'mydoc2'
+        assert ver_doc[0]['revision'] == 1
+        assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc2'}
+
+        versioned_doc['foo'] = u'bar'
+        versioned_doc.save()
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 2
+        ver_doc = list(CONNECTION['versioned_test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 1
+
+    def test_versionning_with_dynamic_collection(self):
+        class MyVersionedDoc(VersionedDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "foo" : unicode,
+            }
+            versioning_collection_name = "versioned_mongokit"
+ 
+        versioned_doc = MyVersionedDoc()
+        versioned_doc['_id'] = "mydoc"
+        versioned_doc['foo'] = u'bla'
+        versioned_doc.save()
+
+        ver_doc = list(CONNECTION['test']['versioned_mongokit'].find())
+        assert len(ver_doc) == 1
+        assert ver_doc[0]['id'] == 'mydoc'
+        assert ver_doc[0]['revision'] == 1
+        assert ver_doc[0]['doc'] == {u'_revision': 1, u'foo': u'bla', u'_id': u'mydoc'}
+
         ver_mongokit2 = list(CONNECTION['test']['versioned_mongokit2'].find())
         assert len(ver_mongokit2) == 0
 
