@@ -95,8 +95,13 @@ class VersionedDocument(MongoDocument):
               "versioning_collection attribute must be None or basestring")
         # overload versioning db and collection if needed
         if reset_versioning_connection:
-            connection = Connection(self.db_host, self.db_port)
-            self.versioning_db = connection[self.versioning_db_name]
+            if hasattr(self, 'connection'):
+                if self.db_host != self.connection.host() or\
+                  self.db_port != self.connection.port():
+                    self.connection = Connection(self.db_host, self.db_port)
+            else:
+                self.connection = Connection(self.db_host, self.db_port)
+            self.versioning_db = self.connection[self.versioning_db_name]
             self.versioning_collection = self.versioning_db[self.versioning_collection_name]
             if not self.versioning_collection_name in self.versioning_db.collection_names():
                 self.versioning_collection.ensure_index(

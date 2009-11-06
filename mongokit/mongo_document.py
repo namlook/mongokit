@@ -210,7 +210,12 @@ class MongoDocument(SchemaDocument):
             self.db_password = db_password
             reset_connection = True
         if reset_connection:
-            self.connection = Connection(self.db_host, self.db_port)
+            if hasattr(self, 'connection'):
+                if self.db_host != self.connection.host() or\
+                  self.db_port != self.connection.port():
+                    self.connection = Connection(self.db_host, self.db_port)
+            else:
+                self.connection = Connection(self.db_host, self.db_port)
             self.db = self.connection[self.db_name]
             self.collection = self.db[self.collection_name]
             MongoDocument.create_index(self.collection)
@@ -220,7 +225,7 @@ class MongoDocument(SchemaDocument):
             raise ConnectionError('You must specify a db_name and collection_name attribute') 
         try:
             return super(MongoDocument, self).__getattr__(key)
-        except:
+        except Exception, e:
             if key == 'connection':
                 raise ConnectionError('You must specify a db_name and collection_name attribute') 
             return super(MongoDocument, self).__getattr__(key)
@@ -318,7 +323,14 @@ class MongoDocument(SchemaDocument):
             db_username = cls.db_username
         if db_password is None:
             db_password = cls.db_password
-        connection = Connection(db_host, db_port)
+        if hasattr(cls, 'connection'):
+            if db_host != cls.connection.host() or\
+              db_port != cls.connection.port():
+                connection = Connection(db_host, db_port)
+            else:
+                connection = cls.connection
+        else:
+            connection = Connection(db_host, db_port)
         db = connection[db_name]
         collection = db[collection_name]
         if db_username and db_password:
