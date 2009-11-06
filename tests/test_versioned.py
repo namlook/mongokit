@@ -299,3 +299,18 @@ class VersionedTestCase(unittest.TestCase):
         assert len(ver_doc) == 2
         ver_doc = list(CONNECTION['test']['versioned_mongokit2'].find())
         assert len(ver_doc) == 1
+
+    def test_versioning_without_versioning_collection_name(self):
+        test_passed = False
+        try:
+            class Group(VersionedDocument):
+                db_name = "test"
+                collection_name = "mongokit"
+                use_autorefs = True
+                structure = {
+                       'name':unicode,
+                       'members':[User], #users
+                   }
+        except:
+            test_passed = True
+        assert test_passed

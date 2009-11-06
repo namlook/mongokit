@@ -26,6 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from mongokit import *
+from mongo_exceptions import *
 from mongokit.mongo_document import MongoProperties
 
 class RevisionDocument(MongoDocument):
@@ -44,12 +45,15 @@ class VersionedMongoProperties(MongoProperties):
                 attrs['versioning_db_name'] = obj.versioning_db_name
             else:
                 obj.versioning_db = Connection(obj.db_host, obj.db_port)[obj.db_name]
+                obj.versioning_db_name = obj.versioning_db_name
                 attrs['versioning_db_name'] = obj.db_name
             if obj.versioning_collection_name:
                 obj.versioning_collection = obj.versioning_db[obj.versioning_collection_name]
                 attrs['versioning_collection_name'] = obj.versioning_collection_name
             else:
+                raise ConnectionError('You must specify a versioning_collection_name')
                 obj.versioning_collection = obj.versioning_db[obj.collection_name]
+                obj.versioning_collection_name = obj.collection_name
                 attrs['versioning_collection_name'] = obj.collection_name
             attrs['versioning_db'] = obj.versioning_db
             attrs['versioning_collection'] = obj.versioning_collection
