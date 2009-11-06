@@ -68,8 +68,6 @@ class VersionedDocument(MongoDocument):
     versioning_db_name = None
     versioning_collection_name = None
 
-    _versioning_collection = None
-
     def __init__(self, doc=None, versioning_db_name=None, versioning_collection_name=None, *args, **kwargs):
         super(VersionedDocument, self).__init__(doc=doc, *args, **kwargs)
         reset_versioning_connection = False
@@ -144,34 +142,6 @@ class VersionedDocument(MongoDocument):
             versioning_collection.remove({'id':{'$in':id_lists}})
         super(VersionedDocument, cls).remove(spec_or_object_id=query, *args, **kwargs)
                 
-#    @classmethod
-#    def get_versioning_collection(cls):
-#        return cls.versioning_collection
-#        if not cls._versioning_collection:
-#            if cls._use_pylons:
-#                from mongokit.ext.pylons_env import MongoPylonsEnv
-#                db_name = MongoPylonsEnv.get_default_db()
-#            else:
-#                db_name = cls.db_name
-#            db_name = cls.versioning_db_name or db_name
-#            collection_name = cls.versioning_collection_name or\
-#              cls.collection_name
-#            if not db_name and not collection_name:
-#                raise ConnectionError( 
-#                  "You must set a db_name and a versioning collection name"
-#                )
-#            db = cls.connection[db_name]
-#            cls._versioning_collection = db[collection_name]
-#            if db.collection_names():
-#                if not collection_name in db.collection_names():
-#                    cls._versioning_collection.create_index(
-#                      [('id', 1), ('revision', 1)], unique=True)
-#        return cls._versioning_collection
-#
-#    def _get_versioning_collection(self):
-#        return self.__class__.get_versioning_collection()
-    #versioning_collection = property(_get_versioning_collection)
-
     def get_revision(self, revision_number):
         doc = RevisionDocument.one(
           {"id":self['_id'], 'revision':revision_number},
