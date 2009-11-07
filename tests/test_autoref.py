@@ -199,10 +199,10 @@ class AutoRefTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, mydoc.save) 
   
     def test_badautoref_not_enabled(self):
-        """Test that, when autoref is disabled
-        we refuse to allow a MongoDocument 
-        to be valid schema.
-        """
+        # Test that, when autoref is disabled
+        # we refuse to allow a MongoDocument 
+        # to be valid schema.
+
         class EmbedDoc(MongoDocument):
             db_name = "test"
             collection_name = "autoref.embed"
@@ -227,10 +227,10 @@ class AutoRefTestCase(unittest.TestCase):
         self.assertRaises(StructureError, MyDoc) 
 
     def test_subclass(self):
-        """Test autoref enabled, but embed a subclass.
-        e.g. if we say EmbedDoc, a subclass of EmbedDoc 
-        is also valid.
-        """
+        # Test autoref enabled, but embed a subclass.
+        # e.g. if we say EmbedDoc, a subclass of EmbedDoc 
+        # is also valid.
+        
         class EmbedDoc(MongoDocument):
             db_name = "test"
             collection_name = "autoref.embed"
@@ -239,8 +239,7 @@ class AutoRefTestCase(unittest.TestCase):
             }
         embed = EmbedDoc()
         embed["spam"] = u"eggs"
-        embedObj = embed.save()
-        assert embedObj
+        embed.save()
 
         class EmbedOtherDoc(EmbedDoc):
             db_name = "test"
@@ -250,8 +249,8 @@ class AutoRefTestCase(unittest.TestCase):
             }
         embedOther = EmbedOtherDoc()
         embedOther["ham"] = u"eggs"
-        embedOtherObj = embedOther.save()
-        assert embedOtherObj
+        embedOther.save()
+        assert embedOther
 
         class MyDoc(MongoDocument):
             use_autorefs = True
@@ -267,10 +266,11 @@ class AutoRefTestCase(unittest.TestCase):
         mydoc = MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
-        mydoc["spam"] = embedOtherObj
+        mydoc["spam"] = embedOther
         
-        id = mydoc.save()
-        assert id
+        mydoc.save()
+        assert mydoc['spam'].collection.name() == "autoref.embed_other"
+        assert mydoc['spam'] == embedOther
 
     def test_autoref_in_list(self):
         class DocA(MongoDocument):
