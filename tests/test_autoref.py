@@ -474,6 +474,21 @@ class AutoRefTestCase(unittest.TestCase):
         docb.save()
 
         assert docb['b']['a'] == 'bla'
+        assert docb['b'].collection.name() == "doca"
+
+        doca2 = DocA(collection_name='doca2')
+        doca2['a'] = u'foo'
+        doca2.save()
+
+        docb2 = DocB(collection_name="docb")
+        docb2['b'] = doca2
+        docb2.save()
+
+        assert docb2['b']['a'] == 'foo' 
+        assert docb2['b'].collection.name() == 'doca2'
+        assert docb2.collection.name() == 'docb'
+
+        assert list(DocB.fetch(collection=DocB.get_collection(collection_name='docb'))) == [docb, docb2]
         
     def _test_autorefs_with_dynamic_db(self):
         """ this test will pass only when db will be implemented in pymongo's DBRef """
