@@ -356,7 +356,7 @@ class AutoRefTestCase(unittest.TestCase):
     
         # create a few deeper  docas
         deep = DocA()
-        #deep['_id'] = 'deep'
+        #deep['_id'] = 'deep' 
         deep['a']['foo'] = 5
         deep.save()
         docb['b']['deep']['doc_a_deep'] = deep
@@ -367,6 +367,7 @@ class AutoRefTestCase(unittest.TestCase):
         docb['b']['deeper']['doc_a_deeper'] = deeper
         deepest = DocA()
         deepest['_id'] = 'deepest'
+        #deepest['_id'] = 'deeper'
         deepest['a']['foo'] = 18
         deepest.save()
         docb['b']['deeper']['inner']['doc_a_deepest'] = deepest
@@ -454,4 +455,42 @@ class AutoRefTestCase(unittest.TestCase):
         group['members'].append(user)
         self.assertRaises(AutoReferenceError, group.save)
 
+    def test_autorefs_with_dynamic_collection(self):
+        class DocA(MongoDocument):
+            db_name = 'test'
+            structure = {'a':unicode}
 
+        class DocB(MongoDocument):
+            db_name = 'test'
+            structure = {'b':DocA}
+            use_autorefs = True
+
+        doca = DocA(collection_name='doca')
+        doca['a'] = u'bla'
+        doca.save()
+
+        docb = DocB(collection_name='docb')
+        docb['b'] = doca
+        docb.save()
+
+        assert docb['b']['a'] == 'bla'
+        
+    def _test_autorefs_with_dynamic_db(self):
+        """ this test will pass only when db will be implemented in pymongo's DBRef """
+        class DocA(MongoDocument):
+            structure = {'a':unicode}
+
+        class DocB(MongoDocument):
+            structure = {'b':DocA}
+            use_autorefs = True
+
+        doca = DocA(db_name='test', collection_name='doca')
+        doca['a'] = u'bla'
+        doca.save()
+
+        docb = DocB(db_name='test', collection_name='docb')
+        docb['b'] = doca
+        docb.save()
+
+        assert docb['b']['a'] == 'bla'
+ 
