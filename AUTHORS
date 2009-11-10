@@ -7,6 +7,7 @@ Great contributors:
     * mongodb auth support
     * dot notation initial idea
     * original autorefs patch
+    * indexes' ttl patch
 
   marcammann
     * original index patch

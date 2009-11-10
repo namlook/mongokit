@@ -608,7 +608,7 @@ class MongoDocument(SchemaDocument):
                 if 'fields' not in index:
                     raise BadIndexError("'fields' key must be specify in indexes")
                 for key, value in index.iteritems():
-                    if key not in ['fields', 'unique']:
+                    if key not in ['fields', 'unique', 'ttl']:
                         raise BadIndexError("%s is unknown key for indexes" % key)
                     if key == "fields":
                         if isinstance(value, dict):
@@ -627,6 +627,8 @@ class MongoDocument(SchemaDocument):
                                 if field not in self._namespaces:
                                     raise ValueError("Error in indexes: can't"
                                       " find %s in structure" % field )
+                    elif key == "ttl":
+                        assert isinstance(value, int)
                     else:
                         assert value in [False, True], value
         if self.belongs_to:

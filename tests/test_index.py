@@ -222,3 +222,28 @@ class IndexTestCase(unittest.TestCase):
             ]
         self.assertRaises(ValueError, Movie)
 
+    def test_index_ttl(self):
+        class Movie(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'standard':unicode,
+            }
+            
+            indexes = [
+                {
+                    'fields':'standard',
+                    'unique':True,
+                    'ttl': 86400
+                },
+# If indexes are still broken validation will choke on the ttl
+            ]
+        movie = Movie()
+        movie['standard'] = u'test'
+        movie.save()
+        
+        db = CONNECTION['test']
+        item = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'standard_1', 'unique':True, 'key':{'standard':1}})
+        
+        assert item is not None, 'No Index Found'
+
