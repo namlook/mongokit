@@ -38,6 +38,8 @@ class ApiTestCase(unittest.TestCase):
         
     def tearDown(self):
         CONNECTION['test'].drop_collection('mongokit')
+        CONNECTION['test'].drop_collection('version')
+        CONNECTION['test'].drop_collection('other_version')
         CONNECTION['test'].drop_collection('versionned_mongokit')
 
     def test_save(self):
@@ -422,4 +424,45 @@ class ApiTestCase(unittest.TestCase):
         assert DocA.get_collection(db_name="foo", collection_name="bar") == Connection('localhost', 27017)['foo']['bar']
         assert DocA.get_collection(collection_name="bar") == Connection('localhost', 27017)['test']['bar']
         assert DocA.get_collection(db_host="127.0.0.2", collection_name="bar") == Connection('127.0.0.2', 27017)['test']['bar']
+
+
+    def test_all_with_dynamic_collection(self):
+        class Section(MongoDocument):
+            db_name = 'test'
+            structure = {"section":int}
+
+        s = Section(collection_name='section')
+        s['section'] = 1
+        s.save()
+
+        s = Section(collection_name='section')
+        s['section'] = 2
+        s.save()
+
+        s = Section(collection_name='other_section')
+        s['section'] = 1
+        s.save()
+
+        s = Section(collection_name='other_section')
+        s['section'] = 2
+        s.save()
+
+
+        sect_col = Section.get_collection(collection_name='section')
+        sects = [s.collection.name() == 'section' and s.db.name() == 'test' for s in Section.all({}, collection=sect_col)] 
+        print  [s for s in Section.all(collection=sect_col)] 
+        assert len(sects) == 2, len(sects)
+        assert any(sects)
+        sects = [s.collection.name() == 'section' and s.db.name() == 'test' for s in Section.fetch( collection=sect_col)]
+        assert len(sects) == 2
+        assert any(sects)
+
+        sect_col = Section.get_collection(collection_name='other_section')
+        sects = [s.collection.name() == 'other_section' and s.db.name() == 'test' for s in Section.all({}, collection=sect_col)] 
+        assert len(sects) == 2
+        assert any(sects)
+        sects = [s.collection.name() == 'other_section' and s.db.name() == 'test' for s in Section.fetch( collection=sect_col)]
+        assert len(sects) == 2
+        assert any(sects)
+
 

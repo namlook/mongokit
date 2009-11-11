@@ -29,6 +29,8 @@
 class MongoDocumentCursor(object):
     def __init__(self, cursor, cls):
         self._cursor = cursor
+        self._collection = cursor._Cursor__collection
+        self._db = self._collection.database()
         self._class_object = cls
 
     def where(self, *args, **kwargs):
@@ -57,5 +59,5 @@ class MongoDocumentCursor(object):
 
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
-            yield self._class_object(obj)
+            yield self._class_object(obj, db_name=self._db.name(), collection_name=self._collection.name())
 
