@@ -523,7 +523,13 @@ class MongoDocument(SchemaDocument):
         # we don't want to touch our document so we create another object
         from copy import deepcopy
         self._process_custom_type(True, self, self.structure)
+        db = self.db
+        collection = self.collection
+        delattr(self, 'db')
+        delattr(self, 'collection')
         obj = deepcopy(self)
+        self.db = db
+        self.collection = collection
         self._process_custom_type(False, self, self.structure)
         _convert_to_json(obj, obj)
         try:

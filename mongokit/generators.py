@@ -52,12 +52,14 @@ class MongoDocumentCursor(object):
         return self._cursor.explain(*args, **kwargs)
 
     def next(self, *args, **kwargs):
-        return self._class_object(self._cursor.next(*args, **kwargs))
+        return self._class_object(self._cursor.next(*args, **kwargs),
+          db_name=self._db.name(), collection_name=self._collection.name())
 
     def skip(self, *args, **kwargs):
         return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
 
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
-            yield self._class_object(obj, db_name=self._db.name(), collection_name=self._collection.name())
+            yield self._class_object(obj,
+              db_name=self._db.name(), collection_name=self._collection.name())
 
