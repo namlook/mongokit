@@ -184,4 +184,32 @@ class JsonTestCase(unittest.TestCase):
         assert mydoc == {'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}, mydoc
         assert isinstance(mydoc['doc']['embed'], EmbedDoc)
 
+    def test_simple_to_json_from_cursor(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "bla":{
+                    "foo":unicode,
+                    "bar":int,
+                },
+                "spam":[],
+            }
+        mydoc = MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc["bla"]["foo"] = u"bar"
+        mydoc["bla"]["bar"] = 42
+        mydoc['spam'] = range(10)
+        mydoc.save()
+        json = mydoc.to_json()
+        assert json == '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+
+        mydoc2 = MyDoc()
+        mydoc2['_id'] = u'mydoc2'
+        mydoc2["bla"]["foo"] = u"bla"
+        mydoc2["bla"]["bar"] = 32
+        mydoc2['spam'] = [datetime.datetime(2000, 1, 1), datetime.datetime(2008, 8, 8)]
+        mydoc2.save()
+
+        [i.to_json() for i in MyDoc.fetch()]
 

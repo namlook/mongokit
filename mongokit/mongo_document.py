@@ -525,11 +525,15 @@ class MongoDocument(SchemaDocument):
         self._process_custom_type(True, self, self.structure)
         db = self.db
         collection = self.collection
-        delattr(self, 'db')
-        delattr(self, 'collection')
+        if hasattr(self, 'db'):
+            self.db = None
+        if hasattr(self, 'collection'):
+            self.collection = None
         obj = deepcopy(self)
-        self.db = db
-        self.collection = collection
+        if hasattr(self, 'db'):
+            self.db = db
+        if hasattr(self, 'collection'):
+            self.collection = collection
         self._process_custom_type(False, self, self.structure)
         _convert_to_json(obj, obj)
         try:
