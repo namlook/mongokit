@@ -215,6 +215,7 @@ class SchemaDocument(dict):
       type(None),
       bool,
       int,
+      long,
       float,
       unicode,
       list, 
