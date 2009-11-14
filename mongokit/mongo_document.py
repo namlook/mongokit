@@ -477,7 +477,7 @@ class MongoDocument(SchemaDocument):
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
-            return cls(list(bson_obj)[0])
+            return cls(bson_obj.next())
 
     @classmethod
     def remove(cls, *args, **kwargs):
@@ -527,6 +527,7 @@ class MongoDocument(SchemaDocument):
         # we don't want to touch our document so we create another object
         from copy import deepcopy
         self._process_custom_type(True, self, self.structure)
+        # pymongo's collection and db can't be deepcopied
         db = self.db
         collection = self.collection
         if hasattr(self, 'db'):
