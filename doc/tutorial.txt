@@ -152,37 +152,35 @@ there is more than one result.
 
 Changing collection dynamically
 ===============================
-.. topic:: new in developpment version
 
+Each `MongoDocument` must have a `db_host`, a `db_port`, a `db_name` and a `collection_name`.
+Those attributes are set when describing mongo documents. The connection, the db and the
+collection are then automatically created and attached to the object.
 
-    Each `MongoDocument` must have a `db_host`, a `db_port`, a `db_name` and a `collection_name`.
-    Those attributes are set when describing mongo documents. The connection, the db and the
-    collection are then automatically created and attached to the object.
+But you might need to specify a different db or collection dynamically. For instance,
+say you want to store a User by database. You can't set the `db_name` and `collection_name`
+because it will change at each user.
 
-    But you might need to specify a different db or collection dynamically. For instance,
-    say you want to store a User by database. You can't set the `db_name` and `collection_name`
-    because it will change at each user.
+>>> class User(MongoDocument):
+...     strucute = {'login':unicode, 'screen_name':unicode}
+...     # we can set `db_name` here...
 
-    >>> class User(MongoDocument):
-    ...     strucute = {'login':unicode, 'screen_name':unicode}
-    ...     # we can set `db_name` here...
+Mongokit allow you to change those parameters on the fly. For this, you need to create
+another collection with the helper `get_collection`.
 
-    Mongokit allow you to change those parameters on the fly. For this, you need to create
-    another collection with the helper `get_collection`.
+>>> user_col = User.get_collection(db_name='namlook', collection_name='profile')
 
-    >>> user_col = User.get_collection(db_name='namlook', collection_name='profile')
+Now, we can query the database by passing our new collection :
 
-    Now, we can query the database by passing our new collection :
+>>> User.all({}, collection=col)
 
-    >>> User.all({}, collection=col)
+You can pass those value to the `MongoDocument.__init__` :
 
-    You can pass those value to the `MongoDocument.__init__` :
+>>> user = User(db_name='namlook', collection_name='profile')
+>>> user['login'] = 'namlook'
+>>> user['screen_name'] = 'Namlook'
 
-    >>> user = User(db_name='namlook', collection_name='profile')
-    >>> user['login'] = 'namlook'
-    >>> user['screen_name'] = 'Namlook'
-
-    calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
+calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
 
 Dot notation 
 ============
@@ -204,46 +202,44 @@ If you want to use the dot notation (ala json), you must set the
 Case of tuple or immutable field
 ================================
 
-.. topic:: new in developpment version
+If you need a structured list with a limited
+number of field, you can use tuple to describe
+your object :
 
-    If you need a structured list with a limited
-    number of field, you can use tuple to describe
-    your object :
+>>> class MyDoc(SchemaDocument):
+...     structure = {
+...         "foo":(int, unicode, float)
+...     }
+>>> mydoc = MyDoc()
+>>> mydoc['foo']
+[None, None, None]
 
-    >>> class MyDoc(SchemaDocument):
-    ...     structure = {
-    ...         "foo":(int, unicode, float)
-    ...     }
-    >>> mydoc = MyDoc()
-    >>> mydoc['foo']
-    [None, None, None]
+Tuple are converted into a simple list.
+They add another validation layer. Field must
+follow the right type:
 
-    Tuple are converted into a simple list.
-    They add another validation layer. Field must
-    follow the right type:
-    
-    >>> mydoc['foo'] = [u"bla", 1, 4.0]
-    >>> mydoc.validate()
-    Traceback (most recent call last):
-    ...
-    SchemaTypeError: foo must be an instance of int not unicode
-    
-    and they must have the right number of items:
-    
-    >>> mydoc['foo'] = [1, u"bla"]
-    Traceback (most recent call last):
-    ...
-    SchemaTypeError: foo must have 3 items not 2
+>>> mydoc['foo'] = [u"bla", 1, 4.0]
+>>> mydoc.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
 
-    As tuples are converted to list internally, you
-    can make all list operations:
+and they must have the right number of items:
 
-    >>> mydoc['foo'] = [1,u'bar',3.2]
-    mydoc.validate()
-    >>> mydoc['foo'] = [None, u"bla", 3.1]
-    mydoc.validate()
-    >>> mydoc['foo'][0] = 50
-    mydoc.validate()
+>>> mydoc['foo'] = [1, u"bla"]
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must have 3 items not 2
+
+As tuples are converted to list internally, you
+can make all list operations:
+
+>>> mydoc['foo'] = [1,u'bar',3.2]
+mydoc.validate()
+>>> mydoc['foo'] = [None, u"bla", 3.1]
+mydoc.validate()
+>>> mydoc['foo'][0] = 50
+mydoc.validate()
 
 Différence beetween {} and the type dict
 ========================================
@@ -303,6 +299,7 @@ By default, MongoKit allow the following types::
       bool, 
       int, 
       float,
+      long,
       unicode,
       list,
       dict,
@@ -317,36 +314,14 @@ By default, MongoKit allow the following types::
 
 It's possible to add more type in authorized_types: 
 
->>> import mongokit
->>> mongokit.authorized_types.append(str)
-
 >>> class MyDoc(MongoDocument):
 ...     structure = {
-...             'foo':str,
+...         "foo":str,
 ...     }
-...
-
+...     authorized_types = MongoDocument.authorized_types + [str]
 >>> mydoc = MyDoc()
 >>> mydoc['foo'] = 'bla'
 >>> mydoc.validate()
-
-.. topic:: new in developpment version
-    
-    `authorized_types` is not in the mongokit module anymore
-    but has been integrated to the `MongoDocument` object.
-    This allow to changed dynamically the authorized_types list at
-    runtime.
-
-    So, if you wan to add more types in authorized_types, you need to do:
-
-    >>> class MyDoc(MongoDocument):
-    ...     structure = {
-    ...         "foo":str,
-    ...     }
-    ...     authorized_types = MongoDocument.authorized_types + [str]
-    >>> mydoc = MyDoc()
-    >>> mydoc['foo'] = 'bla'
-    >>> mydoc.validate()
 
 validate keys
 =============
@@ -535,14 +510,21 @@ and fill the custom_types attributes:
 
 >>> import datetime
 
-A CustomType object must implement to method:
+A CustomType object must implement two methods and one attribute:
 
  - `to_bson(self, value)`: this method will convert the value
     to fit the correct authorized type before beeing saved in the db.
  - `to_python(self, value)`: this method will convert the value
     taken from the db into a python object
+ -  You must specify a `mongo_type` property in the `CustomType` class. this
+    will describes the type of the value stored in the mongodb.  
+ -  If you want more validation, you can specify a `python_type` property which is
+    the python type the value will be converted. This is a good thing to specify it
+    as it make a good documentation.
  
 >>> class CustomDate(CustomType):
+...     mongo_type = unicode
+...     python_type = datetime.datetime # optional, just for more validation
 ...     def to_bson(self, value):
 ...         """convert type to a mongodb type"""
 ...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -550,7 +532,6 @@ A CustomType object must implement to method:
 ...         """convert type to a python object"""
 ...         if value is not None:
 ...            return datetime.datetime.strptime(value, '%y-%m-%d')
-                
 
 Now, let's create a MongoDocument:
 
@@ -559,52 +540,11 @@ Now, let's create a MongoDocument:
 ...     collection_name = 'tutorial'
 ...     structure = {
 ...         'foo':{
-...             'date': unicode,
+...             'date': CustomDate(),
 ...         },
 ...     }
-...     custom_types = {'foo.date':CustomDate}
-...     default_values = {'foo.date':'08-06-07'}
+...     default_values = {'foo.date':u'08-06-07'}
 
-The custom type attribute work just other descriptor (`default_values`, `required_fields`...)
-but take a CustomType object.
-
-.. topic:: new in developpment version
-
-    The `CustomType` api has little changed. 
-     * You must specify a `mongo_type` property in the `CustomType` class. this
-       will describes the type of the value stored in the mongodb.  
-     * If you want more validation, you can specify a `python_type` property which is
-       the python type the value will be converted. This is a good thing to specify it
-       as it make a good documentation.
-     * There is no `custom_types` descriptor anymore. The `CustomType` is set
-       directly in the field. Plus, the `CustomType` must be instanciated.
-    So, the new way of using `CustomType` look like this::
-                
-        >>> class CustomDate(CustomType):
-        ...     mongo_type = unicode
-        ...     python_type = datetime.datetime # optional, just for more validation
-        ...     def to_bson(self, value):
-        ...         """convert type to a mongodb type"""
-        ...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
-        ...     def to_python(self, value):
-        ...         """convert type to a python object"""
-        ...         if value is not None:
-        ...            return datetime.datetime.strptime(value, '%y-%m-%d')
-
-        Now, let's create a MongoDocument:
-
-        >>> class Foo(MongoDocument):
-        ...     db_name = 'test'
-        ...     collection_name = 'tutorial'
-        ...     structure = {
-        ...         'foo':{
-        ...             'date': CustomDate(),
-        ...         },
-        ...     }
-        ...     default_values = {'foo.date':u'08-06-07'}
-
-
-            
 Now, we can create Foo's objects and working with python datetime objects
 
 >>> foo = Foo()
@@ -715,23 +655,12 @@ SchemaTypeError: b.doc_a must be an instance of DocA not int
 >>> docb 
 {'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
 
-While saving, the "_ns" field is added to docb:
-
->>> docb.save()
-{'_ns': u'tutorial', 'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
-
-.. topic:: new in developpment version
-
-    The internal structure of processing embeded document as changed and use the `CustomType` way.
-    The advantage is that your data are not pollued by extra field anymore. So the '_ns' field is not
-    added
-
 Now the interresting part. If we change a field in an embeded doc, the change will be done
 for all DocA which have the same '_id':
 
 >>> docb['b']['doc_a']['a']['foo'] = 4
 >>> docb.save()
-{'_ns': u'tutorial', 'b': {'doc_a': {'a': {'foo': 4}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
+{'b': {'doc_a': {'a': {'foo': 4}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
 
 >>> doca['a']['foo']
 4
@@ -803,126 +732,120 @@ or if you have more than one index:
 ...     ]
 
 
-.. topic:: new in developpment version
+By default, the index direction is set to 1. You can change the direction by passing a dictionnary. 
+Direction must be one of `INDEX_ASCENDING` (or 1) or `INDEX_DESCENDING` (or -1):
 
-    By default, the index direction is set to 1. You can change the direction by passing a dictionnary. 
-    Direction must be one of `INDEX_ASCENDING` (or 1) or `INDEX_DESCENDING` (or -1):
-
-    >>> class MyDoc(MongoDocument):
-    ...     structure = {
-    ...         'standard':unicode,
-    ...         'other':{
-    ...             'deep':unicode,
-    ...         },
-    ...         'notindexed':unicode,
-    ...     }
-    ...     
-    ...     indexes = [
-    ...         {
-    ...             'fields':{'standard':INDEX_ASCENDING, 'other.deep':INDEX_DESCENDING},
-    ...             'unique':True,
-    ...         },
-    ...     ]
+>>> class MyDoc(MongoDocument):
+...     structure = {
+...         'standard':unicode,
+...         'other':{
+...             'deep':unicode,
+...         },
+...         'notindexed':unicode,
+...     }
+...     
+...     indexes = [
+...         {
+...             'fields':{'standard':INDEX_ASCENDING, 'other.deep':INDEX_DESCENDING},
+...             'unique':True,
+...         },
+...     ]
 
 Sharing Connection
 ==================
 
-.. topic:: new in developpment version
+It is possible to share connection beetween object. To do this, create a
+RootDocument (the name doesn't matter) and setup the connection in it :
 
-    It is possible to share connection beetween object. To do this, create a
-    RootDocument (the name doesn't matter) and setup the connection in it :
+>>> class RootDocument(MongoDocument):
+...     connection = Connection('localhost', '27017')
 
-    >>> class RootDocument(MongoDocument):
-    ...     connection = Connection('localhost', '27017')
-
-    Then, make all your objects inherited from the RootDocument. This is
-    useful if you are working in a web framework and you want to share only
-    one connection.
+Then, make all your objects inherited from the RootDocument. This is
+useful if you are working in a web framework and you want to share only
+one connection.
 
 
 JSON support
 ============
 
-.. topic:: new in developpment version
-    
-    While building web application, you might want to create an rest api with json
-    support. Then, you may need to convert all your MongoDocument into a json format
-    in order to pass it via the rest api. Unfortunately (or fortunately), MongoDB
-    support field format which is not supported by json. This is the case for `datetime`
-    but also for all your `CustomTypes` you may have built and your embeded objects.
+While building web application, you might want to create an rest api with json
+support. Then, you may need to convert all your MongoDocument into a json format
+in order to pass it via the rest api. Unfortunately (or fortunately), MongoDB
+support field format which is not supported by json. This is the case for `datetime`
+but also for all your `CustomTypes` you may have built and your embeded objects.
 
-    MongoDocument support the json import/export. Note that you'll need to install `anyjson`
-    to enable this feature. (`sudo easy_install anyjson`)
+MongoDocument support the json import/export. Note that you'll need to install `anyjson`
+to enable this feature. (`sudo easy_install anyjson`)
 
-    :`to_json`:
-    
-    `to_json` is a simply method which export you document into a json document:
+:`to_json`:
 
-    >>> class MyDoc(MongoDocument):
-    ...         db_name = "test"
-    ...         collection_name = "mongokit"
-    ...         structure = {
-    ...             "bla":{
-    ...                 "foo":unicode,
-    ...                 "bar":int,
-    ...             },
-    ...             "spam":[],
-    ...         }
-    >>> mydoc = MyDoc()
-    >>> mydoc['_id'] = u'mydoc'
-    >>> mydoc["bla"]["foo"] = u"bar"
-    >>> mydoc["bla"]["bar"] = 42
-    >>> mydoc['spam'] = range(10)
-    >>> mydoc.save()
-    >>> json = mydoc.to_json()
-    >>> json
-    '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+`to_json` is a simply method which export you document into a json document:
 
-    :`from_json`:
+>>> class MyDoc(MongoDocument):
+...         db_name = "test"
+...         collection_name = "mongokit"
+...         structure = {
+...             "bla":{
+...                 "foo":unicode,
+...                 "bar":int,
+...             },
+...             "spam":[],
+...         }
+>>> mydoc = MyDoc()
+>>> mydoc['_id'] = u'mydoc'
+>>> mydoc["bla"]["foo"] = u"bar"
+>>> mydoc["bla"]["bar"] = 42
+>>> mydoc['spam'] = range(10)
+>>> mydoc.save()
+>>> json = mydoc.to_json()
+>>> json
+'{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
 
-    To load a json string into a MongoDocument, use the `from_json` class method:
+:`from_json`:
 
-    >>> class MyDoc(MongoDocument):
-    ...     db_name = "test"
-    ...     collection_name = "mongokit"
-    ...     structure = {
-    ...         "bla":{
-    ...             "foo":unicode,
-    ...             "bar":int,
-    ...         },
-    ...         "spam":[],
-    ...     }
-    >>> json = '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
-    >>> mydoc = MyDoc.from_json(json)
-    >>> mydoc
-    {'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+To load a json string into a MongoDocument, use the `from_json` class method:
 
-    Not that `from_json` will take care of all your embeded Docs:
+>>> class MyDoc(MongoDocument):
+...     db_name = "test"
+...     collection_name = "mongokit"
+...     structure = {
+...         "bla":{
+...             "foo":unicode,
+...             "bar":int,
+...         },
+...         "spam":[],
+...     }
+>>> json = '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+>>> mydoc = MyDoc.from_json(json)
+>>> mydoc
+{'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
-    >>> class EmbedDoc(MongoDocument):
-    ...     db_name = "test"
-    ...     collection_name = "mongokit"
-    ...     structure = {
-    ...         "bla":{
-    ...             "foo":unicode,
-    ...             "bar":int,
-    ...         },
-    ...         "spam":[],
-    ...     }
-    >>> class MyDoc(MongoDocument):
-    ...    db_name = "test"
-    ...    collection_name = "mongokit"
-    ...    structure = {
-    ...        "doc":{
-    ...            "embed":EmbedDoc,
-    ...        },
-    ...    }
-    ...    use_autorefs = True
-    >>> json = '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
-    >>> mydoc = MyDoc.from_json(json)
-    >>> mydoc
-    {'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}
-    >>> isinstance(mydoc['doc']['embed'], EmbedDoc)
-    True
+Not that `from_json` will take care of all your embeded Docs:
+
+>>> class EmbedDoc(MongoDocument):
+...     db_name = "test"
+...     collection_name = "mongokit"
+...     structure = {
+...         "bla":{
+...             "foo":unicode,
+...             "bar":int,
+...         },
+...         "spam":[],
+...     }
+>>> class MyDoc(MongoDocument):
+...    db_name = "test"
+...    collection_name = "mongokit"
+...    structure = {
+...        "doc":{
+...            "embed":EmbedDoc,
+...        },
+...    }
+...    use_autorefs = True
+>>> json = '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
+>>> mydoc = MyDoc.from_json(json)
+>>> mydoc
+{'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}
+>>> isinstance(mydoc['doc']['embed'], EmbedDoc)
+True
 
 

@@ -27,6 +27,7 @@ Features
  * Pylons Web Framework integration support
  * Operator for validation (currently : OR, NOT and IS)
  * Mongodb auth support
+ * full relation support
 
 A quick example
 ===============
@@ -85,7 +86,93 @@ on the freenode #mongodb irc channel or on twitter_.
 Change Log
 ==========
 
-v0.3.3:
+v0.4
+----
+    * add autoref support to belong_to (delete cascade)
+      (http://bytebucket.org/namlook/mongokit/wiki/html/cascade.html#delete-cascade)
+    * changing collection dynamically 
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically)
+    * add immutable field (python tuple support)
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#case-of-tuple-or-immutable-field)
+    * add direction and ttl to index support
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes)
+    * add connection sharing support
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#sharing-connection)
+    * add json import/export for MongoDocument
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#json-support)
+    * full relation support (related_to)
+      (http://bytebucket.org/namlook/mongokit/wiki/html/relations.html)
+    * add long type support
+
+API change
+^^^^^^^^^^
+
+Adding more authorized_types
+++++++++++++++++++++++++++++
+
+`authorized_types` is not in the mongokit module anymore
+but has been integrated to the `MongoDocument` object.
+This allow to changed dynamically the authorized_types list at
+runtime.
+
+So, if you wan to add more types in authorized_types, you need to do:
+
+>>> class MyDoc(MongoDocument):
+...     structure = {
+...         "foo":str,
+...     }
+...     authorized_types = MongoDocument.authorized_types + [str]
+>>> mydoc = MyDoc()
+>>> mydoc['foo'] = 'bla'
+>>> mydoc.validate()
+
+New CustomType API
+++++++++++++++++++
+
+The `CustomType` api has little changed. 
+ * You must specify a `mongo_type` property in the `CustomType` class. this
+   will describes the type of the value stored in the mongodb.  
+ * If you want more validation, you can specify a `python_type` property which is
+   the python type the value will be converted. This is a good thing to specify it
+   as it make a good documentation.
+ * There is no `custom_types` descriptor anymore. The `CustomType` is set
+   directly in the field. Plus, the `CustomType` must be instanciated.
+
+So, the new way of using `CustomType` look like this::
+            
+    >>> class CustomDate(CustomType):
+    ...     mongo_type = unicode
+    ...     python_type = datetime.datetime # optional, just for more validation
+    ...     def to_bson(self, value):
+    ...         """convert type to a mongodb type"""
+    ...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+    ...     def to_python(self, value):
+    ...         """convert type to a python object"""
+    ...         if value is not None:
+    ...            return datetime.datetime.strptime(value, '%y-%m-%d')
+
+    Now, let's create a MongoDocument:
+
+    >>> class Foo(MongoDocument):
+    ...     db_name = 'test'
+    ...     collection_name = 'tutorial'
+    ...     structure = {
+    ...         'foo':{
+    ...             'date': CustomDate(),
+    ...         },
+    ...     }
+    ...     default_values = {'foo.date':u'08-06-07'}
+
+Autoreference
++++++++++++++
+
+The internal structure of processing embeded document as changed and use the `CustomType` way.
+The advantage is that your data are not pollued by extra field anymore. So the '_ns' field is not
+added any more.
+
+v0.3.3
+------
+
    * add autoref support (thanks to @bwmcadams)
    * add mongodb index support (thanks to @marcammann) 
    * adding CustomType (original idea from Phillip Oldham) 

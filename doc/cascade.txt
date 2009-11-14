@@ -86,38 +86,36 @@ Note tha "delete cascade" work with the `remove()` method too:
 
 >>> BlogArticle.remove({'_id':article['_id']}, cascade=True)
 
-.. topic:: new in developpment version
-    
-    You can use autorefs with belongs_to:
-    
-   >>> class DocA(MongoDocument):
-   ...      db_name = "test"
-   ...      collection_name = "mongokit"
-   ...      structure = {
-   ...          "spam":{"egg":int}
-   ...      }
+You can use autorefs with belongs_to:
 
-   >>> class DocB(MongoDocument):
-   ...      db_name = "test"
-   ...      collection_name = "mongokit"
-   ...      structure = {
-   ...          "foo":{"bar":DocA},
-   ...      }
-   ...      belongs_to = {'foo.bar':DocA}
-   ...     use_autorefs = True
+>>> class DocA(MongoDocument):
+...      db_name = "test"
+...      collection_name = "mongokit"
+...      structure = {
+...          "spam":{"egg":int}
+...      }
 
-   >>> doca = DocA()
-   >>> doca['spam']['egg'] = 3
-   >>> doca.save()
+>>> class DocB(MongoDocument):
+...      db_name = "test"
+...      collection_name = "mongokit"
+...      structure = {
+...          "foo":{"bar":DocA},
+...      }
+...      belongs_to = {'foo.bar':DocA}
+...     use_autorefs = True
 
-   >>> docb = DocB()
-   >>> docb['foo']['bar'] = doca
-   >>> docb.save()
+>>> doca = DocA()
+>>> doca['spam']['egg'] = 3
+>>> doca.save()
 
-   >>> len(list(DocA.fetch()))
-   1
-   >>> doca.delete(cascade=True)
+>>> docb = DocB()
+>>> docb['foo']['bar'] = doca
+>>> docb.save()
 
-   >>> len(list(DocA.fetch()))
-   0
+>>> len(list(DocA.fetch()))
+1
+>>> doca.delete(cascade=True)
+
+>>> len(list(DocA.fetch()))
+0
 
