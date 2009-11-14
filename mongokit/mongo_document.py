@@ -503,9 +503,10 @@ class MongoDocument(SchemaDocument):
         else:
             return collection.remove(*args, **kwargs)
 
-    def to_json(self):
+    def to_json_type(self):
         """
-        convert the document into a json string and return it
+        convert all document field into json type
+        and return the new converted object
         """
         def _convert_to_json(struct, doc):
             """
@@ -541,11 +542,17 @@ class MongoDocument(SchemaDocument):
             self.collection = collection
         self._process_custom_type(False, self, self.structure)
         _convert_to_json(obj, obj)
+        return obj
+
+    def to_json(self):
+        """
+        convert the document into a json string and return it
+        """
         try:
             import anyjson
         except ImportError:
             raise ImportError("can't import anyjson. Please install it before continuing.")
-        return anyjson.serialize(obj)
+        return anyjson.serialize(self.to_json_type())
 
     @classmethod
     def from_json(cls, json):

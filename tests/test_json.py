@@ -58,8 +58,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc["bla"]["bar"] = 42
         mydoc['spam'] = range(10)
         mydoc.save()
-        json = mydoc.to_json()
-        assert json == '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+        assert  mydoc.to_json() == '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+        assert  mydoc.to_json_type() == {"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
         mydoc = MyDoc()
         mydoc['_id'] = u'mydoc2'
@@ -67,8 +67,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc["bla"]["bar"] = 42
         mydoc['spam'] = [datetime.datetime(2000, 1, 1), datetime.datetime(2008, 8, 8)]
         mydoc.save()
-        json = mydoc.to_json()
-        assert json == '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
+        assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
+        assert mydoc.to_json_type() == {"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}
 
     def test_to_json_custom_type(self):
         class CustomFloat(CustomType):
@@ -93,8 +93,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc['doc']['foo'] = 3.70
         mydoc.save()
-        json = mydoc.to_json()
-        assert json == '{"doc": {"foo": "3.7"}, "_id": "mydoc"}', json
+        assert mydoc.to_json() == '{"doc": {"foo": "3.7"}, "_id": "mydoc"}'
+        assert mydoc.to_json_type() == {"doc": {"foo": "3.7"}, "_id": "mydoc"}
 
     def test_to_json_embeded_doc(self):
         class EmbedDoc(MongoDocument):
@@ -126,8 +126,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc['doc']['embed'] = embed
         mydoc.save()
-        json = mydoc.to_json()
-        assert json == '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
+        assert mydoc.to_json() == '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
+        assert mydoc.to_json_type() == {"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}
 
     def test_simple_from_json(self):
         class MyDoc(MongoDocument):
@@ -210,6 +210,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc2["bla"]["bar"] = 32
         mydoc2['spam'] = [datetime.datetime(2000, 1, 1), datetime.datetime(2008, 8, 8)]
         mydoc2.save()
+        json2 = mydoc2.to_json()
 
-        [i.to_json() for i in MyDoc.fetch()]
+        assert [i.to_json() for i in MyDoc.fetch()] == [json, json2]
 
