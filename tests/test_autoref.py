@@ -91,6 +91,7 @@ class AutoRefTestCase(unittest.TestCase):
         assert doca['a']['foo'] == 4, doca['a']['foo']
         saved_docb = DocB.collection.find_one({'_id':'docb'})
         assert saved_docb['b']['doc_a'] == DBRef(collection='mongokit', id='doca'), saved_docb['b']['doc_a']
+        assert DocB.fetch_one() == docb
 
     def test_autoref_with_default_values(self):
         class DocA(MongoDocument):

@@ -443,7 +443,11 @@ class MongoDocument(SchemaDocument):
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
-            return cls(list(bson_obj)[0])
+            doc = bson_obj.next()
+            db_name = doc.collection.database().name()
+            collection_name = doc.collection.name()
+            doc._process_custom_type(True, doc, doc.structure)
+            return cls(doc, db_name=db_name, collection_name=collection_name)
 
 
     @classmethod
