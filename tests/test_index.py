@@ -236,7 +236,7 @@ class IndexTestCase(unittest.TestCase):
                     'unique':True,
                     'ttl': 86400
                 },
-# If indexes are still broken validation will choke on the ttl
+        # If indexes are still broken validation will choke on the ttl
             ]
         movie = Movie()
         movie['standard'] = u'test'
@@ -246,4 +246,73 @@ class IndexTestCase(unittest.TestCase):
         item = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'standard_1', 'unique':True, 'key':{'standard':1}})
         
         assert item is not None, 'No Index Found'
+
+    def test_index_simple_inheritance(self):
+        class DocA(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'standard':unicode,
+            }
+            
+            indexes = [
+                {
+                    'fields':'standard',
+                    'unique':True,
+                },
+            ]
+
+        class DocB(DocA):
+            structure = {
+                'docb':unicode,
+            }
+            
+        docb = DocB()
+        docb['standard'] = u'test'
+        docb['docb'] = u'foo'
+        docb.save()
+        
+        db = CONNECTION['test']
+        item = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'standard_1', 'unique':True, 'key':{'standard':1}})
+        
+        assert item is not None, 'No Index Found'
+
+    def test_index_inheritance(self):
+        class DocA(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {
+                'standard':unicode,
+            }
+            
+            indexes = [
+                {
+                    'fields':'standard',
+                    'unique':True,
+                },
+            ]
+
+        class DocB(DocA):
+            structure = {
+                'docb':unicode,
+            }
+            indexes = [
+                {
+                    'fields':'docb',
+                    'unique':True,
+                },
+            ]
+
+            
+        docb = DocB()
+        docb['standard'] = u'test'
+        docb['docb'] = u'foo'
+        docb.save()
+        
+        db = CONNECTION['test']
+        item = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'standard_1', 'unique':True, 'key':{'standard':1}})
+        item = db.system.indexes.find_one({'ns':'test.mongokit', 'name':'docb_1', 'unique':True, 'key':{'docb':1}})
+        
+        assert item is not None, 'No Index Found'
+
 
