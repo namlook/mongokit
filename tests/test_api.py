@@ -467,3 +467,18 @@ class ApiTestCase(unittest.TestCase):
         assert any(sects)
 
 
+    def test_get_size(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {
+                "doc":{"foo":int, "bla":unicode},
+            }
+
+        mydoc = MyDoc()
+        mydoc['doc']['foo'] = 3
+        mydoc['doc']['bla'] = u'bla bla'
+        assert mydoc.get_size() == 41, mydoc.get_size()
+
+        mydoc['doc']['bla'] = u'bla bla'+'b'*12
+        assert mydoc.get_size() == 41+12

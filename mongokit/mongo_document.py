@@ -32,6 +32,7 @@ from generators import MongoDocumentCursor
 from mongo_exceptions import *
 from mongokit.ext.mongodb_auth import authenticate_mongodb
 from pymongo.son_manipulator import AutoReference, NamespaceInjector
+from pymongo.bson import BSON
 import re
 import logging
 
@@ -289,6 +290,12 @@ class MongoDocument(SchemaDocument):
             self._delete_cascade(self, self.db_name, self.collection_name, self.connection)
         else:
             self.collection.remove({'_id':self['_id']})
+
+    def get_size(self):
+        """
+        return the size of the underlying bson object
+        """
+        return len(BSON.from_dict(self))
 
     #
     # class methods, they work on collection
