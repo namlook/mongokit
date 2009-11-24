@@ -482,3 +482,8 @@ class ApiTestCase(unittest.TestCase):
 
         mydoc['doc']['bla'] = u'bla bla'+'b'*12
         assert mydoc.get_size() == 41+12
+
+        mydoc.validate()
+
+        mydoc['doc']['bla'] = u'b'*4000000
+        self.assertRaises(MaxDocumentSizeError, mydoc.validate)

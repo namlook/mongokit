@@ -237,6 +237,8 @@ class MongoDocument(SchemaDocument):
     def validate(self):
         if self.use_autorefs:
             self._make_reference(self, self.structure)
+        if self.get_size() > 3999999:
+            raise MaxDocumentSizeError("The document size is too big, documents lower than 4Mb is allowed (got %s bytes)" % self.get_size())
         super(MongoDocument, self).validate()
 
         
