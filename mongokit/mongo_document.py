@@ -76,10 +76,9 @@ class RelatedProperties(object):
 class MongoProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
         obj = super(MongoProperties, cls).__new__(cls, name, bases, attrs)
-        if obj.collection_name:
-            if not obj.db_name and not obj._use_pylons:
-                raise ConnectionError('You must specify a db_name')
-            elif obj._use_pylons:
+        if 'MongoDocument' in [i.__name__ for i in obj.__mro__] and\
+          obj.__name__ not in ["MongoDocument", "MongoPylonsDocument","RevisionDocument", "VersionedDocument"]:
+            if obj._use_pylons:
                 from mongokit.ext.pylons_env import MongoPylonsEnv
                 log.debug("Pylons mode...")
                 obj.connection = MongoPylonsEnv.mongo_conn()
@@ -94,6 +93,7 @@ class MongoProperties(SchemaProperties):
                     obj.db = obj.connection[db_name]
                     attrs['db_name'] = db_name
             else:
+                # setting connection
                 if not obj.db_host:
                     raise ConnectionError('You must specify a db_host')
                 if not obj.db_port:
@@ -102,18 +102,20 @@ class MongoProperties(SchemaProperties):
                     obj.connection = Connection(obj.db_host, obj.db_port)
                 elif obj.db_host != obj.connection.host() or obj.db_port != obj.connection.port():
                     obj.connection = Connection(obj.db_host, obj.db_port)
+            attrs['connection'] = obj.connection
+            if obj.db_name and not obj._use_pylons:
                 obj.db = obj.connection[obj.db_name]
+                attrs['db'] = obj.db
             if obj.db_username and obj.db_password:
                 # Password can't be empty or none or we ignore it
                 # This *CAN* fail, in which case it throws ConnectionError
                 log.debug("Username + Passwd set.  Authing against MongoDB.")
                 authenticate_mongodb(obj.db, obj.db_username, obj.db_password)
-            collection = obj.db[obj.collection_name]
-            obj.create_index(collection)
-            obj.collection = collection
-            attrs['connection'] = obj.connection
-            attrs['db'] = obj.db
-            attrs['collection'] = obj.collection
+            if obj.collection_name:
+                collection = obj.db[obj.collection_name]
+                obj.create_index(collection)
+                obj.collection = collection
+                attrs['collection'] = obj.collection
         return type.__new__(cls, name, bases, attrs)        
 
 class MongoDocument(SchemaDocument):
@@ -221,7 +223,7 @@ class MongoDocument(SchemaDocument):
             MongoDocument.create_index(self.collection)
 
     def __getattr__(self, key):
-        if key in ['collection', 'db'] and not hasattr(self, 'connection'):
+        if key in ['collection', 'db'] and (not hasattr(self, 'collection') or not hasattr(self, 'db')):
             raise ConnectionError('You must specify a db_name and collection_name attribute') 
         try:
             return super(MongoDocument, self).__getattr__(key)
@@ -529,16 +531,18 @@ class MongoDocument(SchemaDocument):
         from copy import deepcopy
         self._process_custom_type(True, self, self.structure)
         # pymongo's collection and db can't be deepcopied
-        db = self.db
-        collection = self.collection
+        db = None
+        collection = None
         if hasattr(self, 'db'):
+            db = self.db
             self.db = None
         if hasattr(self, 'collection'):
+            collection = self.collection
             self.collection = None
         obj = deepcopy(self)
-        if hasattr(self, 'db'):
+        if db:
             self.db = db
-        if hasattr(self, 'collection'):
+        if collection:
             self.collection = collection
         self._process_custom_type(False, self, self.structure)
         _convert_to_json(obj, obj)

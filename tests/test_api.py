@@ -37,6 +37,7 @@ class ApiTestCase(unittest.TestCase):
         self.collection = CONNECTION['test']['mongokit']
         
     def tearDown(self):
+        CONNECTION.drop_database('test')
         CONNECTION['test'].drop_collection('mongokit')
         CONNECTION['test'].drop_collection('version')
         CONNECTION['test'].drop_collection('other_version')
@@ -391,7 +392,7 @@ class ApiTestCase(unittest.TestCase):
 
         class DocC(DocB):
             db_host = "127.0.0.2"
-        assert DocC.connection == Connection("127.0.0.2", 27017)
+        assert DocC.connection == Connection("127.0.0.2", 27017), DocC.connection
         assert DocC.collection == Connection("127.0.0.2", 27017)['test']['mongokit']
 
         class DocD(DocC):
@@ -399,10 +400,10 @@ class ApiTestCase(unittest.TestCase):
         assert DocD.connection == Connection("127.0.0.2", 27017), DocD.connection
         assert DocD.collection == Connection("127.0.0.2", 27017)['foo']['mongokit'], DocD.collection
 
-        class BadDoc(MongoDocument):
+        class DocWithDefaultConnection(MongoDocument):
             structure = {}
 
-        assert not hasattr(BadDoc, 'connection')
+        assert DocWithDefaultConnection.connection == Connection("localhost", 27017)
 
         class ShareConnection(MongoDocument):
             connection = Connection()
