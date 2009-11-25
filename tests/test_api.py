@@ -466,6 +466,23 @@ class ApiTestCase(unittest.TestCase):
         assert len(sects) == 2
         assert any(sects)
 
+    def test_with_dynamic_connection(self):
+        class Section(MongoDocument):
+            db_name = 'test'
+            collection_name = 'mongokit'
+            structure = {"section":int}
+
+        sec = Section(connection = CONNECTION)
+        sec['section'] = 1
+        sec.save()
+
+        sec2 = Section(connection = CONNECTION, collection_name='bla')
+        sec2['section'] = 2
+        sec2.save()
+
+        assert Section.all(collection=Section.collection).count() == 1
+        assert Section.all(collection=CONNECTION['test']['bla']).count() == 1
+
 
     def test_get_size(self):
         class MyDoc(MongoDocument):

@@ -182,6 +182,14 @@ You can pass those value to the `MongoDocument.__init__` :
 
 calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
 
+.. topic:: new in developpment version
+
+    you can pass a connection at the document instanciation. this is usefull to share a connection beetween
+    thread in web development for instance :
+
+    con = Connection()
+    >>> user = User(connection = con)
+
 Dot notation 
 ============
 

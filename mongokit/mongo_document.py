@@ -161,7 +161,7 @@ class MongoDocument(SchemaDocument):
       type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None):
+    def __init__(self, doc=None, gen_skel=True, connection=None, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None):
         """
         :doc: a dictionnary. Usefull to convert a simple dict into a full MongoDocument
         :db_host: overide this if you don't want to use MongoDocument.db_host
@@ -194,6 +194,10 @@ class MongoDocument(SchemaDocument):
         # Check if a custom connection is pass to the constructor.
         # If yes, build the custom connection
         reset_connection = False
+        if (connection is not None) and (db_host is not None or db_name is not None):
+            raise AttributeError("You can't pass a db_host or db_name with a connection as parameter")
+        if connection is not None:
+            reset_connection = True
         if db_host is not None:
             self.db_host = db_host
             reset_connection = True
@@ -213,7 +217,9 @@ class MongoDocument(SchemaDocument):
             self.db_password = db_password
             reset_connection = True
         if reset_connection:
-            if hasattr(self, 'connection'):
+            if connection is not None:
+                self.connection = connection
+            elif hasattr(self, 'connection'):
                 if self.db_host != self.connection.host() or\
                   self.db_port != self.connection.port():
                     self.connection = Connection(self.db_host, self.db_port)
