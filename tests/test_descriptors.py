@@ -250,10 +250,8 @@ class DescriptorsTestCase(unittest.TestCase):
                 "bar.$int.bla": lambda x: x > 5
             }
         mydoc = MyDoc()
-        mydoc['bar'].update({3:{'bla': 2}})
-        self.assertRaises(ValidationError, mydoc.validate)
         mydoc['bar'].update({3:{'bla': 15}})
-        mydoc.validate()
+        self.assertRaises(InvalidDocument, mydoc.validate)
 
 
     def test_multiple_validators(self):
