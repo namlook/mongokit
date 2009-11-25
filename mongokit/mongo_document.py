@@ -194,8 +194,8 @@ class MongoDocument(SchemaDocument):
         # Check if a custom connection is pass to the constructor.
         # If yes, build the custom connection
         reset_connection = False
-        if (connection is not None) and (db_host is not None or db_name is not None):
-            raise AttributeError("You can't pass a db_host or db_name with a connection as parameter")
+        if (connection is not None) and (db_host is not None or db_port is not None):
+            raise AttributeError("You can't pass a db_host or db_port with a connection as parameter")
         if connection is not None:
             reset_connection = True
         if db_host is not None:
