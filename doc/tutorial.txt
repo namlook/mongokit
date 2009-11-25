@@ -751,6 +751,31 @@ Direction must be one of `INDEX_ASCENDING` (or 1) or `INDEX_DESCENDING` (or -1):
 ...         },
 ...     ]
 
+.. topic:: new in developpment version
+    
+    Passing a dictionnary in "fields" is now deprecated.
+    The problem when passing a dictionnary is that a dictionnary is unordered. This might
+    be a problem for compound keys. If you want to make compound keys indexes, you now
+    need to pass a list of tuples :
+
+    >>> class MyDoc(MongoDocument):
+    ...     structure = {
+    ...         'standard':unicode,
+    ...         'other':{
+    ...             'deep':unicode,
+    ...         },
+    ...         'notindexed':unicode,
+    ...     }
+    ...     
+    ...     indexes = [
+    ...         {
+    ...             'fields':[('standard':INDEX_ASCENDING), ('other.deep':INDEX_DESCENDING)],
+    ...             'unique':True,
+    ...         },
+    ...     ]
+
+
+
 Sharing Connection
 ==================
 

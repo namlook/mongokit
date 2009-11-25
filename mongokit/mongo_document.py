@@ -366,7 +366,10 @@ class MongoDocument(SchemaDocument):
             if isinstance(index['fields'], dict):
                 fields = [(name, direction) for (name, direction) in sorted(index['fields'].items())]
             elif hasattr(index['fields'], '__iter__'):
-                fields = [(name, 1) for name in index['fields']]
+                if isinstance(index['fields'][0], tuple):
+                    fields = [(name, direction) for name, direction in index['fields']]
+                else:
+                    fields = [(name, 1) for name in index['fields']]
             else:
                 fields = index['fields']
             log.debug('Creating index for %s' % index['fields'])
@@ -647,21 +650,33 @@ class MongoDocument(SchemaDocument):
                         raise BadIndexError("%s is unknown key for indexes" % key)
                     if key == "fields":
                         if isinstance(value, dict):
+                            import warnings
+                            warnings.warn("DEPRECATED index declaration : Passing a dictionnary "
+                            "to 'fields' is deprecated. Please use a list of tuples instead")
                             for field, direction in value.iteritems():
                                 if not direction in [1, -1]:
                                     raise BadIndexError("index direction must be 1 or -1. Got %s" % direction)
-                                if field not in self._namespaces:
+                                if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
                                     raise ValueError("Error in indexes: can't"
                                       " find %s in structure" % field )
                         elif isinstance(value, basestring):
-                            if value not in self._namespaces:
+                            if value not in self._namespaces and value not in STRUCTURE_KEYWORDS:
                                 raise ValueError("Error in indexes: can't"
                                   " find %s in structure" % value )
                         elif isinstance(value, list):
-                            for field in value:
-                                if field not in self._namespaces:
-                                    raise ValueError("Error in indexes: can't"
-                                      " find %s in structure" % field )
+                            for val in value:
+                                if isinstance(val, tuple):
+                                    for field, direction in value:
+                                        if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
+                                            raise ValueError("Error in indexes: can't"
+                                              " find %s in structure" % field )
+                                        if not direction in [1, -1]:
+                                            raise BadIndexError("index direction must be 1 or -1. Got %s" % direction)
+                                else:
+                                    if val not in self._namespaces and val not in STRUCTURE_KEYWORDS:
+                                        raise ValueError("Error in indexes: can't"
+                                          " find %s in structure" % val )
+
                     elif key == "ttl":
                         assert isinstance(value, int)
                     else:
