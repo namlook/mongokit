@@ -310,13 +310,15 @@ class MongoDocument(SchemaDocument):
     # class methods, they work on collection
     #
     @classmethod
-    def get_collection(cls, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None, create_index=False):
+    def get_collection(cls, connection=None, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None, create_index=False):
         """
         return a collection filled by the passed variables. If a variable is None, it the
         value will be filled by the default value (ie set in class attribute)
         
         if create_index is True, the collection will be indexed using the indexes class attribute
         """
+        if (connection is not None) and (db_host is not None or db_port is not None):
+            raise AttributeError("You can't pass a db_host or db_port with a connection as parameter")
         if db_host is None:
             if hasattr(cls, 'connection'):
                 db_host = cls.connection.host()
@@ -341,14 +343,15 @@ class MongoDocument(SchemaDocument):
             db_username = cls.db_username
         if db_password is None:
             db_password = cls.db_password
-        if hasattr(cls, 'connection'):
-            if db_host != cls.connection.host() or\
-              db_port != cls.connection.port():
-                connection = Connection(db_host, db_port)
+        if connection is None:
+            if hasattr(cls, 'connection'):
+                if db_host != cls.connection.host() or\
+                  db_port != cls.connection.port():
+                    connection = Connection(db_host, db_port)
+                else:
+                    connection = cls.connection
             else:
-                connection = cls.connection
-        else:
-            connection = Connection(db_host, db_port)
+                connection = Connection(db_host, db_port)
         db = connection[db_name]
         collection = db[collection_name]
         if db_username and db_password:
