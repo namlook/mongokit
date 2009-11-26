@@ -170,6 +170,14 @@ another collection with the helper `get_collection`.
 
 >>> user_col = User.get_collection(db_name='namlook', collection_name='profile')
 
+.. topic:: new in developpment version
+
+    You can also set a connection:
+
+    con = Connection()
+    >>> user_col = User.get_collection(connection=con, db_name='namlook', collection_name='profile')
+
+
 Now, we can query the database by passing our new collection :
 
 >>> User.all({}, collection=col)
@@ -184,7 +192,7 @@ calling `user.save()` will save the objet into the database 'namlook' in the col
 
 .. topic:: new in developpment version
 
-    you can pass a connection at the document instanciation. this is usefull to share a connection beetween
+    You can pass a connection at the document instanciation. this is usefull to share a connection beetween
     thread in web development for instance :
 
     con = Connection()
