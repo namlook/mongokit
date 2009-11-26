@@ -483,6 +483,20 @@ class ApiTestCase(unittest.TestCase):
         assert Section.all(collection=Section.collection).count() == 1
         assert Section.all(collection=CONNECTION['test']['bla']).count() == 1
 
+    def test_with_collection_name_and_no_db_name(self):
+        class Section(MongoDocument):
+            collection_name = 'mongokit'
+            structure = {"section":int}
+
+        sec = Section()
+        sec['section'] = 1
+        self.assertRaises(ConnectionError, sec.save)
+
+        sec2 = Section(db_name='test')
+        sec2['section'] = 2
+        sec2.save()
+
+        assert Section.get_collection(db_name='test', collection_name='mongokit').find().count() == 1
 
     def test_get_size(self):
         class MyDoc(MongoDocument):

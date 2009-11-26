@@ -107,16 +107,16 @@ class MongoProperties(SchemaProperties):
             if obj.db_name and not obj._use_pylons:
                 obj.db = obj.connection[obj.db_name]
                 attrs['db'] = obj.db
-            if obj.db_username and obj.db_password:
-                # Password can't be empty or none or we ignore it
-                # This *CAN* fail, in which case it throws ConnectionError
-                log.debug("Username + Passwd set.  Authing against MongoDB.")
-                authenticate_mongodb(obj.db, obj.db_username, obj.db_password)
-            if obj.collection_name:
-                collection = obj.db[obj.collection_name]
-                obj.create_index(collection)
-                obj.collection = collection
-                attrs['collection'] = obj.collection
+                if obj.db_username and obj.db_password:
+                    # Password can't be empty or none or we ignore it
+                    # This *CAN* fail, in which case it throws ConnectionError
+                    log.debug("Username + Passwd set.  Authing against MongoDB.")
+                    authenticate_mongodb(obj.db, obj.db_username, obj.db_password)
+                if obj.collection_name:
+                    collection = obj.db[obj.collection_name]
+                    obj.create_index(collection)
+                    obj.collection = collection
+                    attrs['collection'] = obj.collection
         return type.__new__(cls, name, bases, attrs)        
 
 class MongoDocument(SchemaDocument):
