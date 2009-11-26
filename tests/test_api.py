@@ -348,7 +348,9 @@ class ApiTestCase(unittest.TestCase):
         mydoc['doc_b']["bar"] = 2
         mydoc.save()
 
-        assert DocB.fetch_one()
+        docb = DocB.fetch_one()
+        assert docb
+        assert isinstance(docb, DocB)
         self.assertRaises(MultipleResultsFound, DocA.fetch_one)
 
 
@@ -518,3 +520,58 @@ class ApiTestCase(unittest.TestCase):
 
         mydoc['doc']['bla'] = u'b'*4000000
         self.assertRaises(MaxDocumentSizeError, mydoc.validate)
+
+    def test_get_with_no_wrap(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {"foo":unicode}
+
+        for i in xrange(2000):
+            mydoc = MyDoc()
+            mydoc['foo'] = unicode(i)
+            mydoc.save()
+
+        import time
+        start = time.time()
+        mydocs = [i for i in MyDoc.all()]
+        end = time.time()
+        wrap_time = end-start
+
+        start = time.time()
+        mydocs = [i for i in MyDoc.all(wrap=False)]
+        end = time.time()
+        no_wrap_time = end-start
+
+        assert no_wrap_time < wrap_time
+
+    def test_sort_with_no_wrap(self):
+        class MyDoc(MongoDocument):
+            db_name = "test"
+            collection_name = "mongokit"
+            structure = {"foo":int}
+
+        for i in xrange(2000):
+            mydoc = MyDoc()
+            mydoc['foo'] = i
+            mydoc.save()
+
+        import time
+        start = time.time()
+        wrapped_mydocs = [i for i in MyDoc.all().sort('foo', -1)]
+        end = time.time()
+        wrap_time = end-start
+
+        start = time.time()
+        mydocs = [i for i in MyDoc.all(wrap=False).sort('foo', -1)]
+        end = time.time()
+        no_wrap_time = end-start
+
+        assert no_wrap_time < wrap_time
+
+        assert isinstance(wrapped_mydocs[0], MyDoc)
+        assert not isinstance(mydocs[0], MyDoc), type(mydocs[0])
+        assert [i['foo'] for i in mydocs] == list(reversed(range(2000))), [i['foo'] for i in mydocs]
+        assert mydocs[0]['foo'] == 1999, mydocs[0]['foo']
+
+        assert not isinstance(MyDoc.all(wrap=False).sort('foo', -1).next(), MyDoc)

@@ -190,6 +190,27 @@ calling `user.save()` will save the objet into the database 'namlook' in the col
     con = Connection()
     >>> user = User(connection = con)
 
+Getting raw data
+================
+
+.. topic:: new in developpment version
+    
+    Sometime you may want to retrieve many documents in a sort time :
+
+    >>> for doc in MyDoc.fetch():
+    ...     pass # do something with doc... slow !!
+
+    This way isn't very efficient. Actually, this solution will wrap each
+    result into a MongoDocument and will kill speed. Another solution
+    consist in retrieving raw data by telling MongoKit to no wrap the
+    result :
+
+    >>> for doc in MyDoc.fetch(wrap=False):
+    ...     pass # do something with doc... very fast !
+
+    Note that by doing this, you won't be able to use mongokit's method
+    on results.
+
 Dot notation 
 ============
 

@@ -403,14 +403,15 @@ class MongoDocument(SchemaDocument):
 
         The query is launch against the db and collection of the object.
         """
+        wrap = kwargs.pop('wrap',True)
         collection = kwargs.pop('collection', None)
         if collection is None:
             collection = cls.collection
         return MongoDocumentCursor(
-          collection.find(*args, **kwargs), cls)
+          collection.find(*args, **kwargs), cls=cls, wrap=wrap)
 
     @classmethod
-    def fetch(cls, spec=None, fields=None, skip=0, limit=0, collection=None, slave_okay=None, timeout=True, snapshot=False, _sock=None):
+    def fetch(cls, spec=None, fields=None, skip=0, limit=0, collection=None, slave_okay=None, timeout=True, snapshot=False, _sock=None, wrap=True):
         """
         return all document wich match the structure of the object
         `fetch()` takes the same arguments than the the pymongo.collection.find method.
@@ -436,8 +437,8 @@ class MongoDocument(SchemaDocument):
             slave_okay=slave_okay,
             timeout=timeout,
             snapshot=snapshot,
-            _sock=_sock),
-          cls)
+            _sock=_sock,),
+          cls=cls, wrap=wrap)
 
     @classmethod
     def fetch_one(cls, spec=None, fields=None, skip=0, limit=0, collection=None, slave_okay=None, timeout=True, snapshot=False, _sock=None):
@@ -474,10 +475,11 @@ class MongoDocument(SchemaDocument):
     @classmethod
     def group(cls, *args, **kwargs):
         collection = kwargs.pop('collection', None)
+        wrap = kwargs.pop('wrap',True)
         if collection is None:
             collection = cls.collection
         return MongoDocumentCursor(
-          collection.group(*args, **kwargs), cls)
+          collection.group(*args, **kwargs), cls=cls, wrap=wrap)
 
     @classmethod
     def one(cls, *args, **kwargs):

@@ -27,23 +27,25 @@
 
 
 class MongoDocumentCursor(object):
-    def __init__(self, cursor, cls):
+    def __init__(self, cursor, cls, wrap):
         self._cursor = cursor
         self._collection = cursor._Cursor__collection
         self._db = self._collection.database()
         self._class_object = cls
+        self.wrap=wrap
 
     def where(self, *args, **kwargs):
-        return self.__class__(self._cursor.where(*args, **kwargs), self._class_object)
+        return self.__class__(self._cursor.where(*args, **kwargs), self._class_object, self.wrap)
 
     def sort(self, *args, **kwargs):
-        return self.__class__(self._cursor.sort(*args, **kwargs), self._class_object)
+        print args, kwargs, self.wrap
+        return self.__class__(self._cursor.sort(*args, **kwargs), self._class_object, self.wrap)
 
     def limit(self, *args, **kwargs):
-        return self.__class__(self._cursor.limit(*args, **kwargs), self._class_object)
+        return self.__class__(self._cursor.limit(*args, **kwargs), self._class_object, self.wrap)
 
     def hint(self, *args, **kwargs):
-        return self.__class__(self._cursor.hint(*args, **kwargs), self._class_object)
+        return self.__class__(self._cursor.hint(*args, **kwargs), self._class_object, self.wrap)
 
     def count(self, *args, **kwargs):
         return self._cursor.count(*args, **kwargs)
@@ -52,14 +54,20 @@ class MongoDocumentCursor(object):
         return self._cursor.explain(*args, **kwargs)
 
     def next(self, *args, **kwargs):
-        return self._class_object(self._cursor.next(*args, **kwargs),
-          db_name=self._db.name(), collection_name=self._collection.name())
+        data = self._cursor.next(*args, **kwargs)
+        if self.wrap:
+            return self._class_object(data, 
+              db_name=self._db.name(), collection_name=self._collection.name())
+        return data
 
     def skip(self, *args, **kwargs):
-        return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
+        return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object, self.wrap)
 
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
-            yield self._class_object(obj,
-              db_name=self._db.name(), collection_name=self._collection.name())
+            if self.wrap:
+                yield self._class_object(obj,
+                  db_name=self._db.name(), collection_name=self._collection.name())
+            else:
+                yield obj
 
