@@ -107,6 +107,7 @@ class MongoProperties(SchemaProperties):
             if obj.db_name and not obj._use_pylons:
                 obj.db = obj.connection[obj.db_name]
                 attrs['db'] = obj.db
+            if hasattr(obj, 'db'):
                 if obj.db_username and obj.db_password:
                     # Password can't be empty or none or we ignore it
                     # This *CAN* fail, in which case it throws ConnectionError
