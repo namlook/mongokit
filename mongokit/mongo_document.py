@@ -552,17 +552,23 @@ class MongoDocument(SchemaDocument):
         # pymongo's collection and db can't be deepcopied
         db = None
         collection = None
+        connection = None
         if hasattr(self, 'db'):
             db = self.db
             self.db = None
         if hasattr(self, 'collection'):
             collection = self.collection
             self.collection = None
+        if hasattr(self, 'connection'):
+            connection = self.connection
+            self.connection = None
         obj = deepcopy(self)
         if db:
             self.db = db
         if collection:
             self.collection = collection
+        if connection:
+            self.connection = connection
         self._process_custom_type(False, self, self.structure)
         _convert_to_json(obj, obj)
         return obj
