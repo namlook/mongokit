@@ -644,6 +644,15 @@ class MongoDocument(SchemaDocument):
     #
     # end of public API
     #
+    def __hash__(self):
+        if '_id' in self:
+            value = self['_id']
+            if value == -1:
+                value == -2
+            return value.__hash__()
+        else:
+            raise TypeError("A MongoDocument is not hashable if it is not saved. Save the document before hashing it")
+
     @classmethod 
     def _delete_cascade(cls, doc, db_name, collection_name, connection):
         full_collection_path = "%s.%s" % (db_name, collection_name)
