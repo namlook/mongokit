@@ -162,7 +162,7 @@ class MongoDocument(SchemaDocument):
       type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, connection=None, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None):
+    def __init__(self, doc=None, gen_skel=True, connection=None, db_host=None, db_port=None, db_name=None, collection_name=None, db_username=None, db_password=None, collection=None):
         """
         :doc: a dictionnary. Usefull to convert a simple dict into a full MongoDocument
         :db_host: overide this if you don't want to use MongoDocument.db_host
@@ -197,38 +197,45 @@ class MongoDocument(SchemaDocument):
         reset_connection = False
         if (connection is not None) and (db_host is not None or db_port is not None):
             raise AttributeError("You can't pass a db_host or db_port with a connection as parameter")
-        if connection is not None:
-            reset_connection = True
-        if db_host is not None:
-            self.db_host = db_host
-            reset_connection = True
-        if db_port is not None:
-            self.db_port = db_port
-            reset_connection = True
-        if db_name is not None:
-            self.db_name = db_name
-            reset_connection = True
-        if collection_name is not None:
-            self.collection_name = collection_name
-            reset_connection = True
-        if db_username is not None:
-            self.db_username = db_username
-            reset_connection = True
-        if db_password is not None:
-            self.db_password = db_password
-            reset_connection = True
-        if reset_connection:
+        if (connection is not None or db_host is not None or db_port is not None or db_name is not None or collection_name is not None) and (collection is not None):
+            raise AttributeError("If you specify a collection you can't pass any other related db configuration as parameter")
+        if collection:
+            self.collection = collection
+            self.db = collection.database()
+            self.connection = self.db.connection()
+        else:
             if connection is not None:
-                self.connection = connection
-            elif hasattr(self, 'connection'):
-                if self.db_host != self.connection.host() or\
-                  self.db_port != self.connection.port():
+                reset_connection = True
+            if db_host is not None:
+                self.db_host = db_host
+                reset_connection = True
+            if db_port is not None:
+                self.db_port = db_port
+                reset_connection = True
+            if db_name is not None:
+                self.db_name = db_name
+                reset_connection = True
+            if collection_name is not None:
+                self.collection_name = collection_name
+                reset_connection = True
+            if db_username is not None:
+                self.db_username = db_username
+                reset_connection = True
+            if db_password is not None:
+                self.db_password = db_password
+                reset_connection = True
+            if reset_connection:
+                if connection is not None:
+                    self.connection = connection
+                elif hasattr(self, 'connection'):
+                    if self.db_host != self.connection.host() or\
+                      self.db_port != self.connection.port():
+                        self.connection = Connection(self.db_host, self.db_port)
+                else:
                     self.connection = Connection(self.db_host, self.db_port)
-            else:
-                self.connection = Connection(self.db_host, self.db_port)
-            self.db = self.connection[self.db_name]
-            self.collection = self.db[self.collection_name]
-            MongoDocument.create_index(self.collection)
+                self.db = self.connection[self.db_name]
+                self.collection = self.db[self.collection_name]
+                MongoDocument.create_index(self.collection)
 
     def __getattr__(self, key):
         if key in ['collection', 'db'] and (not hasattr(self, 'collection') or not hasattr(self, 'db')):
@@ -396,7 +403,7 @@ class MongoDocument(SchemaDocument):
             collection = cls.collection
         bson_obj = collection.find_one({"_id":id})
         if bson_obj:
-            return cls(bson_obj)
+            return cls(bson_obj, collection=collection)
 
     @classmethod
     def all(cls, *args, **kwargs):
@@ -498,7 +505,7 @@ class MongoDocument(SchemaDocument):
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
-            return cls(bson_obj.next())
+            return cls(bson_obj.next(), collection=collection)
 
     @classmethod
     def remove(cls, *args, **kwargs):

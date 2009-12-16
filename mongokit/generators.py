@@ -56,8 +56,7 @@ class MongoDocumentCursor(object):
     def next(self, *args, **kwargs):
         data = self._cursor.next(*args, **kwargs)
         if self.wrap:
-            return self._class_object(data, 
-              db_name=self._db.name(), collection_name=self._collection.name())
+            return self._class_object(data, collection=self._collection)
         return data
 
     def skip(self, *args, **kwargs):
@@ -66,8 +65,7 @@ class MongoDocumentCursor(object):
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
             if self.wrap:
-                yield self._class_object(obj,
-                  db_name=self._db.name(), collection_name=self._collection.name())
+                yield self._class_object(obj, collection=self._collection)
             else:
                 yield obj
 

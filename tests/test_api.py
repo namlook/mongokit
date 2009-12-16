@@ -353,6 +353,44 @@ class ApiTestCase(unittest.TestCase):
         assert isinstance(docb, DocB)
         self.assertRaises(MultipleResultsFound, DocA.fetch_one)
 
+    def test_query_with_passing_collection(self):
+        class MyDoc(MongoDocument):
+            db_name = 'test'
+            structure = {
+                'foo':int,
+            }
+
+        # boostraping
+        for i in range(10):
+            mydoc = MyDoc(collection_name='mongokit')
+            mydoc['_id'] = unicode(i)
+            mydoc['foo'] = i
+            mydoc.save()
+
+        # get_from_id
+        mongokit = MyDoc.get_collection(collection_name = 'mongokit')
+        fetched_doc = MyDoc.get_from_id('4', collection=mongokit)
+        assert fetched_doc.collection == mongokit
+
+        # all
+        fetched_docs = MyDoc.all({'foo':{'$gt':2}}, collection=mongokit)
+        assert fetched_docs.count() == 7
+        for doc in fetched_docs:
+            assert doc.collection == mongokit
+
+        # one
+        doc = MyDoc.one({'foo':2}, collection=mongokit)
+        assert doc.collection == mongokit
+
+        # fetch
+        fetched_docs = MyDoc.fetch({'foo':{'$gt':2}}, collection=mongokit)
+        assert fetched_docs.count() == 7
+        for doc in fetched_docs:
+            assert doc.collection == mongokit
+
+        # fetch_one
+        doc = MyDoc.fetch_one({'foo':2}, collection=mongokit)
+        assert doc.collection == mongokit
 
     def test_skip_validation(self):
         class DocA(MongoDocument):

@@ -86,6 +86,21 @@ on the freenode #mongodb irc channel or on twitter_.
 Change Log
 ==========
 
+v.dev
+-----
+  * add possibility to fetch raw data efficiently
+    (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#getting-raw-data)
+  * add connection sharing beetween documents
+    (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically)
+  * add connection size validation
+    ()
+  * fix issue with compound keys indexes. Some indexes description are deprecated.
+    (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes)
+  * collection are now passed to the result objects when making a query.
+  (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#query)
+  * a pymongo's collection can now be pass to the constructor
+  (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically)
+
 v0.4
 ----
     * add autoref support to belong_to (delete cascade)

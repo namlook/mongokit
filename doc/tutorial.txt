@@ -82,6 +82,12 @@ which lazy evaluate the results. A cursor is acting like an iterator.
 All theses method can take a query as argument. A query is a simple dict. Please,
 see the mongodb and the pymongo documentation for further details.
 
+.. topic:: new in developpment version
+
+    Note that when you make a query, the collection is passed automatically to the
+    result objects. You can then specify a collection dynamically when making
+    queries.
+
 all()
 -----
 
@@ -197,6 +203,17 @@ calling `user.save()` will save the objet into the database 'namlook' in the col
 
     con = Connection()
     >>> user = User(connection = con)
+
+.. topic:: new in developpment version
+
+    If you instanciate previously a collection, you can pass it to the constructor :
+
+    >>> namlook_profile_collection = User.get_collection(db_name='namlook', collection_name='profile')
+    >>> user = User(collection=namlook_profile_collection)
+
+    Not that you can't specify other db parameter if you pass a collection. So the following example won't work:
+
+    >>> user = User(db_name='john', collection=namlook_profile_collection) # DON'T DO THAT !
 
 Getting raw data
 ================
