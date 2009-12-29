@@ -78,33 +78,6 @@ class Document(SchemaDocument):
                 self._related_loaded = True
         self._non_callable = False
 
-    def __call__(self, doc=None, gen_skel=True):
-        if self._non_callable:
-            raise TypeError("'%s' is not callable" % self.__class__.__name__)
-        obj = self.__class__(doc=doc, gen_skel=gen_skel, collection=self.collection)
-        obj._non_callable = True
-        return obj
-
-    def __hash__(self):
-        if '_id' in self:
-            value = self['_id']
-            if value == -1:
-                value == -2
-            return value.__hash__()
-        else:
-            raise TypeError("A Document is not hashable if it is not saved. Save the document before hashing it")
-
-    def __deepcopy__(self, memo={}):
-        obj = self.__class__(doc=deepcopy(dict(self), memo), gen_skel=False, collection=self.collection)
-        obj.__dict__ = self.__dict__.copy()
-        return obj
-
-    def __getattribute__(self, key):
-        if key in ['collection', 'db', 'connection']:
-            if self.__dict__[key] is None:
-                raise ConnectionError('No collection found') 
-        return super(Document, self).__getattribute__(key)
-     
     def validate(self):
         if self.use_autorefs:
             self._make_reference(self, self.structure)
@@ -232,6 +205,45 @@ class Document(SchemaDocument):
         self._process_custom_type(False, self, self.structure)
         return self
 
+    def delete(self):
+        """
+        delete the document from the collection from his _id.
+
+        This is equivalent to "self.remove({'_id':self['_id']})"
+        """
+        self.collection.remove({'_id':self['_id']})
+
+    #
+    # End of public API
+    #
+
+    def __call__(self, doc=None, gen_skel=True):
+        if self._non_callable:
+            raise TypeError("'%s' is not callable" % self.__class__.__name__)
+        obj = self.__class__(doc=doc, gen_skel=gen_skel, collection=self.collection)
+        obj._non_callable = True
+        return obj
+
+    def __hash__(self):
+        if '_id' in self:
+            value = self['_id']
+            if value == -1:
+                value == -2
+            return value.__hash__()
+        else:
+            raise TypeError("A Document is not hashable if it is not saved. Save the document before hashing it")
+
+    def __deepcopy__(self, memo={}):
+        obj = self.__class__(doc=deepcopy(dict(self), memo), gen_skel=False, collection=self.collection)
+        obj.__dict__ = self.__dict__.copy()
+        return obj
+
+    def __getattribute__(self, key):
+        if key in ['collection', 'db', 'connection']:
+            if self.__dict__[key] is None:
+                raise ConnectionError('No collection found') 
+        return super(Document, self).__getattribute__(key)
+ 
     def _make_reference(self, doc, struct, path=""):
         """
         * wrap all MongoDocument with the CustomType "R()"

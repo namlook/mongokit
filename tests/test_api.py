@@ -27,22 +27,17 @@
 
 import unittest
 
-from fork import Document, Connection
-from mongokit import SchemaDocument, MongoDocumentCursor
+from mongokit import *
 from pymongo.objectid import ObjectId
 
 
 class ApiTestCase(unittest.TestCase):
     def setUp(self):
         self.connection = Connection()
-        self.collection = self.connection['test']['mongokit']
+        self.col = self.connection['test']['mongokit']
         
     def tearDown(self):
         self.connection.drop_database('test')
-        self.connection['test'].drop_collection('mongokit')
-        self.connection['test'].drop_collection('version')
-        self.connection['test'].drop_collection('other_version')
-        self.connection['test'].drop_collection('versionned_mongokit')
 
     def test_save(self):
         class MyDoc(Document):
@@ -54,24 +49,24 @@ class ApiTestCase(unittest.TestCase):
                 "spam":[],
             }
         self.connection.register([MyDoc])
-        mydoc = self.collection.MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
         id = mydoc.save()
         assert isinstance(id['_id'], unicode)
         assert id['_id'].startswith("MyDoc"), id
 
-        saved_doc = self.collection.find_one({"bla.bar":42})
+        saved_doc = self.col.find_one({"bla.bar":42})
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
 
-        mydoc = self.collection.MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 43
         id = mydoc.save(uuid=False)
         assert isinstance(id['_id'], ObjectId)
 
-        saved_doc = self.collection.find_one({"bla.bar":43})
+        saved_doc = self.col.find_one({"bla.bar":43})
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
 
@@ -80,9 +75,9 @@ class ApiTestCase(unittest.TestCase):
             structure = {
                 "foo":int,
             }
+        self.connection.register([MyDoc])
         mydoc = MyDoc()
         mydoc["foo"] = 1
-        self.connection.register([MyDoc])
         self.assertRaises(ConnectionError, mydoc.save)
 
     def test_delete(self):
@@ -91,15 +86,15 @@ class ApiTestCase(unittest.TestCase):
                 "foo":int,
             }
         self.connection.register([MyDoc])
-        mydoc = self.collection.MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc['_id'] = 'foo'
         mydoc["foo"] = 1
         mydoc.save()
-        assert self.collection.MyDoc.all().count() == 1
-        mydoc = self.collection.MyDoc.get_from_id('foo')
+        assert self.col.MyDoc.find().count() == 1
+        mydoc = self.col.MyDoc.get_from_id('foo')
         assert mydoc['foo'] == 1
         mydoc.delete()
-        assert self.collection.MyDoc.all().count() == 0
+        assert self.col.MyDoc.find().count() == 0
         
     def test_generate_skeleton(self):
         class A(SchemaDocument):
@@ -140,15 +135,15 @@ class ApiTestCase(unittest.TestCase):
                 "foo":int,
             }
         self.connection.register([MyDoc])
-        mydoc = self.collection.MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc["_id"] = "bar"
         mydoc["foo"] = 3
         mydoc.save()
-        fetched_doc = self.collection.MyDoc.get_from_id("bar")
+        fetched_doc = self.col.MyDoc.get_from_id("bar")
         assert mydoc == fetched_doc
         assert isinstance(fetched_doc, MyDoc)
 
-    def test_all(self):
+    def test_find(self):
         class MyDoc(Document):
             structure = {
                 "foo":int,
@@ -156,46 +151,46 @@ class ApiTestCase(unittest.TestCase):
             }
         self.connection.register([MyDoc])
         for i in range(10):
-            mydoc = self.collection.MyDoc()
+            mydoc = self.col.MyDoc()
             mydoc["foo"] = i
             mydoc["bar"]['bla'] = i
             mydoc.save()
-        for i in self.collection.MyDoc.all({"foo":{"$gt":4}}):
+        for i in self.col.MyDoc.find({"foo":{"$gt":4}}):
             assert isinstance(i, MyDoc)
-        docs_list = [i["foo"] for i in self.collection.MyDoc.all({"foo":{"$gt":4}})]
+        docs_list = [i["foo"] for i in self.col.MyDoc.find({"foo":{"$gt":4}})]
         assert docs_list == [5,6,7,8,9]
         # using limit/count
-        assert self.collection.MyDoc.all().count() == 10, self.collection.MyDoc.all().count()
-        assert self.collection.MyDoc.all().limit(1).count() == 10, self.collection.MyDoc.all().limit(1).count()
-        assert self.collection.MyDoc.all().where('this.foo').count() == 9 #{'foo':0} is not taken
-        assert self.collection.MyDoc.all().where('this.bar.bla').count() == 9 #{'foo':0} is not taken
-        assert self.collection.MyDoc.all().hint([('foo', 1)])
-        assert [i['foo'] for i in self.collection.MyDoc.all().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
-        allPlans = self.collection.MyDoc.all().explain()['allPlans']
+        assert self.col.MyDoc.find().count() == 10, self.col.MyDoc.find().count()
+        assert self.col.MyDoc.find().limit(1).count() == 10, self.col.MyDoc.find().limit(1).count()
+        assert self.col.MyDoc.find().where('this.foo').count() == 9 #{'foo':0} is not taken
+        assert self.col.MyDoc.find().where('this.bar.bla').count() == 9 #{'foo':0} is not taken
+        assert self.col.MyDoc.find().hint([('foo', 1)])
+        assert [i['foo'] for i in self.col.MyDoc.find().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
+        allPlans = self.col.MyDoc.find().explain()['allPlans']
         assert allPlans == [{u'cursor': u'BasicCursor', u'startKey': {}, u'endKey': {}}]
-        next_doc =  self.collection.MyDoc.all().sort('foo',1).next()
+        next_doc =  self.col.MyDoc.find().sort('foo',1).next()
         assert isinstance(next_doc, MyDoc)
         assert next_doc['foo'] == 0
-        assert len(list(self.collection.MyDoc.all().skip(3))) == 7, len(list(self.collection.MyDoc.all().skip(3)))
-        assert isinstance(self.collection.MyDoc.all().skip(3), MongoDocumentCursor)
+        assert len(list(self.col.MyDoc.find().skip(3))) == 7, len(list(self.col.MyDoc.find().skip(3)))
+        assert isinstance(self.col.MyDoc.find().skip(3), MongoDocumentCursor)
 
-    def test_one(self):
+    def test_find_one(self):
         class MyDoc(Document):
             structure = {
                 "foo":int
             }
         self.connection.register([MyDoc])
-        mydoc = self.collection.MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc['foo'] = 0
         mydoc.save()
-        mydoc = self.collection.MyDoc.one()
+        mydoc = self.col.MyDoc.find_one()
         assert mydoc["foo"] == 0
         assert isinstance(mydoc, MyDoc)
         for i in range(10):
-            mydoc = self.collection.MyDoc()
+            mydoc = self.col.MyDoc()
             mydoc["foo"] = i
             mydoc.save()
-        self.assertRaises(MultipleResultsFound, self.collection.MyDoc.one)
+        self.assertRaises(MultipleResultsFound, self.col.MyDoc.find_one)
 
     def test_fetch(self):
         class DocA(Document):
@@ -210,48 +205,45 @@ class ApiTestCase(unittest.TestCase):
         self.connection.register([DocB])
         # creating DocA
         for i in range(10):
-            mydoc = self.collection.DocA()
+            mydoc = self.col.DocA()
             mydoc['doc_a']["foo"] = i
             mydoc.save()
         # creating DocB
         for i in range(5):
-            mydoc = self.collection.DocB()
+            mydoc = self.col.DocB()
             mydoc['doc_b']["bar"] = i
             mydoc.save()
 
         # all get all documents present in the collection (ie: 15 here)
-        assert self.collection.DocA.all().count() == 15
+        assert self.col.DocA.find().count() == 15
 
         # fetch get only the corresponding documents:
-        assert self.collection.DocA.fetch().count() == 10, self.collection.DocA.fetch().count()
-        assert self.collection.DocB.fetch().count() == 5
+        assert self.col.DocA.fetch().count() == 10, self.col.DocA.fetch().count()
+        assert self.col.DocB.fetch().count() == 5
         index = 0
-        for doc in self.collection.DocA.fetch():
+        for doc in self.col.DocA.fetch():
             assert doc == {'_id':doc['_id'], 'doc_a':{'foo':index}}, doc
             index += 1
 
         #assert DocA.fetch().limit(12).count() == 10, DocA.fetch().limit(1).count() # ???
-        assert self.collection.DocA.fetch().where('this.doc_a.foo > 3').count() == 6
+        assert self.col.DocA.fetch().where('this.doc_a.foo > 3').count() == 6
 
     def test_fetch_with_query(self):
         class DocA(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "bar":unicode,
                 "doc_a":{'foo':int},
             }
         class DocB(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "bar":unicode,
                 "doc_b":{"bar":int},
             }
+        self.connection.register([DocA, DocB])
 
         # creating DocA
         for i in range(10):
-            mydoc = DocA()
+            mydoc = self.col.DocA()
             if i % 2 == 0:
                 mydoc['bar'] = u"spam"
             else:
@@ -260,7 +252,7 @@ class ApiTestCase(unittest.TestCase):
             mydoc.save()
         # creating DocB
         for i in range(5):
-            mydoc = DocB()
+            mydoc = self.col.DocB()
             if i % 2 == 0:
                 mydoc['bar'] = u"spam"
             else:
@@ -269,17 +261,15 @@ class ApiTestCase(unittest.TestCase):
             mydoc.save()
 
         # all get all documents present in the collection (ie: 15 here)
-        assert DocA.all().count() == 15
-        assert DocA.fetch().count() == 10, DocA.fetch().count()
-        assert DocB.fetch().count() == 5
+        assert self.col.DocA.find().count() == 15
+        assert self.col.DocA.fetch().count() == 10, self.col.DocA.fetch().count()
+        assert self.col.DocB.fetch().count() == 5
 
-        assert DocA.fetch({'bar':'spam'}).count() == 5
-        assert DocB.fetch({'bar':'spam'}).count() == 3
+        assert self.col.DocA.fetch({'bar':'spam'}).count() == 5
+        assert self.col.DocB.fetch({'bar':'spam'}).count() == 3
 
     def test_fetch_inheritance(self):
         class Doc(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "doc":{'bla':int},
             }
@@ -291,41 +281,40 @@ class ApiTestCase(unittest.TestCase):
             structure = {
                 "doc_b":{"bar":int},
             }
+        self.connection.register([Doc, DocA, DocB])
         # creating DocA
         for i in range(10):
-            mydoc = DocA()
+            mydoc = self.col.DocA()
             mydoc['doc']["bla"] = i+1
             mydoc['doc_a']["foo"] = i
             mydoc.save()
         # creating DocB
         for i in range(5):
-            mydoc = DocB()
+            mydoc = self.col.DocB()
             mydoc['doc']["bla"] = i+1
             mydoc['doc_a']["foo"] = i
             mydoc['doc_b']["bar"] = i+2
             mydoc.save()
 
         # all get all documents present in the collection (ie: 15 here)
-        assert DocA.all().count() == 15
+        assert self.col.DocA.find().count() == 15
 
         # fetch get only the corresponding documents:
         # DocB is a subclass of DocA and have all fields of DocA so
         # we get all doc here
-        assert DocA.fetch().count() == 15, DocA.fetch().count()
+        assert self.col.DocA.fetch().count() == 15, self.col.DocA.fetch().count()
         # but only the DocB as DocA does not have a 'doc_a' field
-        assert DocB.fetch().count() == 5
+        assert self.col.DocB.fetch().count() == 5
         index = 0
-        for doc in DocB.fetch():
+        for doc in self.col.DocB.fetch():
             assert doc == {'_id':doc['_id'], 'doc_a':{'foo':index}, 'doc':{'bla':index+1}, "doc_b":{'bar':index+2}}, (doc, index)
             index += 1
 
         #assert DocA.fetch().limit(12).count() == 10, DocA.fetch().limit(1).count() # ???
-        assert DocA.fetch().where('this.doc_a.foo > 3').count() == 7
+        assert self.col.DocA.fetch().where('this.doc_a.foo > 3').count() == 7
 
     def test_fetch_one(self):
         class DocA(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "doc_a":{'foo':int},
             }
@@ -333,70 +322,71 @@ class ApiTestCase(unittest.TestCase):
             structure = {
                 "doc_b":{"bar":int},
             }
+        self.connection.register([DocA, DocB])
 
         # creating DocA
-        mydoc = DocA()
+        mydoc = self.col.DocA()
         mydoc['doc_a']["foo"] = 1
         mydoc.save()
         # creating DocB
-        mydoc = DocB()
+        mydoc = self.col.DocB()
         mydoc['doc_b']["bar"] = 2
         mydoc.save()
 
-        docb = DocB.fetch_one()
+        docb = self.col.DocB.fetch_one()
         assert docb
         assert isinstance(docb, DocB)
-        self.assertRaises(MultipleResultsFound, DocA.fetch_one)
+        self.assertRaises(MultipleResultsFound, self.col.DocA.fetch_one)
 
     def test_query_with_passing_collection(self):
         class MyDoc(Document):
-            db_name = 'test'
             structure = {
                 'foo':int,
             }
+        self.connection.register([MyDoc])
+
+        mongokit = self.connection.test.mongokit
 
         # boostraping
         for i in range(10):
-            mydoc = MyDoc(collection_name='mongokit')
+            mydoc = mongokit.MyDoc()
             mydoc['_id'] = unicode(i)
             mydoc['foo'] = i
             mydoc.save()
 
         # get_from_id
-        mongokit = MyDoc.get_collection(collection_name = 'mongokit')
-        fetched_doc = MyDoc.get_from_id('4', collection=mongokit)
+        fetched_doc = mongokit.MyDoc.get_from_id('4')
         assert fetched_doc.collection == mongokit
 
         # all
-        fetched_docs = MyDoc.all({'foo':{'$gt':2}}, collection=mongokit)
+        fetched_docs = mongokit.MyDoc.find({'foo':{'$gt':2}})
         assert fetched_docs.count() == 7
         for doc in fetched_docs:
             assert doc.collection == mongokit
 
         # one
-        doc = MyDoc.one({'foo':2}, collection=mongokit)
+        doc = mongokit.MyDoc.fetch_one({'foo':2})
         assert doc.collection == mongokit
 
         # fetch
-        fetched_docs = MyDoc.fetch({'foo':{'$gt':2}}, collection=mongokit)
+        fetched_docs = mongokit.MyDoc.fetch({'foo':{'$gt':2}})
         assert fetched_docs.count() == 7
         for doc in fetched_docs:
             assert doc.collection == mongokit
 
         # fetch_one
-        doc = MyDoc.fetch_one({'foo':2}, collection=mongokit)
+        doc = mongokit.MyDoc.fetch_one({'foo':2})
         assert doc.collection == mongokit
 
     def test_skip_validation(self):
         class DocA(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "doc_a":{'foo':int},
             }
+        self.connection.register([DocA])
 
         # creating DocA
-        mydoc = DocA()
+        mydoc = self.col.DocA()
         mydoc['doc_a']["foo"] = u'bar' 
         self.assertRaises(SchemaTypeError, mydoc.save)
         mydoc.save(validate=False)
@@ -404,7 +394,7 @@ class ApiTestCase(unittest.TestCase):
         DocA.skip_validation = True
 
         # creating DocA
-        mydoc = DocA()
+        mydoc = self.col.DocA()
         mydoc['doc_a']["foo"] = u'foo' 
         self.assertRaises(SchemaTypeError, mydoc.save, validate=True)
         mydoc.save()
@@ -412,138 +402,89 @@ class ApiTestCase(unittest.TestCase):
 
     def test_connection(self):
         class DocA(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "doc_a":{'foo':int},
             }
-        assert DocA.connection == Connection("localhost", 27017)
-        assert DocA.collection == Connection("localhost", 27017)['test']['mongokit']
+        self.connection.register([DocA])
+        assertion = True
+        try:
+            DocA.connection
+        except AttributeError:
+            assertion = True
+        assert assertion
+        try:
+            DocA.db
+        except AttributeError:
+            assertion = True
+        assert assertion
+        try:
+            DocA.collection
+        except AttributeError:
+            assertion = True
+        assert assertion
 
- 
-        class DocB(DocA):pass
-        assert DocB.connection == Connection("localhost", 27017)
-        assert DocB.collection == Connection("localhost", 27017)['test']['mongokit']
-
-        class DocC(DocB):
-            db_host = "127.0.0.2"
-        assert DocC.connection == Connection("127.0.0.2", 27017), DocC.connection
-        assert DocC.collection == Connection("127.0.0.2", 27017)['test']['mongokit']
-
-        class DocD(DocC):
-            db_name = "foo"
-        assert DocD.connection == Connection("127.0.0.2", 27017), DocD.connection
-        assert DocD.collection == Connection("127.0.0.2", 27017)['foo']['mongokit'], DocD.collection
-
-        class DocWithDefaultConnection(Document):
-            structure = {}
-
-        assert DocWithDefaultConnection.connection == Connection("localhost", 27017)
-
-        class ShareConnection(Document):
-            connection = Connection()
-            structure = {}
-
-        class ShareDocA(ShareConnection):pass
-        class ShareDocB(ShareConnection):pass
-        assert ShareDocA.connection == ShareDocB.connection
-        assert id(ShareDocA.connection) == id(ShareDocB.connection)
-
-    def test_get_collection(self):
-        class DocA(Document):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "doc_a":{'foo':int},
-            }
-        assert DocA.collection == Connection("localhost", 27017)['test']['mongokit']
-        assert DocA.get_collection(db_name="foo", collection_name="bar") == Connection('localhost', 27017)['foo']['bar']
-        assert DocA.get_collection(collection_name="bar") == Connection('localhost', 27017)['test']['bar']
-        assert DocA.get_collection(db_host="127.0.0.2", collection_name="bar") == Connection('127.0.0.2', 27017)['test']['bar']
-
+        assert self.col.DocA.connection == Connection("localhost", 27017)
+        assert self.col.DocA.collection == Connection("localhost", 27017)['test']['mongokit']
+        assert self.col.DocA.db == Connection("localhost", 27017)['test']
 
     def test_all_with_dynamic_collection(self):
         class Section(Document):
-            db_name = 'test'
             structure = {"section":int}
+        self.connection.register([Section])
 
-        s = Section(collection_name='section')
+        s = self.connection.test.section.Section()
         s['section'] = 1
         s.save()
 
-        s = Section(collection_name='section')
+        s = self.connection.test.section.Section()
         s['section'] = 2
         s.save()
 
-        s = Section(collection_name='other_section')
+        s = self.connection.test.other_section.Section()
         s['section'] = 1
         s.save()
 
-        s = Section(collection_name='other_section')
+        s = self.connection.test.other_section.Section()
         s['section'] = 2
         s.save()
 
 
-        sect_col = Section.get_collection(collection_name='section')
-        sects = [s.collection.name() == 'section' and s.db.name() == 'test' for s in Section.all({}, collection=sect_col)] 
-        print  [s for s in Section.all(collection=sect_col)] 
+        sect_col = self.connection.test.section
+        sects = [s.collection.name == 'section' and s.db.name == 'test' for s in sect_col.Section.find({})] 
+        print  [s for s in sect_col.Section.find()] 
         assert len(sects) == 2, len(sects)
         assert any(sects)
-        sects = [s.collection.name() == 'section' and s.db.name() == 'test' for s in Section.fetch( collection=sect_col)]
+        sects = [s.collection.name == 'section' and s.db.name == 'test' for s in sect_col.Section.fetch()]
         assert len(sects) == 2
         assert any(sects)
 
-        sect_col = Section.get_collection(collection_name='other_section')
-        sects = [s.collection.name() == 'other_section' and s.db.name() == 'test' for s in Section.all({}, collection=sect_col)] 
+        sect_col = self.connection.test.other_section
+        sects = [s.collection.name == 'other_section' and s.db.name == 'test' for s in sect_col.Section.find({})] 
         assert len(sects) == 2
         assert any(sects)
-        sects = [s.collection.name() == 'other_section' and s.db.name() == 'test' for s in Section.fetch( collection=sect_col)]
+        sects = [s.collection.name == 'other_section' and s.db.name == 'test' for s in sect_col.Section.fetch()]
         assert len(sects) == 2
         assert any(sects)
-
-    def test_with_dynamic_connection(self):
-        class Section(Document):
-            db_name = 'test'
-            collection_name = 'mongokit'
-            structure = {"section":int}
-
-        sec = Section(connection = CONNECTION)
-        sec['section'] = 1
-        sec.save()
-
-        sec2 = Section(connection = CONNECTION, collection_name='bla')
-        sec2['section'] = 2
-        sec2.save()
-
-        assert Section.all(collection=Section.collection).count() == 1
-        assert Section.all(collection=CONNECTION['test']['bla']).count() == 1
 
     def test_get_collection_with_connection(self):
         class Section(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {"section":int}
-
         connection = Connection('127.0.0.3')
-        col = Section.get_collection(connection = connection)
-        assert col.database().connection() == connection, connection
-        assert col.database().name() == 'test'
-        assert col.name() == 'mongokit'
+        connection.register([Section])
+        col = connection.test.mongokit
+        assert col.database.connection == col.Section.connection
+        assert col.database.name == 'test' == col.Section.db.name
+        assert col.name == 'mongokit' == col.Section.collection.name
 
     def test_with_collection_name_and_no_db_name(self):
         class Section(Document):
             collection_name = 'mongokit'
             structure = {"section":int}
-
-        sec = Section()
-        sec['section'] = 1
-        self.assertRaises(ConnectionError, sec.save)
-
-        sec2 = Section(db_name='test')
+        self.connection.register([Section])
+        sec2 = self.connection.test.mongokit.Section()
         sec2['section'] = 2
         sec2.save()
-
-        assert Section.get_collection(db_name='test', collection_name='mongokit').find().count() == 1
+        assert self.connection.test.mongokit.find().count() == 1
 
     def test_get_size(self):
         class MyDoc(Document):
@@ -570,45 +511,22 @@ class ApiTestCase(unittest.TestCase):
         class MyDoc(Document):
             db_name = "test"
             collection_name = "mongokit"
-            structure = {"foo":unicode}
-
-        for i in xrange(2000):
-            mydoc = MyDoc()
-            mydoc['foo'] = unicode(i)
-            mydoc.save()
-
-        import time
-        start = time.time()
-        mydocs = [i for i in MyDoc.all()]
-        end = time.time()
-        wrap_time = end-start
-
-        start = time.time()
-        mydocs = [i for i in MyDoc.all(wrap=False)]
-        end = time.time()
-        no_wrap_time = end-start
-
-        assert no_wrap_time < wrap_time
-
-    def test_sort_with_no_wrap(self):
-        class MyDoc(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {"foo":int}
+        self.connection.register([MyDoc])
 
         for i in xrange(2000):
-            mydoc = MyDoc()
+            mydoc = self.col.MyDoc()
             mydoc['foo'] = i
             mydoc.save()
 
         import time
         start = time.time()
-        wrapped_mydocs = [i for i in MyDoc.all().sort('foo', -1)]
+        wrapped_mydocs = [i for i in self.col.MyDoc.find()]
         end = time.time()
         wrap_time = end-start
 
         start = time.time()
-        mydocs = [i for i in MyDoc.all(wrap=False).sort('foo', -1)]
+        mydocs = [i for i in self.col.find().sort('foo', -1)]
         end = time.time()
         no_wrap_time = end-start
 
@@ -619,4 +537,4 @@ class ApiTestCase(unittest.TestCase):
         assert [i['foo'] for i in mydocs] == list(reversed(range(2000))), [i['foo'] for i in mydocs]
         assert mydocs[0]['foo'] == 1999, mydocs[0]['foo']
 
-        assert not isinstance(MyDoc.all(wrap=False).sort('foo', -1).next(), MyDoc)
+        assert not isinstance(self.col.find().sort('foo', -1).next(), MyDoc)
