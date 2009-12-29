@@ -31,20 +31,18 @@ from mongokit import *
 from pymongo.objectid import ObjectId
 import datetime
 
-CONNECTION = Connection()
 
 class JsonTestCase(unittest.TestCase):
     def setUp(self):
-        self.collection = CONNECTION['test']['mongokit']
+        self.connection = Connection()
+        self.col = self.connection['test']['mongokit']
         
     def tearDown(self):
-        CONNECTION['test'].drop_collection('mongokit')
-        CONNECTION['test'].drop_collection('versionned_mongokit')
+        self.connection['test'].drop_collection('mongokit')
+        self.connection['test'].drop_collection('versionned_mongokit')
 
     def test_simple_to_json(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class MyDoc(Document):
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -52,7 +50,8 @@ class JsonTestCase(unittest.TestCase):
                 },
                 "spam":[],
             }
-        mydoc = MyDoc()
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc'
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
@@ -61,7 +60,7 @@ class JsonTestCase(unittest.TestCase):
         assert  mydoc.to_json() == '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
         assert  mydoc.to_json_type() == {"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
-        mydoc = MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc2'
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
@@ -81,15 +80,14 @@ class JsonTestCase(unittest.TestCase):
                 if value is not None:
                     return float(value)
 
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class MyDoc(Document):
             structure = {
                 "doc":{
                     "foo":CustomFloat(),
                 },
             }
-        mydoc = MyDoc()
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc'
         mydoc['doc']['foo'] = 3.70
         mydoc.save()
@@ -97,9 +95,7 @@ class JsonTestCase(unittest.TestCase):
         assert mydoc.to_json_type() == {"doc": {"foo": "3.7"}, "_id": "mydoc"}
 
     def test_to_json_embeded_doc(self):
-        class EmbedDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class EmbedDoc(Document):
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -107,22 +103,21 @@ class JsonTestCase(unittest.TestCase):
                 },
                 "spam":[],
             }
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class MyDoc(Document):
             structure = {
                 "doc":{
                     "embed":EmbedDoc,
                 },
             }
             use_autorefs = True
-        embed = EmbedDoc()
+        self.connection.register([MyDoc, EmbedDoc])
+        embed = self.col.EmbedDoc()
         embed['_id'] = u'embed'
         embed["bla"]["foo"] = u"bar"
         embed["bla"]["bar"] = 42
         embed['spam'] = range(10)
         embed.save()
-        mydoc = MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc'
         mydoc['doc']['embed'] = embed
         mydoc.save()
@@ -130,9 +125,7 @@ class JsonTestCase(unittest.TestCase):
         assert mydoc.to_json_type() == {"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}
 
     def test_simple_from_json(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class MyDoc(Document):
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -140,14 +133,13 @@ class JsonTestCase(unittest.TestCase):
                 },
                 "spam":[],
             }
+        self.connection.register([MyDoc])
         json = '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
-        mydoc = MyDoc.from_json(json)
+        mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
     def test_simple_from_json(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class MyDoc(Document):
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -155,14 +147,13 @@ class JsonTestCase(unittest.TestCase):
                 },
                 "spam":[datetime.datetime],
             }
+        self.connection.register([MyDoc])
         json = '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
-        mydoc = MyDoc.from_json(json)
+        mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'_id': 'mydoc2', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2008, 8, 8, 0, 0)]}
 
     def test_from_json_embeded_doc(self):
-        class EmbedDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class EmbedDoc(Document):
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -170,24 +161,21 @@ class JsonTestCase(unittest.TestCase):
                 },
                 "spam":[],
             }
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class MyDoc(Document):
             structure = {
                 "doc":{
                     "embed":EmbedDoc,
                 },
             }
             use_autorefs = True
+        self.connection.register([MyDoc, EmbedDoc])
         json = '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
-        mydoc = MyDoc.from_json(json)
+        mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}, mydoc
         assert isinstance(mydoc['doc']['embed'], EmbedDoc)
 
     def test_simple_to_json_from_cursor(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class MyDoc(Document):
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -195,7 +183,8 @@ class JsonTestCase(unittest.TestCase):
                 },
                 "spam":[],
             }
-        mydoc = MyDoc()
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc'
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
@@ -204,7 +193,7 @@ class JsonTestCase(unittest.TestCase):
         json = mydoc.to_json()
         assert json == '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
 
-        mydoc2 = MyDoc()
+        mydoc2 = self.col.MyDoc()
         mydoc2['_id'] = u'mydoc2'
         mydoc2["bla"]["foo"] = u"bla"
         mydoc2["bla"]["bar"] = 32
@@ -212,5 +201,5 @@ class JsonTestCase(unittest.TestCase):
         mydoc2.save()
         json2 = mydoc2.to_json()
 
-        assert [i.to_json() for i in MyDoc.fetch()] == [json, json2]
+        assert [i.to_json() for i in self.col.MyDoc.fetch()] == [json, json2]
 

@@ -26,6 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymongo.bson import InvalidDocument
+from pymongo.connection import OperationFailure
 class ConnectionError(Exception):pass
 class MongoAuthException(Exception):pass
 class MultipleResultsFound(Exception):pass

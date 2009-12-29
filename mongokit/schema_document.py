@@ -28,6 +28,7 @@
 import datetime
 import re
 import logging
+from copy import deepcopy
 
 log = logging.getLogger(__name__)
 
@@ -252,7 +253,8 @@ class SchemaDocument(dict):
         if gen_skel:
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
-        self._process_custom_type(False, self, self.structure)
+        else:
+            self._process_custom_type(False, self, self.structure)
         ## building required fields namespace
         if not self.skip_validation:
             self._required_namespace = set([])
@@ -320,7 +322,6 @@ class SchemaDocument(dict):
                     elif isinstance(struct[key][0], datetime.datetime):
                         struct[key] = [totimestamp(obj) for obj in struct[key]]
         # we don't want to touch our document so we create another object
-        from copy import deepcopy
         self._process_custom_type(True, self, self.structure)
         obj = deepcopy(self)
         self._process_custom_type(False, self, self.structure)
@@ -478,7 +479,7 @@ class SchemaDocument(dict):
                     elif (struct[key] not in self._authorized_types):
                         ok = False
                         for auth_type in self._authorized_types:
-                            if issubclass(struct[key], auth_type):
+                            if isinstance(struct[key], auth_type):
                                 ok = True
                         if not ok:
                             raise StructureError(
@@ -728,6 +729,16 @@ class SchemaDocument(dict):
                         doc[key] = struct[key].to_python(doc[key])
 
     def _set_default_fields(self, doc, struct, path = ""):
+        default_values = deepcopy(self.default_values)
+        for k,v in default_values.iteritems():
+            if callable(v):
+                if hasattr(v, '_non_callable'):
+                    if v._non_callable is True:
+                        continue
+                default_values[k] = v()
+        self.update(DotExpandedDict(default_values))
+
+    def __set_default_fields(self, doc, struct, path = ""):
         # TODO check this out, this method must be restructured
         for key in struct:
             if type(key) is type:
@@ -866,7 +877,10 @@ class SchemaDocument(dict):
                     if type(struct[key]) is dict and self.use_dot_notation:
                         doc[key] = DotedDict()
                     else:
-                        doc[key] = type(struct[key])()
+                        if callable(struct[key]):
+                            doc[key] = struct[key]()
+                        else:
+                            doc[key] = type(struct[key])()
                 elif struct[key] is dict:
                     doc[key] = {}
                 elif isinstance(struct[key], list):
@@ -883,3 +897,36 @@ class SchemaDocument(dict):
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
 
+class DotExpandedDict(dict): 
+    """ 
+    A special dictionary constructor that takes a dictionary in which the keys 
+    may contain dots to specify inner dictionaries. It's confusing, but this 
+    example should make sense. 
+
+    >>> d = DotExpandedDict({'person.1.firstname': ['Simon'], \ 
+          'person.1.lastname': ['Willison'], \ 
+          'person.2.firstname': ['Adrian'], \ 
+          'person.2.lastname': ['Holovaty']}) 
+    >>> d 
+    {'person': {'1': {'lastname': ['Willison'], 'firstname': ['Simon']}, '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}}} 
+    >>> d['person'] 
+    {'1': {'lastname': ['Willison'], 'firstname': ['Simon']}, '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}} 
+    >>> d['person']['1'] 
+    {'lastname': ['Willison'], 'firstname': ['Simon']} 
+
+    # Gotcha: Results are unpredictable if the dots are "uneven": 
+    >>> DotExpandedDict({'c.1': 2, 'c.2': 3, 'c': 1}) 
+    {'c': 1} 
+    """ 
+    # code taken from Django source code http://code.djangoproject.com/
+    def __init__(self, key_to_list_mapping): 
+        for k, v in key_to_list_mapping.items(): 
+            current = self 
+            bits = k.split('.') 
+            for bit in bits[:-1]: 
+               current = current.setdefault(bit, {}) 
+            # Now assign value to current position 
+            try: 
+                current[bits[-1]] = v 
+            except TypeError: # Special-case if current isn't a dict. 
+                current = {bits[-1]: v} 

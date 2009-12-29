@@ -30,20 +30,15 @@ import unittest
 from mongokit import *
 
 class DescriptorsTestCase(unittest.TestCase):
-    def setUp(self):
-        self.collection = Connection()['test']['mongokit']
         
-    def tearDown(self):
-        Connection()['test'].drop_collection('mongokit')
-
     def test_duplicate_required(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {"foo":unicode}
             required_fields = ["foo", "foo"]
         self.assertRaises(DuplicateRequiredError, MyDoc)
     
     def test_flat_required(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":unicode,
             }
@@ -52,7 +47,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, mydoc.validate )
              
     def test_nested_required(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -63,7 +58,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, mydoc.validate )
 
     def test_list_required(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":[]
             }
@@ -72,7 +67,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, mydoc.validate )
 
     def test_list_required2(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{int:[]}
             }
@@ -82,7 +77,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
 
     def test_dict_required(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{}
             }
@@ -91,7 +86,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, mydoc.validate )
 
     def test_dict_nested_required(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{unicode:{"bar":int}}
             }
@@ -100,7 +95,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(RequireFieldError, mydoc.validate )
 
     def test_default_values(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":int
             }
@@ -110,7 +105,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
     def test_default_values_from_function(self):
         import time
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":float
             }
@@ -120,7 +115,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
     def test_default_values_from_function2(self):
         import time
-        class Doc( MongoDocument ):
+        class Doc( Document ):
             structure = {
                 "doc":{
                     "creation_date":float,
@@ -137,7 +132,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
     def test_default_values_from_function_nested(self):
         import time
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{"bar":float}
             }
@@ -148,7 +143,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
     def _test_default_values_from_function_througt_types(self):
         # XXX TODO
-#        class MyDoc(MongoDocument):
+#        class MyDoc(Document):
 #            structure = {
 #                "foo":{int:float}
 #            }
@@ -160,7 +155,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
         # but
         import time
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{int:float}
             }
@@ -170,7 +165,7 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc['foo'][3] > 0
      
     def test_default_list_values(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":[int]
             }
@@ -180,7 +175,7 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc.validate()
 
     def test_default_list_nested_values(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{
                     "bar":[int]
@@ -191,7 +186,7 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc["foo"]["bar"] == [42,3]
 
     def test_default_dict_values(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{}
             }
@@ -200,7 +195,7 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc["foo"] == {"bar":42}, mydoc
          
     def test_default_dict_checked_values(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{unicode:int}
             }
@@ -209,7 +204,7 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc["foo"] == {"bar":42}, mydoc
 
     def test_default_dict_nested_checked_values(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{unicode:{"bla":int, "ble":unicode}}
             }
@@ -218,7 +213,7 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc["foo"] == {u"bar":{"bla":42, "ble":u"arf"}}, mydoc
            
     def test_validators(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":unicode,
                 "bar":{
@@ -240,7 +235,7 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc.validate()
 
     def test_validators_througt_types(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "bar":{
                     int:{"bla":int}
@@ -255,7 +250,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
 
     def test_multiple_validators(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":unicode,
             }
@@ -271,7 +266,7 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc.validate()
 
     def test_complexe_validation(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":unicode,
                 "bar":{
@@ -296,7 +291,7 @@ class DescriptorsTestCase(unittest.TestCase):
 
     def test_complexe_validation2(self):
        
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":unicode,
                 "bar":{"bla":unicode}
@@ -314,7 +309,7 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc["bar"]["bla"] == "3", mydoc
 
     def test_complexe_validation3(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":unicode,
                 "bar":{
@@ -342,7 +337,7 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc['ble'] is None
 
     def test_bad_default_values(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{"bar":int},
             }
@@ -350,7 +345,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(ValueError, MyDoc)
 
     def test_bad_validators(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             structure = {
                 "foo":{"bar":int},
             }
@@ -358,7 +353,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises(ValueError, MyDoc)
 
     def test_bad_required(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             db_name = "test"
             collection_name = "mongokit"
             structure = {
@@ -372,7 +367,7 @@ class DescriptorsTestCase(unittest.TestCase):
         self.assertRaises( ValueError, MyDoc )
         
     def test_nested_structure2(self):
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             db_name = "test"
             collection_name = "mongokit"
             structure = {

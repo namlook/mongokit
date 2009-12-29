@@ -30,7 +30,7 @@ class MongoDocumentCursor(object):
     def __init__(self, cursor, cls, wrap):
         self._cursor = cursor
         self._collection = cursor._Cursor__collection
-        self._db = self._collection.database()
+        self._db = self._collection.database
         self._class_object = cls
         self.wrap=wrap
 

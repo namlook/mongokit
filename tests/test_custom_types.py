@@ -31,10 +31,12 @@ from mongokit import *
 
 class CustomTypesTestCase(unittest.TestCase):
     def setUp(self):
-        self.collection = Connection()['test']['mongokit']
+        self.connection = Connection()
+        self.col = self.connection['test']['mongokit']
         
     def tearDown(self):
-        Connection()['test'].drop_collection('mongokit')
+        self.connection['test'].drop_collection('mongokit')
+        self.connection['test'].drop_collection('test')
 
     def test_custom_type(self):
         import datetime
@@ -49,15 +51,14 @@ class CustomTypesTestCase(unittest.TestCase):
                 if value is not None:
                     return datetime.datetime.strptime(value, '%y-%m-%d')
                 
-        class Foo(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Foo(Document):
             structure = {
                 "date": CustomDate(),
             }
-            default_values = {'date':u'08-06-07'}
+            default_values = {'date':datetime.datetime(2008, 6, 7)}
+        self.connection.register([Foo])
             
-        foo = Foo()
+        foo = self.col.Foo()
         foo['_id'] = 1
         foo['date'] = datetime.datetime(2003,2,1)
         foo.save()
@@ -65,16 +66,16 @@ class CustomTypesTestCase(unittest.TestCase):
         assert saved_foo == {u'date': u'03-02-01', u'_id': 1}
         foo.save()
 
-        foo2 = Foo()
+        foo2 = self.col.Foo()
         foo2['_id'] = 2
         foo2.save()
         foo2.save()
         assert foo['date'] == datetime.datetime(2003,2,1), foo['date']
-        foo = Foo.get_from_id(1)
+        foo = self.col.Foo.get_from_id(1)
         assert foo['date'] == datetime.datetime(2003,2,1), foo['date']
         saved_foo =  foo.collection.find({'_id':1}).next()
         assert saved_foo['date'] == CustomDate().to_bson(datetime.datetime(2003,2,1)), saved_foo['date']
-        foo2 = Foo.get_from_id(2)
+        foo2 = self.col.Foo.get_from_id(2)
         assert foo2['date'] == datetime.datetime(2008,6,7), foo2
 
     def test_custom_type_nested(self):
@@ -89,29 +90,28 @@ class CustomTypesTestCase(unittest.TestCase):
                 if value is not None:
                     return datetime.datetime.strptime(value, '%y-%m-%d')
                 
-        class Foo(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Foo(Document):
             structure = {
                 'foo':{'date': CustomDate()},
             }
-            default_values = {'foo.date':u'08-06-07'}
+            default_values = {'foo.date':datetime.datetime(2008, 6, 7)}
+        self.connection.register([Foo])
             
-        foo = Foo()
+        foo = self.col.Foo()
         foo['_id'] = 1
         foo['foo']['date'] = datetime.datetime(2003,2,1)
         foo.save()
         foo.save()
 
-        foo2 = Foo()
+        foo2 = self.col.Foo()
         foo2['_id'] = 2
         foo2.save()
         assert foo['foo']['date'] == datetime.datetime(2003,2,1), foo['foo']['date']
-        foo = Foo.get_from_id(1)
+        foo = self.col.Foo.get_from_id(1)
         assert foo['foo']['date'] == datetime.datetime(2003,2,1)
         saved_foo =  foo.collection.find({'_id':1}).next()
         assert saved_foo['foo']['date'] == CustomDate().to_bson(datetime.datetime(2003,2,1)), foo['foo']['date']
-        foo2 = Foo.get_from_id(2)
+        foo2 = self.col.Foo.get_from_id(2)
         assert foo2['foo']['date'] == datetime.datetime(2008,6,7), foo2
 
     def test_custom_type_nested_in_list(self):
@@ -126,29 +126,30 @@ class CustomTypesTestCase(unittest.TestCase):
                 if value is not None:
                     return datetime.datetime.strptime(value, '%y-%m-%d')
                 
-        class Foo(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Foo(Document):
             structure = {
                 'foo':{'date': [CustomDate()]},
             }
-            default_values = {'foo.date':[u'08-06-07']}
+            default_values = {'foo.date':[datetime.datetime(2008, 6, 7)]}
+        self.connection.register([Foo])
             
-        foo = Foo()
+        foo = self.col.Foo()
         foo['_id'] = 1
         foo['foo']['date'].append(datetime.datetime(2003,2,1))
         foo.save()
         foo.save()
 
-        foo2 = Foo()
+        foo2 = self.col.Foo()
+        print foo2
         foo2['_id'] = 2
         foo2.save()
+
         assert foo == {'foo': {'date': [datetime.datetime(2008, 6, 7, 0, 0), datetime.datetime(2003, 2, 1, 0, 0)]}, '_id': 1}
-        foo = Foo.get_from_id(1)
+        foo = self.col.Foo.get_from_id(1)
         assert foo == {u'_id': 1, u'foo': {u'date': [datetime.datetime(2008, 6, 7, 0, 0), datetime.datetime(2003, 2, 1, 0, 0)]}}
         saved_foo =  foo.collection.find({'_id':1}).next()
         assert saved_foo == {u'_id': 1, u'foo': {u'date': [u'08-06-07', u'03-02-01']}}
-        foo2 = Foo.get_from_id(2)
+        foo2 = self.col.Foo.get_from_id(2)
         assert foo2['foo']['date'] == [datetime.datetime(2008,6,7)], foo2
 
     def test_bad_custom_types(self):
@@ -174,10 +175,8 @@ class CustomTypesTestCase(unittest.TestCase):
             def to_python(self, value):
                 return str(value)
 
-        class Receipt(MongoDocument):
+        class Receipt(Document):
             use_dot_notation = True
-            db_name = 'test'
-            collection_name = 'test'
             structure = {
                 'products': [
                       {
@@ -187,8 +186,9 @@ class CustomTypesTestCase(unittest.TestCase):
                       }
                 ]
             }
+        self.connection.register([Receipt])
           
-        r = Receipt()
+        r = self.connection.test.test.Receipt()
         r['_id'] = 'bla'
         r.products = []
         r.products.append({ 'sku': u'X-25A5F58B-61', 'qty': 1, 'price': '9.99' })
@@ -204,21 +204,19 @@ class CustomTypesTestCase(unittest.TestCase):
             mongo_type = float
             python_type = basestring
             def to_bson(self, value):
-                print "blaaa"
                 return float(value)
             def to_python(self, value):
                 return str(value)
 
-        class Receipt(MongoDocument):
-            db_name = 'test'
-            collection_name = 'test'
+        class Receipt(Document):
             structure = {
                 'foo': CustomPrice(),
                 'price': [CustomPrice()],
                 'bar':{'spam':CustomPrice()},
             }
+        self.connection.register([Receipt])
           
-        r = Receipt()
+        r = self.connection.test.test.Receipt()
         r['_id'] = 'bla'
         r['foo'] = '2.23'
         r['price'].append('9.99')
