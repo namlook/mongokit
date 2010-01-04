@@ -388,7 +388,12 @@ class ApiTestCase(unittest.TestCase):
         # creating DocA
         mydoc = self.col.DocA()
         mydoc['doc_a']["foo"] = u'bar' 
-        self.assertRaises(SchemaTypeError, mydoc.save)
+        assertion = False
+        try:
+            mydoc.save()
+        except SchemaTypeError:
+            assertion = True
+        assert assertion
         mydoc.save(validate=False)
 
         DocA.skip_validation = True

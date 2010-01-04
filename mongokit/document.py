@@ -173,7 +173,7 @@ class Document(SchemaDocument):
 
         `save()` follow the pymongo.collection.save arguments
         """
-        if validate is not None:
+        if validate is True or (validate is None and self.skip_validation is False):
             self.validate()
         else:
             if self.use_autorefs:

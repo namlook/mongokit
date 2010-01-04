@@ -472,22 +472,24 @@ class AutoRefTestCase(unittest.TestCase):
 
         assert list(self.connection.test.docb.DocB.fetch()) == [docb, docb2]
         
-    def _test_autorefs_with_dynamic_db(self):
-        """ this test will pass only when db will be implemented in pymongo's DBRef """
+    def test_autorefs_with_dynamic_db(self):
         class DocA(Document):
             structure = {'a':unicode}
 
         class DocB(Document):
             structure = {'b':DocA}
             use_autorefs = True
+        self.connection.register([DocA, DocB])
 
-        doca = DocA(db_name='test', collection_name='doca')
+        doca = self.connection.dba.mongokit.DocA()
         doca['a'] = u'bla'
         doca.save()
 
-        docb = DocB(db_name='test', collection_name='docb')
+        docb = self.connection.dbb.mongokit.DocB()
         docb['b'] = doca
         docb.save()
 
         assert docb['b']['a'] == 'bla'
+        docb = self.connection.dbb.mongokit.DocB.get_from_id(docb['_id'])
+        assert isinstance(docb['b'], DocA)
  
