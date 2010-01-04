@@ -42,37 +42,8 @@ STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
 
 log = logging.getLogger(__name__)
 
-class RelatedProperties(object):
-    def __init__(self, descriptor, doc):
-        self._descriptor = descriptor
-        self._doc = doc
-        def call_func(self, query=None):
-            _query = {}
-            _query.update(self.query)
-            if query is not None:
-                _query.update(query)
-            return self.obj.fetch(_query)
-        for key in self._descriptor:
-            desc = self._descriptor[key]
-            if not callable(desc['target']):
-                fuc = lambda x: {desc['target']:x}
-            else:
-                fuc = desc['target']
-            if desc.get('autoref',False):
-                desc['query'] = fuc(pymongo.dbref.DBRef(database=self._doc.db.name, collection=self._doc.collection.name, id=self._doc['_id']))
-            else:
-                desc['query'] = fuc(self._doc['_id'])
-            methods = {
-              'query':self._descriptor[key]['query'],
-              '__call__':call_func,
-              'obj':self._descriptor[key]['class'],
-            }
-            setattr(self, key, type(key, (object,), methods)())
-
 class Document(SchemaDocument):
 
-    belongs_to = {}
-    related_to = {}
     skip_validation = False
     use_autorefs = False
     indexes = []
@@ -100,16 +71,6 @@ class Document(SchemaDocument):
         self._dbrefs = {}
         if self.use_autorefs and collection:
             self._make_reference(self, self.structure)
-        # cascade feature
-        self._belongs_to = None
-        # related feature
-        self._from_doc = False
-        self._related_loaded = False
-        if doc:
-            self._from_doc = True
-            if self.related_to:
-                self.related = RelatedProperties(self.related_to, self)
-                self._related_loaded = True
         self._non_callable = False
 
     def validate(self):
@@ -213,37 +174,21 @@ class Document(SchemaDocument):
         `save()` follow the pymongo.collection.save arguments
         """
         if validate is not None:
-            if validate or self.belongs_to:
-                self.validate()
+            self.validate()
         else:
-            if not self.skip_validation or self.belongs_to:
-                self.validate()
-            else:
-                if self.use_autorefs:
-                    self._make_reference(self, self.structure)
+            if self.use_autorefs:
+                self._make_reference(self, self.structure)
         if '_id' not in self:
             if uuid:
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
-        if self._belongs_to:
-            db_name, full_collection_path, doc_id = self._belongs_to
-            if isinstance(doc_id, pymongo.dbref.DBRef):
-                doc_id = doc_id.id
-            self.connection[db_name]['_mongometa'].insert({
-              '_id': '%s-%s' % (full_collection_path, self['_id']),
-              'pobj':{'id':doc_id, 'col':full_collection_path},
-              'cobj':{'id':self['_id'], 'col':self.collection.full_name}})
         self._process_custom_type('bson', self, self.structure)
         id = self.collection.save(self, safe=safe, *args, **kwargs)
-        if not self._from_doc and self.related_to and not self._related_loaded:
-            self.related = RelatedProperties(self.related_to, self)
         self._process_custom_type('python', self, self.structure)
         return self
 
     def delete(self):
         """
         delete the document from the collection from his _id.
-
-        This is equivalent to "self.remove({'_id':self['_id']})"
         """
         self.collection.remove({'_id':self['_id']})
 
@@ -420,12 +365,6 @@ class Document(SchemaDocument):
                         assert isinstance(value, int)
                     else:
                         assert value in [False, True], value
-        if self.belongs_to:
-            if not len(self.belongs_to) == 1:
-                raise ValueError("belongs_to must contain only one item")
-            if not issubclass(self.belongs_to.values()[0], MongoDocument):
-                raise ValueError("self.belongs_to['%s'] must have a MongoDocument subclass (got %s instead)" % (
-                  self.belongs_to.keys()[0], self.belongs_to.values()[0]))
 
     def __hash__(self):
         if '_id' in self:

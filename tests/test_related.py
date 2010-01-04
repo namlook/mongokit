@@ -31,23 +31,21 @@ from mongokit import *
 
 class RelatedTestCase(unittest.TestCase):
     def setUp(self):
-        self.collection = Connection()['test']['mongokit']
+        self.connection = Connection()
+        self.col = self.connection['test']['mongokit'] 
         
     def tearDown(self):
-        Connection()['test'].drop_collection('mongokit')
-        Connection()['test'].drop_collection('_mongometa')
+        self.connection()['test'].drop_collection('mongokit')
+        self.connection()['test'].drop_collection('_mongometa')
 
     def test_simple_related(self):
         
-        class Blog(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class Blog(Document):
             structure = {
                 "blog":{"title":unicode}
             }
-        class BlogPost(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+            
+        class BlogPost(Document):
             structure = {
                 "blog_post":{
                     "blog_id":unicode,
@@ -58,21 +56,23 @@ class RelatedTestCase(unittest.TestCase):
         # BlogPost is declared after Blog so we have to fill related_to after
         # BlogPost declaration
         Blog.related_to = {
-          'blog_posts':{'class':BlogPost, 'target':'blog_post.blog_id'},
+          'blog_posts':{'class':self.col.BlogPost, 'target':'blog_post.blog_id'},
         }
+
+        self.connection.register([Blog, BlogPost])
  
-        blog = Blog()
+        blog = self.col.Blog()
         blog['_id'] = u'my blog'
         blog['title'] = u'My Blog'
         blog.save()
         
-        blog_post1 = BlogPost()
+        blog_post1 = self.col.BlogPost()
         blog_post1['_id'] = 1
         blog_post1['blog_post']['blog_id'] = blog['_id']
         blog_post1['blog_post']['content'] = u'a great blog post'
         blog_post1.save()
 
-        blog_post2 = BlogPost()
+        blog_post2 = self.col.BlogPost()
         blog_post2['_id'] = 2
         blog_post2['blog_post']['blog_id'] = blog['_id']
         blog_post2['blog_post']['content'] = u'another great blog post'
@@ -82,18 +82,14 @@ class RelatedTestCase(unittest.TestCase):
         assert blog_posts == [blog_post1, blog_post2], blog_posts
 
     def test_multiple_related(self):
-        class BlogPost(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class BlogPost(Document):
             structure = {
                 "blog_post":{
                     "blog_id":unicode,
                     "content":unicode,
                 },
             }
-        class Author(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Author(Document):
             structure = {
                 'author':{
                     'name':unicode,
@@ -101,9 +97,7 @@ class RelatedTestCase(unittest.TestCase):
                 },
             }
  
-        class Blog(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class Blog(Document):
             structure = {
                 "blog":{"title":unicode}
             }
@@ -111,33 +105,32 @@ class RelatedTestCase(unittest.TestCase):
               'authors':{'class':Author, 'target':'author.blog_id'},
               'blog_posts':{'class':BlogPost, 'target':'blog_post.blog_id'},
             }
-        # BlogPost is declared after Blog so we have to fill related_to after
-        # BlogPost declaration
+        self.connection.register([BlogPost, Author, Blog])
  
-        blog = Blog()
+        blog = self.col.Blog()
         blog['_id'] = u'my blog'
         blog['title'] = u'My Blog'
         blog.save()
         
-        blog_post1 = BlogPost()
+        blog_post1 = self.col.BlogPost()
         blog_post1['_id'] = 1
         blog_post1['blog_post']['blog_id'] = blog['_id']
         blog_post1['blog_post']['content'] = u'a great blog post'
         blog_post1.save()
 
-        blog_post2 = BlogPost()
+        blog_post2 = self.col.BlogPost()
         blog_post2['_id'] = 2
         blog_post2['blog_post']['blog_id'] = blog['_id']
         blog_post2['blog_post']['content'] = u'another great blog post'
         blog_post2.save()
 
-        author1 = Author()
+        author1 = self.col.Author()
         author1['_id'] = u'me'
         author1['author']['name'] = u'Me'
         author1['author']['blog_id'] = blog['_id']
         author1.save()
 
-        author2 = Author()
+        author2 = self.col.Author()
         author2['_id'] = u'you'
         author2['author']['name'] = u'You'
         author2['author']['blog_id'] = blog['_id']
@@ -149,42 +142,39 @@ class RelatedTestCase(unittest.TestCase):
         assert blog_posts == [blog_post1, blog_post2], blog_posts
 
     def test_multiple_related2(self):
-        class BlogPost(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class BlogPost(Document):
             structure = {
                 "blog_post":{
                     "blog_id":unicode,
                     "content":unicode,
                 },
             }
-        class Blog(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class Blog(Document):
             structure = {
                 "blog":{"title":unicode}
             }
             related_to = {
               'blog_posts':{'class':BlogPost, 'target':'blog_post.blog_id'},
             }
+        self.connection.register([BlogPost, Blog])
 
-        blog = Blog()
+        blog = self.col.Blog()
         blog['_id'] = u'my blog'
         blog['title'] = u'My Blog'
         blog.save()
         
-        blog_post1 = BlogPost()
+        blog_post1 = self.col.BlogPost()
         blog_post1['blog_post']['blog_id'] = blog['_id']
         blog_post1['blog_post']['content'] = u'a great blog post'
         blog_post1.save()
 
-        blog_post2 = BlogPost()
+        blog_post2 = self.col.BlogPost()
         blog_post2['blog_post']['blog_id'] = blog['_id']
         blog_post2['blog_post']['content'] = u'another great blog post'
         blog_post2.save()
 
 
-        class Author(MongoDocument):
+        class Author(Document):
             db_name = 'test'
             collection_name = 'mongokit'
             structure = {
@@ -193,20 +183,21 @@ class RelatedTestCase(unittest.TestCase):
                     'blog_id':unicode,
                 },
             }
+        self.connection.register([Author])
  
-        author1 = Author()
+        author1 = self.col.Author()
         author1['author']['name'] = u'me'
         author1['author']['blog_id'] = blog['_id']
         author1.save()
 
-        author2 = Author()
+        author2 = self.col.Author()
         author2['author']['name'] = u'you'
         author2['author']['blog_id'] = blog['_id']
         author2.save()
 
         Blog.related_to.update({'authors':{'class':Author, 'target':'author.blog_id'}})
 
-        blog = Blog.get_from_id('my blog')
+        blog = self.col.Blog.get_from_id('my blog')
 
         authors = list(blog.related.authors())
         assert authors == [author1, author2], authors
@@ -216,16 +207,12 @@ class RelatedTestCase(unittest.TestCase):
 
     def test_simple_related_with_autorefs(self):
 
-        class Blog(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class Blog(Document):
             structure = {
                 "blog":{"title":unicode}
             }
  
-        class BlogPost(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class BlogPost(Document):
             structure = {
                 "blog_post":{
                     "blog":Blog,
@@ -239,20 +226,21 @@ class RelatedTestCase(unittest.TestCase):
         Blog.related_to = {
           'blog_posts':{'class':BlogPost, 'target':'blog_post.blog', 'autoref':True}
         }
+        self.connection.register([Blog, BlogPost])
  
-        blog = Blog()
+        blog = self.col.Blog()
         blog['_id'] = u'my blog'
         blog['title'] = u'My Blog'
         blog.save()
         blog.related
         
-        blog_post1 = BlogPost()
+        blog_post1 = self.col.BlogPost()
         blog_post1['_id'] = 1
         blog_post1['blog_post']['blog'] = blog
         blog_post1['blog_post']['content'] = u'a great blog post'
         blog_post1.save()
 
-        blog_post2 = BlogPost()
+        blog_post2 = self.col.BlogPost()
         blog_post2['_id'] = 2
         blog_post2['blog_post']['blog'] = blog
         blog_post2['blog_post']['content'] = u'another great blog post'
@@ -262,17 +250,12 @@ class RelatedTestCase(unittest.TestCase):
         assert blog_posts == [blog_post1, blog_post2], blog_posts
 
     def test_simple_related_with_autorefs_extra_query(self):
-
-        class Blog(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class Blog(Document):
             structure = {
                 "blog":{"title":unicode}
             }
  
-        class BlogPost(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class BlogPost(Document):
             structure = {
                 "blog_post":{
                     "blog":Blog,
@@ -286,20 +269,21 @@ class RelatedTestCase(unittest.TestCase):
         Blog.related_to = {
           'blog_posts':{'class':BlogPost, 'target':'blog_post.blog', 'autoref':True}
         }
+        self.connection.register([Blog, BlogPost])
  
-        blog = Blog()
+        blog = self.col.Blog()
         blog['_id'] = u'my blog'
         blog['title'] = u'My Blog'
         blog.save()
         blog.related
         
-        blog_post1 = BlogPost()
+        blog_post1 = self.col.BlogPost()
         blog_post1['_id'] = 1
         blog_post1['blog_post']['blog'] = blog
         blog_post1['blog_post']['content'] = u'a great blog post'
         blog_post1.save()
 
-        blog_post2 = BlogPost()
+        blog_post2 = self.col.BlogPost()
         blog_post2['_id'] = 2
         blog_post2['blog_post']['blog'] = blog
         blog_post2['blog_post']['content'] = u'another great blog post'
@@ -311,13 +295,13 @@ class RelatedTestCase(unittest.TestCase):
 
     def test_bad_related(self):
         
-        class Blog(MongoDocument):
+        class Blog(Document):
             db_name = "test"
             collection_name = "mongokit"
             structure = {
                 "blog":{"title":unicode}
             }
-        class BlogPost(MongoDocument):
+        class BlogPost(Document):
             db_name = "test"
             collection_name = "mongokit"
             structure = {
@@ -332,19 +316,20 @@ class RelatedTestCase(unittest.TestCase):
         Blog.related_to = {
           'blog_posts':{'class':BlogPost, 'target':'blog_post.blog_id'},
         }
+        self.connection.register([Blog, BlogPost])
  
-        blog = Blog()
+        blog = self.col.Blog()
         blog['_id'] = u'my blog'
         blog['title'] = u'My Blog'
         blog.save()
         blog.related
         
-        blog_post1 = BlogPost()
+        blog_post1 = self.col.BlogPost()
         blog_post1['blog_post']['blog_id'] = blog['_id']
         blog_post1['blog_post']['content'] = u'a great blog post'
         blog_post1.save()
 
-        blog_post2 = BlogPost()
+        blog_post2 = self.col.BlogPost()
         blog_post2['blog_post']['blog_id'] = blog['_id']
         blog_post2['blog_post']['content'] = u'another great blog post'
         blog_post2.save()
@@ -356,15 +341,11 @@ class RelatedTestCase(unittest.TestCase):
 
     def test_simple_related_with_query(self):
         
-        class Blog(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class Blog(Document):
             structure = {
                 "blog":{"title":unicode}
             }
-        class BlogPost(MongoDocument):
-            db_name = "test"
-            collection_name = "mongokit"
+        class BlogPost(Document):
             structure = {
                 "blog_post":{
                     "blog_id":unicode,
@@ -377,18 +358,19 @@ class RelatedTestCase(unittest.TestCase):
         Blog.related_to = {
           'blog_posts':{'class':BlogPost, 'target':'blog_post.blog_id'},
         }
+        self.connection.register([Blog, BlogPost])
  
-        blog = Blog()
+        blog = self.col.Blog()
         blog['_id'] = u'my blog'
         blog['title'] = u'My Blog'
         blog.save()
         
-        blog_post1 = BlogPost()
+        blog_post1 = self.col.BlogPost()
         blog_post1['blog_post']['blog_id'] = blog['_id']
         blog_post1['blog_post']['content'] = u'a great blog post'
         blog_post1.save()
 
-        blog_post2 = BlogPost()
+        blog_post2 = self.col.BlogPost()
         blog_post2['blog_post']['blog_id'] = blog['_id']
         blog_post2['blog_post']['content'] = u'another great blog post'
         blog_post2.save()
@@ -397,43 +379,40 @@ class RelatedTestCase(unittest.TestCase):
         assert blog_posts == [blog_post1], blog_posts
 
     def test_related_with_complex_target(self):
-        class Article(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Article(Document):
             structure = {
                 'article': {
                     'title':unicode,
                     'tags':{unicode:int},
                 }
             }
-        class Tag(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Tag(Document):
             structure = {
                 'tag':{
                     'title':unicode,
                 }
             }
             related_to = {'articles':{'class':Article, 'target':lambda x:{'article.tags.%s' % x:{'$gt':1}}}}
+        self.connection.register([Article, Tag])
 
-        foo = Tag()
+        foo = self.col.Tag()
         foo['_id'] = u'foo'
         foo['tag']['title'] = u'Foo'
         foo.save()
 
-        bar = Tag()
+        bar = self.col.Tag()
         bar['_id'] = u'bar'
         bar['tag']['title'] = u'Bar'
         bar.save()
 
-        article1 = Article()
+        article1 = self.col.Article()
         article1['_id'] = u'article1'
         article1['article']['title'] = u'First article'
         article1['article']['tags'][u'foo'] = 2
         article1['article']['tags'][u'bar'] = 3
         article1.save()
         
-        article2 = Article()
+        article2 = self.col.Article()
         article2['_id'] = u'article2'
         article2['article']['title'] = u'Second article'
         article2['article']['tags'][u'foo'] = 0
@@ -448,48 +427,45 @@ class RelatedTestCase(unittest.TestCase):
         assert articles == [article1]
 
     def test_related_with_complex_target_in_list(self):
-        class Article(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Article(Document):
             structure = {
                 'article': {
                     'title':unicode,
                     'tags':[unicode],
                 }
             }
-        class Tag(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Tag(Document):
             structure = {
                 'tag':{
                     'title':unicode,
                 }
             }
             related_to = {'articles':{'class':Article, 'target':'article.tags'}}
+        self.connection.register([Article, Tag])
 
-        foo = Tag()
+        foo = self.col.Tag()
         foo['_id'] = u'foo'
         foo['tag']['title'] = u'Foo'
         foo.save()
 
-        bar = Tag()
+        bar = self.col.Tag()
         bar['_id'] = u'bar'
         bar['tag']['title'] = u'Bar'
         bar.save()
 
-        spam = Tag()
+        spam = self.col.Tag()
         spam['_id'] = u'spam'
         spam['tag']['title'] = u'Spam'
         spam.save()
 
 
-        article1 = Article()
+        article1 = self.col.Article()
         article1['_id'] = u'article1'
         article1['article']['title'] = u'First article'
         article1['article']['tags'] = [u'foo', u'spam']
         article1.save()
         
-        article2 = Article()
+        article2 = self.col.Article()
         article2['_id'] = u'article2'
         article2['article']['title'] = u'Second article'
         article2['article']['tags'] = [u'foo', u'bar']
@@ -503,18 +479,14 @@ class RelatedTestCase(unittest.TestCase):
         assert articles == [article1, article2]
 
     def test_related_with_complex_target_in_list_with_autorefs(self):
-        class Tag(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Tag(Document):
             structure = {
                 'tag':{
                     'title':unicode,
                 }
             }
 
-        class Article(MongoDocument):
-            db_name = 'test'
-            collection_name = 'mongokit'
+        class Article(Document):
             use_autorefs = True
             structure = {
                 'article': {
@@ -524,30 +496,31 @@ class RelatedTestCase(unittest.TestCase):
             }
 
         Tag.related_to = {'articles':{'class':Article, 'target':'article.tags', 'autoref':True}}
+        self.connection.register([Article, Tag])
 
-        foo = Tag()
+        foo = self.col.Tag()
         foo['_id'] = u'foo'
         foo['tag']['title'] = u'Foo'
         foo.save()
 
-        bar = Tag()
+        bar = self.col.Tag()
         bar['_id'] = u'bar'
         bar['tag']['title'] = u'Bar'
         bar.save()
 
-        spam = Tag()
+        spam = self.col.Tag()
         spam['_id'] = u'spam'
         spam['tag']['title'] = u'Spam'
         spam.save()
 
 
-        article1 = Article()
+        article1 = self.col.Article()
         article1['_id'] = u'article1'
         article1['article']['title'] = u'First article'
         article1['article']['tags'] = [foo, spam]
         article1.save()
         
-        article2 = Article()
+        article2 = self.col.Article()
         article2['_id'] = u'article2'
         article2['article']['title'] = u'Second article'
         article2['article']['tags'] = [foo, bar]
