@@ -1,14 +1,43 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (c) 2009-2010, Nicolas Clairon
+# All rights reserved.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the University of California, Berkeley nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
+from mongokit.mongo_exceptions import *
+from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
 import pymongo
 from pymongo.bson import BSON
 import re
 from copy import deepcopy
-from mongokit.mongo_exceptions import *
-
 from uuid import uuid4
+import logging
 
-from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
 STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
+
+log = logging.getLogger(__name__)
 
 class RelatedProperties(object):
     def __init__(self, descriptor, doc):
@@ -43,6 +72,7 @@ class Document(SchemaDocument):
     related_to = {}
     skip_validation = False
     use_autorefs = False
+    indexes = []
 
     authorized_types = SchemaDocument.authorized_types + [
       pymongo.binary.Binary,
@@ -213,6 +243,27 @@ class Document(SchemaDocument):
         """
         self.collection.remove({'_id':self['_id']})
 
+    def generate_index(self):
+        # creating index if needed
+        for index in self.indexes:
+            unique = False
+            if 'unique' in index.keys():
+                unique = index['unique']
+            ttl = 300
+            if 'ttl' in index.keys():
+                ttl = index['ttl']
+            if isinstance(index['fields'], tuple):
+                fields = [index['fields']]
+            elif hasattr(index['fields'], '__iter__'):
+                if isinstance(index['fields'][0], tuple):
+                    fields = [(name, direction) for name, direction in index['fields']]
+                else:
+                    fields = [(name, 1) for name in index['fields']]
+            else:
+                fields = index['fields']
+            log.debug('Creating index for %s' % str(index['fields']))
+            self.collection.ensure_index(fields, unique=unique, ttl=ttl)
+
     #
     # End of public API
     #
@@ -223,6 +274,59 @@ class Document(SchemaDocument):
         obj = self.__class__(doc=doc, gen_skel=gen_skel, collection=self.collection)
         obj._non_callable = True
         return obj
+
+    def _validate_descriptors(self):
+        super(Document, self)._validate_descriptors()
+        if self.indexes:
+            for index in self.indexes:
+                if 'fields' not in index:
+                    raise BadIndexError("'fields' key must be specify in indexes")
+                for key, value in index.iteritems():
+                    if key not in ['fields', 'unique', 'ttl']:
+                        raise BadIndexError("%s is unknown key for indexes" % key)
+                    if key == "fields":
+                        if isinstance(value, basestring):
+                            if value not in self._namespaces and value not in STRUCTURE_KEYWORDS:
+                                raise ValueError("Error in indexes: can't"
+                                  " find %s in structure" % value )
+                        elif isinstance(value, tuple):
+                            if len(value) != 2:
+                                raise BadIndexError("Error in indexes: a tuple must contain "
+                                  "only two value the field name and the direction")
+                            if not isinstance(value[1], int):
+                                raise BadIndexError("Error in %s, the direction must be int (got %s instead)" % (value[0], type(value[1])))
+                            if not isinstance(value[0], basestring):
+                                raise BadIndexError("Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
+                            if value[0] not in self._namespaces and value[0] not in STRUCTURE_KEYWORDS:
+                                raise ValueError("Error in indexes: can't"
+                                  " find %s in structure" % value )
+                            if not value[1] in [1, -1]:
+                                raise BadIndexError("index direction must be 1 or -1. Got %s" % value[1])
+                        elif isinstance(value, list):
+                            for val in value:
+                                if isinstance(val, tuple):
+                                    for field, direction in value:
+                                        if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
+                                            raise ValueError("Error in indexes: can't"
+                                              " find %s in structure" % field )
+                                        if not direction in [1, -1]:
+                                            raise BadIndexError("index direction must be 1 or -1. Got %s" % direction)
+                                else:
+                                    if val not in self._namespaces and val not in STRUCTURE_KEYWORDS:
+                                        raise ValueError("Error in indexes: can't"
+                                          " find %s in structure" % val )
+                        else:
+                            raise BadIndexError("fields must be a string, a tuple or a list of tuple (got %s instead)" % type(value))
+                    elif key == "ttl":
+                        assert isinstance(value, int)
+                    else:
+                        assert value in [False, True], value
+        if self.belongs_to:
+            if not len(self.belongs_to) == 1:
+                raise ValueError("belongs_to must contain only one item")
+            if not issubclass(self.belongs_to.values()[0], MongoDocument):
+                raise ValueError("self.belongs_to['%s'] must have a MongoDocument subclass (got %s instead)" % (
+                  self.belongs_to.keys()[0], self.belongs_to.values()[0]))
 
     def __hash__(self):
         if '_id' in self:
