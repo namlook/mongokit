@@ -69,6 +69,25 @@ class JsonTestCase(unittest.TestCase):
         assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
         assert mydoc.to_json_type() == {"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}
 
+    def test_simple_to_json_with_oid(self):
+        class MyDoc(Document):
+            structure = {
+                "bla":{
+                    "foo":unicode,
+                    "bar":int,
+                },
+                "spam":[],
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc["bla"]["foo"] = u"bar"
+        mydoc["bla"]["bar"] = 42
+        mydoc['spam'] = range(10)
+        mydoc.save()
+        assert  isinstance(mydoc.to_json_type()['_id'], basestring), type(mydoc.to_json_type()['_id'])
+        mydoc.to_json()
+
+
     def test_to_json_custom_type(self):
         class CustomFloat(CustomType):
             mongo_type = unicode
@@ -91,8 +110,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc['doc']['foo'] = 3.70
         mydoc.save()
-        assert mydoc.to_json() == '{"doc": {"foo": "3.7"}, "_id": "mydoc"}'
-        assert mydoc.to_json_type() == {"doc": {"foo": "3.7"}, "_id": "mydoc"}
+        assert mydoc.to_json() == '{"doc": {"foo": 3.7000000000000002}, "_id": "mydoc"}', mydoc.to_json()
+        assert mydoc.to_json_type() == {"doc": {"foo": 3.7000000000000002}, "_id": "mydoc"}
 
     def test_to_json_embeded_doc(self):
         class EmbedDoc(Document):
@@ -123,6 +142,35 @@ class JsonTestCase(unittest.TestCase):
         mydoc.save()
         assert mydoc.to_json() == '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
         assert mydoc.to_json_type() == {"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}
+
+    def test_to_json_embeded_doc_with_oid(self):
+        class EmbedDoc(Document):
+            structure = {
+                "bla":{
+                    "foo":unicode,
+                    "bar":int,
+                },
+                "spam":[],
+            }
+        class MyDoc(Document):
+            structure = {
+                "doc":{
+                    "embed":EmbedDoc,
+                },
+            }
+            use_autorefs = True
+        self.connection.register([MyDoc, EmbedDoc])
+        embed = self.col.EmbedDoc()
+        embed["bla"]["foo"] = u"bar"
+        embed["bla"]["bar"] = 42
+        embed['spam'] = range(10)
+        embed.save()
+        mydoc = self.col.MyDoc()
+        mydoc['doc']['embed'] = embed
+        mydoc.save()
+        assert isinstance(mydoc.to_json_type()['doc']['embed']['_id'], basestring)
+        mydoc.to_json()
+
 
     def test_simple_from_json(self):
         class MyDoc(Document):

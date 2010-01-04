@@ -218,13 +218,7 @@ class AutoRefTestCase(unittest.TestCase):
                 },
                 "spam": EmbedDoc,
             }
-        self.connection.register([MyDoc])
-        assertion = False
-        try:
-           self.connection.test.autoref.MyDoc()
-        except StructureError, e:
-            assertion = True
-        assert assertion
+        self.assertRaises(StructureError, self.connection.register, [MyDoc])
 
     def test_subclass(self):
         # Test autoref enabled, but embed a subclass.

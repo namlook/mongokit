@@ -225,7 +225,7 @@ class SchemaDocument(dict):
       CustomType,
     ]
 
-    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True):
+    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True, validate=True):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -242,7 +242,7 @@ class SchemaDocument(dict):
             doc = {}
         if self.structure is None:
             raise StructureError("your document must have a structure defined")
-        if not self.skip_validation: 
+        if not self.skip_validation and validate: 
             self._validate_structure()
             self._namespaces = list(self.__walk_dict(self.structure))
             self._validate_descriptors()
@@ -254,7 +254,7 @@ class SchemaDocument(dict):
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
         else:
-            self._process_custom_type(False, self, self.structure)
+            self._process_custom_type('python', self, self.structure)
         ## building required fields namespace
         if not self.skip_validation:
             self._required_namespace = set([])
@@ -282,13 +282,13 @@ class SchemaDocument(dict):
         validators.
         
         """
-        self._process_custom_type(True, self, self.structure)
+        self._process_custom_type('bson', self, self.structure)
         self._validate_doc(self, self.structure)
         if self.required_fields:
             self._validate_required(self, self.structure)
         if self.validators:
             self._process_validators(self, self.structure)
-        self._process_custom_type(False, self, self.structure)
+        self._process_custom_type('python', self, self.structure)
 
     def __setattr__(self, key, value):
         if key not in self._protected_field_names and self.use_dot_notation and key in self:
@@ -322,9 +322,9 @@ class SchemaDocument(dict):
                     elif isinstance(struct[key][0], datetime.datetime):
                         struct[key] = [totimestamp(obj) for obj in struct[key]]
         # we don't want to touch our document so we create another object
-        self._process_custom_type(True, self, self.structure)
+        self._process_custom_type('bson', self, self.structure)
         obj = deepcopy(self)
-        self._process_custom_type(False, self, self.structure)
+        self._process_custom_type('python', self, self.structure)
         _convert_to_json(obj)
         try:
             import anyjson
@@ -666,7 +666,7 @@ class SchemaDocument(dict):
                 #
                 __processval(self, new_path, doc, key)
 
-    def _process_custom_type(self, to_bson, doc, struct, path = "", root_path=""):
+    def _process_custom_type(self, target, doc, struct, path = "", root_path=""):
         for key in struct:
             if type(key) is type:
                 new_key = "$%s" % key.__name__
@@ -680,10 +680,10 @@ class SchemaDocument(dict):
                 if doc: # we don't need to process an empty doc
                     if type(key) is type:
                         for doc_key in doc: # process type's key such {unicode:int}...
-                            self._process_custom_type(to_bson, doc[doc_key], struct[key], new_path, root_path)
+                            self._process_custom_type(target, doc[doc_key], struct[key], new_path, root_path)
                     else:
                         if key in doc: # we don't care about missing fields
-                            self._process_custom_type(to_bson, doc[key], struct[key], new_path, root_path)
+                            self._process_custom_type(target, doc[key], struct[key], new_path, root_path)
             #
             # If the struct is a list, we have to validate all values into it
             #
@@ -695,7 +695,7 @@ class SchemaDocument(dict):
                     l_objs = []
                     if isinstance(struct[key][0], CustomType):
                         for obj in doc[key]:
-                            if to_bson:
+                            if target=='bson':
                                 if struct[key][0].python_type is not None:
                                     if not isinstance(obj, struct[key][0].python_type) and obj is not None:
                                         raise SchemaTypeError(
@@ -709,7 +709,7 @@ class SchemaDocument(dict):
                     elif isinstance(struct[key][0], dict):
                         if doc[key]:
                             for obj in doc[key]:
-                                self._process_custom_type(to_bson, obj, struct[key][0], new_path, root_path)
+                                self._process_custom_type(target, obj, struct[key][0], new_path, root_path)
             #
             # It is not a dict nor a list but a simple key:value
             #
@@ -718,7 +718,7 @@ class SchemaDocument(dict):
                 # check if the value must not be null
                 #
                 if isinstance(struct[key], CustomType):
-                    if to_bson:
+                    if target == 'bson':
                         if struct[key].python_type is not None:
                             if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
                                 raise SchemaTypeError(

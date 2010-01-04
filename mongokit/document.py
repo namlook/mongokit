@@ -28,12 +28,15 @@
 from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
+from mongokit.schema_document import totimestamp, fromtimestamp
 import pymongo
 from pymongo.bson import BSON
+from pymongo.objectid import ObjectId
 import re
 from copy import deepcopy
 from uuid import uuid4
 import logging
+import datetime
 
 STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
 
@@ -93,10 +96,11 @@ class Document(SchemaDocument):
         if collection:
             self.db = collection.database
             self.connection = self.db.connection
-        # indexing all embed doc if any
+        # indexing all embed doc if any (autorefs feature)
         self._dbrefs = {}
-        if self.use_autorefs:
+        if self.use_autorefs and collection:
             self._make_reference(self, self.structure)
+        # cascade feature
         self._belongs_to = None
         # related feature
         self._from_doc = False
@@ -195,7 +199,7 @@ class Document(SchemaDocument):
         assert '_id' in self, "You must specify an '_id' for using this method"
         return pymongo.dbref.DBRef(database=self.db.name, collection=self.collection.name, id=self['_id'])
 
-    def save(self, uuid=True, validate=None, safe=True, *args, **kwargs):
+    def save(self, uuid=False, validate=None, safe=True, *args, **kwargs):
         """
         save the document into the db.
 
@@ -228,11 +232,11 @@ class Document(SchemaDocument):
               '_id': '%s-%s' % (full_collection_path, self['_id']),
               'pobj':{'id':doc_id, 'col':full_collection_path},
               'cobj':{'id':self['_id'], 'col':self.collection.full_name}})
-        self._process_custom_type(True, self, self.structure)
+        self._process_custom_type('bson', self, self.structure)
         id = self.collection.save(self, safe=safe, *args, **kwargs)
         if not self._from_doc and self.related_to and not self._related_loaded:
             self.related = RelatedProperties(self.related_to, self)
-        self._process_custom_type(False, self, self.structure)
+        self._process_custom_type('python', self, self.structure)
         return self
 
     def delete(self):
@@ -263,6 +267,101 @@ class Document(SchemaDocument):
                 fields = index['fields']
             log.debug('Creating index for %s' % str(index['fields']))
             self.collection.ensure_index(fields, unique=unique, ttl=ttl)
+
+    def to_json_type(self):
+        """
+        convert all document field into json type
+        and return the new converted object
+        """
+        def _convert_to_json(struct, doc):
+            """
+            convert all datetime to a timestamp from epoch
+            """
+            for key in struct:
+                if isinstance(struct[key], datetime.datetime):
+                    struct[key] = totimestamp(struct[key])
+                elif isinstance(struct[key], pymongo.dbref.DBRef):
+                    struct[key] = doc.get_from_id(struct[key].id)
+                elif isinstance(struct[key], ObjectId):
+                    struct[key] = str(struct[key])
+                elif isinstance(struct[key], dict):
+                    _convert_to_json(struct[key], doc)
+                elif isinstance(struct[key], list) and len(struct[key]):
+                    if isinstance(struct[key][0], dict):
+                        for obj in struct[key]:
+                            _convert_to_json(obj, doc)
+                    elif isinstance(struct[key][0], datetime.datetime):
+                        struct[key] = [totimestamp(obj) for obj in struct[key]]
+        # we don't want to touch our document so we create another object
+        from copy import deepcopy
+        self._process_custom_type('bson', self, self.structure)
+        obj = deepcopy(self)
+        self._process_custom_type('python', self, self.structure)
+        _convert_to_json(obj, obj)
+        obj['_id'] = str(obj['_id'])
+        return obj
+
+    def to_json(self):
+        """
+        convert the document into a json string and return it
+        """
+        try:
+            import anyjson
+        except ImportError:
+            raise ImportError("can't import anyjson. Please install it before continuing.")
+        return anyjson.serialize(self.to_json_type())
+
+    @classmethod
+    def from_json(cls, json):
+        """
+        convert a json string and return a SchemaDocument
+        """
+        def _convert_to_python(doc, struct, path = "", root_path=""):
+            for key in struct:
+                if type(key) is type:
+                    new_key = "$%s" % key.__name__
+                else:
+                    new_key = key
+                new_path = ".".join([path, new_key]).strip('.')
+                if isinstance(struct[key], dict):
+                    if doc: # we don't need to process an empty doc
+                        if type(key) is type:
+                            for doc_key in doc: # process type's key such {unicode:int}...
+                                _convert_to_python(doc[doc_key], struct[key], new_path, root_path)
+                        else:
+                            if key in doc: # we don't care about missing fields
+                                _convert_to_python(doc[key], struct[key], new_path, root_path)
+                elif type(struct[key]) is list:
+                    if struct[key]:
+                        if struct[key][0] is datetime.datetime:
+                            l_objs = []
+                            for obj in doc[key]:
+                                obj = fromtimestamp(obj)
+                                l_objs.append(obj)
+                            doc[key] = l_objs
+                        elif isinstance(struct[key][0], R):
+                            l_objs = []
+                            for obj in doc[key]:
+                                obj = struct[key](obj)
+                                l_objs.append(obj)
+                            doc[key] = l_objs
+                        elif isinstance(struct[key][0], dict):
+                            if doc[key]:
+                                for obj in doc[key]:
+                                    _convert_to_python(obj, struct[key][0], new_path, root_path)
+                else:
+                    if struct[key] is datetime.datetime:
+                            doc[key] = fromtimestamp(doc[key])
+                    elif isinstance(struct[key], R):
+                        doc[key] = struct[key]._doc(doc[key])
+        try:
+            import anyjson
+        except ImportError:
+            raise ImportError("can't import anyjson. Please install it before continuing.")
+        obj = anyjson.deserialize(json)
+        _convert_to_python(obj, cls.structure)
+        return obj
+ 
 
     #
     # End of public API
@@ -432,10 +531,6 @@ class Document(SchemaDocument):
                         l_objs.append(obj)
                     doc[key] = l_objs
 
-    # deprecated
-    def all(self, *args, **kwargs):
-        return self.find(*args, **kwargs)
-
 class R(CustomType):
     """ CustomType to deal with autorefs documents """
     mongo_type = pymongo.dbref.DBRef
@@ -452,13 +547,12 @@ class R(CustomType):
         
     def to_python(self, value):
         if value is not None:
-            col = self.connection[value.database][value.collection]#get_collection(collection_name=value.collection)
+            col = self.connection[value.database][value.collection]
             doc = col.find_one({'_id':value.id})
             if doc is None:
                 raise AutoReferenceError('Something wrong append. You probably change'
                   ' your object when passing it as a value to an autorefs enable document.\n'
                   'A document with id "%s" is not saved in the database but was giving as'
                   ' a reference to a %s document' % (value.id, self._doc.__name__))
-            return self._doc(doc, collection=col)#, collection=self._doc.db[value.collection])#collection_name=value.collection)
-
+            return self._doc(doc, collection=col)
 
