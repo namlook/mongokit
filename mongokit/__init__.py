@@ -9,3 +9,4 @@ from database import Database
 from collection import Collection
 from connection import Connection
 
+from pymongo import ASCENDING as INDEX_ASCENDING, DESCENDING as INDEX_DESCENDING

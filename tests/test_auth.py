@@ -31,22 +31,21 @@ from mongokit import *
 from mongokit.auth import User
 from pymongo.objectid import ObjectId
 
-CONNECTION = Connection()
 
 class AuthTestCase(unittest.TestCase):
     def setUp(self):
-        self.collection = CONNECTION['test']['mongokit']
+        self.connection = Connection()
+        self.col = self.connection['test']['mongokit']
         
     def tearDown(self):
-        CONNECTION['test'].drop_collection('mongokit')
-        CONNECTION['test'].drop_collection('versionned_mongokit')
+        self.connection['test'].drop_collection('mongokit')
+        self.connection['test'].drop_collection('versionned_mongokit')
 
     def test_password_validation(self):
-        class SimpleUser(User):
-            db_name = "test"
-            collection_name = "mongokit"
+        class SimpleUser(User): pass
+        self.connection.register([SimpleUser])
 
-        user = SimpleUser()
+        user = self.col.SimpleUser()
         user.login = u"user"
         self.assertRaises(RequireFieldError, user.validate)
         user.password = "myp4$$ord"
@@ -60,17 +59,16 @@ class AuthTestCase(unittest.TestCase):
         assert user['user']['password'] is None
     
     def test_create_user(self):
-        class SimpleUser(User):
-            db_name = "test"
-            collection_name = "mongokit"
+        class SimpleUser(User): pass
+        self.connection.register([SimpleUser])
 
-        user = SimpleUser()
+        user = self.col.SimpleUser()
         user.login = u"user"
         user.email = u"user@foo.bar"
         user.password = u"u$ser_p4$$w0rd"
         user.save()
 
-        saved_user = SimpleUser.get_from_id('user')
+        saved_user = self.col.SimpleUser.get_from_id('user')
         assert saved_user.verify_password("bad") == False
         assert saved_user.verify_password(u"u$ser_p4$$w0rd") == True
 
@@ -89,8 +87,6 @@ class AuthTestCase(unittest.TestCase):
 
     def test_overload_user(self):
         class SimpleUser(User):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "auth":{
                     "session_id":unicode,
@@ -99,14 +95,15 @@ class AuthTestCase(unittest.TestCase):
                     "name":unicode,
                 }
             }
+        self.connection.register([SimpleUser])
 
-        user = SimpleUser()
+        user = self.col.SimpleUser()
         user.login = u"user"
         user.email = u"user@foo.bar"
         user.password = "u$ser_p4$$w0rd"
         user.save()
 
-        saved_user = SimpleUser.get_from_id('user')
+        saved_user = self.col.SimpleUser.get_from_id('user')
         assert saved_user.verify_password("bad") == False
         assert saved_user.verify_password("u$ser_p4$$w0rd") == True
 
