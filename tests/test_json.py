@@ -47,6 +47,7 @@ class JsonTestCase(unittest.TestCase):
                 "bla":{
                     "foo":unicode,
                     "bar":int,
+                    "egg":datetime.datetime,
                 },
                 "spam":[],
             }
@@ -55,10 +56,11 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
+        mydoc['bla']['egg'] = datetime.datetime(2010, 1, 1)
         mydoc['spam'] = range(10)
         mydoc.save()
-        assert  mydoc.to_json() == '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
-        assert  mydoc.to_json_type() == {"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+        assert  mydoc.to_json() == '{"_id": "mydoc", "bla": {"egg": 1262300400.0, "foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+        assert  mydoc.to_json_type() == {'_id': 'mydoc', 'bla': {'egg': 1262300400.0, 'foo': u'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
         mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc2'
@@ -66,8 +68,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc["bla"]["bar"] = 42
         mydoc['spam'] = [datetime.datetime(2000, 1, 1), datetime.datetime(2008, 8, 8)]
         mydoc.save()
-        assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
-        assert mydoc.to_json_type() == {"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}
+        assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"egg": null, "foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
+        assert mydoc.to_json_type() == {'_id': 'mydoc2', 'bla': {'egg': None, 'foo': u'bar', 'bar': 42}, 'spam': [946681200.0, 1218146400.0]}
 
     def test_simple_to_json_with_oid(self):
         class MyDoc(Document):
@@ -171,6 +173,19 @@ class JsonTestCase(unittest.TestCase):
         assert isinstance(mydoc.to_json_type()['doc']['embed']['_id'], basestring)
         mydoc.to_json()
 
+    def test_to_json_with_dict_in_list(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":[{'bar':unicode, 'egg':int}],
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc["foo"] = [{'bar':u'bla', 'egg':3}, {'bar':u'bli', 'egg':4}]
+        mydoc.save()
+        assert  mydoc.to_json() == '{"foo": [{"bar": "bla", "egg": 3}, {"bar": "bli", "egg": 4}], "_id": "mydoc"}', mydoc.to_json()
+        assert  mydoc.to_json_type() == {'foo': [{'bar': u'bla', 'egg': 3}, {'bar': u'bli', 'egg': 4}], '_id': 'mydoc'}
+
 
     def test_simple_from_json(self):
         class MyDoc(Document):
@@ -192,13 +207,14 @@ class JsonTestCase(unittest.TestCase):
                 "bla":{
                     "foo":unicode,
                     "bar":int,
+                    "egg":datetime.datetime,
                 },
                 "spam":[datetime.datetime],
             }
         self.connection.register([MyDoc])
-        json = '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
+        json = '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42, "egg":946681200.0}, "spam": [946681200.0, 1218146400.0]}'
         mydoc = self.col.MyDoc.from_json(json)
-        assert mydoc == {'_id': 'mydoc2', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2008, 8, 8, 0, 0)]}
+        assert mydoc == {'_id': 'mydoc2', 'bla': {'foo': 'bar', 'bar': 42, "egg":datetime.datetime(2000, 1, 1, 0, 0)}, 'spam': [datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2008, 8, 8, 0, 0)]}
 
     def test_from_json_embeded_doc(self):
         class EmbedDoc(Document):
@@ -221,6 +237,42 @@ class JsonTestCase(unittest.TestCase):
         mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}, mydoc
         assert isinstance(mydoc['doc']['embed'], EmbedDoc)
+
+    def test_from_json_embeded_doc_in_list(self):
+        class EmbedDoc(Document):
+            structure = {
+                "bla":{
+                    "foo":unicode,
+                    "bar":int,
+                },
+                "spam":[],
+            }
+        class MyDoc(Document):
+            structure = {
+                "doc":{
+                    "embed":[EmbedDoc],
+                },
+            }
+            use_autorefs = True
+        self.connection.register([MyDoc, EmbedDoc])
+        json = '{"doc": {"embed": [{"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}]}, "_id": "mydoc"}'
+        mydoc = self.col.MyDoc.from_json(json)
+        assert mydoc == {'doc': {'embed': [{u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}]}, '_id': u'mydoc'}, mydoc
+        assert isinstance(mydoc['doc']['embed'][0], EmbedDoc)
+
+    def test_from_json_dict_in_list(self):
+        class MyDoc(Document):
+            structure = {
+                "doc":{
+                    "embed":[{"foo":unicode, "bar":int}],
+                },
+            }
+            use_autorefs = True
+        self.connection.register([MyDoc])
+        json = '{"doc": {"embed": [{"foo": "bar", "bar": 42}]}, "_id": "mydoc"}'
+        mydoc = self.col.MyDoc.from_json(json)
+        assert mydoc == {'doc': {'embed': [{'foo': 'bar', 'bar': 42}]}, '_id': 'mydoc'}
+
 
     def test_simple_to_json_from_cursor(self):
         class MyDoc(Document):
@@ -250,4 +302,25 @@ class JsonTestCase(unittest.TestCase):
         json2 = mydoc2.to_json()
 
         assert [i.to_json() for i in self.col.MyDoc.fetch()] == [json, json2]
+
+    def test_anyjson_import_error(self):
+        import sys
+        for i in sys.path:
+            if 'anyjson' in i:
+                index = sys.path.index(i)
+                del sys.path[index]
+                break
+        class MyDoc(Document):
+            structure = {
+                "foo":int,
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc["foo"] = 4
+        mydoc.save()
+        self.assertRaises(ImportError, mydoc.to_json)
+        self.assertRaises(ImportError, MyDoc.from_json, '{"_id":"mydoc", "foo":4}')
+        sys.path.insert(index, i)
+
 

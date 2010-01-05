@@ -27,7 +27,6 @@
 
 from mongokit import *
 from mongo_exceptions import *
-from mongokit.mongo_document import MongoProperties
 
 class RevisionDocument(Document):
     structure = {

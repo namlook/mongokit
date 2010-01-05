@@ -88,7 +88,7 @@ class Document(SchemaDocument):
 
     def find(self, *args, **kwargs):
         return MongoDocumentCursor(
-          self.collection.find(*args, **kwargs), cls=self.__class__, wrap=True)
+          self.collection.find(*args, **kwargs), cls=self.__class__)
 
     def find_one(self, *args, **kwargs):
         bson_obj = self.collection.find(*args, **kwargs)
@@ -104,7 +104,7 @@ class Document(SchemaDocument):
         """
         return self.find_one({"_id":id})
 
-    def fetch(self, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None, wrap=True):
+    def fetch(self, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
         """
         return all document wich match the structure of the object
         `fetch()` takes the same arguments than the the pymongo.collection.find method.
@@ -129,7 +129,7 @@ class Document(SchemaDocument):
             timeout=timeout,
             snapshot=snapshot,
             _sock=_sock,),
-          cls=self.__class__, wrap=wrap)
+          cls=self.__class__)
 
     def fetch_one(self, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
         """
@@ -225,8 +225,6 @@ class Document(SchemaDocument):
             for key in struct:
                 if isinstance(struct[key], datetime.datetime):
                     struct[key] = totimestamp(struct[key])
-                elif isinstance(struct[key], pymongo.dbref.DBRef):
-                    struct[key] = doc.get_from_id(struct[key].id)
                 elif isinstance(struct[key], ObjectId):
                     struct[key] = str(struct[key])
                 elif isinstance(struct[key], dict):
@@ -238,7 +236,6 @@ class Document(SchemaDocument):
                     elif isinstance(struct[key][0], datetime.datetime):
                         struct[key] = [totimestamp(obj) for obj in struct[key]]
         # we don't want to touch our document so we create another object
-        from copy import deepcopy
         self._process_custom_type('bson', self, self.structure)
         obj = deepcopy(self)
         self._process_custom_type('python', self, self.structure)
@@ -263,19 +260,12 @@ class Document(SchemaDocument):
         """
         def _convert_to_python(doc, struct, path = "", root_path=""):
             for key in struct:
-                if type(key) is type:
-                    new_key = "$%s" % key.__name__
-                else:
-                    new_key = key
+                new_key = key
                 new_path = ".".join([path, new_key]).strip('.')
                 if isinstance(struct[key], dict):
                     if doc: # we don't need to process an empty doc
-                        if type(key) is type:
-                            for doc_key in doc: # process type's key such {unicode:int}...
-                                _convert_to_python(doc[doc_key], struct[key], new_path, root_path)
-                        else:
-                            if key in doc: # we don't care about missing fields
-                                _convert_to_python(doc[key], struct[key], new_path, root_path)
+                        if key in doc: # we don't care about missing fields
+                            _convert_to_python(doc[key], struct[key], new_path, root_path)
                 elif type(struct[key]) is list:
                     if struct[key]:
                         if struct[key][0] is datetime.datetime:
@@ -287,7 +277,7 @@ class Document(SchemaDocument):
                         elif isinstance(struct[key][0], R):
                             l_objs = []
                             for obj in doc[key]:
-                                obj = struct[key](obj)
+                                obj = struct[key][0]._doc(obj)
                                 l_objs.append(obj)
                             doc[key] = l_objs
                         elif isinstance(struct[key][0], dict):
@@ -296,7 +286,7 @@ class Document(SchemaDocument):
                                     _convert_to_python(obj, struct[key][0], new_path, root_path)
                 else:
                     if struct[key] is datetime.datetime:
-                            doc[key] = fromtimestamp(doc[key])
+                        doc[key] = fromtimestamp(doc[key])
                     elif isinstance(struct[key], R):
                         doc[key] = struct[key]._doc(doc[key])
         try:
@@ -336,14 +326,13 @@ class Document(SchemaDocument):
                         elif isinstance(value, tuple):
                             if len(value) != 2:
                                 raise BadIndexError("Error in indexes: a tuple must contain "
-                                  "only two value the field name and the direction")
+                                  "only two value : the field name and the direction")
                             if not isinstance(value[1], int):
                                 raise BadIndexError("Error in %s, the direction must be int (got %s instead)" % (value[0], type(value[1])))
                             if not isinstance(value[0], basestring):
                                 raise BadIndexError("Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
                             if value[0] not in self._namespaces and value[0] not in STRUCTURE_KEYWORDS:
-                                raise ValueError("Error in indexes: can't"
-                                  " find %s in structure" % value )
+                                raise ValueError("Error in indexes: can't find %s in structure" % value[0] )
                             if not value[1] in [1, -1]:
                                 raise BadIndexError("index direction must be 1 or -1. Got %s" % value[1])
                         elif isinstance(value, list):
@@ -369,8 +358,6 @@ class Document(SchemaDocument):
     def __hash__(self):
         if '_id' in self:
             value = self['_id']
-            if value == -1:
-                value == -2
             return value.__hash__()
         else:
             raise TypeError("A Document is not hashable if it is not saved. Save the document before hashing it")
@@ -393,10 +380,7 @@ class Document(SchemaDocument):
         * track the embed doc changes and save it when self.save() is called
         """
         for key in struct:
-            if type(key) is type:
-                new_key = "$%s" % key.__name__
-            else:
-                new_key = key
+            new_key = key
             new_path = ".".join([path, new_key]).strip('.')
             #
             # if the value is a dict, we have a another structure to validate
@@ -457,14 +441,10 @@ class Document(SchemaDocument):
                         if full_new_path not in self._dbrefs:
                             self._dbrefs[full_new_path] = obj
                         else:
-                            # if the embed doc indexed was None but not the new embed one,
-                            # we update the index
-                            if self._dbrefs[full_new_path] is None:
-                                self._dbrefs[full_new_path] = obj
                             # if the embed obj is already indexed, we check is the
                             # one we get has not changed. If so, we save the embed
                             # obj and update the reference
-                            elif self._dbrefs[full_new_path] != obj:
+                            if self._dbrefs[full_new_path]['_id'] == obj['_id'] and self._dbrefs[full_new_path] != obj:
                                 obj.save()
                                 self._dbrefs[full_new_path].update(obj)
                         l_objs.append(obj)

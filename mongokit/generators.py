@@ -27,25 +27,23 @@
 
 
 class MongoDocumentCursor(object):
-    def __init__(self, cursor, cls, wrap):
+    def __init__(self, cursor, cls):
         self._cursor = cursor
         self._collection = cursor._Cursor__collection
         self._db = self._collection.database
         self._class_object = cls
-        self.wrap=wrap
 
     def where(self, *args, **kwargs):
-        return self.__class__(self._cursor.where(*args, **kwargs), self._class_object, self.wrap)
+        return self.__class__(self._cursor.where(*args, **kwargs), self._class_object)
 
     def sort(self, *args, **kwargs):
-        print args, kwargs, self.wrap
-        return self.__class__(self._cursor.sort(*args, **kwargs), self._class_object, self.wrap)
+        return self.__class__(self._cursor.sort(*args, **kwargs), self._class_object)
 
     def limit(self, *args, **kwargs):
-        return self.__class__(self._cursor.limit(*args, **kwargs), self._class_object, self.wrap)
+        return self.__class__(self._cursor.limit(*args, **kwargs), self._class_object)
 
     def hint(self, *args, **kwargs):
-        return self.__class__(self._cursor.hint(*args, **kwargs), self._class_object, self.wrap)
+        return self.__class__(self._cursor.hint(*args, **kwargs), self._class_object)
 
     def count(self, *args, **kwargs):
         return self._cursor.count(*args, **kwargs)
@@ -55,17 +53,12 @@ class MongoDocumentCursor(object):
 
     def next(self, *args, **kwargs):
         data = self._cursor.next(*args, **kwargs)
-        if self.wrap:
-            return self._class_object(data, collection=self._collection)
-        return data
+        return self._class_object(data, collection=self._collection)
 
     def skip(self, *args, **kwargs):
-        return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object, self.wrap)
+        return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
 
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
-            if self.wrap:
-                yield self._class_object(obj, collection=self._collection)
-            else:
-                yield obj
+            yield self._class_object(obj, collection=self._collection)
 

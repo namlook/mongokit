@@ -38,6 +38,7 @@ class ApiTestCase(unittest.TestCase):
         
     def tearDown(self):
         self.connection.drop_database('test')
+        self.connection.drop_database('othertest')
 
     def test_save(self):
         class MyDoc(Document):
@@ -142,6 +143,9 @@ class ApiTestCase(unittest.TestCase):
         fetched_doc = self.col.MyDoc.get_from_id("bar")
         assert mydoc == fetched_doc
         assert isinstance(fetched_doc, MyDoc)
+        raw_doc = self.col.get_from_id('bar')
+        assert mydoc == raw_doc
+        assert not isinstance(raw_doc, MyDoc)
 
     def test_find(self):
         class MyDoc(Document):
@@ -481,20 +485,8 @@ class ApiTestCase(unittest.TestCase):
         assert col.database.name == 'test' == col.Section.db.name
         assert col.name == 'mongokit' == col.Section.collection.name
 
-    def test_with_collection_name_and_no_db_name(self):
-        class Section(Document):
-            collection_name = 'mongokit'
-            structure = {"section":int}
-        self.connection.register([Section])
-        sec2 = self.connection.test.mongokit.Section()
-        sec2['section'] = 2
-        sec2.save()
-        assert self.connection.test.mongokit.find().count() == 1
-
     def test_get_size(self):
         class MyDoc(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {
                 "doc":{"foo":int, "bla":unicode},
             }
@@ -514,8 +506,6 @@ class ApiTestCase(unittest.TestCase):
 
     def test_get_with_no_wrap(self):
         class MyDoc(Document):
-            db_name = "test"
-            collection_name = "mongokit"
             structure = {"foo":int}
         self.connection.register([MyDoc])
 
@@ -543,3 +533,52 @@ class ApiTestCase(unittest.TestCase):
         assert mydocs[0]['foo'] == 1999, mydocs[0]['foo']
 
         assert not isinstance(self.col.find().sort('foo', -1).next(), MyDoc)
+
+    def test_get_dbref(self):
+        class MyDoc(Document):
+            structure = {"foo":int}
+        self.connection.register([MyDoc])
+
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'1'
+        mydoc['foo'] = 1
+        mydoc.save()
+        
+        mydoc = self.connection.test.othercol.MyDoc()
+        mydoc['_id'] = u'2'
+        mydoc['foo'] = 2
+        mydoc.save()
+
+        mydoc = self.connection.othertest.mongokit.MyDoc()
+        mydoc['_id'] = u'3'
+        mydoc['foo'] = 3
+        mydoc.save()
+
+        mydoc = self.col.MyDoc.find_one({'foo':1})
+        assert mydoc.get_dbref(), DBRef(u'mongokit', u'1', u'test')
+
+        mydoc = self.connection.test.othercol.MyDoc.find_one({'foo':2})
+        assert mydoc.get_dbref() == DBRef(u'othercol', u'2', u'test')
+
+        mydoc = self.connection.othertest.mongokit.MyDoc.find_one({'foo':3})
+        assert mydoc.get_dbref() == DBRef(u'mongokit', u'3', u'othertest')
+
+    def test__hash__(self):
+        class MyDoc(Document):
+            structure = {"foo":int}
+        self.connection.register([MyDoc])
+
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = 1
+        self.assertRaises(TypeError, hash, mydoc)
+
+        mydoc.save()
+        hash(mydoc)
+
+    def test_non_callable(self):
+        class MyDoc(Document):
+            structure = {"foo":int}
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        self.assertRaises(TypeError, mydoc)
+

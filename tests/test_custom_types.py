@@ -165,6 +165,12 @@ class CustomTypesTestCase(unittest.TestCase):
                 
         self.assertRaises(TypeError, CustomDate)
 
+        class CustomDate(CustomType):
+            mongo_type = unicode
+        self.assertRaises(NotImplementedError, CustomDate().to_bson, "bla")
+        self.assertRaises(NotImplementedError, CustomDate().to_python, "bla")
+
+
     def test_custom_type_nested_list(self):
         import datetime
 

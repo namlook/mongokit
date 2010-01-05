@@ -72,10 +72,7 @@ class AutoRefTestCase(unittest.TestCase):
         assert docb == {'b': {'doc_a': {'a': {'foo': 3}, '_id': 'doca'}}, '_id': 'docb'}
         docb.save()
         saved_docb = self.col.find_one({'_id':'docb'})
-        print saved_docb
         _docb = self.col.DocB.get_from_id('docb')
-        print _docb, type(_docb), type(_docb['b']['doc_a'])
-        print _docb['b']['doc_a'].structure
         assert saved_docb['b']['doc_a'] == DBRef(database='test', collection='mongokit', id='doca'), saved_docb['b']['doc_a']
 
         docb_list = list(self.col.DocB.fetch())
@@ -304,7 +301,7 @@ class AutoRefTestCase(unittest.TestCase):
         assert docb['b']['doc_a'][0]['a']['foo'] == 3
         docb['b']['doc_a'][0]['a']['foo'] = 4
         docb.save()
-        assert docb['b']['doc_a'][0]['a']['foo'] == 4, type(docb['b']['doc_a'][0])
+        assert docb['b']['doc_a'][0]['a']['foo'] == 4, docb['b']['doc_a'][0]['a']['foo']
         assert doca['a']['foo'] == 4, doca['a']['foo']
 
         docb['b']['doc_a'].append(doca2)
@@ -492,4 +489,81 @@ class AutoRefTestCase(unittest.TestCase):
         assert docb['b']['a'] == 'bla'
         docb = self.connection.dbb.mongokit.DocB.get_from_id(docb['_id'])
         assert isinstance(docb['b'], DocA)
- 
+
+    def test_autoref_without_validation(self):
+        class DocA(Document):
+            structure = {
+                "a":{'foo':int},
+            }
+        self.connection.register([DocA])
+
+        doca = self.col.DocA()
+        doca['_id'] = 'doca'
+        doca['a']['foo'] = 3
+        doca.save()
+
+        class DocB(Document):
+            structure = {
+                "b":{"doc_a":DocA},
+            }
+            use_autorefs = True
+            skip_validation = True
+        self.connection.register([DocB])
+
+        docb = self.col.DocB()
+        docb['_id'] = 'docb'
+        docb['b']['doc_a'] = doca
+        docb.save()
+
+    def test_autoref_updated(self):
+        class DocA(Document):
+            structure = {
+                "a":{'foo':int},
+            }
+        self.connection.register([DocA])
+
+        doca = self.col.DocA()
+        doca['_id'] = 'doca'
+        doca['a']['foo'] = 3
+        doca.save()
+
+        doca2 = self.col.DocA()
+        doca2['_id'] = 'doca2'
+        doca2['a']['foo'] = 6
+        doca2.save()
+
+        class DocB(Document):
+            structure = {
+                "b":{"doc_a":[DocA]},
+            }
+            use_autorefs = True
+        self.connection.register([DocB])
+
+        docb = self.col.DocB()
+        docb['_id'] = 'docb'
+        docb.save()
+        assert docb ==  {'b': {'doc_a': []}, '_id': 'docb'}
+        docb['b']['doc_a'] = [doca, doca2]
+        docb.save()
+        assert docb == {'b': {'doc_a': [{u'a': {u'foo': 3}, u'_id': u'doca'}, {u'a': {u'foo': 6}, u'_id': u'doca2'}]}, '_id': 'docb'}
+        docb['b']['doc_a'].pop(0)
+        docb.save()
+        assert docb == {'b': {'doc_a': [{u'a': {u'foo': 6}, u'_id': u'doca2'}]}, '_id': 'docb'}
+        fetched_docb = self.col.DocB.get_from_id('docb')
+        assert fetched_docb == {u'_id': u'docb', u'b': {u'doc_a': [{u'a': {u'foo': 6}, u'_id': u'doca2'}]}}
+
+        docb = self.col.DocB()
+        docb['_id'] = 'docb'
+        docb.save()
+        assert docb ==  {'b': {'doc_a': []}, '_id': 'docb'}
+        docb['b']['doc_a'] = [doca, doca2]
+        docb.save()
+        assert docb == {'b': {'doc_a': [{u'a': {u'foo': 3}, u'_id': u'doca'}, {u'a': {u'foo': 6}, u'_id': u'doca2'}]}, '_id': 'docb'}, docb
+        docb['b']['doc_a'].pop(0)
+        docb['b']['doc_a'].append(doca)
+        docb.save()
+        assert docb == {'b': {'doc_a': [{u'a': {u'foo': 6}, u'_id': u'doca2'}, {u'a': {u'foo': 3}, u'_id': u'doca'}]}, '_id': 'docb'}, docb
+        fetched_docb = self.col.DocB.get_from_id('docb')
+        assert fetched_docb == {u'_id': u'docb', u'b': {u'doc_a': [{u'a': {u'foo': 6}, u'_id': u'doca2'}, {u'a': {u'foo': 3}, u'_id': u'doca'}]}}
+
+

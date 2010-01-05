@@ -263,10 +263,60 @@ class IndexTestCase(unittest.TestCase):
             }
             indexes = [
                 {
+                    'fields':('standard',1, "blah"),
+                },
+            ]
+        self.assertRaises(BadIndexError, self.connection.register, [Movie])
+        class Movie(Document):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':('standard',"2"),
+                },
+            ]
+        self.assertRaises(BadIndexError, self.connection.register, [Movie])
+        class Movie(Document):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':(3,1),
+                },
+            ]
+        self.assertRaises(BadIndexError, self.connection.register, [Movie])
+        class Movie(Document):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':("blah",1),
+                },
+            ]
+        self.assertRaises(ValueError, self.connection.register, [Movie])
+        class Movie(Document):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
                     'fields':[('standard',1), ('bla',1)],
                 },
             ]
         self.assertRaises(ValueError, self.connection.register, [Movie])
+        class Movie(Document):
+            structure = {
+                'standard':unicode,
+            }
+            indexes = [
+                {
+                    'fields':[('standard',3)],
+                },
+            ]
+        self.assertRaises(BadIndexError, self.connection.register, [Movie])
         class Movie(Document):
             structure = {
                 'standard':unicode,

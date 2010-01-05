@@ -101,6 +101,21 @@ class VersionedTestCase(unittest.TestCase):
         versioned_doc = self.connection.test.mongokit.MyVersionedDoc.get_from_id(versioned_doc['_id'])
         assert len(list(versioned_doc.get_revisions())) == 3, len(list(versioned_doc.get_revisions()))
 
+    def test_save_without_versionning(self):
+        class MyVersionedDoc(VersionedDocument):
+            structure = {
+                "foo" : unicode,
+            }
+        self.connection.register([MyVersionedDoc])
+ 
+        versioned_doc = self.col.MyVersionedDoc()
+        versioned_doc['_id'] = "mydoc"
+        versioned_doc['foo'] = u'bla'
+        versioned_doc.save(versioning=False)
+        assert self.col.MyVersionedDoc.versioning_collection.find().count() == 0
+        assert self.col.find().count() == 1
+
+
     def test_save_versionning_without_id(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {

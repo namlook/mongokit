@@ -45,10 +45,21 @@ class TypesTestCase(unittest.TestCase):
                 assert MyDoc() == {"foo":None}, auth_type
  
     def test_not_authorized_type(self):
-       for unauth_type in [set, str]:
+        for unauth_type in [set, str]:
             class MyDoc(SchemaDocument):
-                structure = { "foo":unauth_type }
+                structure = { "foo":[unauth_type] }
             self.assertRaises( StructureError, MyDoc )
+            class MyDoc2(SchemaDocument):
+                structure = { 'foo':[{int:unauth_type }]}
+            self.assertRaises( StructureError, MyDoc2 )
+            class MyDoc3(SchemaDocument):
+                structure = { 'foo':[{unauth_type:int }]}
+            self.assertRaises( AuthorizedTypeError, MyDoc3 )
+
+        class MyDoc4(SchemaDocument):
+            structure = {1:unicode}
+        self.assertRaises( StructureError, MyDoc4 )
+
 
     def test_type_from_functions(self):
         from datetime import datetime
@@ -221,6 +232,18 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = {u"foo":"7"}
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
+        class MyInt(int):
+            pass
+        class MyDoc(SchemaDocument):
+            structure = {
+                "foo":MyInt,
+            }
+        mydoc = MyDoc()
+        mydoc["foo"] = MyInt(3)
+        mydoc.validate()
+        mydoc['foo'] = 3
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+
     def test_list_instead_of_dict(self):
         class MyDoc(SchemaDocument):
             structure = {
@@ -255,9 +278,18 @@ class TypesTestCase(unittest.TestCase):
             authorized_types = SchemaDocument.authorized_types + [str]
         mydoc = MyDoc()
     
+    def test_schema_operator(self):
+        from mongokit.operators import SchemaOperator
+        class OP(SchemaOperator):
+            repr = "op"
+        op = OP()
+        self.assertRaises(NotImplementedError, op.validate, "bla")
+            
 
     def test_or_operator(self):
         from mongokit import OR
+        assert repr(OR(unicode, str)) == "<unicode or str>"
+
         class BadMyDoc(SchemaDocument):
             structure = {"bla":OR(unicode,str)}
         self.assertRaises(StructureError, BadMyDoc)
@@ -382,3 +414,4 @@ class TypesTestCase(unittest.TestCase):
         mydoc = MyDoc()
         mydoc['foo'] = CustomFloat(4)
         mydoc.validate()
+

@@ -37,14 +37,18 @@ class StructureTestCase(unittest.TestCase):
         Connection()['test'].drop_collection('mongokit')
 
     def test_no_structure(self):
-        class MyDoc(SchemaDocument):
-            pass
+        class MyDoc(SchemaDocument): pass
         self.assertRaises(StructureError, MyDoc)
 
     def test_empty_structure(self):
         class MyDoc(SchemaDocument):
             structure = {}
         assert MyDoc() == {}
+
+    def test_structure_not_dict(self):
+        class MyDoc(SchemaDocument):
+            structure = 3
+        self.assertRaises(StructureError, MyDoc)
 
     def test_load_with_dict(self):
         doc = {"foo":1, "bla":{"bar":u"spam"}}
@@ -143,6 +147,9 @@ class StructureTestCase(unittest.TestCase):
         mydoc.foo.bar = 3
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc.foo.bar = u"bar"
+        assert mydoc.foo.bar == u'bar'
+        mydoc.foo.bla = 2
+        assert mydoc.foo.bla == 2
         assert mydoc['foo'] == {"bar":"bar"}
         assert mydoc['foo']['bar'] == 'bar'
         assert mydoc == {'foo':{'bar':'bar'}}

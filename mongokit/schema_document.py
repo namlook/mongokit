@@ -92,8 +92,6 @@ class DotedDict(dict):
     def __getattr__(self, key):
         if key in self:
             return self[key]
-        else:
-           dict.__getattribute__(self, key)
 
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
@@ -240,8 +238,6 @@ class SchemaDocument(dict):
             self._authorized_types = self.authorized_types[:]
         if doc is None:
             doc = {}
-        if self.structure is None:
-            raise StructureError("your document must have a structure defined")
         if not self.skip_validation and validate: 
             self._validate_structure()
             self._namespaces = list(self.__walk_dict(self.structure))
@@ -302,78 +298,78 @@ class SchemaDocument(dict):
         else:
             return dict.__getattribute__(self, key) 
 
-    def to_json(self):
-        """
-        convert the document into a json string and return it
-        """
-        def _convert_to_json(struct):
-            """
-            convert all datetime to a timestamp from epoch
-            """
-            for key in struct:
-                if isinstance(struct[key], datetime.datetime):
-                    struct[key] = totimestamp(struct[key])
-                elif isinstance(struct[key], dict):
-                    _convert_to_json(struct[key])
-                elif isinstance(struct[key], list) and len(struct[key]):
-                    if isinstance(struct[key][0], dict):
-                        for obj in struct[key]:
-                            _convert_to_json(obj)
-                    elif isinstance(struct[key][0], datetime.datetime):
-                        struct[key] = [totimestamp(obj) for obj in struct[key]]
-        # we don't want to touch our document so we create another object
-        self._process_custom_type('bson', self, self.structure)
-        obj = deepcopy(self)
-        self._process_custom_type('python', self, self.structure)
-        _convert_to_json(obj)
-        try:
-            import anyjson
-        except ImportError:
-            raise ImportError("can't import anyjson. Please install it before continuing.")
-        return anyjson.serialize(obj)
- 
-    @classmethod
-    def from_json(cls, json):
-        """
-        convert a json string and return a SchemaDocument
-        """
-        def _convert_to_python(doc, struct, path = "", root_path=""):
-            for key in struct:
-                if type(key) is type:
-                    new_key = "$%s" % key.__name__
-                else:
-                    new_key = key
-                new_path = ".".join([path, new_key]).strip('.')
-                if isinstance(struct[key], dict):
-                    if doc: # we don't need to process an empty doc
-                        if type(key) is type:
-                            for doc_key in doc: # process type's key such {unicode:int}...
-                                _convert_to_python(doc[doc_key], struct[key], new_path, root_path)
-                        else:
-                            if key in doc: # we don't care about missing fields
-                                _convert_to_python(doc[key], struct[key], new_path, root_path)
-                elif type(struct[key]) is list:
-                    if struct[key]:
-                        l_objs = []
-                        if struct[key][0] is datetime.datetime:
-                            for obj in doc[key]:
-                                obj = fromtimestamp(obj)
-                                l_objs.append(obj)
-                            doc[key] = l_objs
-                        elif isinstance(struct[key][0], dict):
-                            if doc[key]:
-                                for obj in doc[key]:
-                                    _convert_to_python(obj, struct[key][0], new_path, root_path)
-                else:
-                    if struct[key] is datetime.datetime:
-                            doc[key] = fromtimestamp(doc[key])
-        try:
-            import anyjson
-        except ImportError:
-            raise ImportError("can't import anyjson. Please install it before continuing.")
-        obj = anyjson.deserialize(json)
-        _convert_to_python(obj, cls.structure)
-        return obj
+#    def to_json(self):
+#        """
+#        convert the document into a json string and return it
+#        """
+#        def _convert_to_json(struct):
+#            """
+#            convert all datetime to a timestamp from epoch
+#            """
+#            for key in struct:
+#                if isinstance(struct[key], datetime.datetime):
+#                    struct[key] = totimestamp(struct[key])
+#                elif isinstance(struct[key], dict):
+#                    _convert_to_json(struct[key])
+#                elif isinstance(struct[key], list) and len(struct[key]):
+#                    if isinstance(struct[key][0], dict):
+#                        for obj in struct[key]:
+#                            _convert_to_json(obj)
+#                    elif isinstance(struct[key][0], datetime.datetime):
+#                        struct[key] = [totimestamp(obj) for obj in struct[key]]
+#        # we don't want to touch our document so we create another object
+#        self._process_custom_type('bson', self, self.structure)
+#        obj = deepcopy(self)
+#        self._process_custom_type('python', self, self.structure)
+#        _convert_to_json(obj)
+#        try:
+#            import anyjson
+#        except ImportError:
+#            raise ImportError("can't import anyjson. Please install it before continuing.")
+#        return anyjson.serialize(obj)
+# 
+#    @classmethod
+#    def from_json(cls, json):
+#        """
+#        convert a json string and return a SchemaDocument
+#        """
+#        def _convert_to_python(doc, struct, path = "", root_path=""):
+#            for key in struct:
+#                if type(key) is type:
+#                    new_key = "$%s" % key.__name__
+#                else:
+#                    new_key = key
+#                new_path = ".".join([path, new_key]).strip('.')
+#                if isinstance(struct[key], dict):
+#                    if doc: # we don't need to process an empty doc
+#                        if type(key) is type:
+#                            for doc_key in doc: # process type's key such {unicode:int}...
+#                                _convert_to_python(doc[doc_key], struct[key], new_path, root_path)
+#                        else:
+#                            if key in doc: # we don't care about missing fields
+#                                _convert_to_python(doc[key], struct[key], new_path, root_path)
+#                elif type(struct[key]) is list:
+#                    if struct[key]:
+#                        l_objs = []
+#                        if struct[key][0] is datetime.datetime:
+#                            for obj in doc[key]:
+#                                obj = fromtimestamp(obj)
+#                                l_objs.append(obj)
+#                            doc[key] = l_objs
+#                        elif isinstance(struct[key][0], dict):
+#                            if doc[key]:
+#                                for obj in doc[key]:
+#                                    _convert_to_python(obj, struct[key][0], new_path, root_path)
+#                else:
+#                    if struct[key] is datetime.datetime:
+#                            doc[key] = fromtimestamp(doc[key])
+#        try:
+#            import anyjson
+#        except ImportError:
+#            raise ImportError("can't import anyjson. Please install it before continuing.")
+#        obj = anyjson.deserialize(json)
+#        _convert_to_python(obj, cls.structure)
+#        return obj
 
     #
     # Public API end
@@ -435,11 +431,6 @@ class SchemaDocument(dict):
             if validator not in self._namespaces:
                 raise ValueError("Error in validators: can't"
                   "find %s in structure" % validator )
-        for validator in self.validators:
-            if validator not in self._namespaces:
-                raise ValueError("Error in validators: can't"
-                  "find %s in structure" % validator )
-        
 
     def _validate_structure(self):
         """
@@ -449,7 +440,7 @@ class SchemaDocument(dict):
         def __validate_structure( struct):
             if type(struct) is type:
                 if struct not in self._authorized_types:
-                    raise StructureError("%s is not an authorized_types" % key)
+                    raise StructureError("%s is not an authorized_types" % struct)
             elif isinstance(struct, dict):
                 for key in struct:
                     if isinstance(key, basestring):
@@ -479,7 +470,7 @@ class SchemaDocument(dict):
                     elif (struct[key] not in self._authorized_types):
                         ok = False
                         for auth_type in self._authorized_types:
-                            if isinstance(struct[key], auth_type):
+                            if isinstance(struct[key], auth_type) or issubclass(struct[key], auth_type):
                                 ok = True
                         if not ok:
                             raise StructureError(
@@ -738,65 +729,6 @@ class SchemaDocument(dict):
                 default_values[k] = v()
         self.update(DotExpandedDict(default_values))
 
-    def __set_default_fields(self, doc, struct, path = ""):
-        # TODO check this out, this method must be restructured
-        for key in struct:
-            if type(key) is type:
-                new_key = "$%s" % key.__name__
-            else:
-                new_key = key
-            new_path = ".".join([path, new_key]).strip('.')
-            #
-            # default_values :
-            # if the value is None, check if a default value exist.
-            # if exists, and it is a function then call it otherwise,
-            # juste feed it
-            #
-            if type(key) is not type:
-                if doc[key] is None and new_path in self.default_values:
-                    new_value = self.default_values[new_path]
-                    if callable(new_value):
-                        new_value = new_value()
-                    if isinstance(struct[key], CustomType):
-                        if not isinstance(new_value, struct[key].mongo_type):
-                            raise DefaultFieldTypeError(
-                              "%s must be an instance of %s not %s" % (
-                                new_path, struct[key].mongo_type.__name__, type(new_value).__name__))
-                    doc[key] = new_value
-            #
-            # if the value is a dict, we have a another structure to validate
-            #
-            if isinstance(struct[key], dict):
-                #
-                # if the dict is still empty into the document we build
-                # it with None values
-                #
-                if len(struct[key]) and\
-                  not [i for i in struct[key].keys() if type(i) is type]:
-                    self._set_default_fields(doc[key], struct[key], new_path)
-                else:
-                    if new_path in self.default_values:
-                        new_value = self.default_values[new_path]
-                        if callable(new_value):
-                            new_value = new_value()
-                        if isinstance(struct[key], CustomType):
-                            if not isinstance(new_value, struct[key].mongo_type):
-                                raise DefaultFieldTypeError(
-                                  "%s must be an instance of %s not %s" % (
-                                    new_path, struct[key].mongo_type.__name__, type(new_value).__name__))
-                        doc[key] = new_value
-            else: # list or what else
-                if new_path in self.default_values:
-                    new_value = self.default_values[new_path]
-                    if callable(new_value):
-                        new_value = new_value()
-                    if isinstance(struct[key], CustomType):
-                        if not isinstance(new_value, struct[key].mongo_type):
-                            raise DefaultFieldTypeError(
-                              "%s must be an instance of %s not %s" % (
-                                new_path, struct[key].mongo_type.__name__, type(new_value).__name__))
-                    doc[key] = new_value
-
     def _validate_required(self, doc, struct, path = "", root_path=""):
         for key in struct:
             if type(key) is type:
@@ -877,10 +809,7 @@ class SchemaDocument(dict):
                     if type(struct[key]) is dict and self.use_dot_notation:
                         doc[key] = DotedDict()
                     else:
-                        if callable(struct[key]):
-                            doc[key] = struct[key]()
-                        else:
-                            doc[key] = type(struct[key])()
+                        doc[key] = type(struct[key])()
                 elif struct[key] is dict:
                     doc[key] = {}
                 elif isinstance(struct[key], list):
@@ -930,3 +859,12 @@ class DotExpandedDict(dict):
                 current[bits[-1]] = v 
             except TypeError: # Special-case if current isn't a dict. 
                 current = {bits[-1]: v} 
+
+#class DotCollapsedDict(dict):
+#    def __init__(self, passed_dict):
+#        assert isinstance(passed_dict, dict), "you must pass a dict instance"
+#        d = eval(str(passed_dict).replace("<type '", "").replace('{}', '(@@)').replace("': {'", '.').replace("': {", ".$").replace(": {'", '.').replace(": {", '.$').replace("'>:", "':").replace("'>", "").replace('}', '').replace('(@@)','{}')+'}')
+#        for k,v in d.iteritems():
+#            self[k] = v
+#
+
