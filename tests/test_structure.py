@@ -150,7 +150,7 @@ class StructureTestCase(unittest.TestCase):
         assert mydoc.foo.bar == u'bar'
         mydoc.foo.bla = 2
         assert mydoc.foo.bla == 2
-        assert mydoc['foo'] == {"bar":"bar"}
+        assert mydoc['foo'] == {"bar":"bar"}, mydoc
         assert mydoc['foo']['bar'] == 'bar'
         assert mydoc == {'foo':{'bar':'bar'}}
         mydoc.validate()
