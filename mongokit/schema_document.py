@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2009, Nicolas Clairon
+# Copyright (c) 2009-2010, Nicolas Clairon
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -33,24 +33,12 @@ from copy import deepcopy
 log = logging.getLogger(__name__)
 
 from operators import SchemaOperator, IS
+from helpers import *
 
-__all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict',
+__all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict', 'DotExpandedDict', 'DotCollapsedDict',
   'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
   'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
   'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp']
-
-def totimestamp(dt):
-    """
-    convert a datetime into a float since epoch
-    """
-    import time
-    return time.mktime(dt.timetuple()) + dt.microsecond/1e6
-
-def fromtimestamp(epoch_date):
-    """
-    convert a float since epoch to a datetime object
-    """
-    return datetime.datetime.fromtimestamp(epoch_date)
 
 class CustomType(object): 
     mongo_type = None
@@ -82,16 +70,6 @@ class DuplicateDefaultValueError(Exception):pass
 class ModifierOperatorError(Exception):pass
 class SchemaTypeError(Exception):pass
 class DefaultFieldTypeError(Exception):pass
-
-class DotedDict(dict):
-    def __setattr__(self, key, value):
-        if key in self:
-            self[key] = value
-        else:
-           dict.__setattr__(self, key, value) 
-    def __getattr__(self, key):
-        if key in self:
-            return self[key]
 
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
@@ -298,78 +276,18 @@ class SchemaDocument(dict):
         else:
             return dict.__getattribute__(self, key) 
 
-#    def to_json(self):
-#        """
-#        convert the document into a json string and return it
-#        """
-#        def _convert_to_json(struct):
-#            """
-#            convert all datetime to a timestamp from epoch
-#            """
-#            for key in struct:
-#                if isinstance(struct[key], datetime.datetime):
-#                    struct[key] = totimestamp(struct[key])
-#                elif isinstance(struct[key], dict):
-#                    _convert_to_json(struct[key])
-#                elif isinstance(struct[key], list) and len(struct[key]):
-#                    if isinstance(struct[key][0], dict):
-#                        for obj in struct[key]:
-#                            _convert_to_json(obj)
-#                    elif isinstance(struct[key][0], datetime.datetime):
-#                        struct[key] = [totimestamp(obj) for obj in struct[key]]
-#        # we don't want to touch our document so we create another object
-#        self._process_custom_type('bson', self, self.structure)
-#        obj = deepcopy(self)
-#        self._process_custom_type('python', self, self.structure)
-#        _convert_to_json(obj)
-#        try:
-#            import anyjson
-#        except ImportError:
-#            raise ImportError("can't import anyjson. Please install it before continuing.")
-#        return anyjson.serialize(obj)
-# 
-#    @classmethod
-#    def from_json(cls, json):
-#        """
-#        convert a json string and return a SchemaDocument
-#        """
-#        def _convert_to_python(doc, struct, path = "", root_path=""):
-#            for key in struct:
-#                if type(key) is type:
-#                    new_key = "$%s" % key.__name__
-#                else:
-#                    new_key = key
-#                new_path = ".".join([path, new_key]).strip('.')
-#                if isinstance(struct[key], dict):
-#                    if doc: # we don't need to process an empty doc
-#                        if type(key) is type:
-#                            for doc_key in doc: # process type's key such {unicode:int}...
-#                                _convert_to_python(doc[doc_key], struct[key], new_path, root_path)
-#                        else:
-#                            if key in doc: # we don't care about missing fields
-#                                _convert_to_python(doc[key], struct[key], new_path, root_path)
-#                elif type(struct[key]) is list:
-#                    if struct[key]:
-#                        l_objs = []
-#                        if struct[key][0] is datetime.datetime:
-#                            for obj in doc[key]:
-#                                obj = fromtimestamp(obj)
-#                                l_objs.append(obj)
-#                            doc[key] = l_objs
-#                        elif isinstance(struct[key][0], dict):
-#                            if doc[key]:
-#                                for obj in doc[key]:
-#                                    _convert_to_python(obj, struct[key][0], new_path, root_path)
-#                else:
-#                    if struct[key] is datetime.datetime:
-#                            doc[key] = fromtimestamp(doc[key])
-#        try:
-#            import anyjson
-#        except ImportError:
-#            raise ImportError("can't import anyjson. Please install it before continuing.")
-#        obj = anyjson.deserialize(json)
-#        _convert_to_python(obj, cls.structure)
-#        return obj
+    def to_json(self):
+        """
+        convert the document into a json string and return it
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def from_json(cls, json):
+        """
+        convert a json string and return a SchemaDocument
+        """
+        raise NotImplementedError
 
     #
     # Public API end
@@ -388,9 +306,10 @@ class SchemaDocument(dict):
                         new_key = "$%s" % key.__name__
                     else:
                         new_key = key
-                    if type(child_key) is type:
-                        new_child_key = "$%s" % child_key.__name__
-                    else:
+                    #if type(child_key) is type:
+                    #    new_child_key = "$%s" % child_key.__name__
+                    #else:
+                    if type(child_key) is not type:
                         new_child_key = child_key
                     yield '%s.%s' % (new_key, new_child_key)
             elif type(key) is type:
@@ -398,25 +317,27 @@ class SchemaDocument(dict):
             elif isinstance(value, list) and len(value):
                 if isinstance(value[0], dict):
                     for child_key in self.__walk_dict(value[0]):
-                        if type(key) is type:
-                            new_key = "$%s" % key.__name__
-                        else:
+                        #if type(key) is type:
+                        #    new_key = "$%s" % key.__name__
+                        #else:
+                        if type(key) is not type:
                             new_key = key
-                        if type(child_key) is type:
-                            new_child_key = "$%s" % child_key.__name__
-                        else:
+                        #if type(child_key) is type:
+                        #    new_child_key = "$%s" % child_key.__name__
+                        #else:
+                        if type(child_key) is not type:
                             new_child_key = child_key
                         yield '%s.%s' % (new_key, new_child_key)
                 else:
                     if type(key) is not type:
                         yield key
-                    else:
-                        yield ""
+                    #else:
+                    #    yield ""
             else:
                 if type(key) is not type:
                     yield key
-                else:
-                    yield ""
+                #else:
+                #    yield ""
 
     def _validate_descriptors(self):
         for dv in self.default_values:
@@ -592,70 +513,19 @@ class SchemaDocument(dict):
                     path, len(struct), len(doc)))
             for i in range(len(struct)):
                 self._validate_doc(doc[i], struct[i], path)
-        elif not isinstance(doc, struct):
-            raise SchemaTypeError(
-              "%s must be an instance of %s not %s" % (
-                path, struct.__name__, type(doc).__name__))
             
-
     def _process_validators(self, doc, struct, path = ""):
-        #################################################
-        def __processval( self, new_path, doc, key ):
-            #
-            # check that the value pass througt the validator process
-            #
-            if new_path in self.validators and doc[key] is not None:
-                if not hasattr(self.validators[new_path], "__iter__"):
-                    validators = [self.validators[new_path]]
-                else:
-                    validators = self.validators[new_path]
+        doted_doc = DotCollapsedDict(doc)
+        doted_struct = DotCollapsedDict(self.structure)
+        for key, validators in self.validators.iteritems():
+            if doted_doc[key] is not None:
+                if not hasattr(validators, "__iter__"):
+                    validators = [validators]
                 for validator in validators:
-                    if not validator(doc[key]):
+                    if not validator(doted_doc[key]):
                         raise ValidationError(
                           "%s does not pass the validator %s" % (
-                            new_path, validator.__name__))
-        #################################################
-        for key in struct:
-            if type(key) is type:
-                new_key = "$%s" % key.__name__
-            else:
-                new_key = key
-            new_path = ".".join([path, new_key]).strip('.')
-            #
-            # if the value is a dict, we have a another structure to validate
-            #
-            if isinstance(struct[key], dict):
-                #
-                # if the dict is still empty into the document
-                # we build it with None values
-                #
-                if type(key) is not type and key not in doc:
-                    __processval(self, new_path, doc)
-                elif type(key) is type:
-                    for doc_key in doc:
-                        self._process_validators(
-                          doc[doc_key], struct[key], new_path)
-                else:
-                    self._process_validators(doc[key], struct[key], new_path)
-            #
-            # If the struct is a list, we have to validate all values into it
-            #
-            elif type(struct[key]) is list:
-                #
-                # check if the list must not be null
-                #
-                if not key in doc:
-                    __processval(self, new_path, doc, key)
-                elif not len(doc[key]):
-                    __processval(self, new_path, doc, key)
-            #
-            # It is not a dict nor a list but a simple key:value
-            #
-            else:
-                #
-                # check if the value must not be null
-                #
-                __processval(self, new_path, doc, key)
+                            key, validator.__name__))
 
     def _process_custom_type(self, target, doc, struct, path = "", root_path=""):
         for key in struct:
@@ -729,75 +599,16 @@ class SchemaDocument(dict):
                 default_values[k] = v()
         self.update(DotExpandedDict(default_values))
 
-    def _validate_required(self, doc, struct, path = "", root_path=""):
-        for key in struct:
-            if type(key) is type:
-                new_key = "$%s" % key.__name__
-            else:
-                new_key = key
-            new_path = ".".join([path, new_key]).strip('.')
-            #
-            # if the value is a dict, we have a another structure to validate
-            #
-            if isinstance(struct[key], dict):
-                #
-                # if the dict is still empty into the document we build
-                # it with None values
-                #
-                if type(key) is not type and key not in doc:
-                    if new_path in self._required_namespace:
-                        if root_path:
-                            new_path = ".".join([root_path, new_path])
-                        raise RequireFieldError("%s is required" % new_path)
-                elif type(key) is type:
-                    if not len(doc):
-                        if new_path in self._required_namespace:
-                            if root_path:
-                                new_path = ".".join([root_path, new_path])
-                            raise RequireFieldError("%s is required" % new_path)
-                    else:
-                        for doc_key in doc:
-                            self._validate_required(
-                              doc[doc_key], struct[key], new_path)
-                elif not len(doc[key]) and new_path in self._required_namespace:
-                    if root_path:
-                        new_path = ".".join([root_path, new_path])
-                    raise RequireFieldError( "%s is required" % new_path )
-                else:
-                    self._validate_required(doc[key], struct[key], new_path, root_path)
-            #
-            # If the struct is a list, we have to validate all values into it
-            #
-            elif type(struct[key]) is list:
-                #
-                # check if the list must not be null
-                #
-                if not key in doc:
-                    if new_path in self._required_namespace:
-                        if root_path:
-                            new_path = ".".join([root_path, new_path])
-                        raise RequireFieldError( "%s is required" % new_path )
-                elif not len(doc[key]) and new_path in self.required_fields:
-                    if root_path:
-                        new_path = ".".join([root_path, new_path])
-                    raise RequireFieldError( "%s is required" % new_path )
-            #
-            # It is not a dict nor a list but a simple key:value
-            #
-            else:
-                #
-                # check if the value must not be null
-                #
-                if not key in doc:
-                    if new_path in self._required_namespace:
-                        if root_path:
-                            new_path = ".".join([root_path, new_path])
-                        raise RequireFieldError( "%s is required" % new_path )
-                elif doc[key] is None and new_path in self._required_namespace:
-                    if root_path:
-                        new_path = ".".join([root_path, new_path])
-                    raise RequireFieldError( "%s is required" % new_path )
-
+    def _validate_required(self, doc, struct, path="", root_path=""):
+        doted_doc = DotCollapsedDict(doc)
+        doted_struct = DotCollapsedDict(self.structure)
+        for req in self.required_fields:
+            if doted_doc.get(req) is None:
+                raise RequireFieldError("%s is required" % req)
+            elif doted_doc.get(req) == []:
+                raise RequireFieldError("%s is required" % req)
+            elif doted_doc.get(req) == {}:
+                raise RequireFieldError("%s is required" % req)
 
     def __generate_skeleton(self, doc, struct, path = ""):
         for key in struct:
@@ -825,46 +636,4 @@ class SchemaDocument(dict):
             #
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
-
-class DotExpandedDict(dict): 
-    """ 
-    A special dictionary constructor that takes a dictionary in which the keys 
-    may contain dots to specify inner dictionaries. It's confusing, but this 
-    example should make sense. 
-
-    >>> d = DotExpandedDict({'person.1.firstname': ['Simon'], \ 
-          'person.1.lastname': ['Willison'], \ 
-          'person.2.firstname': ['Adrian'], \ 
-          'person.2.lastname': ['Holovaty']}) 
-    >>> d 
-    {'person': {'1': {'lastname': ['Willison'], 'firstname': ['Simon']}, '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}}} 
-    >>> d['person'] 
-    {'1': {'lastname': ['Willison'], 'firstname': ['Simon']}, '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}} 
-    >>> d['person']['1'] 
-    {'lastname': ['Willison'], 'firstname': ['Simon']} 
-
-    # Gotcha: Results are unpredictable if the dots are "uneven": 
-    >>> DotExpandedDict({'c.1': 2, 'c.2': 3, 'c': 1}) 
-    {'c': 1} 
-    """ 
-    # code taken from Django source code http://code.djangoproject.com/
-    def __init__(self, key_to_list_mapping): 
-        for k, v in key_to_list_mapping.items(): 
-            current = self 
-            bits = k.split('.') 
-            for bit in bits[:-1]: 
-               current = current.setdefault(bit, {}) 
-            # Now assign value to current position 
-            try: 
-                current[bits[-1]] = v 
-            except TypeError: # Special-case if current isn't a dict. 
-                current = {bits[-1]: v} 
-
-#class DotCollapsedDict(dict):
-#    def __init__(self, passed_dict):
-#        assert isinstance(passed_dict, dict), "you must pass a dict instance"
-#        d = eval(str(passed_dict).replace("<type '", "").replace('{}', '(@@)').replace("': {'", '.').replace("': {", ".$").replace(": {'", '.').replace(": {", '.$').replace("'>:", "':").replace("'>", "").replace('}', '').replace('(@@)','{}')+'}')
-#        for k,v in d.iteritems():
-#            self[k] = v
-#
 

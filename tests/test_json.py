@@ -324,3 +324,9 @@ class JsonTestCase(unittest.TestCase):
         sys.path.insert(index, i)
 
 
+    def test_json_schema_document(self):
+        class MyDoc(SchemaDocument):
+            structure = {'foo':int}
+        self.assertRaises(NotImplementedError, MyDoc().to_json)
+        self.assertRaises(NotImplementedError, MyDoc.from_json, '{"foo":null}')
+

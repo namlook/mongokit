@@ -28,7 +28,7 @@
 from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
-from mongokit.schema_document import totimestamp, fromtimestamp
+from mongokit.helpers import totimestamp, fromtimestamp
 import pymongo
 from pymongo.bson import BSON
 from pymongo.objectid import ObjectId

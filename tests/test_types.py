@@ -49,6 +49,9 @@ class TypesTestCase(unittest.TestCase):
             class MyDoc(SchemaDocument):
                 structure = { "foo":[unauth_type] }
             self.assertRaises( StructureError, MyDoc )
+            class MyDoc(SchemaDocument):
+                structure = { "foo":(unauth_type) }
+            self.assertRaises( StructureError, MyDoc )
             class MyDoc2(SchemaDocument):
                 structure = { 'foo':[{int:unauth_type }]}
             self.assertRaises( StructureError, MyDoc2 )
@@ -84,6 +87,8 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo'] = [set([1,2]), "bla"]
         self.assertRaises(AuthorizedTypeError, mydoc.validate)
+        mydoc['foo'] = u"bla"
+        self.assertRaises(SchemaTypeError, mydoc.validate)
 
 #        class MyDoc(SchemaDocument):
 #            structure = {
@@ -143,6 +148,8 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = [u"bla", 1, 4.0]
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = [1, u"bla"]
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = u"bla"
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = [1,u'bar',3.2]
         mydoc.validate()

@@ -66,6 +66,7 @@ class AuthTestCase(unittest.TestCase):
         user.login = u"user"
         user.email = u"user@foo.bar"
         user.password = u"u$ser_p4$$w0rd"
+        print "°°°°°°°°°", user
         user.save()
 
         saved_user = self.col.SimpleUser.get_from_id('user')

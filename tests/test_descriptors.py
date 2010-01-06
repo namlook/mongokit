@@ -228,6 +228,7 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc["foo"] = u"google.com"
         self.assertRaises(ValidationError, mydoc.validate)
         mydoc["foo"] = u"http://google.com"
+        print mydoc
         mydoc.validate()
         mydoc['bar']['bla'] = 2
         self.assertRaises(ValidationError, mydoc.validate)
@@ -247,7 +248,6 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc = MyDoc()
         mydoc['bar'].update({3:{'bla': 15}})
         self.assertRaises(InvalidDocument, mydoc.validate)
-
 
     def test_multiple_validators(self):
         class MyDoc(Document):

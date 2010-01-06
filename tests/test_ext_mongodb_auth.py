@@ -33,11 +33,9 @@ logging.basicConfig(level=logging.DEBUG)
 from mongokit import *
 from pymongo.objectid import ObjectId
 
-CONNECTION = Connection()
-
 admin_created = False
 
-class ExtMongoDBAuthTestCase(unittest.TestCase):
+class _ExtMongoDBAuthTestCase(unittest.TestCase):
     """Tests MongoDB Authentication.
     To prevent possibly screwing someone's DB, does NOT confirm "strict"
     authentication.  E.g. doesn't create a root password.
@@ -46,27 +44,29 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
     """
     def setUp(self):
         # if no admin user is defined, create one
-        if not CONNECTION.admin.system.users.find().count():
-            CONNECTION.admin.eval('db.addUser("theadmin", "anadminpassword")')
+        import md5
+        self.connection = Connection()
+        if not self.connection.admin.system.users.find().count():
+            username = "theadmin"
+            self.connection.test.system.users.insert({"user": username, "pwd": md5.new(username + ":mongo:" + "anadminpassword").hexdigest()})
+            #CONNECTION.admin.eval('db.addUser("theadmin", "anadminpassword")')
             admin_created = True
         self.db = CONNECTION['test']
         # Toss in a user
-        self.db.eval('db.addUser("foo", "bar")')
+        username = "theadmin"
+        self.connection.test.system.users.insert({"user": username, "pwd": md5.new(username + ":mongo:" + "bar").hexdigest()})
         self.collection = self.db['mongokit_auth']
         
     def tearDown(self):
         if admin_created:
-            CONNECTION.admin.system.users.remove({})
-        self.db.eval('db.system.users.remove({name: "foo"})')
-        CONNECTION['test'].drop_collection('mongokit_auth')
+            self.connection.admin.system.users.remove({})
+        self.connection.test.system.users.remove({"user": "foo"})
+        self.connection.test.drop_collection('mongokit_auth')
 
-    
     def test_auth(self):
-        class MyDoc(MongoDocument):
-            db_name = "test"
+        class MyDoc(Document):
             db_username = "foo"
             db_password = "bar"
-            collection_name = "mongokit_auth"
             structure = {
                 "bla":{
                     "foo":unicode,
@@ -74,18 +74,18 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
                 },
                 "spam":[],
             }
-        mydoc = MyDoc()
+        self.connection.register([MyDoc])
+        mydoc = self.connection.test.mongokit_auth.MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
         id = mydoc.save()
-        assert isinstance(id['_id'], unicode)
-        assert id['_id'].startswith("MyDoc"), id
+        assert isinstance(id['_id'], ObjectId)
 
         saved_doc = self.collection.find_one({"bla.bar":42})
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
 
-        mydoc = MyDoc()
+        mydoc = self.connection.test.mongokit_auth.MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 43
         id = mydoc.save(uuid=False)
@@ -99,7 +99,7 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
     def _test_badauth_no_admin(self):
         # XXX WARNING : uncommented this test will remove the root password of the mongodb instance !!!!
         CONNECTION.admin.system.users.remove({})
-        class MyDoc(MongoDocument):
+        class MyDoc(Document):
             db_name = "test"
             db_username = "foo"
             db_password = "bar"
@@ -117,15 +117,12 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
         self.assertRaises(MongoAuthException, mydoc.save)
         self.db.logout()
 
-        
     def test_badauth(self):
         crash = False
         try:
-            class MyDoc(MongoDocument):
-                db_name = "test"
+            class MyDoc(Document):
                 db_username = "foo"
                 db_password = "spam"
-                collection_name = "mongokit_auth"
                 structure = {
                     "bla":{
                         "foo":unicode,
@@ -133,6 +130,7 @@ class ExtMongoDBAuthTestCase(unittest.TestCase):
                     },
                     "spam":[],
                 }
+            self.connection.register([MyDoc])
         except MongoAuthException:
             crash = True
         assert crash

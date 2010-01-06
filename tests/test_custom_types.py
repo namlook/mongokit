@@ -43,6 +43,7 @@ class CustomTypesTestCase(unittest.TestCase):
 
         class CustomDate(CustomType):
             mongo_type = unicode
+            python_type = datetime.datetime
             def to_bson(self, value):
                 """convert type to a mongodb type"""
                 return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -77,6 +78,20 @@ class CustomTypesTestCase(unittest.TestCase):
         assert saved_foo['date'] == CustomDate().to_bson(datetime.datetime(2003,2,1)), saved_foo['date']
         foo2 = self.col.Foo.get_from_id(2)
         assert foo2['date'] == datetime.datetime(2008,6,7), foo2
+
+    def test_instance_type(self):
+        from pymongo.objectid import ObjectId
+        from pymongo.dbref import DBRef
+        class Bla(ObjectId):pass
+        class Ble(DBRef):pass
+        class MyDoc(Document):
+            structure = { "foo":ObjectId }
+        self.connection.register([MyDoc])
+        doc = self.col.MyDoc()
+        doc['foo'] = Ble("bla", "ble", "bli")
+        self.assertRaises(SchemaTypeError, doc.validate)
+        doc['foo'] = Bla()
+        doc.validate()
 
     def test_custom_type_nested(self):
         import datetime
@@ -162,7 +177,6 @@ class CustomTypesTestCase(unittest.TestCase):
                 """convert type to a python object"""
                 if value is not None:
                     return datetime.datetime.strptime(value, '%y-%m-%d')
-                
         self.assertRaises(TypeError, CustomDate)
 
         class CustomDate(CustomType):
@@ -170,7 +184,61 @@ class CustomTypesTestCase(unittest.TestCase):
         self.assertRaises(NotImplementedError, CustomDate().to_bson, "bla")
         self.assertRaises(NotImplementedError, CustomDate().to_python, "bla")
 
+    def test_custom_type_bad_python(self):
+        import datetime
 
+        class CustomDate(CustomType):
+            mongo_type = unicode
+            python_type = datetime.datetime
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(Document):
+            structure = {
+                "date": CustomDate(),
+            }
+            default_values = {'date':(2008, 6, 7)}
+        self.connection.register([Foo])
+        foo = self.col.Foo()
+        foo['_id'] = 1
+        self.assertRaises(SchemaTypeError, foo.save)
+
+        class Foo(Document):
+            structure = {
+                "date": [CustomDate()],
+            }
+            default_values = {'date':[(2008, 6, 7)]}
+        self.connection.register([Foo])
+        foo2 = self.col.Foo()
+        foo2['_id'] = 2
+        self.assertRaises(SchemaTypeError, foo2.save)
+
+        class CustomDate(CustomType):
+            mongo_type = int
+            python_type = datetime.datetime
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+
+        class Foo(Document):
+            structure = {
+                "date": CustomDate(),
+            }
+        self.connection.register([Foo])
+        foo = self.col.Foo()
+        foo['_id'] = 2
+        foo['date'] = datetime.datetime(2003,2,1)
+        self.assertRaises(SchemaTypeError, foo.save)
+ 
     def test_custom_type_nested_list(self):
         import datetime
 
