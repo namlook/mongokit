@@ -56,4 +56,12 @@ class Collection(PymongoCollection):
         elif count == 1:
             return bson_obj.next()
 
+    def find_random(self):
+        """
+        return one random document from the collection
+        """
+        import random
+        max = self.count()
+        num = random.randint(0, max-1)
+        return self.find().skip(num).next()
 

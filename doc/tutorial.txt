@@ -86,8 +86,7 @@ Getting raw data
 
 Getting raw data is usefull when you only want to have value from your data. This is fast
 as there's no validation or wrapping. There is two methods to query raw data : `find()` and
-`find_one()` and `one()`. 
-
+`find_one()`, `one()` and `find_random()`.
 
 find() and find_one()
 ~~~~~~~~~~~~~~~~~~~~~
@@ -96,7 +95,7 @@ find() and find_one()
 Please, see the pymongo documentation
 
 one()
-~~~~~~~~~~
+~~~~~
 
 `one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
 there is more than one result.
@@ -116,11 +115,16 @@ MultipleResultsFound: 2 results found
 
 If no document is found, `one()` returns `None`
 
+find_random()
+~~~~~~~~~~~~~
+
+`find_random()` will return a random document from the database. This method doesn't take other arguments.
+
 Getting Document instance
 -----------------------------
 
 There is 4 methods to query your data and get Document's instance :
-`find()`, `find_one()`, `fetch()` and `fetch_one`.
+`find()`, `find_one()`, `fetch()`, `fetch_one` and `find_random()`.
 `find()` and `fetch()` return a cursor of collection.  A cursor is a container
 which lazy evaluate the results. A cursor is acting like an iterator.
 `find_one()` and `fetch_one()` return the document itself.
@@ -197,6 +201,12 @@ fetch_one()
 
 Juste like `fetch()` but raise a  `mongokit.MultipleResultsFound` exception if
 there is more than one result.
+
+find_random()
+~~~~~~~~~~~~~
+
+`find_random()` will return a random document from the database. This method doesn't take other arguments.
+
 
 Changing collection dynamically
 ===============================

@@ -133,6 +133,18 @@ class Document(SchemaDocument):
         elif count == 1:
             return self.__class__(doc=bson_obj.next(), collection=self.collection)
 
+    def find_random(self):
+        """
+        return one random document from the collection
+        """
+        import random
+        max = self.collection.count()
+        num = random.randint(0, max-1)
+        return self.__class__(
+          self.collection.find().skip(num).next(),
+          collection=self.collection
+        )
+
     def get_from_id(self, id):
         """
         return the document wich has the id

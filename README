@@ -20,6 +20,7 @@ Features
  * required fields validation
  * default values
  * custom validators
+ * random query support (which returns a random document from the database)
  * inheritance and polymorphisme support
  * versionized document support (still in alpha stage)
  * partial auth support (it brings a simple User model) 

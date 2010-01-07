@@ -219,6 +219,21 @@ class ApiTestCase(unittest.TestCase):
         self.assertRaises(MultipleResultsFound, self.col.MyDoc.one)
         self.assertRaises(MultipleResultsFound, self.col.one)
 
+    def test_find_random(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":int
+            }
+        self.connection.register([MyDoc])
+        for i in range(10):
+            mydoc = self.col.MyDoc()
+            mydoc["foo"] = i
+            mydoc.save()
+        raw_mydoc = self.col.find_random()
+        mydoc = self.col.MyDoc.find_random()
+        assert isinstance(mydoc, MyDoc)
+        assert mydoc != raw_mydoc, (mydoc, raw_mydoc)
+
     def test_fetch(self):
         class DocA(Document):
             structure = {
