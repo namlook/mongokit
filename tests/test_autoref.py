@@ -397,7 +397,7 @@ class AutoRefTestCase(unittest.TestCase):
         docb['b']['doc_a'] = doca
         # create a few deeper  docas
         deep = self.col.DocA()
-        deep['_id'] = 'doca'
+        deep['_id'] = 'doca' # XXX same id of doca, this will be erased by doca when saving docb
         deep['a']['foo'] = 5
         deep.save()
         docb['b']['deep']['doc_a_deep'] = deep
@@ -405,8 +405,8 @@ class AutoRefTestCase(unittest.TestCase):
         docb.save()
 
         test_doc = self.col.DocB.get_from_id(docb['_id'])
-        assert test_doc['b']['doc_a']['a']['foo'] == 5
-        assert test_doc['b']['deep']['doc_a_deep']['a']['foo'] == 5
+        assert test_doc['b']['doc_a']['a']['foo'] == 3, test_doc['b']['doc_a']['a']
+        assert test_doc['b']['deep']['doc_a_deep']['a']['foo'] == 3, test_doc['b']['deep']['doc_a_deep']['a']['foo']
 
     def test_autorefs_embed_in_list_with_bad_reference(self):
         class User(Document):
@@ -565,5 +565,36 @@ class AutoRefTestCase(unittest.TestCase):
         assert docb == {'b': {'doc_a': [{u'a': {u'foo': 6}, u'_id': u'doca2'}, {u'a': {u'foo': 3}, u'_id': u'doca'}]}, '_id': 'docb'}, docb
         fetched_docb = self.col.DocB.get_from_id('docb')
         assert fetched_docb == {u'_id': u'docb', u'b': {u'doc_a': [{u'a': {u'foo': 6}, u'_id': u'doca2'}, {u'a': {u'foo': 3}, u'_id': u'doca'}]}}
+
+    def test_autoref_updated_with_default_values(self):
+        class DocA(Document):
+            structure = {
+                "a":{'foo':int},
+                   "abis":{'bar':int},
+                }
+            default_values = {'a.foo':2}
+            required_fields = ['abis.bar']
+
+        self.connection.register([DocA])
+        doca = self.col.DocA()
+        doca['_id'] = 'doca'
+        doca['abis']['bar'] = 3
+        doca.save()
+
+        class DocB(Document):
+            structure = {
+                "b":{"doc_a":DocA},
+            }
+            use_autorefs = True
+
+        self.connection.register([DocB])
+        docb = self.col.DocB()
+        docb['_id'] = 'docb'
+        docb['b']['doc_a'] = doca
+        assert docb == {'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}, docb
+        docb['b']['doc_a']['a']['foo'] = 4
+        docb.save()
+        assert docb == {'b': {'doc_a': {'a': {'foo': 4}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}, docb
+        assert doca['a']['foo'] == 4
 
 

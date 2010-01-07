@@ -21,24 +21,22 @@ Features
  * default values
  * custom validators
  * inheritance and polymorphisme support
- * delete cascade support
  * versionized document support (still in alpha stage)
  * partial auth support (it brings a simple User model) 
- * Pylons Web Framework integration support
- * Operator for validation (currently : OR, NOT and IS)
- * Mongodb auth support
- * full relation support
+ * operator for validation (currently : OR, NOT and IS)
+ * simple web framework integration
+ * import/export to json
 
 A quick example
 ===============
 
-MongoDocument are enhanced python dictionnary with a ``validate()`` method.
-A MongoDocument declaration look like that::
+Document are enhanced python dictionnary with a ``validate()`` method.
+A Document declaration look like that::
 
-    >>> from mongokit import MongoDocument
+    >>> from mongokit import *
     >>> import datetime
 
-    >>> class BlogPost(MongoDocument):
+    >>> class BlogPost(Document):
     ...     db_name = 'test'
     ...     collection_name = 'tutorial'
     ...     structure = {
@@ -51,18 +49,24 @@ A MongoDocument declaration look like that::
     ...     required_fields = ['title','author', 'date_creation']
     ...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
     ... 
-    >>> blogpost = BlogPost()
+
+We fire a connection and register our objects.
+
+    >>> con = Connection()
+    >>> con.register([BlogPost])
+    >>> blogpost = con.test.example.BlogPost() # this use the db "test" and the collection "example"
     >>> blogpost['title'] = u'my title'
     >>> blogpost['body'] = u'a body'
     >>> blogpost['author'] = u'me'
-    >>> blogpost.validate()
-    >>> blogpost # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    >>> blogpost
     {'body': u'a body', 'title': u'my title', 'date_creation': datetime.datetime(...), 'rank': 0, 'author': u'me'}
     >>> blogpost.save()
    
+Saving the object will call the `validate()` method.
+
 And you can use more complex structure::
 
-    >>> class ComplexDoc(MongoDocument):
+    >>> class ComplexDoc(Document):
     ...     db_name = 'test'
     ...     collection_name = 'tutorial'
     ...     structure = {
@@ -86,20 +90,15 @@ on the freenode #mongodb irc channel or on twitter_.
 Change Log
 ==========
 
-v.dev
------
-  * add possibility to fetch raw data efficiently
-    (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#getting-raw-data)
-  * add connection sharing beetween documents
-    (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically)
-  * add connection size validation
-    ()
-  * fix issue with compound keys indexes. Some indexes description are deprecated.
-    (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes)
-  * collection are now passed to the result objects when making a query.
-  (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#query)
-  * a pymongo's collection can now be pass to the constructor
-  (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically)
+v0.5
+----
+ * refactoring API which is getting much much more cleaner. Please see the migration_ page to keep your code up to date
+ * 100% code coverage by 148 unit tests
+ * lot of bug fix (too many to list them here)
+ * add document size validation
+ * add cross database reference support
+
+.. _migration : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html
 
 v0.4
 ----
@@ -118,72 +117,6 @@ v0.4
     * full relation support (related_to)
       (http://bytebucket.org/namlook/mongokit/wiki/html/relations.html)
     * add long type support
-
-API change
-^^^^^^^^^^
-
-Adding more authorized_types
-++++++++++++++++++++++++++++
-
-`authorized_types` is not in the mongokit module anymore
-but has been integrated to the `MongoDocument` object.
-This allow to changed dynamically the authorized_types list at
-runtime.
-
-So, if you wan to add more types in authorized_types, you need to do:
-
->>> class MyDoc(MongoDocument):
-...     structure = {
-...         "foo":str,
-...     }
-...     authorized_types = MongoDocument.authorized_types + [str]
->>> mydoc = MyDoc()
->>> mydoc['foo'] = 'bla'
->>> mydoc.validate()
-
-New CustomType API
-++++++++++++++++++
-
-The `CustomType` api has little changed. 
- * You must specify a `mongo_type` property in the `CustomType` class. this
-   will describes the type of the value stored in the mongodb.  
- * If you want more validation, you can specify a `python_type` property which is
-   the python type the value will be converted. This is a good thing to specify it
-   as it make a good documentation.
- * There is no `custom_types` descriptor anymore. The `CustomType` is set
-   directly in the field. Plus, the `CustomType` must be instanciated.
-
-So, the new way of using `CustomType` look like this::
-            
-    >>> class CustomDate(CustomType):
-    ...     mongo_type = unicode
-    ...     python_type = datetime.datetime # optional, just for more validation
-    ...     def to_bson(self, value):
-    ...         """convert type to a mongodb type"""
-    ...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
-    ...     def to_python(self, value):
-    ...         """convert type to a python object"""
-    ...         if value is not None:
-    ...            return datetime.datetime.strptime(value, '%y-%m-%d')
-
-    Now, let's create a MongoDocument:
-
-    >>> class Foo(MongoDocument):
-    ...     db_name = 'test'
-    ...     collection_name = 'tutorial'
-    ...     structure = {
-    ...         'foo':{
-    ...             'date': CustomDate(),
-    ...         },
-    ...     }
-    ...     default_values = {'foo.date':u'08-06-07'}
-
-Autoreference
-+++++++++++++
-
-The internal structure of processing embeded document as changed and use the `CustomType` way.
-The advantage is that your data are not pollued by extra field anymore. So the '_ns' field is not
-added any more.
 
 v0.3.3
 ------

@@ -15,7 +15,10 @@ Contents:
     introduction
     tutorial
     inheritance
-    migration
+    cascade
+    relations
+    pylons_support
+    mongodb_auth
 
 
 

@@ -6,7 +6,7 @@ And we want to build an object C from A and B. Let's build Root, A and B
 first :
 
 >>> from mongokit import *
->>> class Root(Document):
+>>> class Root(MongoDocument):
 ...     structure = {
 ...         "root":int,
 ...     }

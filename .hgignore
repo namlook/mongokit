@@ -3,7 +3,6 @@ syntax: glob
 .*.swp
 .coverage
 data
-old
 Ekeet.egg-info
 Masheet.egg-info
 dist

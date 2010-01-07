@@ -1,0 +1,79 @@
+
+>>> from mongokit import Connection
+
+>>> con = Connection()
+
+Let's say we have previously created 3 MongoDocuments : Blog, BlogPost and User.
+Those objects have to be rechable via the connections so we register them :
+
+>>> con.register([Blog, BlogPost, User])
+
+and now, we can play. All begin via the connection `con`. Just like the pymongo
+api, we get to the collection Via the connection and the db.
+
+>>> con.mongokit.tutorial.find()
+
+In this line, we query the collection named 'tutorial' (which is attached to the
+db named 'mongokit') and fetch all documents in the collection (the pymongo's way).
+
+Now enter the MongoDocument objects. Let's create a blog post:
+
+    >>> blogpost = con.mongokit.tutorial.BlogPost()
+    >>> blogpost['title'] = u'my title'
+    >>> blogpost['body'] = u'a body'
+    >>> blogpost['author'] = u'me'
+    >>> blogpost.save()
+
+Note that this is quite the same as the current api. We just get the BlogPost object
+via the collection. The main advantage of this approche is that we don't have to
+bother about the collection.
+
+Note that we can simulate the current api behavior by getting the BlogPost object
+before :
+
+    >>> BlogPost = con.mongokit.tutorial.BlogPost
+    >>> blogpost = BlogPost()
+    >>> blogpost2 = BlogPost()
+
+Another advantage is the ability of using the collection dynamically without pain.
+Let's say that we want to put all BlogPost into a user collection (so one collection
+by user) :
+
+    >>> user_col = 'me'
+    >>> blogpost = con.mongokit[user_col].BlogPost()
+
+Quering is as simple as instanciating object. There's two way of fetching objects :
+
+ * getting raw data (the pymongo's way)
+ * getting instanciated object with all method defined (the mongokit way)
+
+The first approche will produce only python dict and is very fast.
+The seconde will wrap the data into the MongoDocument. This is useful if we defined
+methods and want to use them.
+
+Getting raw data :
+
+    >>> raw_data = con.mongokit.tutorial.find()
+
+Actually, all pymongo's method can be apply :
+    
+    >>> con.mongokit.tutorial.remove({})
+    >>> con.mongokit.drop_collection('tutorial')
+
+Getting instanciated objects :
+
+    >>> blogpost_cursor = con.mongokit.tutorial.BlogPost.find()
+    >>> bp = blogpost_cursor.next()
+
+We can apply MongoDocument methods (`validate`, `to_json` etc...)
+
+    >>> bp.validate()
+    >>> bp
+    {'body': u'a body', 'title': u'my title', 'date_creation': datetime.datetime(...), 'rank': 0, 'author': u'me'}
+
+Other mongokit queries are available :
+
+    >>> blogpost_cursor = con.mongokit.tutorial.BlogPost.fetch() # get only BlogPost
+
+
+

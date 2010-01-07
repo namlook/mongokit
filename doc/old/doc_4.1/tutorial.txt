@@ -10,7 +10,9 @@ Simple Example
 
 >>> import datetime
 
->>> class BlogPost(Document):
+>>> class BlogPost(MongoDocument):
+...     db_name = 'test'
+...     collection_name = 'tutorial'
 ...     structure = {
 ...             'title':unicode,
 ...             'body':unicode,
@@ -22,6 +24,7 @@ Simple Example
 ...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
 ... 
 
+A MongoDocument take a `db_name` and a `collection_name` as attribute. Next, you have to specify a structure.
 The structure is a simply dictionnary with python type. In this example, `title` must be unicode and `rank`
 must be an int.
 
@@ -31,21 +34,14 @@ attribute. This is a simple list which list all required_fields (ie, those field
 Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
 you can pass callable object (like a datetime).
 
-Now, fire a connection and register the ``BlogPost`` object:
+But before, some cleanup:
 
->>> con = Connection()
->>> con.register([BlogPost])
+>>> Connection().test.tutorial.remove({})
 
-Let's do some cleanup before continue:
+Now, let's create a blogpost:
 
->>> con.test.drop_collection('tutorial')
-
-Now, let's create a blogpost we want to work on the collection "tutorial" on the database "test":
-
->>> tutorial = con.test.tutorial
-
->>> bp = tutorial.BlogPost()
->>> bp
+>>> bp = BlogPost()
+>>> bp # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
 {'body': None, 'title': None, 'date_creation': datetime.datetime(...), 'rank': 0, 'author': None} 
 
 Not that `date_creation` was automaticly filled by `utcnow()` and rank is 0.
@@ -70,127 +66,89 @@ RequireFieldError: author is required
 >>> bp['author'] = u'myself'
 >>> bp.validate()
 
-Note that `save` will call the `validate` method, so you don't have to validate
-each time.
+Note that `save` will call the `validate` method, so you don't have to validate each time.
 
->>> bp.save()
-{'body': None, '_id': ObjectId('...'), 'title': u'my first blog post', 'author': u'myself', 'date_creation': datetime.datetime(...), 'rank': 0}
+>>> bp.save() # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+{'body': None, 'title': u'my first blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
 
 Query
 =====
 
-There's two ways to query a collection : getting raw data or ``Document`` instance.
-
-Getting raw data
-----------------
-
-Getting raw data is usefull when you only want to have value from your data. This is fast
-as there's no validation or wrapping. There is two methods to query raw data : `find()` and
-`find_one()` and `one()`. 
-
-
-find() and find_one()
-~~~~~~~~~~~~~~~~~~~~~
-
-`find()`, and `find_one()` act like the similar pymongo's methods.
-Please, see the pymongo documentation
-
-one()
-~~~~~~~~~~
-
-`one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
-there is more than one result.
-
->>> bp2 = tutorial.BlogPost()
->>> bp2['title'] = u'my second blog post'
->>> bp2['author'] = u'you'
->>> bp2.save()
-
->>> tutorial.one()
-Traceback (most recent call last):
-...
-MultipleResultsFound: 2 results found
-
->>> tutorial.one({'title':'my first blog post'})
-{u'body': None, u'author': u'myself', u'title': u'my first blog post', u'rank': 0, u'_id': ObjectId('...'), u'date_creation': datetime.datetime(...)}
-
-If no document is found, `one()` returns `None`
-
-Getting Document instance
------------------------------
-
-There is 4 methods to query your data and get Document's instance :
-`find()`, `find_one()`, `fetch()` and `fetch_one`.
-`find()` and `fetch()` return a cursor of collection.  A cursor is a container
+There 4 way to query a collection `all()`, `one()`, `fetch()`, `fetch_one`.
+`all()` and `fetch()` return a cursor of collection.  A cursor is an container
 which lazy evaluate the results. A cursor is acting like an iterator.
-`find_one()` and `fetch_one()` return the document itself.
+`one()` and `fetch_one()` return the document itself.
 
 All theses method can take a query as argument. A query is a simple dict. Please,
 see the mongodb and the pymongo documentation for further details.
 
-find()
+.. topic:: new in developpment version
+
+    Note that when you make a query, the collection is passed automatically to the
+    result objects. You can then specify a collection dynamically when making
+    queries.
+
+all()
 -----
 
-`find()` without argument will return a cursor of all documents of the collection.
+`all()` without argument will return a cursor of all documents of the collection.
 If a query is passed, it will return a cursor all documents which match the query.
+The query is launch against the db and collection of the object.
 
-`find()` takes the same arguments than the the `pymongo.collection.find` method.
+`all()` takes the same arguments than the the pymongo.collection.find method.
 
->>> for post in tutorial.BlogPost.find():
+>>> bp = BlogPost()
+>>> bp['title'] = u"my second blog post"
+>>> bp['author'] = u"myself"
+>>> bp.save() # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+{'body': None, 'title': u'my second blog post', 'author': u'myself', 'rank': 0, '_id': ..., 'date_creation': datetime.datetime(...)}
+
+>>> for post in  BlogPost.all():
 ...     print post['title']
 my first blog post
 my second blog post
 
 
->>> for post in tutorial.BlogPost.find({'title':'my first blog post'}):
+>>> for post in  BlogPost.all({'title':'my first blog post'}):
 ...     print post['title']
 my first blog post
 
-find_one()
-----------
-
-`find_one()` act like `find()` but return only the first document of result. This
-method takes the same arguments than the pymongo's `find_one()` method. Please, check
-the pymongo's documentation.
 
 one()
-----------
+-----
 
-`one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
+`one()` act like `all()` but will raise a `mongokit.MultipleResultsFound` exception if
 there is more than one result.
 
->>> tutorial.BlogPost.one()
+>>> BlogPost.one()
 Traceback (most recent call last):
 ...
 MultipleResultsFound: 2 results found
 
->>> doc = tutorial.BlogPost.one({'title':'my first blog post'})
->>> doc
+>>> BlogPost.one({'title':'my first blog post'}) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
 {u'body': None, u'title': u'my first blog post', u'author': u'myself', u'rank': 0, u'_id': ..., u'date_creation': datetime.datetime(...)}
->>> isinstance(doc, BlogPost)
-True
 
 If no document is found, `one()` returns None
 
 fetch()
 -------
 
-Unlike `find()`, `fetch()` will return only documents which match the structure of the Document.
+Unlike `all()`, `fetch()` will return only documents which match the structure of the Document.
 
->>> all_blog_posts = tutorial.BlogPost.fetch()
+>>> all_blog_posts = BlogPost.fetch()
 
 This will return only all blog post (which have 'title', 'body', 'author', 'date_creation', 'rank' as fields).
 This is an helper for :
 
->>> all_blog_posts = tutorial.BlogPost.find({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': {'$exists': True}})
+>>> all_blog_posts = BlogPost.all({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': {'$exists': True}})
 
-Note, like `find()` and and `one()`, you can pass advanced queries:
+Note, like `all()` and and `one()`, you can pass advanced queries:
 
->>> my_blog_posts = tutorial.BlogPost.fetch({'author':'myself'})
+>>> my_blog_posts = BlogPost.fetch({'author':'myself'})
 
 which is equivalent to:
 
->>> all_blog_posts = tutorial.BlogPost.find({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': 'myself'})
+>>> all_blog_posts = BlogPost.all({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': 'myself'})
 
 fetch_one()
 -----------
@@ -201,28 +159,82 @@ there is more than one result.
 Changing collection dynamically
 ===============================
 
+Each `MongoDocument` must have a `db_host`, a `db_port`, a `db_name` and a `collection_name`.
+Those attributes are set when describing mongo documents. The connection, the db and the
+collection are then automatically created and attached to the object.
+
 But you might need to specify a different db or collection dynamically. For instance,
-say you want to store a User by database. 
+say you want to store a User by database. You can't set the `db_name` and `collection_name`
+because it will change at each user.
 
->>> class User(Document):
-...     structure = {'login':unicode, 'screen_name':unicode}
+>>> class User(MongoDocument):
+...     strucute = {'login':unicode, 'screen_name':unicode}
+...     # we can set `db_name` here...
 
->>> con.register([User])
+Mongokit allow you to change those parameters on the fly. For this, you need to create
+another collection with the helper `get_collection`.
 
-Like Pymongo, Mongokit allow you to change those parameters on the fly:
+>>> user_col = User.get_collection(db_name='namlook', collection_name='profile')
 
->>> user_name = 'namlook'
->>> user_col = con[user_name].profile
+.. topic:: new in developpment version
+
+    You can also set a connection:
+
+    con = Connection()
+    >>> user_col = User.get_collection(connection=con, db_name='namlook', collection_name='profile')
+
 
 Now, we can query the database by passing our new collection :
 
->>> profiles = user_col.User.find()
+>>> User.all({}, collection=col)
 
->>> user = user_col.User()
+You can pass those value to the `MongoDocument.__init__` :
+
+>>> user = User(db_name='namlook', collection_name='profile')
 >>> user['login'] = 'namlook'
 >>> user['screen_name'] = 'Namlook'
 
 calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
+
+.. topic:: new in developpment version
+
+    You can pass a connection at the document instanciation. this is usefull to share a connection beetween
+    thread in web development for instance :
+
+    con = Connection()
+    >>> user = User(connection = con)
+
+.. topic:: new in developpment version
+
+    If you instanciate previously a collection, you can pass it to the constructor :
+
+    >>> namlook_profile_collection = User.get_collection(db_name='namlook', collection_name='profile')
+    >>> user = User(collection=namlook_profile_collection)
+
+    Not that you can't specify other db parameter if you pass a collection. So the following example won't work:
+
+    >>> user = User(db_name='john', collection=namlook_profile_collection) # DON'T DO THAT !
+
+Getting raw data
+================
+
+.. topic:: new in developpment version
+    
+    Sometime you may want to retrieve many documents in a sort time :
+
+    >>> for doc in MyDoc.fetch():
+    ...     pass # do something with doc... slow !!
+
+    This way isn't very efficient. Actually, this solution will wrap each
+    result into a MongoDocument and will kill speed. Another solution
+    consist in retrieving raw data by telling MongoKit to no wrap the
+    result :
+
+    >>> for doc in MyDoc.fetch(wrap=False):
+    ...     pass # do something with doc... very fast !
+
+    Note that by doing this, you won't be able to use mongokit's method
+    on results.
 
 Dot notation 
 ============
@@ -230,14 +242,13 @@ Dot notation
 If you want to use the dot notation (ala json), you must set the
 `use_dot_notation` attribute to True:
 
->>> class TestDotNotation(Document):
+>>> class TestDotNotation(MongoDocument):
 ...     structure = {
 ...         "foo":{ "bar":unicode}
 ...     }
 ...     use_dot_notation=True
 
->>> con.register([TestDotNotation])
->>> doc = tutorial.TestDotNotation()
+>>> doc = TestDotNotation()
 >>> doc.foo.bar = u"bla"
 >>> doc
 {'foo': {'bar': u'bla'}}
@@ -249,12 +260,11 @@ If you need a structured list with a limited
 number of field, you can use tuple to describe
 your object :
 
->>> class MyDoc(Document):
+>>> class MyDoc(SchemaDocument):
 ...     structure = {
 ...         "foo":(int, unicode, float)
 ...     }
->>> con.register([MyDoc])
->>> mydoc = tutorial.MyDoc()
+>>> mydoc = MyDoc()
 >>> mydoc['foo']
 [None, None, None]
 
@@ -271,7 +281,6 @@ SchemaTypeError: foo must be an instance of int not unicode
 and they must have the right number of items:
 
 >>> mydoc['foo'] = [1, u"bla"]
->>> mydoc.validate()
 Traceback (most recent call last):
 ...
 SchemaTypeError: foo must have 3 items not 2
@@ -280,18 +289,18 @@ As tuples are converted to list internally, you
 can make all list operations:
 
 >>> mydoc['foo'] = [1,u'bar',3.2]
->>> mydoc.validate()
+mydoc.validate()
 >>> mydoc['foo'] = [None, u"bla", 3.1]
->>> mydoc.validate()
+mydoc.validate()
 >>> mydoc['foo'][0] = 50
->>> mydoc.validate()
+mydoc.validate()
 
 Différence beetween {} and the type dict
 ========================================
 
 {} is used for describing the structure like {"foo":unicode, "bar":int}
 
->>> class Person(Document):
+>>> class Person(MongoDocument):
 ...    structure = {
 ...        "biography": {"foo":unicode, "bar":int}
 ...    }
@@ -299,15 +308,14 @@ Différence beetween {} and the type dict
 
 If you don't specify the structure :
 
->>> class Person(Document):
+>>> class Person(MongoDocument):
 ...    structure = {
 ...        "biography": {}
 ...    }
 
 You won't be able to do that because "foo" is not defined into the structure.
 
->>> con.register([Person])
->>> bob = tutorial.Person()
+>>> bob = Person()
 >>> bob[u"biography"][u"foo"] = u"bla"
 >>> bob.validate()
 Traceback (most recent call last):
@@ -317,20 +325,19 @@ StructureError: unknown fields : [u'foo']
 
 If you want to add new items to a dict if they're not defined, you must use the dict type instead :
 
->>> class Person(Document):
+>>> class Person(MongoDocument):
 ...    structure = {
 ...        "biography": dict
 ...    }
 
->>> con.register([Person])
->>> bob = tutorial.Person()
+>>> bob = Person()
 >>> bob[u"biography"][u"foo"] = u"bla"
 >>> bob.validate()
 
 Using dict type is useful if you don't know what field will be added *and* what will be the type of the field.
 If you know the type of the field, it's better to do that :
 
->>> class Person(Document):
+>>> class Person(MongoDocument):
 ...    structure = {
 ...        "biography": {unicode:unicode}
 ...    }
@@ -361,13 +368,12 @@ By default, MongoKit allow the following types::
 
 It's possible to add more type in authorized_types: 
 
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
 ...     structure = {
 ...         "foo":str,
 ...     }
-...     authorized_types = Document.authorized_types + [str]
->>> con.register([MyDoc])
->>> mydoc = tutorial.MyDoc()
+...     authorized_types = MongoDocument.authorized_types + [str]
+>>> mydoc = MyDoc()
 >>> mydoc['foo'] = 'bla'
 >>> mydoc.validate()
 
@@ -377,7 +383,7 @@ validate keys
 If the value of key is not known but we want to validate some deeper structure, 
 we use the "$<type>" descriptor :
 
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
 ...    structure = {
 ...        "key1":{
 ...            unicode:{
@@ -393,8 +399,7 @@ we use the "$<type>" descriptor :
 Not that if you use python type as key in structure, generate_skeleton
 won't be able to build the entired underline structure :
 
->>> con.register([MyDoc])
->>> tutorial.MyDoc() == {'key1': {}, 'bla': None}
+>>> MyDoc() == {'key1': {}, 'bla': None}
 True
 
 So, default_values nor signals will work.
@@ -412,13 +417,12 @@ We can use the OR operator to tell MongoKit to validate the field :
 
 >>> from mongokit import OR
 >>> from datetime import datetime
->>> class Account(Document): 
+>>> class Account(MongoDocument): 
 ...     structure = { 
 ...         "balance": {'foo': OR(unicode, int, float)} 
 ...     } 
 
->>> con.register([Account])
->>> account = tutorial.Account()
+>>> account = Account()
 >>> account['balance']['foo'] = u'3.0'
 >>> account.validate()
 >>> account['balance']['foo'] = 3.0
@@ -439,13 +443,12 @@ You can also use the NOT operator to tell MongoKit that you don't want a such ty
 for a field :
 
 >>> from mongokit import NOT
->>> class Account(Document): 
+>>> class Account(MongoDocument): 
 ...     structure = { 
 ...         "balance": {'foo': NOT(unicode, datetime)} 
 ...     } 
 
->>> con.register([Account])
->>> account = tutorial.Account()
+>>> account = Account()
 >>> account['balance']['foo'] = 3
 >>> account.validate()
 >>> account['balance']['foo'] = 3.0
@@ -472,13 +475,12 @@ Sometime, you might want to force a fields to be in a specifique value. The IS o
 must be use for this purpose :
 
 >>> from mongokit import IS
->>> class Account(Document): 
+>>> class Account(MongoDocument): 
 ...     structure = { 
 ...         "flag": {'foo': IS(u'spam', u'controversy', u'phishing')} 
 ...     } 
 
->>> con.register([Account])
->>> account = tutorial.Account()
+>>> account = Account()
 >>> account['flag']['foo'] = u'spam'
 >>> account.validate()
 >>> account['flag']['foo'] = u'phishing'
@@ -500,7 +502,7 @@ to feet your needs.
 
 Example the following document:
 
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
 ...     structure={
 ...             "foo":int,
 ...             "bar":int,
@@ -526,7 +528,7 @@ you might want to skip the validation layer. This will make mongokit significant
 TIP: this is a good idea to create a "RootDocument" and to inherite all you object from it.
 This will allow you to control the behavior of all your objects by setting the RootDocument:
 
->>> class RootDocument(Document):
+>>> class RootDocument(MongoDocument):
 ...     structure = {}
 ...     skip_validation = True
 ...     use_dot_notation = True
@@ -540,8 +542,7 @@ This will allow you to control the behavior of all your objects by setting the R
 
 Note that you can always force the validation at any moment on saving even if `skip_validation` is `True`:
 
->>> con.register([MyDoc]) # No need to register RootDocument as we do not instanciate it
->>> mydoc = tutorial.MyDoc()
+>>> mydoc = MyDoc()
 >>> mydoc['foo'] = u'bar'
 >>> mydoc.save(validate=True)
 Traceback (most recent call last):
@@ -586,9 +587,11 @@ A CustomType object must implement two methods and one attribute:
 ...         if value is not None:
 ...            return datetime.datetime.strptime(value, '%y-%m-%d')
 
-Now, let's create a Document:
+Now, let's create a MongoDocument:
 
->>> class Foo(Document):
+>>> class Foo(MongoDocument):
+...     db_name = 'test'
+...     collection_name = 'tutorial'
 ...     structure = {
 ...         'foo':{
 ...             'date': CustomDate(),
@@ -598,8 +601,7 @@ Now, let's create a Document:
 
 Now, we can create Foo's objects and working with python datetime objects
 
->>> con.register([Foo])
->>> foo = tutorial.Foo()
+>>> foo = Foo()
 >>> foo['_id'] = 1
 >>> foo['foo']['date'] = datetime.datetime(2003,2,1)
 >>> foo.save()
@@ -607,17 +609,17 @@ Now, we can create Foo's objects and working with python datetime objects
 
 The saved object in db has the unicode footprint as expected:
 
->>> tutorial.find_one({'_id':1})
+>>> foo.collection.find_one({'_id':1})
 {u'_id': 1, u'foo': {u'date': u'03-02-01'}}
 
 Quering an object will convert automaticly the CustomType into the correct
 python object:
 
->>> foo = tutorial.Foo.get_from_id(1)
+>>> foo = Foo.get_from_id(1)
 >>> foo['foo']['date']
 datetime.datetime(2003, 2, 1, 0, 0)
 
-Embedding Documents as values
+Embedding MongoDocuments as values
 ==================================
 
 MongoKit has optional support for MongoDB's autoreferencing/dbref 
@@ -629,7 +631,7 @@ handled automatically by the pymongo driver.
 
 .. _autoref_sample: http://github.com/mongodb/mongo-python-driver/blob/cd47b2475c5fe567e98696e6bc5af3c402891d12/examples/auto_reference.py
 
-Autoreferences allow you to pass other Documents as values.
+Autoreferences allow you to pass other MongoDocuments as values.
 pymongo_.  (with help from MongoKit) automatically
 translates these object values into DBRefs before persisting to
 Mongo.  When fetching, it translates them back, so that you have
@@ -648,7 +650,7 @@ require you to explicitly enable autoref for two reasons:
     * You may not wish to use auto-referencing in some cases where you're using DBRefs.
 
 Once you have autoref enabled, MongoKit will allow you to define
-any valid subclass of Document as part of your document
+any valid subclass of MongoDocument as part of your document
 structure.  **If your class does not define `use_autorefs` as 
 True, MongoKit's structure validation code will REJECT your 
 structure.**
@@ -658,7 +660,9 @@ A detailed example
 
 First let's create a simple doc:
 
->>> class DocA(Document):
+>>> class DocA(MongoDocument):
+...    db_name = "test"
+...    collection_name = "tutorial"
 ...    structure = {
 ...        "a":{'foo':int},
 ...        "abis":{'bar':int},
@@ -666,8 +670,7 @@ First let's create a simple doc:
 ...    default_values = {'a.foo':2}
 ...    required_fields = ['abis.bar']
 
->>> con.register([DocA])
->>> doca = tutorial.DocA()
+>>> doca = DocA()
 >>> doca['_id'] = 'doca'
 >>> doca['abis']['bar'] = 3
 >>> doca.save()
@@ -675,17 +678,18 @@ First let's create a simple doc:
 
 Now, let's create a DocB which have a reference to DocA:
 
->>> class DocB(Document):
+>>> class DocB(MongoDocument):
+...    db_name = "test"
+...    collection_name = "tutorial"
 ...    structure = {
 ...        "b":{"doc_a":DocA},
 ...    }
 ...    use_autorefs = True
 
-Note that to be able to specify a Document into the structure, we must
+Note that to be able to specify a MongoDocument into the structure, we must
 set `use_autorefs` as `True`.
 
->>> con.register([DocB])
->>> docb = tutorial.DocB()
+>>> docb = DocB()
 
 The default value for an embeded doc is None:
 
@@ -705,28 +709,26 @@ SchemaTypeError: b.doc_a must be an instance of DocA not int
 >>> docb 
 {'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
 
-Note that the reference can be cross collection but also cross database. So, it doesn't matter
-where you save the DocA object as long as it can be fetch with the same connection.
-
 Now the interresting part. If we change a field in an embeded doc, the change will be done
 for all DocA which have the same '_id':
 
 >>> docb['b']['doc_a']['a']['foo'] = 4
 >>> docb.save()
-{'b': {'doc_a': {u'a': {u'foo': 4}, u'abis': {u'bar': 3}, u'_id': u'doca'}}, '_id': 'docb'}
+{'b': {'doc_a': {'a': {'foo': 4}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
 
 >>> doca['a']['foo']
 4
 
 Required fields are also supported in embeded documents.i
 Remember DocA have the 'abis.bar' field required. If we set it to None
-via the docb document, the RequireFieldError is raised:
+via the docb document, the RequireFieldError is raised with the full path
+'b.doc_a.abis.bar':
 
 >>> docb['b']['doc_a']['abis']['bar'] = None
 >>> docb.validate()
 Traceback (most recent call last):
 ...
-RequireFieldError: abis.bar is required
+RequireFieldError: b.doc_a.abis.bar is required
 
 Indexes
 =======
@@ -744,7 +746,7 @@ is a liste of dictionnary with the following structure:
 
 Example:
 
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
 ...     structure = {
 ...         'standard':unicode,
 ...         'other':{
@@ -762,7 +764,7 @@ Example:
 
 or if you have more than one index:
 
->>> class Movie(Document):
+>>> class Movie(MongoDocument):
 ...     db_name = 'test'
 ...     collection_name = 'mongokit'
 ...     structure = {
@@ -784,11 +786,10 @@ or if you have more than one index:
 ...     ]
 
 
-By default, the index direction is set to 1. You can change the direction by
-passing a list of tuple.  Direction must be one of `INDEX_ASCENDING` (or 1) or
-`INDEX_DESCENDING` (or -1):
+By default, the index direction is set to 1. You can change the direction by passing a dictionnary. 
+Direction must be one of `INDEX_ASCENDING` (or 1) or `INDEX_DESCENDING` (or -1):
 
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
 ...     structure = {
 ...         'standard':unicode,
 ...         'other':{
@@ -799,28 +800,69 @@ passing a list of tuple.  Direction must be one of `INDEX_ASCENDING` (or 1) or
 ...     
 ...     indexes = [
 ...         {
-...             'fields':[('standard',INDEX_ASCENDING), ('other.deep',INDEX_DESCENDING)],
+...             'fields':{'standard':INDEX_ASCENDING, 'other.deep':INDEX_DESCENDING},
 ...             'unique':True,
 ...         },
 ...     ]
+
+.. topic:: new in developpment version
+    
+    Passing a dictionnary in "fields" is now deprecated.
+    The problem when passing a dictionnary is that a dictionnary is unordered. This might
+    be a problem for compound keys. If you want to make compound keys indexes, you now
+    need to pass a list of tuples :
+
+    >>> class MyDoc(MongoDocument):
+    ...     structure = {
+    ...         'standard':unicode,
+    ...         'other':{
+    ...             'deep':unicode,
+    ...         },
+    ...         'notindexed':unicode,
+    ...     }
+    ...     
+    ...     indexes = [
+    ...         {
+    ...             'fields':[('standard',INDEX_ASCENDING), ('other.deep',INDEX_DESCENDING)],
+    ...             'unique':True,
+    ...         },
+    ...     ]
+
+
+
+Sharing Connection
+==================
+
+It is possible to share connection beetween object. To do this, create a
+RootDocument (the name doesn't matter) and setup the connection in it :
+
+>>> class RootDocument(MongoDocument):
+...     connection = Connection('localhost', '27017')
+
+Then, make all your objects inherited from the RootDocument. This is
+useful if you are working in a web framework and you want to share only
+one connection.
+
 
 JSON support
 ============
 
 While building web application, you might want to create an rest api with json
-support. Then, you may need to convert all your Document into a json format
+support. Then, you may need to convert all your MongoDocument into a json format
 in order to pass it via the rest api. Unfortunately (or fortunately), MongoDB
 support field format which is not supported by json. This is the case for `datetime`
 but also for all your `CustomTypes` you may have built and your embeded objects.
 
-Document support the json import/export. Note that you'll need to install `anyjson`
+MongoDocument support the json import/export. Note that you'll need to install `anyjson`
 to enable this feature. (`sudo easy_install anyjson`)
 
 :`to_json`:
 
 `to_json` is a simply method which export you document into a json document:
 
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
+...         db_name = "test"
+...         collection_name = "mongokit"
 ...         structure = {
 ...             "bla":{
 ...                 "foo":unicode,
@@ -828,8 +870,7 @@ to enable this feature. (`sudo easy_install anyjson`)
 ...             },
 ...             "spam":[],
 ...         }
->>> con.register([MyDoc])
->>> mydoc = tutorial.MyDoc()
+>>> mydoc = MyDoc()
 >>> mydoc['_id'] = u'mydoc'
 >>> mydoc["bla"]["foo"] = u"bar"
 >>> mydoc["bla"]["bar"] = 42
@@ -841,9 +882,11 @@ to enable this feature. (`sudo easy_install anyjson`)
 
 :`from_json`:
 
-To load a json string into a Document, use the `from_json` class method:
+To load a json string into a MongoDocument, use the `from_json` class method:
 
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
+...     db_name = "test"
+...     collection_name = "mongokit"
 ...     structure = {
 ...         "bla":{
 ...             "foo":unicode,
@@ -852,21 +895,23 @@ To load a json string into a Document, use the `from_json` class method:
 ...         "spam":[],
 ...     }
 >>> json = '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
->>> mydoc = tutorial.MyDoc.from_json(json)
+>>> mydoc = MyDoc.from_json(json)
 >>> mydoc
 {'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
-Note that `from_json` will take care of all your embeded Docs if you used the `to_json()` method to
-generated the json. Indeed, some extra value has to be set : the datatabase and the collection where
-the embed document lives. This is added by the `to_json()` method:
+Not that `from_json` will take care of all your embeded Docs:
 
->>> class EmbedDoc(Document):
+>>> class EmbedDoc(MongoDocument):
 ...     db_name = "test"
 ...     collection_name = "mongokit"
 ...     structure = {
-...         "foo":unicode
+...         "bla":{
+...             "foo":unicode,
+...             "bar":int,
+...         },
+...         "spam":[],
 ...     }
->>> class MyDoc(Document):
+>>> class MyDoc(MongoDocument):
 ...    db_name = "test"
 ...    collection_name = "mongokit"
 ...    structure = {
@@ -875,39 +920,11 @@ the embed document lives. This is added by the `to_json()` method:
 ...        },
 ...    }
 ...    use_autorefs = True
->>> con.register([EmbedDoc, MyDoc])
-
-Let's create an embed doc:
-
->>> embed = tutorial.EmbedDoc()
->>> embed['_id'] = u"embed"
->>> embed['foo'] = u"bar"
->>> embed.save()
-
-and embed this doc to another doc
-
->>> mydoc = tutorial.MyDoc()
->>> mydoc['_id'] = u'mydoc'
->>> mydoc['doc']['embed'] = embed
->>> mydoc.save()
-
-Now let's see how look the generated json:
-
->>> json = mydoc.to_json()
->>> json
-'{"doc": {"embed": {"_collection": "tutorial", "_database": "test", "_id": "embed", "foo": "bar"}}, "_id": "mydoc"}'
-
-As you can see, two new fields have been added : `_collection` and `_database`
-which represent respectively the collection and the database where the embed
-doc has been saved. Thoses informations are needed to generate the embed
-document. There are removed when calling the `from_json()` method:
-
->>> mydoc = tutorial.MyDoc.from_json(json)
+>>> json = '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
+>>> mydoc = MyDoc.from_json(json)
 >>> mydoc
-{'doc': {'embed': {u'_id': u'embed', u'foo': u'bar'}}, '_id': 'mydoc'}
-
-An the embed document is an instance of EmbedDoc:
-
+{'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}
 >>> isinstance(mydoc['doc']['embed'], EmbedDoc)
 True
+
 
