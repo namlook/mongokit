@@ -194,7 +194,30 @@ class ApiTestCase(unittest.TestCase):
             mydoc = self.col.MyDoc()
             mydoc["foo"] = i
             mydoc.save()
-        self.assertRaises(MultipleResultsFound, self.col.MyDoc.find_one)
+        one_doc = self.col.MyDoc.find_one()
+        raw_mydoc = self.col.find_one()
+        assert one_doc == raw_mydoc
+
+    def test_one(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":int
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = 0
+        mydoc.save()
+        raw_mydoc = self.col.one()
+        mydoc = self.col.MyDoc.one()
+        assert mydoc == raw_mydoc
+        assert mydoc["foo"] == 0
+        assert isinstance(mydoc, MyDoc)
+        for i in range(10):
+            mydoc = self.col.MyDoc()
+            mydoc["foo"] = i
+            mydoc.save()
+        self.assertRaises(MultipleResultsFound, self.col.MyDoc.one)
+        self.assertRaises(MultipleResultsFound, self.col.one)
 
     def test_fetch(self):
         class DocA(Document):

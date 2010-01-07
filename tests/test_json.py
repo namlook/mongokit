@@ -142,7 +142,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc['doc']['embed'] = embed
         mydoc.save()
-        assert mydoc.to_json() == '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
+        assert mydoc.to_json() == '{"doc": {"embed": {"_collection": "mongokit", "_database": "test", "_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
         assert mydoc.to_json_type() == {"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}
 
     def test_to_json_embeded_doc_with_oid(self):
@@ -171,7 +171,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc['doc']['embed'] = embed
         mydoc.save()
         assert isinstance(mydoc.to_json_type()['doc']['embed']['_id'], basestring)
-        mydoc.to_json()
+        assert mydoc.to_json() == '{"doc": {"embed": {"_collection": "mongokit", "_database": "test", "_id": "%s", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "%s"}' % (
+          embed['_id'], mydoc['_id'])
 
     def test_to_json_with_dict_in_list(self):
         class MyDoc(Document):
@@ -200,6 +201,7 @@ class JsonTestCase(unittest.TestCase):
         json = '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
         mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+        assert mydoc.collection == self.col
 
     def test_simple_from_json(self):
         class MyDoc(Document):
@@ -215,6 +217,7 @@ class JsonTestCase(unittest.TestCase):
         json = '{"_id": "mydoc2", "bla": {"foo": "bar", "bar": 42, "egg":946681200.0}, "spam": [946681200.0, 1218146400.0]}'
         mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'_id': 'mydoc2', 'bla': {'foo': 'bar', 'bar': 42, "egg":datetime.datetime(2000, 1, 1, 0, 0)}, 'spam': [datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2008, 8, 8, 0, 0)]}
+        assert mydoc.collection == self.col
 
     def test_from_json_embeded_doc(self):
         class EmbedDoc(Document):
@@ -233,7 +236,18 @@ class JsonTestCase(unittest.TestCase):
             }
             use_autorefs = True
         self.connection.register([MyDoc, EmbedDoc])
-        json = '{"doc": {"embed": {"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
+        
+        embed = self.col.EmbedDoc()
+        embed['_id'] = u"embed"
+        embed["bla"] = {"foo": u"bar", "bar": 42}
+        embed["spam"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        embed.save()
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc['doc']['embed'] = embed
+        mydoc.save()
+        json = mydoc.to_json()
+        assert json == '{"doc": {"embed": {"_collection": "mongokit", "_database": "test", "_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": "mydoc"}'
         mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'doc': {'embed': {u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, '_id': u'mydoc'}, mydoc
         assert isinstance(mydoc['doc']['embed'], EmbedDoc)
@@ -255,7 +269,17 @@ class JsonTestCase(unittest.TestCase):
             }
             use_autorefs = True
         self.connection.register([MyDoc, EmbedDoc])
-        json = '{"doc": {"embed": [{"_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}]}, "_id": "mydoc"}'
+        embed = self.col.EmbedDoc()
+        embed['_id'] = u"embed"
+        embed["bla"] = {"foo": u"bar", "bar": 42}
+        embed["spam"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        embed.save()
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc['doc']['embed'] = [embed]
+        mydoc.save()
+        json = mydoc.to_json()
+        assert json == '{"doc": {"embed": [{"_collection": "mongokit", "_database": "test", "_id": "embed", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}]}, "_id": "mydoc"}'
         mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'doc': {'embed': [{u'_id': u'embed', u'bla': {u'foo': u'bar', u'bar': 42}, u'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}]}, '_id': u'mydoc'}, mydoc
         assert isinstance(mydoc['doc']['embed'][0], EmbedDoc)
@@ -320,9 +344,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc["foo"] = 4
         mydoc.save()
         self.assertRaises(ImportError, mydoc.to_json)
-        self.assertRaises(ImportError, MyDoc.from_json, '{"_id":"mydoc", "foo":4}')
+        self.assertRaises(ImportError, self.col.MyDoc.from_json, '{"_id":"mydoc", "foo":4}')
         sys.path.insert(index, i)
-
 
     def test_json_schema_document(self):
         class MyDoc(SchemaDocument):

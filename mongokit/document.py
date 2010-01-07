@@ -77,7 +77,8 @@ class Document(SchemaDocument):
         if self.use_autorefs:
             self._make_reference(self, self.structure)
         if self.get_size() > 3999999:
-            raise MaxDocumentSizeError("The document size is too big, documents lower than 4Mb is allowed (got %s bytes)" % self.get_size())
+            raise MaxDocumentSizeError("The document size is too big, documents "
+              "lower than 4Mb is allowed (got %s bytes)" % self.get_size())
         super(Document, self).validate()
 
     def get_size(self):
@@ -87,10 +88,44 @@ class Document(SchemaDocument):
         return len(BSON.from_dict(self))
 
     def find(self, *args, **kwargs):
+        """
+        Query the database.
+
+        The `spec` argument is a prototype document that all results must
+        match. For example if self si called MyDoc:
+
+        >>> mydocs = db.test.MyDoc.find({"hello": "world"})
+
+        only matches documents that have a key "hello" with value "world".
+        Matches can have other keys *in addition* to "hello". The `fields`
+        argument is used to specify a subset of fields that should be included
+        in the result documents. By limiting results to a certain subset of
+        fields you can cut down on network traffic and decoding time.
+
+        `mydocs` is a cursor which yield MyDoc object instances.
+
+        See pymongo's documentation for more details on arguments.
+        """
         return MongoDocumentCursor(
           self.collection.find(*args, **kwargs), cls=self.__class__)
 
     def find_one(self, *args, **kwargs):
+        """
+        Get the first object found from the database.
+
+        See pymongo's documentation for more details on arguments.
+        """
+        bson_obj = self.collection.find_one(*args, **kwargs)
+        return self.__class__(doc=bson_obj, collection=self.collection)
+
+    def one(self, *args, **kwargs):
+        """
+        `one()` act like `find()` but will raise a
+        `mongokit.MultipleResultsFound` exception if there is more than one
+        result.
+    
+        If no document is found, `one()` returns `None`
+        """
         bson_obj = self.collection.find(*args, **kwargs)
         count = bson_obj.count()
         if count > 1:
@@ -247,14 +282,40 @@ class Document(SchemaDocument):
         """
         convert the document into a json string and return it
         """
+        def _convert_to_python(doc, struct, path = "", root_path=""):
+            for key in struct:
+                new_key = key
+                new_path = ".".join([path, new_key]).strip('.')
+                if isinstance(struct[key], dict):
+                    if doc: # we don't need to process an empty doc
+                        if key in doc: # we don't care about missing fields
+                            _convert_to_python(doc[key], struct[key], new_path, root_path)
+                elif type(struct[key]) is list:
+                    if struct[key]:
+                        if isinstance(struct[key][0], R):
+                            l_objs = []
+                            for obj in doc[key]:
+                                obj['_collection'] = self.collection.name
+                                obj['_database'] = self.db.name
+                                l_objs.append(obj)
+                            doc[key] = l_objs
+                        elif isinstance(struct[key][0], dict):
+                            if doc[key]:
+                                for obj in doc[key]:
+                                    _convert_to_python(obj, struct[key][0], new_path, root_path)
+                else:
+                    if isinstance(struct[key], R):
+                        doc[key]['_collection'] = self.collection.name
+                        doc[key]['_database'] = self.db.name
         try:
             import anyjson
         except ImportError:
             raise ImportError("can't import anyjson. Please install it before continuing.")
-        return anyjson.serialize(self.to_json_type())
+        obj = self.to_json_type()
+        _convert_to_python(obj, self.structure)
+        return anyjson.serialize(obj)
 
-    @classmethod
-    def from_json(cls, json):
+    def from_json(self, json):
         """
         convert a json string and return a SchemaDocument
         """
@@ -277,7 +338,9 @@ class Document(SchemaDocument):
                         elif isinstance(struct[key][0], R):
                             l_objs = []
                             for obj in doc[key]:
-                                obj = struct[key][0]._doc(obj)
+                                db = obj['_database']
+                                col = obj['_collection']
+                                obj = struct[key][0]._doc(obj, collection=self.connection[db][col]).get_dbref()
                                 l_objs.append(obj)
                             doc[key] = l_objs
                         elif isinstance(struct[key][0], dict):
@@ -288,14 +351,16 @@ class Document(SchemaDocument):
                     if struct[key] is datetime.datetime:
                         doc[key] = fromtimestamp(doc[key])
                     elif isinstance(struct[key], R):
-                        doc[key] = struct[key]._doc(doc[key])
+                        db = doc[key]['_database']
+                        col = doc[key]['_collection']
+                        doc[key] = struct[key]._doc(doc[key], collection=self.connection[db][col]).get_dbref()
         try:
             import anyjson
         except ImportError:
             raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = anyjson.deserialize(json)
-        _convert_to_python(obj, cls.structure)
-        return obj
+        _convert_to_python(obj, self.structure)
+        return self.__class__(obj, collection=self.collection)
  
 
     #
@@ -393,8 +458,8 @@ class Document(SchemaDocument):
                 # be sure that we have an instance of MongoDocument
                 if not isinstance(doc[key], struct[key]._doc) and doc[key] is not None:
                     raise SchemaTypeError(
-                      "%s must be an instance of Document not %s" % (
-                        new_path, type(doc[key]).__name__))
+                      "%s must be an instance of %s not %s" % (
+                        new_path, struct[key]._doc.__name__, type(doc[key]).__name__))
                 # validate the embed doc
                 if not self.skip_validation and doc[key] is not None:
                     doc[key].validate()

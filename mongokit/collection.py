@@ -26,6 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymongo.collection import Collection as PymongoCollection
+from mongo_exceptions import MultipleResultsFound
 
 class Collection(PymongoCollection):
 
@@ -46,5 +47,13 @@ class Collection(PymongoCollection):
         return the document wich has the id
         """
         return self.find_one({"_id":id})
+
+    def one(self, *args, **kwargs):
+        bson_obj = self.find(*args, **kwargs)
+        count = bson_obj.count()
+        if count > 1:
+            raise MultipleResultsFound("%s results found" % count)
+        elif count == 1:
+            return bson_obj.next()
 
 
