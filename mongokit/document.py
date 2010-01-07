@@ -470,6 +470,7 @@ class Document(SchemaDocument):
                     # if the embed doc indexed was None but not the new embed one,
                     # we update the index
                     if self._dbrefs[new_path] is None and doc[key] is not None:
+                        doc[key].save()
                         self._dbrefs[new_path] = doc[key]
                     # if the embed obj is already indexed, we check is the
                     # one we get has not changed. If so, we save the embed
