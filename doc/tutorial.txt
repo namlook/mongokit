@@ -203,7 +203,7 @@ Juste like `fetch()` but raise a  `mongokit.MultipleResultsFound` exception if
 there is more than one result.
 
 find_random()
-~~~~~~~~~~~~~
+-------------
 
 `find_random()` will return a random document from the database. This method doesn't take other arguments.
 
