@@ -114,7 +114,7 @@ class Document(SchemaDocument):
         See pymongo's documentation for more details on arguments.
         """
         return MongoDocumentCursor(
-          self.collection.find(*args, **kwargs), cls=self.__class__)
+          self.collection.find(*args, **kwargs), cls=self._obj_class)
 
     def find_one(self, *args, **kwargs):
         """
@@ -123,7 +123,7 @@ class Document(SchemaDocument):
         See pymongo's documentation for more details on arguments.
         """
         bson_obj = self.collection.find_one(*args, **kwargs)
-        return self.__class__(doc=bson_obj, collection=self.collection)
+        return self._obj_class(doc=bson_obj, collection=self.collection)
 
     def one(self, *args, **kwargs):
         """
@@ -138,7 +138,7 @@ class Document(SchemaDocument):
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
-            return self.__class__(doc=bson_obj.next(), collection=self.collection)
+            return self._obj_class(doc=bson_obj.next(), collection=self.collection)
 
     def find_random(self):
         """
@@ -147,7 +147,7 @@ class Document(SchemaDocument):
         import random
         max = self.collection.count()
         num = random.randint(0, max-1)
-        return self.__class__(
+        return self._obj_class(
           self.collection.find().skip(num).next(),
           collection=self.collection
         )
@@ -183,7 +183,7 @@ class Document(SchemaDocument):
             timeout=timeout,
             snapshot=snapshot,
             _sock=_sock,),
-          cls=self.__class__)
+          cls=self._obj_class)
 
     def fetch_one(self, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
         """
@@ -379,7 +379,7 @@ class Document(SchemaDocument):
             raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = anyjson.deserialize(json)
         _convert_to_python(obj, self.structure)
-        return self.__class__(obj, collection=self.collection)
+        return self._obj_class(obj, collection=self.collection)
  
 
     #

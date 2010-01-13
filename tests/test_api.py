@@ -142,6 +142,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
         fetched_doc = self.col.MyDoc.get_from_id("bar")
         assert mydoc == fetched_doc
+        assert callable(fetched_doc) is False
         assert isinstance(fetched_doc, MyDoc)
         raw_doc = self.col.get_from_id('bar')
         assert mydoc == raw_doc
@@ -173,6 +174,7 @@ class ApiTestCase(unittest.TestCase):
         allPlans = self.col.MyDoc.find().explain()['allPlans']
         assert allPlans == [{u'cursor': u'BasicCursor', u'startKey': {}, u'endKey': {}}]
         next_doc =  self.col.MyDoc.find().sort('foo',1).next()
+        assert callable(next_doc) is False
         assert isinstance(next_doc, MyDoc)
         assert next_doc['foo'] == 0
         assert len(list(self.col.MyDoc.find().skip(3))) == 7, len(list(self.col.MyDoc.find().skip(3)))
@@ -195,6 +197,7 @@ class ApiTestCase(unittest.TestCase):
             mydoc["foo"] = i
             mydoc.save()
         one_doc = self.col.MyDoc.find_one()
+        assert callable(one_doc) is False
         raw_mydoc = self.col.find_one()
         assert one_doc == raw_mydoc
 
@@ -209,6 +212,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
         raw_mydoc = self.col.one()
         mydoc = self.col.MyDoc.one()
+        assert callable(mydoc) is False
         assert mydoc == raw_mydoc
         assert mydoc["foo"] == 0
         assert isinstance(mydoc, MyDoc)
@@ -231,6 +235,7 @@ class ApiTestCase(unittest.TestCase):
             mydoc.save()
         raw_mydoc = self.col.find_random()
         mydoc = self.col.MyDoc.find_random()
+        assert callable(mydoc) is False
         assert isinstance(mydoc, MyDoc)
         assert mydoc != raw_mydoc, (mydoc, raw_mydoc)
 
@@ -265,6 +270,7 @@ class ApiTestCase(unittest.TestCase):
         index = 0
         for doc in self.col.DocA.fetch():
             assert doc == {'_id':doc['_id'], 'doc_a':{'foo':index}}, doc
+            assert callable(doc) is False
             index += 1
 
         #assert DocA.fetch().limit(12).count() == 10, DocA.fetch().limit(1).count() # ???
@@ -376,6 +382,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
 
         docb = self.col.DocB.fetch_one()
+        assert callable(docb) is False
         assert docb
         assert isinstance(docb, DocB)
         self.assertRaises(MultipleResultsFound, self.col.DocA.fetch_one)
