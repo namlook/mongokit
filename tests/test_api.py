@@ -619,4 +619,5 @@ class ApiTestCase(unittest.TestCase):
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
         self.assertRaises(TypeError, mydoc)
+        assert callable(mydoc) is False
 

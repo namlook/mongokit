@@ -78,7 +78,7 @@ class AutoRefTestCase(unittest.TestCase):
         docb_list = list(self.col.DocB.fetch())
         assert len(docb_list) == 1
         new_docb = docb_list[0]
-        assert isinstance(new_docb['b']['doc_a'], self.col.DocA.__class__)
+        assert isinstance(new_docb['b']['doc_a'], DocA), new_docb['b']['doc_a'].__class__
         assert docb == {'b': {'doc_a': {'a': {'foo': 3}, '_id': 'doca'}}, '_id': 'docb'}, docb
         assert docb['b']['doc_a']['a']['foo'] == 3
         docb['b']['doc_a']['a']['foo'] = 4

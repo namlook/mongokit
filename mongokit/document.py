@@ -42,6 +42,14 @@ STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
 
 log = logging.getLogger(__name__)
 
+class CallableMixin(object):
+    """
+    brings the callable method to a Document. usefull for the connection's
+    register method
+    """
+    def __call__(self, doc=None, gen_skel=True):
+        return self._obj_class(doc=doc, gen_skel=gen_skel, collection=self.collection)
+
 class Document(SchemaDocument):
 
     skip_validation = False
@@ -71,7 +79,6 @@ class Document(SchemaDocument):
         self._dbrefs = {}
         if self.use_autorefs and collection:
             self._make_reference(self, self.structure)
-        self._non_callable = False
 
     def validate(self):
         if self.use_autorefs:
@@ -378,13 +385,6 @@ class Document(SchemaDocument):
     #
     # End of public API
     #
-
-    def __call__(self, doc=None, gen_skel=True):
-        if self._non_callable:
-            raise TypeError("'%s' is not callable" % self.__class__.__name__)
-        obj = self.__class__(doc=doc, gen_skel=gen_skel, collection=self.collection)
-        obj._non_callable = True
-        return obj
 
     def _validate_descriptors(self):
         super(Document, self)._validate_descriptors()

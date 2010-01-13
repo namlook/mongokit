@@ -593,9 +593,6 @@ class SchemaDocument(dict):
         default_values = deepcopy(self.default_values)
         for k,v in default_values.iteritems():
             if callable(v):
-                if hasattr(v, '_non_callable'):
-                    if v._non_callable is True:
-                        continue
                 default_values[k] = v()
         self.update(DotExpandedDict(default_values))
 

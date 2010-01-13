@@ -27,6 +27,7 @@
 
 from pymongo import Connection as PymongoConnection
 from database import Database
+from document import CallableMixin
 
 class Connection(PymongoConnection):
 
@@ -37,7 +38,10 @@ class Connection(PymongoConnection):
     def register(self, obj_list):
         for obj in obj_list:
             obj()._validate_descriptors()
-            self._registered_documents[obj.__name__] = obj
+            CallableDocument = type(
+              "Callable%s" % obj.__name__,
+              (obj, CallableMixin), {"_obj_class":obj, "__repr__":object.__repr__})
+            self._registered_documents[obj.__name__] = CallableDocument
 
     def __getattr__(self, key):
         return Database(self, key)
