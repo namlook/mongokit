@@ -38,7 +38,7 @@ from helpers import *
 __all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict', 'DotExpandedDict', 'DotCollapsedDict',
   'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
   'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
-  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp']
+  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n']
 
 class CustomType(object): 
     mongo_type = None
@@ -180,8 +180,7 @@ class SchemaDocument(dict):
     required_fields = []
     default_values = {}
     validators = {}
-
-    custom_types = {}
+    i18n = []
 
     skip_validation = False
 
@@ -236,6 +235,8 @@ class SchemaDocument(dict):
                 splited_rf = rf.split('.')
                 for index in range(len(splited_rf)):
                     self._required_namespace.add(".".join(splited_rf[:index+1]))
+        if self.i18n:
+            self._make_i18n()
 
     def generate_skeleton(self):
         """
@@ -632,4 +633,44 @@ class SchemaDocument(dict):
             #
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
+
+    def _make_i18n(self):
+        from helpers import DotCollapsedDict, DotExpandedDict
+        doted_dict = DotCollapsedDict(self.structure)
+        for field in self.i18n:
+            if not isinstance(doted_dict[field], i18n):
+                doted_dict[field] = i18n(
+                  field_type = doted_dict[field],
+                  field_name = field
+                )
+        self.structure.update(DotExpandedDict(doted_dict))
+
+class i18n(dict, CustomType):
+    """ CustomType to deal with i18n """
+    mongo_type = list
+
+    def __init__(self, field_type=None, field_name=None):
+        super(i18n, self).__init__()
+        self.python_type = self.__class__
+        self._field_type = field_type
+        self._field_name = field_name
+
+    def __call__(self):
+        return i18n(self._field_type, self._field_name)
+
+    def to_bson(self, value):
+        if value is not None:
+            for l,v in value.iteritems():
+                if not isinstance(v, self._field_type):
+                    raise SchemaTypeError(
+                      "%s (%s) must be an instance of %s not %s" % (
+                        self._field_name, l, self._field_type, type(v).__name__))
+            return [{'lang':l, 'value':v} for l,v in value.iteritems()]
+        
+    def to_python(self, value):
+        if value is not None:
+            i18n_dict = self.__class__(self._field_type)
+            for i in  value:
+                i18n_dict[i['lang']] = i['value']
+            return i18n_dict
 
