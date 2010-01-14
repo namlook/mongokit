@@ -628,3 +628,15 @@ class ApiTestCase(unittest.TestCase):
         self.assertRaises(TypeError, mydoc)
         assert callable(mydoc) is False
 
+
+    def test_bad_call(self):
+        class MyDoc(Document):
+            structure = {"foo":int}
+        self.assertRaises(TypeError, self.connection.test.col.MyDoc)
+        self.connection.register([MyDoc])
+        self.connection.test.col.MyDoc()
+        self.assertRaises(TypeError, self.connection.test.col.Bla)
+        self.assertRaises(TypeError, self.connection.test.Bla)
+
+
+

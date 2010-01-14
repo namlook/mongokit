@@ -42,6 +42,20 @@ class Collection(PymongoCollection):
         else:
             return Collection(self.database,  u"%s.%s" % (self.name, key))
 
+    def __call__(self, *args, **kwargs):
+        if "." not in self.__name:
+            raise TypeError("'Collection' object is not callable. If you "
+                            "meant to call the '%s' method on a 'Database' "
+                            "object it is failing because no such method "
+                            "exists." %
+                            self.__name)
+        name = self.__name.split(".")[-1]
+        raise TypeError("'Collection' object is not callable. "
+          "If you meant to call the '%s' method on a 'Collection' "
+          "object it is failing because no such method exists.\n"
+          "If '%s' is a Document then you may have forgotten to "
+          "register it to the connection." % (name, name))
+
     def get_from_id(self, id):
         """
         return the document wich has the id
