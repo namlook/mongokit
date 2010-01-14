@@ -79,6 +79,31 @@ class CustomTypesTestCase(unittest.TestCase):
         foo2 = self.col.Foo.get_from_id(2)
         assert foo2['date'] == datetime.datetime(2008,6,7), foo2
 
+    def test_custom_type2(self):
+        import datetime
+
+        class CustomPrice(CustomType):
+            mongo_type = float
+            def to_bson(self, value):
+                return float(value)
+            def to_python(self, value):
+                return str(value)
+
+        class Receipt(Document):
+            use_dot_notation = True
+            structure = {
+                'price': CustomPrice(),
+            }
+        self.connection.register([Receipt])
+          
+        r = self.connection.test.test.Receipt()
+        r['_id'] = 'bla'
+        r['price'] =  '9.99'
+        r.save()
+        r_saved = r.collection.find_one({'_id':'bla'})
+        assert r_saved == {u'_id': u'bla', u'price': 9.9900000000000002}
+
+
     def test_instance_type(self):
         from pymongo.objectid import ObjectId
         from pymongo.dbref import DBRef
