@@ -537,7 +537,20 @@ class SchemaDocument(dict):
             #
             # if the value is a dict, we have a another structure to validate
             #
-            if isinstance(struct[key], dict):
+            #
+            # It is not a dict nor a list but a simple key:value
+            #
+            if isinstance(struct[key], CustomType):
+                if target == 'bson':
+                    if struct[key].python_type is not None:
+                        if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
+                            raise SchemaTypeError(
+                              "%s must be an instance of %s not %s" % (
+                                new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
+                    doc[key] = struct[key].to_bson(doc[key])
+                else:
+                    doc[key] = struct[key].to_python(doc[key])
+            elif isinstance(struct[key], dict):
                 if doc: # we don't need to process an empty doc
                     if type(key) is type:
                         for doc_key in doc: # process type's key such {unicode:int}...
@@ -571,24 +584,7 @@ class SchemaDocument(dict):
                         if doc[key]:
                             for obj in doc[key]:
                                 self._process_custom_type(target, obj, struct[key][0], new_path, root_path)
-            #
-            # It is not a dict nor a list but a simple key:value
-            #
-            else:
-                #
-                # check if the value must not be null
-                #
-                if isinstance(struct[key], CustomType):
-                    if target == 'bson':
-                        if struct[key].python_type is not None:
-                            if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
-                                raise SchemaTypeError(
-                                  "%s must be an instance of %s not %s" % (
-                                    new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
-                        doc[key] = struct[key].to_bson(doc[key])
-                    else:
-                        doc[key] = struct[key].to_python(doc[key])
-
+            
     def _set_default_fields(self, doc, struct, path = ""):
         default_values = deepcopy(self.default_values)
         for k,v in default_values.iteritems():
@@ -617,7 +613,10 @@ class SchemaDocument(dict):
                     if type(struct[key]) is dict and self.use_dot_notation:
                         doc[key] = DotedDict()
                     else:
-                        doc[key] = type(struct[key])()
+                        if callable(struct[key]):
+                            doc[key] = struct[key]()
+                        else:
+                            doc[key] = type(struct[key])()
                 elif struct[key] is dict:
                     doc[key] = {}
                 elif isinstance(struct[key], list):
