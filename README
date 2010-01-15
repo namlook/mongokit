@@ -20,6 +20,7 @@ Features
  * required fields validation
  * default values
  * custom validators
+ * cross database document reference
  * random query support (which returns a random document from the database)
  * inheritance and polymorphisme support
  * versionized document support (still in alpha stage)
@@ -27,6 +28,7 @@ Features
  * operator for validation (currently : OR, NOT and IS)
  * simple web framework integration
  * import/export to json
+ * i18n support
 
 A quick example
 ===============
@@ -90,12 +92,14 @@ Change Log
 v0.5
 ----
  * refactoring API which is getting much much more cleaner. Please see the migration_ page to keep your code up to date
- * 100% code coverage by 148 unit tests
+ * 100% code coverage by 162 unit tests
  * lot of bug fix (too many to list them here)
  * add document size validation
  * add cross database reference support
+ * `i18n support`_
 
 .. _migration : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html
+.. _`i18n support` : http://bytebucket.org/namlook/mongokit/wiki/html/i18n.html
 
 v0.4
 ----

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2009, Nicolas Clairon
+# Copyright (c) 2009-2010, Nicolas Clairon
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -38,7 +38,7 @@ import codecs
 
 setup(
     name = 'mongokit',
-    version = '0.4',
+    version = '0.5',
 
     description = 'Python mongodb kit',
     long_description = codecs.open('README', "r", "utf-8").read(),
@@ -62,7 +62,7 @@ setup(
     zip_safe = False,
 
     install_requires = [
-        'pymongo>=0.15.1',
+        'pymongo>=1.3',
         'anyjson>=0.2.2',
     ]
 
