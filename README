@@ -38,8 +38,6 @@ A Document declaration look like that::
     >>> import datetime
 
     >>> class BlogPost(Document):
-    ...     db_name = 'test'
-    ...     collection_name = 'tutorial'
     ...     structure = {
     ...             'title':unicode,
     ...             'body':unicode,
@@ -68,8 +66,6 @@ Saving the object will call the `validate()` method.
 And you can use more complex structure::
 
     >>> class ComplexDoc(Document):
-    ...     db_name = 'test'
-    ...     collection_name = 'tutorial'
     ...     structure = {
     ...         "foo" : {"content":int},
     ...         "bar" : {

@@ -38,7 +38,7 @@ from helpers import *
 __all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict', 'DotExpandedDict', 'DotCollapsedDict',
   'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
   'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
-  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n']
+  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n', 'i18nError']
 
 class CustomType(object): 
     mongo_type = None
@@ -70,6 +70,7 @@ class DuplicateDefaultValueError(Exception):pass
 class ModifierOperatorError(Exception):pass
 class SchemaTypeError(Exception):pass
 class DefaultFieldTypeError(Exception):pass
+class i18nError(Exception):pass
 
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
@@ -200,7 +201,7 @@ class SchemaDocument(dict):
       CustomType,
     ]
 
-    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True, validate=True):
+    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True, validate=True, lang='en', fallback_lang='en'):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -210,6 +211,8 @@ class SchemaDocument(dict):
         gen_auth_types: if True, generate automaticly the self._authorized_types
             attribute from self.authorized_types
         """
+        self._current_lang = lang
+        self._fallback_lang = fallback_lang
         # init
         if gen_auth_types:
             self._authorized_types = self.authorized_types[:]
@@ -223,6 +226,8 @@ class SchemaDocument(dict):
             self[k] = v
         if doc:
             gen_skel = False
+            if self.i18n or self.use_dot_notation:
+                self.__generate_doted_dict(self, self.structure)
         if gen_skel:
             self.generate_skeleton()
             self._set_default_fields(self, self.structure)
@@ -267,28 +272,22 @@ class SchemaDocument(dict):
 
     def __setattr__(self, key, value):
         if key not in self._protected_field_names and self.use_dot_notation and key in self:
-            self[key] = value
+            if isinstance(self.structure[key], i18n):
+                self[key][self._current_lang] = value
+            else:
+                self[key] = value
         else:
            dict.__setattr__(self, key, value) 
 
     def __getattr__(self, key):
         if key not in self._protected_field_names and self.use_dot_notation and key in self:
+            if isinstance(self[key], i18n):
+                if self._current_lang not in self[key]:
+                    return self[key].get(self._fallback_lang)
+                return self[key][self._current_lang]
             return self[key]
         else:
             return dict.__getattribute__(self, key) 
-
-    def to_json(self):
-        """
-        convert the document into a json string and return it
-        """
-        raise NotImplementedError
-
-    @classmethod
-    def from_json(cls, json):
-        """
-        convert a json string and return a SchemaDocument
-        """
-        raise NotImplementedError
 
     #
     # Public API end
@@ -612,7 +611,10 @@ class SchemaDocument(dict):
             if type(key) is not type and key not in doc:
                 if isinstance(struct[key], dict):
                     if type(struct[key]) is dict and self.use_dot_notation:
-                        doc[key] = DotedDict()
+                        if self.i18n:
+                            doc[key] = i18nDotedDict(doc.get(key, {}), self)
+                        else:
+                            doc[key] = DotedDict(doc.get(key, {}))
                     else:
                         if callable(struct[key]):
                             doc[key] = struct[key]()
@@ -634,16 +636,43 @@ class SchemaDocument(dict):
             if isinstance(struct[key], dict) and type(key) is not type:
                 self.__generate_skeleton(doc[key], struct[key], path)
 
+    def __generate_doted_dict(self, doc, struct):
+        for key in struct:
+            #
+            # Automatique generate the skeleton with NoneType
+            #
+            if type(key) is not type:# and key not in doc:
+                if isinstance(struct[key], dict):
+                    if type(struct[key]) is dict:
+                        if self.i18n:
+                            doc[key] = i18nDotedDict(doc.get(key, {}), self)
+                        else:
+                            doc[key] = DotedDict(doc.get(key, {}))
+            #
+            # if the value is a dict, we have a another structure to validate
+            #
+            if isinstance(struct[key], dict) and type(key) is not type:
+                self.__generate_doted_dict(doc[key], struct[key])
+
+
     def _make_i18n(self):
-        from helpers import DotCollapsedDict, DotExpandedDict
         doted_dict = DotCollapsedDict(self.structure)
         for field in self.i18n:
+            if field not in doted_dict:
+                raise ValidationError("%s not found in structure" % field)
             if not isinstance(doted_dict[field], i18n):
+                if isinstance(doted_dict[field], list):
+                    raise i18nError("you can not apply i18n on list")
                 doted_dict[field] = i18n(
                   field_type = doted_dict[field],
                   field_name = field
                 )
         self.structure.update(DotExpandedDict(doted_dict))
+
+    def set_lang(self, lang):
+        self._current_lang = lang
+    def get_lang(self):
+        return self._current_lang
 
 class i18n(dict, CustomType):
     """ CustomType to deal with i18n """

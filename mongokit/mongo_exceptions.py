@@ -30,7 +30,6 @@ from pymongo.connection import OperationFailure
 class ConnectionError(Exception):pass
 class MongoAuthException(Exception):pass
 class MultipleResultsFound(Exception):pass
-class PylonsEnvError(Exception):pass
 class BadIndexError(Exception):pass
 class AutoReferenceError(Exception):pass
 class MaxDocumentSizeError(Exception):pass

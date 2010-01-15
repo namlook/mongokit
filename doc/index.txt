@@ -15,6 +15,7 @@ Contents:
     introduction
     tutorial
     inheritance
+    i18n
     migration
 
 

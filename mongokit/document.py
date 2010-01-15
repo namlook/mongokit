@@ -47,8 +47,8 @@ class CallableMixin(object):
     brings the callable method to a Document. usefull for the connection's
     register method
     """
-    def __call__(self, doc=None, gen_skel=True):
-        return self._obj_class(doc=doc, gen_skel=gen_skel, collection=self.collection)
+    def __call__(self, doc=None, gen_skel=True, lang='en', fallback_lang='en'):
+        return self._obj_class(doc=doc, gen_skel=gen_skel, collection=self.collection, lang=lang, fallback_lang=fallback_lang)
 
 class Document(SchemaDocument):
 
@@ -64,12 +64,12 @@ class Document(SchemaDocument):
       type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, collection=None):
+    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en'):
         self._authorized_types = self.authorized_types[:]
         # If using autorefs, we need another authorized
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
-        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False)
+        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang, fallback_lang=fallback_lang)
         # collection
         self.collection = collection
         if collection:

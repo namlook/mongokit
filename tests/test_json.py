@@ -347,9 +347,81 @@ class JsonTestCase(unittest.TestCase):
         self.assertRaises(ImportError, self.col.MyDoc.from_json, '{"_id":"mydoc", "foo":4}')
         sys.path.insert(index, i)
 
-    def test_json_schema_document(self):
-        class MyDoc(SchemaDocument):
-            structure = {'foo':int}
-        self.assertRaises(NotImplementedError, MyDoc().to_json)
-        self.assertRaises(NotImplementedError, MyDoc.from_json, '{"foo":null}')
+    def test_to_json_with_dot_notation(self):
+        class MyDoc(Document):
+            use_dot_notation = True
+            structure = {
+                "bla":{
+                    "foo":unicode,
+                    "bar":int,
+                    "egg":datetime.datetime,
+                },
+                "spam":[],
+            }
+        self.connection.register([MyDoc])
 
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc["bla"]["foo"] = u"bar"
+        mydoc["bla"]["bar"] = 42
+        mydoc['bla']['egg'] = datetime.datetime(2010, 1, 1)
+        mydoc['spam'] = range(10)
+        mydoc.save()
+        assert  mydoc.to_json() == '{"_id": "mydoc", "bla": {"egg": 1262300400.0, "foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+        assert  mydoc.to_json_type() == {'_id': 'mydoc', 'bla': {'egg': 1262300400.0, 'foo': u'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc.bla.foo = u"bar"
+        mydoc.bla.bar = 42
+        mydoc.bla.egg = datetime.datetime(2010, 1, 1)
+        mydoc.spam = range(10)
+        mydoc.save()
+        assert  mydoc.to_json() == '{"_id": "mydoc", "bla": {"egg": 1262300400.0, "foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}', mydoc.to_json()
+        assert  mydoc.to_json_type() == {'_id': 'mydoc', 'bla': {'egg': 1262300400.0, 'foo': u'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc2'
+        mydoc.bla.foo = u"bar"
+        mydoc.bla.bar = 42
+        mydoc.spam = [datetime.datetime(2000, 1, 1), datetime.datetime(2008, 8, 8)]
+        mydoc.save()
+        assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"egg": null, "foo": "bar", "bar": 42}, "spam": [946681200.0, 1218146400.0]}'
+        assert mydoc.to_json_type() == {'_id': 'mydoc2', 'bla': {'egg': None, 'foo': u'bar', 'bar': 42}, 'spam': [946681200.0, 1218146400.0]}
+
+    def test_to_json_with_i18n_and_dot_notation(self):
+        class MyDoc(Document):
+            use_dot_notation = True
+            structure = {
+                "bla":{
+                    "foo":unicode,
+                    "bar":int,
+                    "egg":datetime.datetime,
+                },
+                "spam":[],
+            }
+            i18n = ['bla.foo']
+        self.connection.register([MyDoc])
+
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc.bla.foo = u"bar"
+        mydoc.bla.bar = 42
+        mydoc.bla.egg = datetime.datetime(2010, 1, 1)
+        mydoc.spam = range(10)
+        mydoc.set_lang('fr')
+        mydoc.bla.foo = u"arf"
+        mydoc.save()
+        assert  mydoc.to_json_type() == {'_id': 'mydoc', 'bla': {'bar': 42, 'foo': {'fr': u'arf', 'en': u'bar'}, 'egg': 1262300400.0}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+        assert  mydoc.to_json() == '{"_id": "mydoc", "bla": {"bar": 42, "foo": {"fr": "arf", "en": "bar"}, "egg": 1262300400.0}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc2'
+        mydoc.bla.foo = u"bar"
+        mydoc.bla.bar = 42
+        mydoc.spam = [datetime.datetime(2000, 1, 1), datetime.datetime(2008, 8, 8)]
+        mydoc.save()
+        assert mydoc.to_json_type() == {'_id': 'mydoc2', 'bla': {'bar': 42, 'foo': {'en': u'bar'}, 'egg': None}, 'spam': [946681200.0, 1218146400.0]}
+        assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"bar": 42, "foo": {"en": "bar"}, "egg": null}, "spam": [946681200.0, 1218146400.0]}'
+
+ 

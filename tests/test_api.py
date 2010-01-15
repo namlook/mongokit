@@ -505,7 +505,6 @@ class ApiTestCase(unittest.TestCase):
 
         sect_col = self.connection.test.section
         sects = [s.collection.name == 'section' and s.db.name == 'test' for s in sect_col.Section.find({})] 
-        print  [s for s in sect_col.Section.find()] 
         assert len(sects) == 2, len(sects)
         assert any(sects)
         sects = [s.collection.name == 'section' and s.db.name == 'test' for s in sect_col.Section.fetch()]
@@ -639,4 +638,22 @@ class ApiTestCase(unittest.TestCase):
         self.assertRaises(TypeError, self.connection.test.Bla)
 
 
+    def test_fetched_dot_notation(self):
+        class MyDoc(Document):
+            use_dot_notation = True
+            structure = {
+                "foo":int,
+                "bar":{"egg":unicode}
+            }
+
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc.foo = 3
+        mydoc.bar.egg = u'bla'
+        mydoc.save()
+        fetched_doc = self.col.MyDoc.find_one()
+        assert fetched_doc.foo == 3, fetched_doc.foo
+        assert fetched_doc.bar.egg == "bla", fetched_doc.bar.egg
+
+       
 

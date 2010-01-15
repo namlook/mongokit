@@ -40,6 +40,39 @@ def fromtimestamp(epoch_date):
     """
     return datetime.datetime.fromtimestamp(epoch_date)
 
+from copy import deepcopy
+
+class i18nDotedDict(dict):
+    """
+    Dot notation dictionnary access with i18n support
+    """
+    def __init__(self, dic, doc):
+        super(i18nDotedDict, self).__init__(dic)
+        self._doc = doc
+
+    def __setattr__(self, key, value):
+        from mongokit.schema_document import i18n
+        if key in self:
+            if isinstance(self[key], i18n):
+                self[key][self._doc._current_lang] = value
+            else:
+                self[key] = value
+        else:
+           dict.__setattr__(self, key, value) 
+
+    def __getattr__(self, key):
+        from mongokit.schema_document import i18n
+        if key in self:
+            if isinstance(self[key], i18n):
+                if self._doc._current_lang not in self[key]:
+                    return self[key].get(self._doc._fallback_lang)
+                return self[key][self._doc._current_lang]
+            return self[key]
+
+    def __deepcopy__(self, memo={}):
+        obj = dict(self)
+        return deepcopy(obj, memo)
+
 class DotedDict(dict):
     """
     Dot notation dictionnary access
@@ -52,6 +85,9 @@ class DotedDict(dict):
     def __getattr__(self, key):
         if key in self:
             return self[key]
+    def __deepcopy__(self, memo={}):
+        obj = dict(self)
+        return deepcopy(obj, memo)
 
 class DotExpandedDict(dict): 
     """ 
