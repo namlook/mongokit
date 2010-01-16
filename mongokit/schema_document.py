@@ -98,6 +98,9 @@ class SchemaProperties(type):
                         obj_validators = attrs.get('validators', {}).copy()
                         attrs['validators'] = parent.validators.copy()
                         attrs['validators'].update(obj_validators)
+                    if parent.i18n:
+                        attrs['i18n'] = list(set(
+                          attrs.get('i18n', [])+parent.i18n))
         for mro in bases[0].__mro__:
             attrs['_protected_field_names'] = attrs['_protected_field_names'].union(list(mro.__dict__))
         attrs['_protected_field_names'] = list(attrs['_protected_field_names'])

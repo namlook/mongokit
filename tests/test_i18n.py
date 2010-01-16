@@ -219,4 +219,45 @@ class ApiTestCase(unittest.TestCase):
         doc = self.col.Doc.find_random()
         assert doc['title'] == {'en':'Hello', 'fr':'Salut'}
 
+    def test_i18n_inheritance(self):
+        class A(Document):
+            structure = {
+                'a':{
+                    'title':unicode,
+                }
+            }
+            i18n = ['a.title']
+
+        class B(A):
+            structure = {
+                'b':{
+                    'title':unicode,
+                }
+            }
+            i18n = ['b.title']
+
+
+        class C(Document):
+            structure = {
+                'c':{
+                    'title':unicode,
+                }
+            }
+            i18n = ['c.title']
+
+        class D(B, C):
+            structure = {
+                'd':{
+                    'title':unicode,
+                }
+            }
+
+        self.connection.register([D])
+        doc = self.col.D()
+        assert doc.i18n == ['a.title', 'c.title', 'b.title'], doc.i18n
+        doc['a']['title']['en'] = u'Hello'
+        doc['b']['title']['fr'] = u"Salut"
+        doc['c']['title']['fr'] = u"Salut"
+        assert doc == {'a': {'title': {'en': u'Hello'}}, 'c': {'title': {'fr': u'Salut'}}, 'b': {'title': {'fr': u'Salut'}}, 'd': {'title': None}}
+
 
