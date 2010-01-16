@@ -661,8 +661,6 @@ class SchemaDocument(dict):
             if field not in doted_dict:
                 raise ValidationError("%s not found in structure" % field)
             if not isinstance(doted_dict[field], i18n):
-                if isinstance(doted_dict[field], list):
-                    raise i18nError("you can not apply i18n on list")
                 doted_dict[field] = i18n(
                   field_type = doted_dict[field],
                   field_name = field
@@ -690,10 +688,17 @@ class i18n(dict, CustomType):
     def to_bson(self, value):
         if value is not None:
             for l,v in value.iteritems():
-                if not isinstance(v, self._field_type):
-                    raise SchemaTypeError(
-                      "%s (%s) must be an instance of %s not %s" % (
-                        self._field_name, l, self._field_type, type(v).__name__))
+                if isinstance(v, list) and isinstance(self._field_type, list):
+                    for i in v:
+                        if not isinstance(i, self._field_type[0]):
+                            raise SchemaTypeError(
+                              "%s (%s) must be an instance of %s not %s" % (
+                                self._field_name, l, self._field_type[0], type(i).__name__))
+                else:
+                    if not isinstance(v, self._field_type):
+                        raise SchemaTypeError(
+                          "%s (%s) must be an instance of %s not %s" % (
+                            self._field_name, l, self._field_type, type(v).__name__))
             return [{'lang':l, 'value':v} for l,v in value.iteritems()]
         
     def to_python(self, value):

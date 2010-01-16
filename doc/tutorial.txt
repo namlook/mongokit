@@ -133,7 +133,7 @@ All theses method can take a query as argument. A query is a simple dict. Please
 see the mongodb and the pymongo documentation for further details.
 
 find()
------
+------
 
 `find()` without argument will return a cursor of all documents of the collection.
 If a query is passed, it will return a cursor all documents which match the query.
@@ -158,7 +158,7 @@ method takes the same arguments than the pymongo's `find_one()` method. Please, 
 the pymongo's documentation.
 
 one()
-----------
+-----
 
 `one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
 there is more than one result.
@@ -519,7 +519,7 @@ Example the following document:
 ... 
 
 We want to be sure that before saving our object, foo is greater than bar and baz is
-unicode(foo). Do do that, we juste overload the validation method :
+unicode(foo). Do do that, we juste overload the validation method::
 
     def validate(self):
         assert self['foo'] > self['bar']

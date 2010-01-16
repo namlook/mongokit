@@ -106,7 +106,19 @@ class ApiTestCase(unittest.TestCase):
                 "title":[unicode]
             }
             i18n = ['title']
-        self.assertRaises(i18nError, self.connection.register, [Doc])
+        self.connection.register([Doc])
+        
+        doc = self.col.Doc()
+        doc.title = [u'Hello', u'Hi']
+        doc.set_lang('fr')
+        doc.title = [u'Bonjour', u'Salut']
+        doc.save()
+
+        assert doc.title == ['Bonjour', 'Salut']
+        doc.set_lang('en')
+        assert doc.title == ['Hello', 'Hi']
+        doc.title.append(1)
+        self.assertRaises(SchemaTypeError, doc.save)
 
     def test_i18n_nested_dict(self):
         class Doc(Document):
