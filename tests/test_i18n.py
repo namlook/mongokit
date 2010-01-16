@@ -122,6 +122,35 @@ class ApiTestCase(unittest.TestCase):
 
     def test_i18n_nested_dict(self):
         class Doc(Document):
+            structure = {
+                'title':{
+                    'foo':unicode,
+                    'bar':{'bla':int},
+                    'egg':int,
+                }
+            }
+            i18n = ['title.foo', 'title.bar.bla']
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        doc['title']['foo']['fr'] = u'Salut'
+        doc['title']['bar']['bla']['fr'] = 3
+        doc['title']['egg'] = 4
+        doc['title']['foo']['en'] = u"Hello"
+        doc['title']['bar']['bla']['en'] = 2
+        assert doc == {'title': {'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}, 'egg':4}}, doc
+        doc.save()
+
+        raw_doc = self.col.find_one({'_id':doc['_id']})
+        assert raw_doc == {'_id':doc['_id'],
+          u'title': {u'foo': [{u'lang': u'fr', u'value': u'Salut'}, {u'lang': u'en', u'value': u'Hello'}],
+          u'bar': {u'bla': [{u'lang': u'fr', u'value': 3}, {u'lang': u'en', u'value': 2}]}, 'egg':4}
+        }, raw_doc
+        fetched_doc = self.col.Doc.find_one({'_id':doc['_id']})
+        assert fetched_doc['title']['foo']['en'] == 'Hello'
+        assert fetched_doc['title']['foo']['fr'] == 'Salut'
+
+    def test_i18n_nested_dict_dot_notation(self):
+        class Doc(Document):
             use_dot_notation = True
             structure = {
                 'title':{
@@ -157,6 +186,7 @@ class ApiTestCase(unittest.TestCase):
         assert fetched_doc.title.foo == 'Hello'
         fetched_doc.set_lang('fr')
         assert fetched_doc.title.foo == 'Salut'
+
 
     def test_i18n_fallback(self):
         class Doc(Document):
