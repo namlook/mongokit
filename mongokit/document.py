@@ -257,7 +257,6 @@ class Document(SchemaDocument):
         self._process_custom_type('bson', self, self.structure)
         id = self.collection.save(self, safe=safe, *args, **kwargs)
         self._process_custom_type('python', self, self.structure)
-        return self
 
     def delete(self):
         """

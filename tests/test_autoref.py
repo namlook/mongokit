@@ -161,8 +161,8 @@ class AutoRefTestCase(unittest.TestCase):
         self.connection.register([EmbedDoc])
         embed = self.col.EmbedDoc()
         embed["spam"] = u"eggs"
-        embedObj = embed.save()
-        assert embedObj
+        embed.save()
+        assert embed
 
         class EmbedOtherDoc(Document):
             structure = {
@@ -171,8 +171,8 @@ class AutoRefTestCase(unittest.TestCase):
         self.connection.register([EmbedOtherDoc])
         embedOther = self.connection.test.embed_other.EmbedOtherDoc()
         embedOther["ham"] = u"eggs"
-        embedOtherObj = embedOther.save()
-        assert embedOtherObj
+        embedOther.save()
+        assert embedOther
 
         class MyDoc(Document):
             use_autorefs = True
@@ -188,7 +188,7 @@ class AutoRefTestCase(unittest.TestCase):
         mydoc = self.connection.test.autoref.MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
-        mydoc["spam"] = embedOtherObj
+        mydoc["spam"] = embedOther
         
         self.assertRaises(SchemaTypeError, mydoc.save) 
   
@@ -204,8 +204,8 @@ class AutoRefTestCase(unittest.TestCase):
         self.connection.register([EmbedDoc])
         embed = self.connection.test['autoref.embed'].EmbedDoc()
         embed["spam"] = u"eggs"
-        embedObj = embed.save()
-        assert embedObj
+        embed.save()
+        assert embed
 
         class MyDoc(Document):
             structure = {

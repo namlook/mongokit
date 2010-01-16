@@ -53,8 +53,8 @@ class ApiTestCase(unittest.TestCase):
         mydoc = self.col.MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 42
-        id = mydoc.save()
-        assert isinstance(id['_id'], ObjectId)
+        mydoc.save()
+        assert isinstance(mydoc['_id'], ObjectId)
 
         saved_doc = self.col.find_one({"bla.bar":42})
         for key, value in mydoc.iteritems():
@@ -63,9 +63,9 @@ class ApiTestCase(unittest.TestCase):
         mydoc = self.col.MyDoc()
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 43
-        id = mydoc.save(uuid=True)
-        assert isinstance(id['_id'], unicode)
-        assert id['_id'].startswith("MyDoc"), id
+        mydoc.save(uuid=True)
+        assert isinstance(mydoc['_id'], unicode)
+        assert mydoc['_id'].startswith("MyDoc"), id
 
         saved_doc = self.col.find_one({"bla.bar":43})
         for key, value in mydoc.iteritems():
