@@ -141,7 +141,8 @@ class Document(SchemaDocument):
         See pymongo's documentation for more details on arguments.
         """
         bson_obj = self.collection.find_one(*args, **kwargs)
-        return self._obj_class(doc=bson_obj, collection=self.collection)
+        if bson_obj:
+            return self._obj_class(doc=bson_obj, collection=self.collection)
 
     def one(self, *args, **kwargs):
         """

@@ -186,6 +186,7 @@ class ApiTestCase(unittest.TestCase):
                 "foo":int
             }
         self.connection.register([MyDoc])
+        assert self.col.MyDoc.find_one() is None
         mydoc = self.col.MyDoc()
         mydoc['foo'] = 0
         mydoc.save()
@@ -229,7 +230,7 @@ class ApiTestCase(unittest.TestCase):
                 "foo":int
             }
         self.connection.register([MyDoc])
-        for i in range(10):
+        for i in range(50):
             mydoc = self.col.MyDoc()
             mydoc["foo"] = i
             mydoc.save()
