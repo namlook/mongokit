@@ -27,7 +27,7 @@
 
 from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
-from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError
+from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties
 from mongokit.helpers import totimestamp, fromtimestamp
 import pymongo
 from pymongo.bson import BSON
@@ -50,7 +50,25 @@ class CallableMixin(object):
     def __call__(self, doc=None, gen_skel=True, lang='en', fallback_lang='en'):
         return self._obj_class(doc=doc, gen_skel=gen_skel, collection=self.collection, lang=lang, fallback_lang=fallback_lang)
 
+class DocumentProperties(SchemaProperties):
+    def __new__(cls, name, bases, attrs):
+        for base in bases:
+            parent = base.__mro__[0]
+            if hasattr(parent, 'structure'):
+                if parent.structure is not None:
+                    parent = parent()
+                    if parent.indexes:
+                        if 'indexes' not in attrs:
+                            attrs['indexes'] = []
+                        for index in attrs['indexes']+parent.indexes:
+                            if index not in attrs['indexes']:
+                                attrs['indexes'].append(index)
+        return SchemaProperties.__new__(cls, name, bases, attrs)        
+
+
 class Document(SchemaDocument):
+
+    __metaclass__ = DocumentProperties
 
     skip_validation = False
     use_autorefs = False

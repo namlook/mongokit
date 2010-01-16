@@ -497,3 +497,41 @@ class IndexTestCase(unittest.TestCase):
         results = [i['_id'] for i in collection.find().sort([('mydoc.creation_date',-1),('_id',1)])]
         print results
         assert results  == [u'aa', u'aaa', u'bbb', u'ccc'], results
+
+    def test_index_inheritance(self):
+        class A(Document):
+            structure = {
+                'a':{
+                    'title':unicode,
+                }
+            }
+            indexes = [{'fields':'a.title'}]
+
+        class B(A):
+            structure = {
+                'b':{
+                    'title':unicode,
+                }
+            }
+            indexes = [{'fields':'b.title'}]
+
+
+        class C(Document):
+            structure = {
+                'c':{
+                    'title':unicode,
+                }
+            }
+            indexes = [{'fields':'c.title'}]
+
+        class D(B, C):
+            structure = {
+                'd':{
+                    'title':unicode,
+                }
+            }
+
+        self.connection.register([D])
+        doc = self.col.D()
+        assert doc.indexes == [{'fields': 'b.title'}, {'fields': 'a.title'}, {'fields': 'c.title'}]
+
