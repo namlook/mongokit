@@ -220,6 +220,19 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc["foo"] == [42,3]
         mydoc.validate()
 
+    def test_default_list_values_with_callable(self):
+        def get_truth():
+            return 42
+        class MyDoc(Document):
+            structure = {
+                "foo":[int]
+            }
+            default_values = {"foo":[get_truth,3]}
+        mydoc = MyDoc()
+        assert mydoc["foo"] == [42,3]
+        mydoc.validate()
+
+
     def test_default_list_nested_values(self):
         class MyDoc(Document):
             structure = {
@@ -239,7 +252,18 @@ class DescriptorsTestCase(unittest.TestCase):
             default_values = {"foo":{"bar":42}}
         mydoc = MyDoc()
         assert mydoc["foo"] == {"bar":42}, mydoc
-         
+
+    def test_default_dict_values_with_callable(self):
+        def get_truth():
+            return {'bar':42}
+        class MyDoc(Document):
+            structure = {
+                "foo":{}
+            }
+            default_values = {"foo":get_truth}
+        mydoc = MyDoc()
+        assert mydoc["foo"] == {"bar":42}, mydoc
+          
     def test_default_dict_checked_values(self):
         class MyDoc(Document):
             structure = {

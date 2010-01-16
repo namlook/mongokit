@@ -84,6 +84,7 @@ class CustomTypesTestCase(unittest.TestCase):
 
         class CustomPrice(CustomType):
             mongo_type = float
+            python_type = basestring
             def to_bson(self, value):
                 return float(value)
             def to_python(self, value):
@@ -159,6 +160,7 @@ class CustomTypesTestCase(unittest.TestCase):
         import datetime
         class CustomDate(CustomType):
             mongo_type = unicode
+            python_type = datetime.datetime
             def to_bson(self, value):
                 """convert type to a mongodb type"""
                 return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -179,6 +181,11 @@ class CustomTypesTestCase(unittest.TestCase):
         foo['foo']['date'].append(datetime.datetime(2003,2,1))
         foo.save()
         foo.save()
+
+        foo1 = self.col.Foo()
+        foo1['_id'] = 1
+        foo1['foo']['date'].append(1)
+        self.assertRaises(SchemaTypeError, foo1.save)
 
         foo2 = self.col.Foo()
         print foo2
@@ -208,11 +215,56 @@ class CustomTypesTestCase(unittest.TestCase):
 
         class CustomDate(CustomType):
             mongo_type = unicode
+        self.assertRaises(TypeError, CustomDate)
+
+        class CustomDate(CustomType):
+            mongo_type = unicode
+            python_type = int
         self.assertRaises(NotImplementedError, CustomDate().to_bson, "bla")
         self.assertRaises(NotImplementedError, CustomDate().to_python, "bla")
 
+    def test_bad_custom_type_bad_python_type(self):
+        import datetime
+
+        class CustomDate(CustomType):
+            mongo_type = unicode
+            python_type = basestring
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(Document):
+            structure = {
+                "date": CustomDate(),
+            }
+            default_values = {'date':datetime.datetime(2008, 6, 7)}
+        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
+ 
     def test_custom_type_bad_python(self):
         import datetime
+
+        class CustomDate(CustomType):
+            mongo_type = unicode
+            python_type = str
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(Document):
+            structure = {
+                "date": CustomDate(),
+            }
+            default_values = {'date':datetime.datetime(2008, 6, 7)}
+        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
+
 
         class CustomDate(CustomType):
             mongo_type = unicode
@@ -237,10 +289,7 @@ class CustomTypesTestCase(unittest.TestCase):
                 "date": [CustomDate()],
             }
             default_values = {'date':[(2008, 6, 7)]}
-        self.connection.register([Foo])
-        foo2 = self.col.Foo()
-        foo2['_id'] = 2
-        self.assertRaises(SchemaTypeError, foo2.save)
+        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
 
         class CustomDate(CustomType):
             mongo_type = int
@@ -262,12 +311,13 @@ class CustomTypesTestCase(unittest.TestCase):
         foo['_id'] = 2
         foo['date'] = datetime.datetime(2003,2,1)
         self.assertRaises(SchemaTypeError, foo.save)
- 
+
     def test_custom_type_nested_list(self):
         import datetime
 
         class CustomPrice(CustomType):
             mongo_type = float
+            python_type = str
             def to_bson(self, value):
                 return float(value)
             def to_python(self, value):
