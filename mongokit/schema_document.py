@@ -233,7 +233,8 @@ class SchemaDocument(dict):
                 self.__generate_doted_dict(self, self.structure)
         if gen_skel:
             self.generate_skeleton()
-            self._set_default_fields(self, self.structure)
+            if self.default_values:
+                self._set_default_fields(self, self.structure)
         else:
             self._process_custom_type('python', self, self.structure)
         ## building required fields namespace
@@ -589,11 +590,70 @@ class SchemaDocument(dict):
                                 self._process_custom_type(target, obj, struct[key][0], new_path, root_path)
             
     def _set_default_fields(self, doc, struct, path = ""):
-        default_values = deepcopy(self.default_values)
-        for k,v in default_values.iteritems():
-            if callable(v):
-                default_values[k] = v()
-        self.update(DotExpandedDict(default_values))
+        # TODO check this out, this method must be restructured
+        for key in struct:
+            if type(key) is type:
+                new_key = "$%s" % key.__name__
+            else:
+                new_key = key
+            new_path = ".".join([path, new_key]).strip('.')
+            #
+            # default_values :
+            # if the value is None, check if a default value exist.
+            # if exists, and it is a function then call it otherwise,
+            # juste feed it
+            #
+            if type(key) is not type:
+                if doc[key] is None and new_path in self.default_values:
+                    new_value = self.default_values[new_path]
+                    if callable(new_value):
+                        new_value = new_value()
+                    if isinstance(struct[key], CustomType):
+                        if not isinstance(new_value, struct[key].python_type):
+                            raise DefaultFieldTypeError(
+                              "%s must be an instance of %s not %s" % (
+                                new_path, struct[key].python_type.__name__, type(new_value).__name__))
+                    doc[key] = new_value
+            #
+            # if the value is a dict, we have a another structure to validate
+            #
+            if isinstance(struct[key], dict):
+                #
+                # if the dict is still empty into the document we build
+                # it with None values
+                #
+                if len(struct[key]) and\
+                  not [i for i in struct[key].keys() if type(i) is type]:
+                    self._set_default_fields(doc[key], struct[key], new_path)
+                else:
+                    if new_path in self.default_values:
+                        new_value = self.default_values[new_path]
+                        if callable(new_value):
+                            new_value = new_value()
+                        if isinstance(struct[key], CustomType):
+                            if not isinstance(new_value, struct[key].python_type):
+                                raise DefaultFieldTypeError(
+                                  "%s must be an instance of %s not %s" % (
+                                    new_path, struct[key].python_type.__name__, type(new_value).__name__))
+                        doc[key] = new_value
+            elif isinstance(struct[key], list):
+                if new_path in self.default_values:
+                    for new_value in self.default_values[new_path]:
+                        if callable(new_value):
+                            new_value = new_value()
+                        else:
+                            doc[key].append(new_value)  
+            else: # list or what else
+                if new_path in self.default_values:
+                    new_value = self.default_values[new_path]
+                    if callable(new_value):
+                        new_value = new_value()
+                    if isinstance(struct[key], CustomType):
+                        if not isinstance(new_value, struct[key].python_type):
+                            raise DefaultFieldTypeError(
+                              "%s must be an instance of %s not %s" % (
+                                new_path, struct[key].python_type.__name__, type(new_value).__name__))
+                    doc[key] = new_value
 
     def _validate_required(self, doc, struct, path="", root_path=""):
         doted_doc = DotCollapsedDict(doc)

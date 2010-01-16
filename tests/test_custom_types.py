@@ -122,6 +122,7 @@ class CustomTypesTestCase(unittest.TestCase):
         import datetime
         class CustomDate(CustomType):
             mongo_type = unicode
+            python_type = datetime.datetime
             def to_bson(self, value):
                 """convert type to a mongodb type"""
                 return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -183,6 +184,7 @@ class CustomTypesTestCase(unittest.TestCase):
         print foo2
         foo2['_id'] = 2
         foo2.save()
+        print id(foo['foo']['date']), id(foo2['foo']['date'])
 
         assert foo == {'foo': {'date': [datetime.datetime(2008, 6, 7, 0, 0), datetime.datetime(2003, 2, 1, 0, 0)]}, '_id': 1}
         foo = self.col.Foo.get_from_id(1)
@@ -228,10 +230,7 @@ class CustomTypesTestCase(unittest.TestCase):
                 "date": CustomDate(),
             }
             default_values = {'date':(2008, 6, 7)}
-        self.connection.register([Foo])
-        foo = self.col.Foo()
-        foo['_id'] = 1
-        self.assertRaises(SchemaTypeError, foo.save)
+        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
 
         class Foo(Document):
             structure = {

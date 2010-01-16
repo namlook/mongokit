@@ -97,11 +97,57 @@ class DescriptorsTestCase(unittest.TestCase):
     def test_default_values(self):
         class MyDoc(Document):
             structure = {
-                "foo":int
+                "foo":int,
+                "bla":unicode,
             }
             default_values = {"foo":42}
         mydoc = MyDoc()
         assert mydoc["foo"] == 42
+        assert mydoc == {'foo':42, 'bla':None}, mydoc
+
+    def test_default_values_nested(self):
+        class MyDoc(Document):
+            structure = {
+                "bar":{
+                    "foo":int,
+                    "bla":unicode,
+                }
+            }
+            default_values = {"bar.foo":42}
+        mydoc = MyDoc()
+        assert mydoc['bar']["foo"] == 42
+        assert mydoc == {'bar':{'foo':42, 'bla':None}}, mydoc
+
+    def test_default_values_nested_inheritance(self):
+        import datetime
+        class Core(Document):
+            structure = {
+                "core":{
+                    "creation_date":datetime.datetime,
+                }
+            }
+            default_values = {
+                "core.creation_date": datetime.datetime(2010, 1, 1),
+            }
+
+        class MyDoc(Core):
+            structure = {
+                "bar":{
+                    "foo":int,
+                    "bla":unicode,
+                }
+            }
+            default_values = {"bar.foo":42}
+
+        class MyDoc2(MyDoc):
+            structure = {
+                "mydoc2":{
+                    "toto":int
+                }
+            }
+        mydoc = MyDoc2()
+        assert mydoc['bar']["foo"] == 42
+        assert mydoc == {'mydoc2': {'toto': None}, 'core': {'creation_date': datetime.datetime(2010, 1, 1, 0, 0)}, 'bar': {'foo': 42, 'bla': None}}
 
     def test_default_values_from_function(self):
         import time
