@@ -307,6 +307,8 @@ class Document(SchemaDocument):
                             _convert_to_json(obj, doc)
                     elif isinstance(struct[key][0], datetime.datetime):
                         struct[key] = [totimestamp(obj) for obj in struct[key]]
+                    elif isinstance(struct[key][0], ObjectId):
+                        struct[key] = [str(obj) for obj in struct[key]]
         # we don't want to touch our document so we create another object
         self._process_custom_type('bson', self, self.structure)
         obj = deepcopy(self)

@@ -89,6 +89,34 @@ class JsonTestCase(unittest.TestCase):
         assert  isinstance(mydoc.to_json_type()['_id'], basestring), type(mydoc.to_json_type()['_id'])
         mydoc.to_json()
 
+    def test_simple_to_json_with_oid_in_list(self):
+        class A(Document):
+            structure = {
+                "foo":unicode,
+            }
+        class B(Document):
+            structure = {
+                'bar':[ObjectId],
+                'egg':{
+                    'nested':ObjectId,
+                }
+            }
+
+        self.connection.register([A, B])
+        a = self.col.A()
+        a["foo"] = u"bar"
+        a.save()
+        assert  isinstance(a.to_json_type()['_id'], basestring), type(a.to_json_type()['_id'])
+        a.to_json()
+        b = self.col.B()
+        b['bar'] = [a['_id']]
+        b['egg']['nested'] = a['_id']
+        b.save()
+        assert  isinstance(b.to_json_type()['bar'][0], basestring), b.to_json_type()
+        assert  isinstance(b.to_json_type()['egg']['nested'], basestring), b.to_json_type()
+        assert "ObjectId" not in b.to_json()
+
+
 
     def test_to_json_custom_type(self):
         class CustomFloat(CustomType):
