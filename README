@@ -89,6 +89,15 @@ on the freenode #mongodb irc channel or on twitter_.
 Change Log
 ==========
 
+v0.5.1
+------
+ * `save()` doesn't return ``self`` anymore (was an API monster)
+ * fix bug in `find_one()` method. Now returns None if no Document is found
+ * fix bug when using default values
+ * adding i18n list support
+ * add i18n inheritance support
+ * adding index inheritance support
+
 v0.5
 ----
  * refactoring API which is getting much much more cleaner. Please see the migration_ page to keep your code up to date

@@ -74,7 +74,6 @@ Note that `save` will call the `validate` method, so you don't have to validate
 each time.
 
 >>> bp.save()
-{'body': None, '_id': ObjectId('...'), 'title': u'my first blog post', 'author': u'myself', 'date_creation': datetime.datetime(...), 'rank': 0}
 
 Query
 =====
@@ -604,7 +603,6 @@ Now, let's create a Document:
 ...             'date': CustomDate(),
 ...         },
 ...     }
-...     default_values = {'foo.date':u'08-06-07'}
 
 Now, we can create Foo's objects and working with python datetime objects
 
@@ -613,7 +611,6 @@ Now, we can create Foo's objects and working with python datetime objects
 >>> foo['_id'] = 1
 >>> foo['foo']['date'] = datetime.datetime(2003,2,1)
 >>> foo.save()
-{'foo': {'date': datetime.datetime(2003, 2, 1, 0, 0)}, '_id': 1}
 
 The saved object in db has the unicode footprint as expected:
 
@@ -681,7 +678,6 @@ First let's create a simple doc:
 >>> doca['_id'] = 'doca'
 >>> doca['abis']['bar'] = 3
 >>> doca.save()
-{'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}
 
 Now, let's create a DocB which have a reference to DocA:
 
@@ -723,7 +719,6 @@ for all DocA which have the same '_id':
 
 >>> docb['b']['doc_a']['a']['foo'] = 4
 >>> docb.save()
-{'b': {'doc_a': {u'a': {u'foo': 4}, u'abis': {u'bar': 3}, u'_id': u'doca'}}, '_id': 'docb'}
 
 >>> doca['a']['foo']
 4
