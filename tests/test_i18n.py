@@ -290,4 +290,18 @@ class ApiTestCase(unittest.TestCase):
         doc['c']['title']['fr'] = u"Salut"
         assert doc == {'a': {'title': {'en': u'Hello'}}, 'c': {'title': {'fr': u'Salut'}}, 'b': {'title': {'fr': u'Salut'}}, 'd': {'title': None}}
 
+    def test_i18n_default_values(self):
+        class Doc(Document):
+            use_dot_notation = True
+            structure = {
+                'title':int,
+                'foo':{'bar':unicode},
+            }
+            i18n = ['title', 'foo.bar']
+            default_values = {'title':{'en':3, 'fr':4}, 'foo.bar': {'en':u'bla', 'fr': u'ble'}}
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        assert doc == {'foo': {'bar': {'fr': u'ble', 'en': u'bla'}}, 'title': {'fr': 4, 'en': 3}}
+        doc.save()
+
 

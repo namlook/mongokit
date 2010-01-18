@@ -616,7 +616,7 @@ class SchemaDocument(dict):
             #
             # if the value is a dict, we have a another structure to validate
             #
-            if isinstance(struct[key], dict):
+            if isinstance(struct[key], dict) and new_path not in self.i18n:
                 #
                 # if the dict is still empty into the document we build
                 # it with None values
@@ -646,7 +646,14 @@ class SchemaDocument(dict):
                     new_value = self.default_values[new_path]
                     if callable(new_value):
                         new_value = new_value()
-                    doc[key] = new_value
+                    if new_path in self.i18n:
+                        doc[key] = i18n(
+                          field_type = struct[key],
+                          field_name = key
+                        )
+                        doc[key].update(new_value)
+                    else:
+                        doc[key] = new_value
 
     def _validate_required(self, doc, struct, path="", root_path=""):
         doted_doc = DotCollapsedDict(doc)
