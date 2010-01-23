@@ -659,7 +659,7 @@ class SchemaDocument(dict):
         doted_doc = DotCollapsedDict(doc)
         doted_struct = DotCollapsedDict(self.structure)
         for req in self.required_fields:
-            if doted_doc.get(req) is None:
+            if doted_doc.get(req) is None and doted_struct.get(req) is not dict:
                 raise RequireFieldError("%s is required" % req)
             elif doted_doc.get(req) == []:
                 raise RequireFieldError("%s is required" % req)

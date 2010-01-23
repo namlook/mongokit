@@ -45,6 +45,8 @@ class DescriptorsTestCase(unittest.TestCase):
             required_fields = ["foo"]
         mydoc = MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
+        mydoc['foo'] = u'bla'
+        mydoc.validate()
              
     def test_nested_required(self):
         class MyDoc(Document):
@@ -56,6 +58,8 @@ class DescriptorsTestCase(unittest.TestCase):
             required_fields = ["bla.foo"]
         mydoc = MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
+        mydoc['bla']['foo'] = u'bla'
+        mydoc.validate()
 
     def test_list_required(self):
         class MyDoc(Document):
@@ -65,16 +69,19 @@ class DescriptorsTestCase(unittest.TestCase):
             required_fields = ["foo"]
         mydoc = MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
+        mydoc['foo'] = [1,2,3]
+        mydoc.validate()
 
-    def test_list_required2(self):
+    def test_dict_required2(self):
         class MyDoc(Document):
             structure = {
-                "foo":{int:[]}
+                "foo":dict
             }
-            required_fields = ["foo.$int"]
+            required_fields = ["foo"]
         mydoc = MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
-
+        mydoc['foo'] = {u"3":[u'bla']}
+        mydoc.validate()
 
     def test_dict_required(self):
         class MyDoc(Document):
@@ -84,6 +91,8 @@ class DescriptorsTestCase(unittest.TestCase):
             required_fields = ["foo"]
         mydoc = MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
+        mydoc['foo'] = {u'bar':u'bla'}
+        self.assertRaises(StructureError, mydoc.validate )
 
     def test_dict_nested_required(self):
         class MyDoc(Document):
