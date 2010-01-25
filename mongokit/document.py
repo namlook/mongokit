@@ -343,7 +343,7 @@ class Document(SchemaDocument):
                                 for obj in doc[key]:
                                     _convert_to_python(obj, struct[key][0], new_path, root_path)
                 else:
-                    if isinstance(struct[key], R):
+                    if isinstance(struct[key], R) and doc[key] is not None:
                         doc[key]['_collection'] = self.collection.name
                         doc[key]['_database'] = self.db.name
         try:
