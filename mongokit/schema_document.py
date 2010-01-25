@@ -368,6 +368,8 @@ class SchemaDocument(dict):
             if type(struct) is type:
                 if struct not in self._authorized_types:
                     raise StructureError("%s is not an authorized_types" % struct)
+                elif struct is None:
+                    raise StructureError("%s can't be None" % struct)
             elif isinstance(struct, dict):
                 for key in struct:
                     if isinstance(key, basestring):
@@ -382,7 +384,9 @@ class SchemaDocument(dict):
                     else:
                         raise StructureError(
                           "%s must be a basestring or a type" % key)
-                    if isinstance(struct[key], dict):
+                    if struct[key] is None:
+                        raise StructureError("%s can't be None in structure declaration" % key)
+                    elif isinstance(struct[key], dict):
                         __validate_structure(struct[key])
                     elif isinstance(struct[key], list):
                         __validate_structure(struct[key])

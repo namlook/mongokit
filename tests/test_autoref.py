@@ -598,3 +598,39 @@ class AutoRefTestCase(unittest.TestCase):
         assert doca['a']['foo'] == 4
 
 
+    def test_autoref_with_None(self):
+        class RootDocument(Document):
+           use_dot_notation=True
+           use_autorefs = True
+           structure = {}
+
+        class User(RootDocument):
+           collection_name = "users"
+           structure = {
+               "email": unicode,
+               "password": unicode,
+           }
+           required_fields = [ "email", "password" ]
+           indexes = [
+               { "fields": "email",
+                 "unique": True,
+               },
+           ]
+        self.connection.register([User])
+        User = self.col.User
+        u = User()
+        u['email'] = u'....'
+        u['password'] = u'....'
+        u.save()
+        assert u['_id'] != None
+    
+        class ExampleSession(RootDocument):
+           #collection_name = "sessions"
+           use_autorefs = True
+           structure   = {
+               "user": User,
+               "token": unicode,
+           }
+        # raise an assertion because User is a CallableUser, not User
+        self.assertRaises(StructureError, self.connection.register, [ExampleSession])
+
