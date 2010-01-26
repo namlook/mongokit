@@ -298,7 +298,8 @@ class Document(SchemaDocument):
                 if isinstance(struct[key], datetime.datetime):
                     struct[key] = totimestamp(struct[key])
                 elif isinstance(struct[key], ObjectId):
-                    struct[key] = str(struct[key])
+                    #struct[key] = str(struct[key])
+                    struct[key] = {'$oid': str(struct[key])} 
                 elif isinstance(struct[key], dict):
                     _convert_to_json(struct[key], doc)
                 elif isinstance(struct[key], list) and len(struct[key]):
@@ -308,13 +309,16 @@ class Document(SchemaDocument):
                     elif isinstance(struct[key][0], datetime.datetime):
                         struct[key] = [totimestamp(obj) for obj in struct[key]]
                     elif isinstance(struct[key][0], ObjectId):
-                        struct[key] = [str(obj) for obj in struct[key]]
+                        #struct[key] = [str(obj) for obj in struct[key]]
+                        struct[key] = [{'$oid': str(obj)} for obj in struct[key]]
         # we don't want to touch our document so we create another object
         self._process_custom_type('bson', self, self.structure)
         obj = deepcopy(self)
         self._process_custom_type('python', self, self.structure)
         _convert_to_json(obj, obj)
-        obj['_id'] = str(obj['_id'])
+        if '_id' in obj:
+            if isinstance(obj['_id'], ObjectId):
+                obj['_id'] = {'$oid': str(obj['_id'])}
         return obj
 
     def to_json(self):
@@ -352,7 +356,7 @@ class Document(SchemaDocument):
             raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = self.to_json_type()
         _convert_to_python(obj, self.structure)
-        return anyjson.serialize(obj)
+        return unicode(anyjson.serialize(obj))
 
     def from_json(self, json):
         """
@@ -379,6 +383,8 @@ class Document(SchemaDocument):
                             for obj in doc[key]:
                                 db = obj['_database']
                                 col = obj['_collection']
+                                if '$oid' in obj['_id']:
+                                    obj['_id'] = ObjectId(obj['_id']['$oid'])
                                 obj = struct[key][0]._doc(obj, collection=self.connection[db][col]).get_dbref()
                                 l_objs.append(obj)
                             doc[key] = l_objs
@@ -386,19 +392,22 @@ class Document(SchemaDocument):
                             if doc[key]:
                                 for obj in doc[key]:
                                     _convert_to_python(obj, struct[key][0], new_path, root_path)
-                else:
-                    if struct[key] is datetime.datetime:
-                        doc[key] = fromtimestamp(doc[key])
-                    elif isinstance(struct[key], R) and doc[key] is not None:
-                        db = doc[key]['_database']
-                        col = doc[key]['_collection']
-                        doc[key] = struct[key]._doc(doc[key], collection=self.connection[db][col]).get_dbref()
+                elif struct[key] is datetime.datetime:
+                    doc[key] = fromtimestamp(doc[key])
+                elif isinstance(struct[key], R) and doc[key] is not None:
+                    db = doc[key]['_database']
+                    col = doc[key]['_collection']
+                    if '$oid' in doc[key]['_id']:
+                        doc[key]['_id'] = ObjectId(doc[key]['_id']['$oid'])
+                    doc[key] = struct[key]._doc(doc[key], collection=self.connection[db][col]).get_dbref()
         try:
             import anyjson
         except ImportError:
             raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = anyjson.deserialize(json)
         _convert_to_python(obj, self.structure)
+        if '$oid' in obj['_id']:
+            obj['_id'] = ObjectId(obj['_id']['$oid'])
         return self._obj_class(obj, collection=self.collection)
  
 
