@@ -389,7 +389,7 @@ class Document(SchemaDocument):
                 else:
                     if struct[key] is datetime.datetime:
                         doc[key] = fromtimestamp(doc[key])
-                    elif isinstance(struct[key], R):
+                    elif isinstance(struct[key], R) and doc[key] is not None:
                         db = doc[key]['_database']
                         col = doc[key]['_collection']
                         doc[key] = struct[key]._doc(doc[key], collection=self.connection[db][col]).get_dbref()
