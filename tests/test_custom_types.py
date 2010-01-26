@@ -374,3 +374,27 @@ class CustomTypesTestCase(unittest.TestCase):
         r_saved = r.collection.find_one({'_id':'bla'})
         assert r_saved == {u'price': [9.9900000000000002, 2.9900000000000002], u'_id': u'bla', u'bar': {u'spam': 3.3300000000000001}, u'foo': 2.23}
 
+    def test_custom_type_not_serializable(self):
+        from decimal import Decimal
+        class DecimalType(CustomType):
+           mongo_type = unicode
+           python_type = Decimal
+
+           def to_bson(self, value):
+               """convert type to a mongodb type"""
+               if value is not None:
+                   return unicode(value)
+
+           def to_python(self, value):
+               """convert type to a python object"""
+               if value is not None:
+                   return Decimal(value)
+
+        class MyDocument(Document):
+           structure = {'amount': DecimalType()}
+        self.connection.register([MyDocument])
+        document = self.col.MyDocument()
+        document['amount'] = Decimal(u'100.00')
+        document.validate()
+
+

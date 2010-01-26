@@ -101,16 +101,23 @@ class Document(SchemaDocument):
     def validate(self):
         if self.use_autorefs:
             self._make_reference(self, self.structure)
-        if self.get_size() > 3999999:
+        size = self.get_size()
+        if size > 3999999:
             raise MaxDocumentSizeError("The document size is too big, documents "
-              "lower than 4Mb is allowed (got %s bytes)" % self.get_size())
+              "lower than 4Mb is allowed (got %s bytes)" % size)
         super(Document, self).validate()
 
     def get_size(self):
         """
         return the size of the underlying bson object
         """
-        return len(BSON.from_dict(self))
+        try:
+            size = len(BSON.from_dict(self))
+        except:
+            self._process_custom_type('bson', self, self.structure)
+            size = len(BSON.from_dict(self))
+            self._process_custom_type('python', self, self.structure)
+        return size
 
     def find(self, *args, **kwargs):
         """
