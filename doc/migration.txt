@@ -57,11 +57,15 @@ Note that this is quite the same as the current api. We just get the BlogPost ob
 via the collection. The main advantage of this approche is that we don't have to
 bother about the collection.
 
-We can simulate the current api behavior by getting the BlogPost object before :
+You can simulate the current api behavior like this:
 
->>> BlogPost = con.test.migration.BlogPost
->>> blogpost = BlogPost()
->>> blogpost2 = BlogPost()
+    class BlogPostDocument(Document): # <-- just rename the class by adding "Document"
+        ...
+    >>> con.register([BlogPostDocument]) # register the document
+    >>> BlogPost = con.test.migration.BlogPostDocument()
+
+    >>> blogpost = BlogPost()
+    >>> blogpost2 = BlogPost()
 
 Another advantage is the ability of using the collection dynamically without pain.
 Let's say that we want to put all BlogPost into a user collection (so one collection

@@ -383,8 +383,9 @@ class Document(SchemaDocument):
                             for obj in doc[key]:
                                 db = obj['_database']
                                 col = obj['_collection']
-                                if '$oid' in obj['_id']:
-                                    obj['_id'] = ObjectId(obj['_id']['$oid'])
+                                if '_id' in obj:
+                                    if '$oid' in obj['_id']:
+                                        obj['_id'] = ObjectId(obj['_id']['$oid'])
                                 obj = struct[key][0]._doc(obj, collection=self.connection[db][col]).get_dbref()
                                 l_objs.append(obj)
                             doc[key] = l_objs
@@ -397,8 +398,9 @@ class Document(SchemaDocument):
                 elif isinstance(struct[key], R) and doc[key] is not None:
                     db = doc[key]['_database']
                     col = doc[key]['_collection']
-                    if '$oid' in doc[key]['_id']:
-                        doc[key]['_id'] = ObjectId(doc[key]['_id']['$oid'])
+                    if '_id' in doc[key]:
+                        if '$oid' in doc[key]['_id']:
+                            doc[key]['_id'] = ObjectId(doc[key]['_id']['$oid'])
                     doc[key] = struct[key]._doc(doc[key], collection=self.connection[db][col]).get_dbref()
         try:
             import anyjson
@@ -406,8 +408,9 @@ class Document(SchemaDocument):
             raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = anyjson.deserialize(json)
         _convert_to_python(obj, self.structure)
-        if '$oid' in obj['_id']:
-            obj['_id'] = ObjectId(obj['_id']['$oid'])
+        if '_id' in obj:
+            if '$oid' in obj['_id']:
+                obj['_id'] = ObjectId(obj['_id']['$oid'])
         return self._obj_class(obj, collection=self.collection)
  
 

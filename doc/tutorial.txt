@@ -110,7 +110,7 @@ Traceback (most recent call last):
 MultipleResultsFound: 2 results found
 
 >>> tutorial.one({'title':'my first blog post'})
-{u'body': None, u'author': u'myself', u'title': u'my first blog post', u'rank': 0, u'_id': ObjectId('...'), u'date_creation': datetime.datetime(...)}
+{u'body': None, u'author': u'myself', u'title': u'my first blog post', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
 
 If no document is found, `one()` returns `None`
 
@@ -169,7 +169,7 @@ MultipleResultsFound: 2 results found
 
 >>> doc = tutorial.BlogPost.one({'title':'my first blog post'})
 >>> doc
-{u'body': None, u'title': u'my first blog post', u'author': u'myself', u'rank': 0, u'_id': ..., u'date_creation': datetime.datetime(...)}
+{u'body': None, u'title': u'my first blog post', u'author': u'myself', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
 >>> isinstance(doc, BlogPost)
 True
 
@@ -625,7 +625,7 @@ python object:
 datetime.datetime(2003, 2, 1, 0, 0)
 
 Embedding Documents as values
-==================================
+=============================
 
 MongoKit has optional support for MongoDB's autoreferencing/dbref 
 features. Autoreferencing allows you to embed MongoKit objects/instances
@@ -842,7 +842,7 @@ to enable this feature. (`sudo easy_install anyjson`)
 >>> mydoc.save()
 >>> json = mydoc.to_json()
 >>> json
-'{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+u'{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
 
 :`from_json`:
 
@@ -900,7 +900,7 @@ Now let's see how look the generated json:
 
 >>> json = mydoc.to_json()
 >>> json
-'{"doc": {"embed": {"_collection": "tutorial", "_database": "test", "_id": "embed", "foo": "bar"}}, "_id": "mydoc"}'
+u'{"doc": {"embed": {"_collection": "tutorial", "_database": "test", "_id": "embed", "foo": "bar"}}, "_id": "mydoc"}'
 
 As you can see, two new fields have been added : `_collection` and `_database`
 which represent respectively the collection and the database where the embed
@@ -909,10 +909,33 @@ document. There are removed when calling the `from_json()` method:
 
 >>> mydoc = tutorial.MyDoc.from_json(json)
 >>> mydoc
-{'doc': {'embed': {u'_id': u'embed', u'foo': u'bar'}}, '_id': 'mydoc'}
+{u'doc': {u'embed': {u'_id': u'embed', u'foo': u'bar'}}, u'_id': u'mydoc'}
 
 An the embed document is an instance of EmbedDoc:
 
 >>> isinstance(mydoc['doc']['embed'], EmbedDoc)
 True
+
+ObjectId support
+----------------
+
+`from_json()` can detect if the `_id` is an ``ObjectId`` instance or a simple string. When you serialize an object
+with ``ObjectId`` instance to json, the generated json object look like this:
+
+    '{"_id": {"$oid": "..."}, ...}'
+
+>>> embed = tutorial.EmbedDoc()
+>>> embed['foo'] = u"bar"
+>>> embed.save()
+>>> embed.to_json()
+u'{"foo": "bar", "_id": {"$oid": "4b5ec47390bce737e5000002"}}'
+
+the "$oid" field is added to tell `from_json()` that '_id' is an ``ObjectId`` instance.
+The same append with embed doc:
+
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['doc']['embed'] = embed
+>>> mydoc.save()
+>>> mydoc.to_json()
+{'doc': {'embed': {u'_id': ObjectId('4b5ec45090bce737cb000002'), u'foo': u'bar'}}, '_id': ObjectId('4b5ec45090bce737cb000003')}
 

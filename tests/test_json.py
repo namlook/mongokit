@@ -480,6 +480,26 @@ class JsonTestCase(unittest.TestCase):
         mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'doc': {'embed': [{'foo': 'bar', 'bar': 42}]}, '_id': 'mydoc'}
 
+    def test_from_json_unicode(self):
+        class MyDoc(Document):
+            structure = {
+                "doc":{
+                    "name":unicode
+                },
+                "foo": unicode,
+            }
+            use_autorefs = True
+        self.connection.register([MyDoc])
+
+        mydoc = self.col.MyDoc()
+        mydoc['doc']['name'] = u'bla'
+        mydoc['foo'] = u'bar'
+        json = mydoc.to_json()
+        mydoc2 = self.col.MyDoc.from_json(json)
+        assert isinstance(mydoc['doc']['name'], unicode)
+        assert isinstance(mydoc['foo'], unicode)
+        assert isinstance(mydoc2['doc']['name'], unicode)
+        assert isinstance(mydoc2['foo'], unicode)
 
     def test_simple_to_json_from_cursor(self):
         class MyDoc(Document):
