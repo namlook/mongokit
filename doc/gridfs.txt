@@ -1,0 +1,75 @@
+GridFS
+======
+
+MongoKit implements GridFS support and brings some helpers
+to facilitate the use of relative small files.
+
+Let's create a document ``Doc`` which have two attachment in
+GridFS  named as  `source` and `template`:
+
+>>> from mongokit import *
+>>> class Doc(Document):
+...        structure = {
+...            'title':unicode,
+...        }
+...        gridfs = ['source', 'template']
+
+As you can see, nothing hard. We just declare our attachment files
+in the `gridfs` attribute. Filling this attribute will generate
+an `fs` attribute at runtime. This `fs` attribute is actually an
+object which deal with GridFS.
+
+
+>>> connection = Connection()
+>>> connection.register([Doc])
+>>> doc = connection.test.tutorial.Doc()
+>>> doc['title'] = u'Hello'
+>>> doc.save()
+
+Before using gridfs attachment, you have to save the document.
+This is required as under the hood, mongokit use the document
+``_id`` to link with GridFS files.
+
+The simple way
+--------------
+
+All gridfs attachments are accessible via the `fs` object.
+Now, we can fill the ``source`` and ``template``:
+
+>>> doc.fs.source = "Hello World !"
+>>> doc.fs.template = "My pretty template"
+
+And that's it ! By doing this, MongoKit will open a GridFile,
+fill it with the value, and close it.
+
+Note that you have to be carefull to the type : attachments
+only accept string.
+
+You can read any attachment in a very simple way :
+
+>>> doc.fs.source
+'Hello World !'
+
+The full way
+------------
+
+While the previous method is very easy, it might not be enougth
+if you're dealing with very big files or want to use some file
+related feature (for instance, using seek to not have to load
+all the file in memory)
+
+You can do that with using the `open()` method on the ``fs`` object.
+The `open()` method take the file name and the opened mode 
+('r' for read, 'w' for write) :
+
+>>> f = doc.fs.open("source", 'w')
+>>> f.write("Hello World again !")
+>>> f.close() 
+
+Caution ! Don't forget to close the file or every else will be blocked.
+If you experiencing some general blocking, you might check if you don't
+forget to close an opened file.
+
+>>> doc.fs.source
+'Hello World again !'
+

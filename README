@@ -23,12 +23,13 @@ Features
  * cross database document reference
  * random query support (which returns a random document from the database)
  * inheritance and polymorphisme support
- * versionized document support (still in alpha stage)
+ * versionized document support (in beta stage)
  * partial auth support (it brings a simple User model) 
  * operator for validation (currently : OR, NOT and IS)
  * simple web framework integration
  * import/export to json
  * i18n support
+ * GridFS support
 
 A quick example
 ===============

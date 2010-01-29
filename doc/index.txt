@@ -16,6 +16,7 @@ Contents:
     tutorial
     inheritance
     i18n
+    gridfs
     migration
 
 

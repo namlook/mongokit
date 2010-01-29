@@ -32,6 +32,8 @@ from mongokit.helpers import totimestamp, fromtimestamp
 import pymongo
 from pymongo.bson import BSON
 from pymongo.objectid import ObjectId
+from gridfs import GridFS
+from gridfs.grid_file import GridFile
 import re
 from copy import deepcopy
 from uuid import uuid4
@@ -65,6 +67,40 @@ class DocumentProperties(SchemaProperties):
                                 attrs['indexes'].append(index)
         return SchemaProperties.__new__(cls, name, bases, attrs)        
 
+class FS(object):
+    def __init__(self, gridfs, obj):
+        self._gridfs = gridfs
+        self._obj = obj
+        self._fs = GridFS(self._obj.db)
+
+    def __getattr__(self, key):
+        if key not in ['_gridfs', '_obj', '_fs']:
+            if key in self._gridfs:
+                f = GridFile({'metadata':{'name':key, 'doc_id':self._obj['_id']}}, self._obj.db, 'r', self._obj.collection.name)
+                content = f.read()
+                f.close()
+                return content
+        return super(FS, self).__getattribute__(key)
+
+    def __setattr__(self, key, value):
+        if key not in ['_gridfs', '_obj', '_fs']:
+            if key in self._gridfs:
+                f = GridFile({'metadata':{'name':key, 'doc_id':self._obj['_id']}}, self._obj.db, 'w', self._obj.collection.name)
+                try:
+                    f.write(value)
+                except TypeError:
+                    raise TypeError("GridFS value mus be string not %s" % type(value))
+                finally:
+                    f.close()
+        else:
+            super(FS, self).__setattr__(key, value)
+
+    def __delattr__(self, key):
+        self._fs.remove({'metadata.doc_id':self._obj['_id'], 'metadata.name':key})
+
+    def open(self, name, mode='r'):
+        assert name in self._gridfs, "%s is not declared in gridfs" % name
+        return GridFile({'metadata':{'name':name, 'doc_id':self._obj['_id']}}, self._obj.db, mode, self._obj.collection.name)
 
 class Document(SchemaDocument):
 
@@ -73,6 +109,7 @@ class Document(SchemaDocument):
     skip_validation = False
     use_autorefs = False
     indexes = []
+    gridfs = []
 
     authorized_types = SchemaDocument.authorized_types + [
       pymongo.binary.Binary,
@@ -93,10 +130,15 @@ class Document(SchemaDocument):
         if collection:
             self.db = collection.database
             self.connection = self.db.connection
-        # indexing all embed doc if any (autorefs feature)
-        self._dbrefs = {}
-        if self.use_autorefs and collection:
-            self._make_reference(self, self.structure)
+            # indexing all embed doc if any (autorefs feature)
+            self._dbrefs = {}
+            if self.use_autorefs and collection:
+                self._make_reference(self, self.structure)
+            # gridfs
+            if self.gridfs:
+                self.fs = FS(self.gridfs, self)
+        else:
+            self.fs = None
 
     def validate(self):
         if self.use_autorefs:
@@ -485,7 +527,7 @@ class Document(SchemaDocument):
 
     def __getattribute__(self, key):
         if key in ['collection', 'db', 'connection']:
-            if self.__dict__[key] is None:
+            if self.__dict__.get(key) is None:
                 raise ConnectionError('No collection found') 
         return super(Document, self).__getattribute__(key)
  

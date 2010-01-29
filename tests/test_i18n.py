@@ -31,7 +31,7 @@ from mongokit import *
 from pymongo.objectid import ObjectId
 
 
-class ApiTestCase(unittest.TestCase):
+class i18nTestCase(unittest.TestCase):
     def setUp(self):
         self.connection = Connection()
         self.col = self.connection['test']['mongokit']
