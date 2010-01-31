@@ -90,6 +90,14 @@ on the freenode #mongodb irc channel or on twitter_.
 Change Log
 ==========
 
+v0.5.2
+------
+ * bugs fix in json import/export
+ * bugs fix in default values and required values
+ * `gridfs support`_
+
+.. _`gridfs support` : http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html
+
 v0.5.1
 ------
  * `save()` doesn't return ``self`` anymore (was an API monster)
