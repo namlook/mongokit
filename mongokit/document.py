@@ -226,7 +226,7 @@ class Document(SchemaDocument):
         """
         return self.find_one({"_id":id})
 
-    def fetch(self, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
+    def fetch(self, spec=None, fields=None, skip=0, limit=0, timeout=True, snapshot=False, tailable=False, _sock=None, _must_use_master=False, _is_command=False):
         """
         return all document wich match the structure of the object
         `fetch()` takes the same arguments than the the pymongo.collection.find method.
@@ -243,17 +243,19 @@ class Document(SchemaDocument):
                 spec[key] = {'$exists':True}
         return MongoDocumentCursor(
           self.collection.find(
-            spec=spec, 
-            fields=fields, 
-            skip=skip,
+            spec=spec,
+            fields=fields,
+            skip=skip, 
             limit=limit,
-            slave_okay=slave_okay,
-            timeout=timeout,
-            snapshot=snapshot,
-            _sock=_sock,),
+            timeout=timeout, 
+            snapshot=snapshot, 
+            tailable=tailable,
+            _sock=_sock,
+            _must_use_master=_must_use_master,
+            _is_command=_is_command),
           cls=self._obj_class)
 
-    def fetch_one(self, spec=None, fields=None, skip=0, limit=0, slave_okay=None, timeout=True, snapshot=False, _sock=None):
+    def fetch_one(self, spec=None, fields=None, skip=0, limit=0, timeout=True, snapshot=False, tailable=False, _sock=None, _must_use_master=False, _is_command=False):
         """
         return one document wich match the structure of the object
         `fetch_one()` takes the same arguments than the the pymongo.collection.find method.
@@ -264,14 +266,16 @@ class Document(SchemaDocument):
         The query is launch against the db and collection of the object.
         """
         bson_obj = self.fetch(
-            spec=spec, 
-            fields=fields, 
-            skip=skip,
+            spec=spec,
+            fields=fields,
+            skip=skip, 
             limit=limit,
-            slave_okay=slave_okay,
-            timeout=timeout,
-            snapshot=snapshot,
-            _sock=_sock)
+            timeout=timeout, 
+            snapshot=snapshot, 
+            tailable=tailable,
+            _sock=_sock,
+            _must_use_master=_must_use_master,
+            _is_command=_is_command)
         count = bson_obj.count()
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)

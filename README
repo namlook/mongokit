@@ -87,8 +87,35 @@ on the freenode #mongodb irc channel or on twitter_.
 
 .. _twitter : http://twitter.com/namlook
 
+
+Mongokit is documented and well tested with 100% of code coverage::
+
+    Name                          Stmts   Exec  Cover   Missing
+    -----------------------------------------------------------
+    mongokit                         11     11   100%   
+    mongokit.auth                    43     43   100%   
+    mongokit.collection              31     31   100%   
+    mongokit.connection              14     14   100%   
+    mongokit.database                 7      7   100%   
+    mongokit.document               385    385   100%   
+    mongokit.generators              26     26   100%   
+    mongokit.helpers                 69     69   100%   
+    mongokit.mongo_exceptions         8      8   100%   
+    mongokit.operators               47     47   100%   
+    mongokit.schema_document        445    445   100%   
+    mongokit.versioned_document      45     45   100%   
+    -----------------------------------------------------------
+    TOTAL                          1131   1131   100%   
+    ----------------------------------------------------------------------
+    Ran 186 tests in 34.298s
+
+
 Change Log
 ==========
+
+v0.5.3
+------
+ * support of pymongo 1.4
 
 v0.5.2
 ------

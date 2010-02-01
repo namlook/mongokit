@@ -67,3 +67,4 @@ it just with ``self.connection``. The file ``lib/base.py`` has to look like this
             # the request is routed to. This routing information is
             # available in environ['pylons.routes_dict']
             return WSGIController.__call__(self, environ, start_response)
+

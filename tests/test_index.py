@@ -33,7 +33,6 @@ class IndexTestCase(unittest.TestCase):
     def setUp(self):
         self.connection = Connection()
         self.col = self.connection['test']['mongokit']
-        self.col.drop_indexes()
         
     def tearDown(self):
         self.connection['test'].drop_collection('mongokit')
@@ -496,7 +495,7 @@ class IndexTestCase(unittest.TestCase):
 
         results = [i['_id'] for i in collection.find().sort([('mydoc.creation_date',-1),('_id',1)])]
         print results
-        assert results  == [u'aa', u'aaa', u'bbb', u'ccc'], results
+        assert results  == [u'ccc', u'aa', u'aaa', u'bbb'], results
 
     def test_index_inheritance(self):
         class A(Document):
