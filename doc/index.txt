@@ -17,6 +17,7 @@ Contents:
     inheritance
     i18n
     gridfs
+    pylons
     migration
 
 

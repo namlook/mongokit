@@ -1,0 +1,69 @@
+Pylons support
+==============
+
+You can very easily interface Mongokit with Pylons. This tutorial explains how to do this.
+Note that there's a lot of way to do the same thing. If you found another better solution,
+please contact me, I'll update this tutorial.
+
+Write you all models in ``model/``.  In the ``model/__init__.py``, import all the module
+you want to register and then add them to a list called `register_models`.
+
+Example of ``model/__init__.py``::
+
+    from blog import Blog
+    from blogpost import BlogPost
+
+    register_models = [Blog, BlogPost]
+
+Then go to the ``lib/app_globals.py`` and edit this file so it look like this::
+
+    from pylons import config
+    from ekeet.models import register_models
+    from mongokit import *
+
+    class Globals(object):
+
+        """Globals acts as a container for objects available throughout the
+        life of the application
+
+        """
+
+        def __init__(self):
+            """One instance of Globals is created during application
+            initialization and is available during requests via the
+            'app_globals' variable
+
+            """
+            self.connection = Connection(
+              host = config['db_host'],
+              port = int(config['db_port']),
+            )
+            self.db = self.connection[config['db_name']]
+            self.connection.register(register_models)
+
+
+In this file, we create the connection (optionaly the db if we use only on) and then
+we register all our models.
+
+Now, you can access to the connection via the pylons.config :
+
+    config['pylons.app_globals'].connection
+
+A more convenient way is to add the connection to the BaseController so you can access
+it just with ``self.connection``. The file ``lib/base.py`` has to look like this::
+
+    from pylons.controllers import WSGIController
+    from pylons.templating import render_mako as render
+    from pylons import config
+    import pylons
+
+    class BaseController(WSGIController):
+
+        connection = config['pylons.app_globals'].connection
+
+        def __call__(self, environ, start_response):
+            """Invoke the Controller"""
+            # WSGIController.__call__ dispatches to the Controller method
+            # the request is routed to. This routing information is
+            # available in environ['pylons.routes_dict']
+            return WSGIController.__call__(self, environ, start_response)
