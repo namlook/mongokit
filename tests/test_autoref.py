@@ -597,7 +597,6 @@ class AutoRefTestCase(unittest.TestCase):
         assert docb == {'b': {'doc_a': {'a': {'foo': 4}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}, docb
         assert doca['a']['foo'] == 4
 
-
     def test_autoref_with_None(self):
         class RootDocument(Document):
            use_dot_notation=True
@@ -633,4 +632,30 @@ class AutoRefTestCase(unittest.TestCase):
            }
         # raise an assertion because User is a CallableUser, not User
         self.assertRaises(StructureError, self.connection.register, [ExampleSession])
+
+    def test_autoref_without_database_specified(self):
+        class EmbedDoc(Document):
+           structure = {
+               "foo": unicode,
+           }
+
+        class Doc(Document):
+           use_dot_notation=True
+           use_autorefs = True
+           force_autorefs_current_db = True
+           structure = {
+               "embed": EmbedDoc,
+           }
+        self.connection.register([EmbedDoc, Doc])
+
+        embed = self.col.EmbedDoc()
+        embed['foo'] = u'bar'
+        embed.save()
+
+        raw_doc = {'embed':DBRef(collection=self.col.name, id=embed['_id'])}
+        self.col.insert(raw_doc)
+
+        doc = self.col.Doc.find_one({'_id':raw_doc['_id']})
+
+        
 

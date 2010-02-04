@@ -108,6 +108,7 @@ class Document(SchemaDocument):
 
     skip_validation = False
     use_autorefs = False
+    force_autorefs_current_db = False
     indexes = []
     gridfs = []
 
@@ -551,7 +552,10 @@ class Document(SchemaDocument):
                 # if struct[key] is a MongoDocument, so we have to convert it into the
                 # CustomType : R
                 if not isinstance(struct[key], R):
-                    struct[key] = R(struct[key], self.connection)
+                    db_name = None
+                    if self.force_autorefs_current_db:
+                        db_name = self.db.name
+                    struct[key] = R(struct[key], self.connection, db_name)
                 # be sure that we have an instance of MongoDocument
                 if not isinstance(doc[key], struct[key]._doc) and doc[key] is not None:
                     raise SchemaTypeError(
@@ -589,7 +593,10 @@ class Document(SchemaDocument):
             elif isinstance(struct[key], list) and len(struct[key]):
                 if isinstance( struct[key][0], SchemaProperties) or isinstance(struct[key][0], R):
                     if not isinstance(struct[key][0], R):
-                        struct[key][0] = R(struct[key][0], self.connection)
+                        db_name = None
+                        if self.force_autorefs_current_db:
+                            db_name = self.db.name
+                        struct[key][0] = R(struct[key][0], self.connection, db_name)
                     l_objs = []
                     for no, obj in enumerate(doc[key]):
                         if not isinstance(obj, struct[key][0]._doc) and obj is not None:
@@ -618,9 +625,10 @@ class R(CustomType):
     mongo_type = pymongo.dbref.DBRef
     python_type = Document
 
-    def __init__(self, doc, connection):
+    def __init__(self, doc, connection, fallback_database=None):
         super(R, self).__init__()
         self._doc = doc
+        self._fallback_database = fallback_database
         self.connection = connection
     
     def to_bson(self, value):
@@ -629,12 +637,21 @@ class R(CustomType):
         
     def to_python(self, value):
         if value is not None:
-            col = self.connection[value.database][value.collection]
+            if value.database:
+                database = value.database
+            else:
+                database = self._fallback_database
+            if database is None:
+                raise RuntimeError("It appears that you try to use autorefs. I found a DBRef without"
+                  " database specified.\n If you do want to use the current database, you"
+                  " have to add the attribute `force_autorefs_current_db` as True. Please see the doc"
+                  " for more details.\n The DBRef without database is : %s " % value)
+            col = self.connection[database][value.collection]
             doc = col.find_one({'_id':value.id})
             if doc is None:
                 raise AutoReferenceError('Something wrong append. You probably change'
                   ' your object when passing it as a value to an autorefs enable document.\n'
-                  'A document with id "%s" is not saved in the database but was giving as'
-                  ' a reference to a %s document' % (value.id, self._doc.__name__))
+                  'A document with id "%s" is not saved in the database "%s" but was giving as'
+                  ' a reference to a %s document' % (value.id, database, self._doc.__name__))
             return self._doc(doc, collection=col)
 
