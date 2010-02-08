@@ -426,19 +426,19 @@ class IndexTestCase(unittest.TestCase):
                     "creation_date":datetime.datetime,
                 }
             }
-            #indexes = [{'fields':[('mydoc.creation_date',-1), ('_id',1)]}]
+            indexes = [{'fields':[('mydoc.creation_date',-1), ('_id',1)]}]
         self.connection.register([MyDoc])
 
         date = datetime.datetime.utcnow()
 
         mydoc = self.col.MyDoc()
-        mydoc['creation_date'] = date
+        mydoc['mydoc']['creation_date'] = date
         mydoc['_id'] = u'aaa'
         mydoc.save()
 
 
         mydoc3 = self.col.MyDoc()
-        mydoc3['creation_date'] = date
+        mydoc3['mydoc']['creation_date'] = date
         mydoc3['_id'] = u'bbb'
         mydoc3.save()
 
@@ -447,7 +447,7 @@ class IndexTestCase(unittest.TestCase):
         date2 = datetime.datetime.utcnow()
 
         mydoc2 = self.col.MyDoc()
-        mydoc2['creation_date'] = date2
+        mydoc2['mydoc']['creation_date'] = date2
         mydoc2['_id'] = u'aa'
         mydoc2.save()
 
@@ -455,15 +455,13 @@ class IndexTestCase(unittest.TestCase):
         date3 = datetime.datetime.utcnow()
 
         mydoc4 = self.col.MyDoc()
-        mydoc4['creation_date'] = date3
+        mydoc4['mydoc']['creation_date'] = date3
         mydoc4['_id'] = u'ccc'
         mydoc4.save()
 
         self.col.ensure_index([('mydoc.creation_date',-1), ('_id',1)])
-        #print list(self.col.MyDoc.db.system.indexes.find())
         results = [i['_id'] for i in self.col.MyDoc.fetch().sort([('mydoc.creation_date',-1),('_id',1)])]
-        print results
-        assert results  == [u'aa', u'aaa', u'bbb', u'ccc'], results
+        assert results == ['ccc', 'aa', 'aaa', 'bbb'], results
 
     def test_index_pymongo(self):
         import datetime
