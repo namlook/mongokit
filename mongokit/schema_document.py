@@ -483,9 +483,10 @@ class SchemaDocument(dict):
                               "missed fields : %s" % struct_doc_diff )
                 else:
                     struct_struct_diff = list(set(doc).difference(set(struct)))
-                    if not sum( 1 for s in struct_struct_diff if s in STRUCTURE_KEYWORDS):
+                    bad_fields = [s for s in struct_struct_diff if s not in STRUCTURE_KEYWORDS]
+                    if bad_fields:
                         raise StructureError( 
-                          "unknown fields : %s" % struct_struct_diff)
+                          "unknown fields : %s" % bad_fields)
             for key in struct:
                 if type(key) is type:
                     new_key = "$%s" % key.__name__

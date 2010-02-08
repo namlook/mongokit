@@ -657,4 +657,16 @@ class ApiTestCase(unittest.TestCase):
         assert fetched_doc.bar.egg == "bla", fetched_doc.bar.egg
 
        
+    def test_validate_doc_with_field_added_after_save(self):
+        class Doc(Document):
+           structure = {
+               "foo": unicode,
+           }
+        self.connection.register([Doc])
 
+        doc = self.col.Doc()
+        doc['foo'] = u"bla"
+        doc.save()
+        doc['bar'] = 2
+        self.assertRaises(StructureError, doc.validate)
+ 
