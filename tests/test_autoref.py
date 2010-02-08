@@ -657,5 +657,3 @@ class AutoRefTestCase(unittest.TestCase):
 
         doc = self.col.Doc.find_one({'_id':raw_doc['_id']})
 
-        
-
