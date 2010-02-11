@@ -61,6 +61,12 @@ class MongoDocumentCursor(object):
     def skip(self, *args, **kwargs):
         return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
 
+    def clone(self, *args, **kwargs):
+        return self.__class__(self._cursor.clone(), self._class_object)
+
+    def explain(self, *args, **kwargs):
+        return self._cursor.explain()
+
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
             yield self._class_object(obj, collection=self._collection)
