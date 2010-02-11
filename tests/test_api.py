@@ -669,4 +669,25 @@ class ApiTestCase(unittest.TestCase):
         doc.save()
         doc['bar'] = 2
         self.assertRaises(StructureError, doc.validate)
+
+    def test_distinct(self):
+        class Doc(Document):
+            structure = {
+                "foo": unicode,
+                "bla": int
+            }
+        self.connection.register([Doc])
+
+        for i in range(15):
+            if i % 2 == 0:
+                foo = u"blo"
+            else:
+                foo = u"bla"
+            doc = self.col.Doc(doc={'foo':foo, 'bla':i})
+            doc.save()
  
+        assert self.col.find().distinct('foo') == ['bla', 'blo']
+        assert self.col.find().distinct('bla') == range(15)
+
+
+

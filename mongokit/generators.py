@@ -33,6 +33,9 @@ class MongoDocumentCursor(object):
         self._db = self._collection.database
         self._class_object = cls
 
+    def distinct(self, *args, **kwargs):
+        return self._cursor.distinct(*args, **kwargs)
+
     def where(self, *args, **kwargs):
         return self.__class__(self._cursor.where(*args, **kwargs), self._class_object)
 
