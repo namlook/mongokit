@@ -689,5 +689,21 @@ class ApiTestCase(unittest.TestCase):
         assert self.col.find().distinct('foo') == ['bla', 'blo']
         assert self.col.find().distinct('bla') == range(15)
 
-
+    def test_explain(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":int,
+                "bar":{"bla":int},
+            }
+        self.connection.register([MyDoc])
+        for i in range(10):
+            mydoc = self.col.MyDoc()
+            mydoc["foo"] = i
+            mydoc["bar"]['bla'] = i
+            mydoc.save()
+        explain1 = self.col.MyDoc.find({"foo":{"$gt":4}}).explain()
+        explain2 = self.col.find({'foo':{'gt':4}}).explain()
+        explain1.pop('n')
+        explain2.pop('n')
+        assert explain1 == explain2, (explain1, explain2)
 
