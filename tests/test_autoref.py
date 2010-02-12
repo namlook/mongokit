@@ -657,3 +657,75 @@ class AutoRefTestCase(unittest.TestCase):
 
         doc = self.col.Doc.find_one({'_id':raw_doc['_id']})
 
+    def test_recreate_and_reregister_class_with_reference(self):
+        class CompanyDocument(Document):
+            collection_name = "test_companies"
+            use_autorefs = True
+            use_dot_notation = True
+            structure = {
+                "name": unicode,
+            }
+
+        class UserDocument(Document):
+            collection_name = "test_users"
+            use_autorefs = True
+            use_dot_notation = True
+            structure = {
+                "email": unicode,
+                "company": CompanyDocument,
+            }
+
+        class SessionDocument(Document):
+            collection_name = "test_sessions"
+            use_autorefs = True
+            use_dot_notation = True
+            structure = {
+                "token": unicode,
+                "owner": UserDocument,
+            }
+        self.connection.register([CompanyDocument, UserDocument, SessionDocument])
+
+        company = self.col.database[CompanyDocument.collection_name].CompanyDocument()
+        company.name = u"Company"
+        company.save()
+
+        company_owner = self.col.database[UserDocument.collection_name].UserDocument()
+        company_owner.email = u"manager@test.com"
+        company_owner.company = company
+        company_owner.save()
+
+        s = self.col.database[SessionDocument.collection_name].SessionDocument()
+        s.token = u'asddadsad'
+        s.owner = company_owner
+        s.save()
+
+        sbis= self.col.database[SessionDocument.collection_name].SessionDocument.find_one({"token": u"asddadsad" })
+        assert sbis == s, sbis
+
+        class CompanyDocument(Document):
+            collection_name = "test_companies"
+            use_autorefs = True
+            structure = {
+                "name": unicode,
+            }
+
+        class UserDocument(Document):
+            collection_name = "test_users"
+            use_autorefs = True
+            structure = {
+                "email": unicode,
+                "company": CompanyDocument,
+            }
+
+        class SessionDocument(Document):
+            collection_name = "test_sessions"
+            use_autorefs = True
+            structure = {
+                "token": unicode,
+                "owner": UserDocument,
+            }
+        self.connection.register([CompanyDocument, UserDocument, SessionDocument])
+
+        sbis= self.col.database[SessionDocument.collection_name].SessionDocument.find_one({"token": u"asddadsad" })
+        assert sbis == s, sbis
+

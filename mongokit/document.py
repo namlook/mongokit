@@ -556,6 +556,10 @@ class Document(SchemaDocument):
                     if self.force_autorefs_current_db:
                         db_name = self.db.name
                     struct[key] = R(struct[key], self.connection, db_name)
+                # if we have DBRef into the document we have to call
+                # _process_custom_type another time.
+                if isinstance(doc[key], pymongo.dbref.DBRef):
+                    doc._process_custom_type('python', doc, doc.structure)
                 # be sure that we have an instance of MongoDocument
                 if not isinstance(doc[key], struct[key]._doc) and doc[key] is not None:
                     raise SchemaTypeError(
