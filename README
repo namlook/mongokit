@@ -97,25 +97,32 @@ Mongokit is documented and well tested with 100% of code coverage::
     mongokit.collection              31     31   100%   
     mongokit.connection              14     14   100%   
     mongokit.database                 7      7   100%   
-    mongokit.document               385    385   100%   
-    mongokit.generators              26     26   100%   
+    mongokit.document               400    400   100%   
+    mongokit.generators              32     32   100%   
     mongokit.helpers                 69     69   100%   
     mongokit.mongo_exceptions         8      8   100%   
     mongokit.operators               47     47   100%   
-    mongokit.schema_document        445    445   100%   
+    mongokit.schema_document        462    462   100%   
     mongokit.versioned_document      45     45   100%   
     -----------------------------------------------------------
-    TOTAL                          1131   1131   100%   
+    TOTAL                          1169   1169   100%   
     ----------------------------------------------------------------------
-    Ran 186 tests in 34.298s
-
+    Ran 193 tests in 58.080s
 
 Change Log
 ==========
 
 v0.5.3
 ------
+ * fix default_value issue when using with dict and list (see #35)
+ * fix bug reported by Andrew Degtiariov : http://bit.ly/c1vcUv
+ * add clone and explain method to MongoDocumentCursor
+ * add distinct to cursor (thanks to Flaper87)
+ * fix index test
+ * fix : when a field is added to a saved document and not specified in the structure, the validation wasn't work properly
+ * use current database if DBRef has no database information. Please, see the doc
  * support of pymongo 1.4
+
 
 v0.5.2
 ------
