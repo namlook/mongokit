@@ -612,6 +612,10 @@ class SchemaDocument(dict):
                     new_value = self.default_values[new_path]
                     if callable(new_value):
                         new_value = new_value()
+                    elif isinstance(new_value, dict):
+                        new_value = deepcopy(new_value)
+                    elif isinstance(new_value, list):
+                        new_value = new_value[:]
                     if isinstance(struct[key], CustomType):
                         if not isinstance(new_value, struct[key].python_type):
                             raise DefaultFieldTypeError(
@@ -634,12 +638,20 @@ class SchemaDocument(dict):
                         new_value = self.default_values[new_path]
                         if callable(new_value):
                             new_value = new_value()
+                        elif isinstance(new_value, dict):
+                            new_value = deepcopy(new_value)
+                        elif isinstance(new_value, list):
+                            new_value = new_value[:]
                         doc[key] = new_value
             elif isinstance(struct[key], list):
                 if new_path in self.default_values:
                     for new_value in self.default_values[new_path]:
                         if callable(new_value):
                             new_value = new_value()
+                        elif isinstance(new_value, dict):
+                            new_value = deepcopy(new_value)
+                        elif isinstance(new_value, list):
+                            new_value = new_value[:]
                         if isinstance(struct[key][0], CustomType):
                             if not isinstance(new_value, struct[key][0].python_type):
                                 raise DefaultFieldTypeError(
@@ -651,6 +663,10 @@ class SchemaDocument(dict):
                     new_value = self.default_values[new_path]
                     if callable(new_value):
                         new_value = new_value()
+                    elif isinstance(new_value, dict):
+                        new_value = deepcopy(new_value)
+                    elif isinstance(new_value, list):
+                        new_value = new_value[:]
                     if new_path in self.i18n:
                         doc[key] = i18n(
                           field_type = struct[key],

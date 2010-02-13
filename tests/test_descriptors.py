@@ -30,6 +30,12 @@ import unittest
 from mongokit import *
 
 class DescriptorsTestCase(unittest.TestCase):
+    def setUp(self):
+        self.connection = Connection()
+        self.col = self.connection['test']['mongokit']
+        
+    def tearDown(self):
+        self.connection.drop_database('test')
         
     def test_duplicate_required(self):
         class MyDoc(Document):
@@ -225,9 +231,28 @@ class DescriptorsTestCase(unittest.TestCase):
                 "foo":[int]
             }
             default_values = {"foo":[42,3]}
-        mydoc = MyDoc()
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
         assert mydoc["foo"] == [42,3]
-        mydoc.validate()
+        mydoc['foo'] = [1,2,3]
+        mydoc.save()
+        mydoc = self.col.MyDoc()
+        assert mydoc['foo'] == [42,3]
+
+    def test_default_list_values_empty(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":list
+            }
+            default_values = {"foo":[3]}
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        assert mydoc["foo"] == [3]
+        mydoc['foo'].append(2)
+        mydoc.save()
+        mydoc = self.col.MyDoc()
+        assert mydoc['foo'] == [3], mydoc
+
 
     def test_default_list_values_with_callable(self):
         def get_truth():
@@ -256,11 +281,46 @@ class DescriptorsTestCase(unittest.TestCase):
     def test_default_dict_values(self):
         class MyDoc(Document):
             structure = {
-                "foo":{}
+                "foo":dict
             }
             default_values = {"foo":{"bar":42}}
-        mydoc = MyDoc()
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
         assert mydoc["foo"] == {"bar":42}, mydoc
+        mydoc['foo'] = {'bar':1}
+        mydoc.save()
+        mydoc = self.col.MyDoc()
+        assert mydoc["foo"] == {"bar":42}, mydoc
+
+    def test_default_dict_values_empty(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":dict
+            }
+            default_values = {"foo":{}}
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        print id(mydoc.structure['foo']), id(mydoc['foo']), id(mydoc.default_values['foo'])
+        assert mydoc["foo"] == {}, mydoc
+        mydoc['foo'][u'bar'] = 1
+        mydoc.save()
+        mydoc2 = self.col.MyDoc()
+        print id(mydoc2.structure['foo']), id(mydoc2['foo']), id(mydoc2.default_values['foo'])
+        assert mydoc2["foo"] == {}, mydoc
+
+        class MyDoc(Document):
+            structure = {
+                "foo":{unicode:int}
+            }
+            default_values = {"foo":{}}
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        assert mydoc["foo"] == {}, mydoc
+        mydoc['foo'][u'bar'] = 1
+        mydoc.save()
+        mydoc2 = self.col.MyDoc()
+        assert mydoc2["foo"] == {}, mydoc
+
 
     def test_default_dict_values_with_callable(self):
         def get_truth():
