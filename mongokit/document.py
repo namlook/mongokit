@@ -29,11 +29,10 @@ from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, Auto
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties
 from mongokit.helpers import totimestamp, fromtimestamp
+from mongokit.grid import *
 import pymongo
 from pymongo.bson import BSON
 from pymongo.objectid import ObjectId
-from gridfs import GridFS
-from gridfs.grid_file import GridFile
 import re
 from copy import deepcopy
 from uuid import uuid4
@@ -66,41 +65,6 @@ class DocumentProperties(SchemaProperties):
                             if index not in attrs['indexes']:
                                 attrs['indexes'].append(index)
         return SchemaProperties.__new__(cls, name, bases, attrs)        
-
-class FS(object):
-    def __init__(self, gridfs, obj):
-        self._gridfs = gridfs
-        self._obj = obj
-        self._fs = GridFS(self._obj.db)
-
-    def __getattr__(self, key):
-        if key not in ['_gridfs', '_obj', '_fs']:
-            if key in self._gridfs:
-                f = GridFile({'metadata':{'name':key, 'doc_id':self._obj['_id']}}, self._obj.db, 'r', self._obj.collection.name)
-                content = f.read()
-                f.close()
-                return content
-        return super(FS, self).__getattribute__(key)
-
-    def __setattr__(self, key, value):
-        if key not in ['_gridfs', '_obj', '_fs']:
-            if key in self._gridfs:
-                f = GridFile({'metadata':{'name':key, 'doc_id':self._obj['_id']}}, self._obj.db, 'w', self._obj.collection.name)
-                try:
-                    f.write(value)
-                except TypeError:
-                    raise TypeError("GridFS value mus be string not %s" % type(value))
-                finally:
-                    f.close()
-        else:
-            super(FS, self).__setattr__(key, value)
-
-    def __delattr__(self, key):
-        self._fs.remove({'metadata.doc_id':self._obj['_id'], 'metadata.name':key})
-
-    def open(self, name, mode='r'):
-        assert name in self._gridfs, "%s is not declared in gridfs" % name
-        return GridFile({'metadata':{'name':name, 'doc_id':self._obj['_id']}}, self._obj.db, mode, self._obj.collection.name)
 
 class Document(SchemaDocument):
 

@@ -44,7 +44,7 @@ class GridFSTestCase(unittest.TestCase):
             structure = {
                 'title':unicode,
             }
-            gridfs = ['source']
+            gridfs = {'files': ['source']}
         self.connection.register([Doc])
         doc = self.col.Doc()
         doc['title'] = u'Hello'
@@ -65,12 +65,21 @@ class GridFSTestCase(unittest.TestCase):
         assert doc['title'] == u'Hello'
         assert len(doc.fs.__dict__) == 3
 
+        del doc.fs.source
+
+        assertion = False
+        try:
+            print doc.fs.source
+        except IOError:
+            assertion = True
+        assert assertion
+
     def test_gridfs_with_open(self):
         class Doc(Document):
             structure = {
                 'title':unicode,
             }
-            gridfs = ['source']
+            gridfs = {'files': ['source']}
         self.connection.register([Doc])
         doc = self.col.Doc()
         doc['title'] = u'Hello'
@@ -98,7 +107,7 @@ class GridFSTestCase(unittest.TestCase):
             structure = {
                 'title':unicode,
             }
-            gridfs = ['source']
+            gridfs = {'files': ['source']}
         self.connection.register([Doc])
         doc = self.col.Doc()
         doc['title'] = u'Hello'
@@ -117,7 +126,7 @@ class GridFSTestCase(unittest.TestCase):
             structure = {
                 'title':unicode,
             }
-            gridfs = ['source']
+            gridfs = {'files': ['source']}
         self.connection.register([Doc])
         doc = self.col.Doc()
         doc['title'] = u'Hello'
@@ -135,4 +144,49 @@ class GridFSTestCase(unittest.TestCase):
             assertion = True
         assert assertion
         assert len(doc.fs.__dict__) == 3
+
+    def test_gridfs_with_container(self):
+        class Doc(Document):
+            structure = {
+                'title':unicode,
+            }
+            gridfs = {
+                'files': ['source'],
+                'containers': ['images']
+            }
+
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        print dir(doc.fs)
+        doc['title'] = u'Hello'
+        doc.save()
+
+        doc.fs.source = "Hello World !"
+        assert doc.fs.source == u"Hello World !"
+
+        assertion = False
+        try:
+            doc.fs.images['first.jpg'] = 3
+        except TypeError:
+            assertion = True
+        assert assertion
+
+        doc.fs.images['first.jpg'] = "My first image"
+        doc.fs.images['second.jpg'] = "My second image"
+
+        assert doc.fs.images['first.jpg'] == 'My first image'
+        assert doc.fs.images['second.jpg'] == 'My second image'
+
+        doc.fs.images['first.jpg'] = "My very first image"
+        assert doc.fs.images['first.jpg'] == 'My very first image'
+        print doc.fs.images
+
+        del doc.fs.images['first.jpg']
+        
+        assertion = False
+        try:
+            doc.fs.images['first.jpg']
+        except IOError:
+            assertion = True
+        assert assertion
 
