@@ -16,7 +16,8 @@ Simple Example
 ...             'body':unicode,
 ...             'author':unicode,
 ...             'date_creation':datetime.datetime,
-...             'rank':int
+...             'rank':int,
+...             'tags': [unicode],
 ...     }
 ...     required_fields = ['title','author', 'date_creation']
 ...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
@@ -74,6 +75,401 @@ Note that `save` will call the `validate` method, so you don't have to validate
 each time.
 
 >>> bp.save()
+
+The structure
+=============
+
+The ``structure`` is a simple dict which define how document fields will be validated.
+Field types are simple python type.  By default, MongoKit allow the following types::
+
+    authorized_types = [type(None),
+      bool, 
+      int, 
+      float,
+      long,
+      unicode,
+      list,
+      dict,
+      datetime.datetime, 
+      pymongo.binary.Binary,
+      pymongo.objectid.ObjectId,
+      pymongo.dbref.DBRef,
+      pymongo.code.Code,
+      type(re.compile("")),
+      CustomType,
+    ]
+
+validate keys
+-------------
+
+If the value of key is not known but we want to validate some deeper structure, 
+we use the "$<type>" descriptor :
+
+>>> class MyDoc(Document):
+...    structure = {
+...        "key1":{
+...            unicode:{
+...                "bla":int,
+...                "bar":{unicode:int}
+...            },
+...        },
+...        "bla":float,
+...    }
+...    required_fields = ["key1.$unicode.bla"]
+...
+
+Not that if you use python type as key in structure, generate_skeleton
+won't be able to build the entired underline structure :
+
+>>> con.register([MyDoc])
+>>> tutorial.MyDoc() == {'key1': {}, 'bla': None}
+True
+
+So, default_values nor validators will work.
+
+Difference beetween [] and the type list
+----------------------------------------
+
+This is pretty simple. if you want to define a list of heterogen types just do:
+
+        tags : list
+
+If you use the type `list`, no validation will be done on this field other than
+checking that the field is a list. If you want to define a list of unicode :
+
+        tag : [unicode]
+
+When validating the document, this will iterate to the list and check if all value
+are unicode.
+
+Difference beetween {} and the type dict
+----------------------------------------
+
+{} is used for describing the structure like {"foo":unicode, "bar":int}
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {"foo":unicode, "bar":int}
+...    }
+
+
+If you don't specify the structure :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {}
+...    }
+
+You won't be able to do that because "foo" is not defined into the structure.
+
+>>> con.register([Person])
+>>> bob = tutorial.Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+>>> bob.validate()
+Traceback (most recent call last):
+...
+StructureError: unknown fields : [u'foo']
+
+
+If you want to add new items to a dict if they're not defined, you must use the dict type instead :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": dict
+...    }
+
+>>> con.register([Person])
+>>> bob = tutorial.Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+>>> bob.validate()
+
+Using dict type is useful if you don't know what field will be added *and* what will be the type of the field.
+If you know the type of the field, it's better to do that :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {unicode:unicode}
+...    }
+
+This will add another layer to validate the content. See "validate keys" section for more informations.
+
+Case of tuple or immutable field
+--------------------------------
+
+If you need a structured list with a limited
+number of field, you can use tuple to describe
+your object :
+
+>>> class MyDoc(Document):
+...     structure = {
+...         "foo":(int, unicode, float)
+...     }
+>>> con.register([MyDoc])
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo']
+[None, None, None]
+
+Tuple are converted into a simple list.
+They add another validation layer. Field must
+follow the right type:
+
+>>> mydoc['foo'] = [u"bla", 1, 4.0]
+>>> mydoc.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
+
+and they must have the right number of items:
+
+>>> mydoc['foo'] = [1, u"bla"]
+>>> mydoc.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must have 3 items not 2
+
+As tuples are converted to list internally, you
+can make all list operations:
+
+>>> mydoc['foo'] = [1,u'bar',3.2]
+>>> mydoc.validate()
+>>> mydoc['foo'] = [None, u"bla", 3.1]
+>>> mydoc.validate()
+>>> mydoc['foo'][0] = 50
+>>> mydoc.validate()
+
+
+Adding more authorized types
+----------------------------
+
+It's possible to add more type in authorized_types: 
+
+>>> class MyDoc(Document):
+...     structure = {
+...         "foo":str,
+...     }
+...     authorized_types = Document.authorized_types + [str]
+>>> con.register([MyDoc])
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo'] = 'bla'
+>>> mydoc.validate()
+
+Adding complex validation
+=========================
+
+If the use of a validator is not enougth, you can overload the validation method
+to feet your needs.
+
+Example the following document:
+
+>>> class MyDoc(Document):
+...     structure={
+...             "foo":int,
+...             "bar":int,
+...             "baz":unicode,
+...     }
+... 
+
+We want to be sure that before saving our object, foo is greater than bar and baz is
+unicode(foo). Do do that, we juste overload the validation method::
+
+    def validate(self):
+        assert self['foo'] > self['bar']
+        assert self['baz'] == unicode(self['foo'])
+        super(MyDoc, self).validate(self)
+
+
+MongokitOperator
+================
+
+It is possible to add another layer of validation to fields.
+
+OR operator
+-----------
+
+Let's say that we have a field which can be unicode or int or a float.
+We can use the OR operator to tell MongoKit to validate the field :
+
+>>> from mongokit import OR
+>>> from datetime import datetime
+>>> class Account(Document): 
+...     structure = { 
+...         "balance": {'foo': OR(unicode, int, float)} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['balance']['foo'] = u'3.0'
+>>> account.validate()
+>>> account['balance']['foo'] = 3.0
+>>> account.validate()
+
+but :
+
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <unicode or int or float> not datetime
+
+NOT operator
+------------
+
+You can also use the NOT operator to tell MongoKit that you don't want a such type
+for a field :
+
+>>> from mongokit import NOT
+>>> class Account(Document): 
+...     structure = { 
+...         "balance": {'foo': NOT(unicode, datetime)} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['balance']['foo'] = 3
+>>> account.validate()
+>>> account['balance']['foo'] = 3.0
+>>> account.validate()
+
+and :
+
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not datetime
+
+>>> account['balance']['foo'] = u'3.0'
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not unicode
+
+IS operator
+-----------
+
+Sometime, you might want to force a fields to be in a specifique value. The IS operator
+must be use for this purpose :
+
+>>> from mongokit import IS
+>>> class Account(Document): 
+...     structure = { 
+...         "flag": {'foo': IS(u'spam', u'controversy', u'phishing')} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['flag']['foo'] = u'spam'
+>>> account.validate()
+>>> account['flag']['foo'] = u'phishing'
+>>> account.validate()
+
+and :
+
+>>> account['flag']['foo'] = u'foo'
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: flag.foo must be in [u'spam', u'controversy', u'phishing'] not foo
+
+Custom types
+============
+
+Sometime, we need to work with complexe object while their
+footprint in the database is fairly simple. Let's take a  
+datetime object. Datetime object can be usefull to compute
+complexe date but while mongodb can deal with datetime object,
+let's say that we just want to store the unicode representation.
+
+MongoKit allow the use to work on a datetime object and store the unicode
+representation on the fly. In order to do this, we have to implement a CustomType
+and fill the custom_types attributes:
+
+>>> import datetime
+
+A CustomType object must implement two methods and one attribute:
+
+ - `to_bson(self, value)`: this method will convert the value
+    to fit the correct authorized type before beeing saved in the db.
+ - `to_python(self, value)`: this method will convert the value
+    taken from the db into a python object
+ -  You must specify a `mongo_type` property in the `CustomType` class. this
+    will describes the type of the value stored in the mongodb.  
+ -  If you want more validation, you can specify a `python_type` property which is
+    the python type the value will be converted. This is a good thing to specify it
+    as it make a good documentation.
+ 
+>>> class CustomDate(CustomType):
+...     mongo_type = unicode
+...     python_type = datetime.datetime # optional, just for more validation
+...     def to_bson(self, value):
+...         """convert type to a mongodb type"""
+...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+...     def to_python(self, value):
+...         """convert type to a python object"""
+...         if value is not None:
+...            return datetime.datetime.strptime(value, '%y-%m-%d')
+
+Now, let's create a Document:
+
+>>> class Foo(Document):
+...     structure = {
+...         'foo':{
+...             'date': CustomDate(),
+...         },
+...     }
+
+Now, we can create Foo's objects and working with python datetime objects
+
+>>> con.register([Foo])
+>>> foo = tutorial.Foo()
+>>> foo['_id'] = 1
+>>> foo['foo']['date'] = datetime.datetime(2003,2,1)
+>>> foo.save()
+
+The saved object in db has the unicode footprint as expected:
+
+>>> tutorial.find_one({'_id':1})
+{u'_id': 1, u'foo': {u'date': u'03-02-01'}}
+
+Quering an object will convert automaticly the CustomType into the correct
+python object:
+
+>>> foo = tutorial.Foo.get_from_id(1)
+>>> foo['foo']['date']
+datetime.datetime(2003, 2, 1, 0, 0)
+
+Skipping validation
+===================
+
+Once your application is ready for production and you are sure that the data is consistant,
+you might want to skip the validation layer. This will make mongokit significant faster
+(as fast as pymongo). In order to do that, just set the `skip_validation` attribute to `True`.
+
+TIP: this is a good idea to create a "RootDocument" and to inherite all you object from it.
+This will allow you to control the behavior of all your objects by setting the RootDocument:
+
+>>> class RootDocument(Document):
+...     structure = {}
+...     skip_validation = True
+...     use_dot_notation = True
+...     use_autorefs = True
+
+>>> class MyDoc(RootDocument):
+...     structure={
+...             "foo":int,
+...     }
+
+
+Note that you can always force the validation at any moment on saving even if `skip_validation` is `True`:
+
+>>> con.register([MyDoc]) # No need to register RootDocument as we do not instanciate it
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo'] = u'bar'
+>>> mydoc.save(validate=True)
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
+
 
 Query
 =====
@@ -251,378 +647,6 @@ If you want to use the dot notation (ala json), you must set the
 >>> doc
 {'foo': {'bar': u'bla'}}
 
-Case of tuple or immutable field
-================================
-
-If you need a structured list with a limited
-number of field, you can use tuple to describe
-your object :
-
->>> class MyDoc(Document):
-...     structure = {
-...         "foo":(int, unicode, float)
-...     }
->>> con.register([MyDoc])
->>> mydoc = tutorial.MyDoc()
->>> mydoc['foo']
-[None, None, None]
-
-Tuple are converted into a simple list.
-They add another validation layer. Field must
-follow the right type:
-
->>> mydoc['foo'] = [u"bla", 1, 4.0]
->>> mydoc.validate()
-Traceback (most recent call last):
-...
-SchemaTypeError: foo must be an instance of int not unicode
-
-and they must have the right number of items:
-
->>> mydoc['foo'] = [1, u"bla"]
->>> mydoc.validate()
-Traceback (most recent call last):
-...
-SchemaTypeError: foo must have 3 items not 2
-
-As tuples are converted to list internally, you
-can make all list operations:
-
->>> mydoc['foo'] = [1,u'bar',3.2]
->>> mydoc.validate()
->>> mydoc['foo'] = [None, u"bla", 3.1]
->>> mydoc.validate()
->>> mydoc['foo'][0] = 50
->>> mydoc.validate()
-
-Différence beetween {} and the type dict
-========================================
-
-{} is used for describing the structure like {"foo":unicode, "bar":int}
-
->>> class Person(Document):
-...    structure = {
-...        "biography": {"foo":unicode, "bar":int}
-...    }
-
-
-If you don't specify the structure :
-
->>> class Person(Document):
-...    structure = {
-...        "biography": {}
-...    }
-
-You won't be able to do that because "foo" is not defined into the structure.
-
->>> con.register([Person])
->>> bob = tutorial.Person()
->>> bob[u"biography"][u"foo"] = u"bla"
->>> bob.validate()
-Traceback (most recent call last):
-...
-StructureError: unknown fields : [u'foo']
-
-
-If you want to add new items to a dict if they're not defined, you must use the dict type instead :
-
->>> class Person(Document):
-...    structure = {
-...        "biography": dict
-...    }
-
->>> con.register([Person])
->>> bob = tutorial.Person()
->>> bob[u"biography"][u"foo"] = u"bla"
->>> bob.validate()
-
-Using dict type is useful if you don't know what field will be added *and* what will be the type of the field.
-If you know the type of the field, it's better to do that :
-
->>> class Person(Document):
-...    structure = {
-...        "biography": {unicode:unicode}
-...    }
-
-This will add another layer to validate the content. See "validate keys" section for more informations.
-
-Adding more authorized types
-============================
-
-By default, MongoKit allow the following types::
-
-    authorized_types = [type(None),
-      bool, 
-      int, 
-      float,
-      long,
-      unicode,
-      list,
-      dict,
-      datetime.datetime, 
-      pymongo.binary.Binary,
-      pymongo.objectid.ObjectId,
-      pymongo.dbref.DBRef,
-      pymongo.code.Code,
-      type(re.compile("")),
-      CustomType,
-    ]
-
-It's possible to add more type in authorized_types: 
-
->>> class MyDoc(Document):
-...     structure = {
-...         "foo":str,
-...     }
-...     authorized_types = Document.authorized_types + [str]
->>> con.register([MyDoc])
->>> mydoc = tutorial.MyDoc()
->>> mydoc['foo'] = 'bla'
->>> mydoc.validate()
-
-validate keys
-=============
-
-If the value of key is not known but we want to validate some deeper structure, 
-we use the "$<type>" descriptor :
-
->>> class MyDoc(Document):
-...    structure = {
-...        "key1":{
-...            unicode:{
-...                "bla":int,
-...                "bar":{unicode:int}
-...            },
-...        },
-...        "bla":float,
-...    }
-...    required_fields = ["key1.$unicode.bla"]
-...
-
-Not that if you use python type as key in structure, generate_skeleton
-won't be able to build the entired underline structure :
-
->>> con.register([MyDoc])
->>> tutorial.MyDoc() == {'key1': {}, 'bla': None}
-True
-
-So, default_values nor signals will work.
-
-MongokitOperator
-================
-
-It is possible to add another layer of validation to fields.
-
-OR operator
------------
-
-Let's say that we have a field which can be unicode or int or a float.
-We can use the OR operator to tell MongoKit to validate the field :
-
->>> from mongokit import OR
->>> from datetime import datetime
->>> class Account(Document): 
-...     structure = { 
-...         "balance": {'foo': OR(unicode, int, float)} 
-...     } 
-
->>> con.register([Account])
->>> account = tutorial.Account()
->>> account['balance']['foo'] = u'3.0'
->>> account.validate()
->>> account['balance']['foo'] = 3.0
->>> account.validate()
-
-but :
-
->>> account['balance']['foo'] = datetime.now()
->>> account.validate()
-Traceback (most recent call last):
-...
-SchemaTypeError: balance.foo must be an instance of <unicode or int or float> not datetime
-
-NOT operator
-------------
-
-You can also use the NOT operator to tell MongoKit that you don't want a such type
-for a field :
-
->>> from mongokit import NOT
->>> class Account(Document): 
-...     structure = { 
-...         "balance": {'foo': NOT(unicode, datetime)} 
-...     } 
-
->>> con.register([Account])
->>> account = tutorial.Account()
->>> account['balance']['foo'] = 3
->>> account.validate()
->>> account['balance']['foo'] = 3.0
->>> account.validate()
-
-and :
-
->>> account['balance']['foo'] = datetime.now()
->>> account.validate()
-Traceback (most recent call last):
-...
-SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not datetime
-
->>> account['balance']['foo'] = u'3.0'
->>> account.validate()
-Traceback (most recent call last):
-...
-SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not unicode
-
-IS operator
------------
-
-Sometime, you might want to force a fields to be in a specifique value. The IS operator
-must be use for this purpose :
-
->>> from mongokit import IS
->>> class Account(Document): 
-...     structure = { 
-...         "flag": {'foo': IS(u'spam', u'controversy', u'phishing')} 
-...     } 
-
->>> con.register([Account])
->>> account = tutorial.Account()
->>> account['flag']['foo'] = u'spam'
->>> account.validate()
->>> account['flag']['foo'] = u'phishing'
->>> account.validate()
-
-and :
-
->>> account['flag']['foo'] = u'foo'
->>> account.validate()
-Traceback (most recent call last):
-...
-SchemaTypeError: flag.foo must be in [u'spam', u'controversy', u'phishing'] not foo
-
-Adding complex validation
-=========================
-
-If the use of a validator is not enougth, you can overload the validation method
-to feet your needs.
-
-Example the following document:
-
->>> class MyDoc(Document):
-...     structure={
-...             "foo":int,
-...             "bar":int,
-...             "baz":unicode,
-...     }
-... 
-
-We want to be sure that before saving our object, foo is greater than bar and baz is
-unicode(foo). Do do that, we juste overload the validation method::
-
-    def validate(self):
-        assert self['foo'] > self['bar']
-        assert self['baz'] == unicode(self['foo'])
-        super(MyDoc, self).validate(self)
-
-Skipping validation
-===================
-
-Once your application is ready for production and you are sure that the data is consistant,
-you might want to skip the validation layer. This will make mongokit significant faster
-(as fast as pymongo). In order to do that, just set the `skip_validation` attribute to `True`.
-
-TIP: this is a good idea to create a "RootDocument" and to inherite all you object from it.
-This will allow you to control the behavior of all your objects by setting the RootDocument:
-
->>> class RootDocument(Document):
-...     structure = {}
-...     skip_validation = True
-...     use_dot_notation = True
-...     use_autorefs = True
-
->>> class MyDoc(RootDocument):
-...     structure={
-...             "foo":int,
-...     }
-
-
-Note that you can always force the validation at any moment on saving even if `skip_validation` is `True`:
-
->>> con.register([MyDoc]) # No need to register RootDocument as we do not instanciate it
->>> mydoc = tutorial.MyDoc()
->>> mydoc['foo'] = u'bar'
->>> mydoc.save(validate=True)
-Traceback (most recent call last):
-...
-SchemaTypeError: foo must be an instance of int not unicode
-
-Custom types
-============
-
-Sometime, we need to work with complexe object while their
-footprint in the database is fairly simple. Let's take a  
-datetime object. Datetime object can be usefull to compute
-complexe date but while mongodb can deal with datetime object,
-let's say that we just want to store the unicode representation.
-
-MongoKit allow the use to work on a datetime object and store the unicode
-representation on the fly. In order to do this, we have to implement a CustomType
-and fill the custom_types attributes:
-
->>> import datetime
-
-A CustomType object must implement two methods and one attribute:
-
- - `to_bson(self, value)`: this method will convert the value
-    to fit the correct authorized type before beeing saved in the db.
- - `to_python(self, value)`: this method will convert the value
-    taken from the db into a python object
- -  You must specify a `mongo_type` property in the `CustomType` class. this
-    will describes the type of the value stored in the mongodb.  
- -  If you want more validation, you can specify a `python_type` property which is
-    the python type the value will be converted. This is a good thing to specify it
-    as it make a good documentation.
- 
->>> class CustomDate(CustomType):
-...     mongo_type = unicode
-...     python_type = datetime.datetime # optional, just for more validation
-...     def to_bson(self, value):
-...         """convert type to a mongodb type"""
-...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
-...     def to_python(self, value):
-...         """convert type to a python object"""
-...         if value is not None:
-...            return datetime.datetime.strptime(value, '%y-%m-%d')
-
-Now, let's create a Document:
-
->>> class Foo(Document):
-...     structure = {
-...         'foo':{
-...             'date': CustomDate(),
-...         },
-...     }
-
-Now, we can create Foo's objects and working with python datetime objects
-
->>> con.register([Foo])
->>> foo = tutorial.Foo()
->>> foo['_id'] = 1
->>> foo['foo']['date'] = datetime.datetime(2003,2,1)
->>> foo.save()
-
-The saved object in db has the unicode footprint as expected:
-
->>> tutorial.find_one({'_id':1})
-{u'_id': 1, u'foo': {u'date': u'03-02-01'}}
-
-Quering an object will convert automaticly the CustomType into the correct
-python object:
-
->>> foo = tutorial.Foo.get_from_id(1)
->>> foo['foo']['date']
-datetime.datetime(2003, 2, 1, 0, 0)
 
 Embedding Documents as values
 =============================
