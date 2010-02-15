@@ -91,6 +91,40 @@ class AutoRefTestCase(unittest.TestCase):
         assert self.col.DocB.fetch_one() == docb
         assert self.col.DocB.find_one({'_id':'docb'}) == docb
 
+    def test_simple_autoref2(self):
+        class Embed(Document):
+            structure = {
+                'foo': dict,
+                'bar': int,
+            }
+
+        class Doc(Document):
+            structure = {
+                'embed':Embed,
+                'eggs': unicode,
+            }
+            use_autorefs = True
+        self.connection.register([Embed, Doc])
+
+        embed = self.col.Embed()
+        embed['foo'] = {'hello':u'monde'}
+        embed['bar'] = 3
+        embed.save()
+
+        doc = self.col.Doc()
+        doc['embed'] = embed
+        doc['eggs'] = u'arf'
+        doc.save()
+
+        assert doc == {'embed': {u'_id': embed['_id'], u'bar': 3, u'foo': {u'hello': u'monde'}}, '_id': doc['_id'], 'eggs': u'arf'}, doc
+
+        doc = self.col.Doc.fetch_one()
+        doc['embed']['foo']['hello'] = u'World'
+        doc.save()
+
+        assert doc == {'embed': {u'_id': embed['_id'], u'bar': 3, u'foo': {u'hello': u'World'}}, '_id': doc['_id'], 'eggs': u'arf'}, doc
+        assert self.col.Embed.fetch_one() == {u'_id': embed['_id'], u'bar': 3, u'foo': {u'hello': u'World'}}
+
     def test_autoref_with_default_values(self):
         class DocA(Document):
             structure = {
