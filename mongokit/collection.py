@@ -76,6 +76,7 @@ class Collection(PymongoCollection):
         """
         import random
         max = self.count()
-        num = random.randint(0, max-1)
-        return self.find().skip(num).next()
+        if max:
+            num = random.randint(0, max-1)
+            return self.find().skip(num).next()
 

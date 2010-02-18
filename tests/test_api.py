@@ -230,6 +230,8 @@ class ApiTestCase(unittest.TestCase):
                 "foo":int
             }
         self.connection.register([MyDoc])
+        assert self.col.find_random() is None
+        assert self.col.MyDoc.find_random() is None
         for i in range(50):
             mydoc = self.col.MyDoc()
             mydoc["foo"] = i

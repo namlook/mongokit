@@ -171,7 +171,12 @@ class Document(SchemaDocument):
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
         elif count == 1:
-            return self._obj_class(doc=bson_obj.next(), collection=self.collection)
+            try:
+                doc = bson_obj.next()
+            except StopIteration:
+                doc = None
+            if doc:
+                return self._obj_class(doc=doc, collection=self.collection)
 
     def find_random(self):
         """
@@ -179,11 +184,12 @@ class Document(SchemaDocument):
         """
         import random
         max = self.collection.count()
-        num = random.randint(0, max-1)
-        return self._obj_class(
-          self.collection.find().skip(num).next(),
-          collection=self.collection
-        )
+        if max:
+            num = random.randint(0, max-1)
+            return self._obj_class(
+              self.collection.find().skip(num).next(),
+              collection=self.collection
+            )
 
     def get_from_id(self, id):
         """
