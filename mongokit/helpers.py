@@ -27,18 +27,19 @@
 
 import datetime
 
-def totimestamp(dt):
+def totimestamp(value):
     """
     convert a datetime into a float since epoch
     """
-    import time
-    return time.mktime(dt.timetuple()) + dt.microsecond/1e6
+    import calendar
+    return int(calendar.timegm(value.timetuple()) * 1000 + value.microsecond / 1000)
 
 def fromtimestamp(epoch_date):
     """
     convert a float since epoch to a datetime object
     """
-    return datetime.datetime.fromtimestamp(epoch_date)
+    seconds = float(epoch_date) / 1000.0
+    return datetime.datetime.utcfromtimestamp(seconds)
 
 from copy import deepcopy
 
