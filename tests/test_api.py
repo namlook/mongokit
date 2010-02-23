@@ -709,3 +709,17 @@ class ApiTestCase(unittest.TestCase):
         explain2.pop('n')
         assert explain1 == explain2, (explain1, explain2)
 
+    def test_with_long(self):
+        class Doc(Document):
+            structure = {
+                "foo":OR(int, long),
+                "bar":unicode,
+            }
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        doc['foo'] = 12L
+        doc.save()
+        fetch_doc = self.col.Doc.find_one()
+        fetch_doc['bar'] = u'egg'
+        fetch_doc.save()
+
