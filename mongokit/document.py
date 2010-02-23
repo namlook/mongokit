@@ -540,7 +540,10 @@ class Document(SchemaDocument):
                     doc[key].validate()
                 # if we didn't index the embed obj yet, well, we do it
                 if new_path not in self._dbrefs:
-                    self._dbrefs[new_path] = deepcopy(doc[key])
+                    if doc[key]:
+                        self._dbrefs[new_path] = deepcopy(dict(doc[key]))
+                    else:
+                        self._dbrefs[new_path] = None
                 else:
                     # if the embed doc indexed was None but not the new embed one,
                     # we update the index
