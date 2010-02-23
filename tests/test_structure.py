@@ -31,10 +31,11 @@ from mongokit import *
 
 class StructureTestCase(unittest.TestCase):
     def setUp(self):
-        self.collection = Connection()['test']['mongokit']
+        self.connection = Connection()
+        self.col = self.connection['test']['mongokit']
         
     def tearDown(self):
-        Connection()['test'].drop_collection('mongokit')
+        self.connection['test'].drop_collection('mongokit')
 
     def test_no_structure(self):
         class MyDoc(SchemaDocument): pass
@@ -183,4 +184,32 @@ class StructureTestCase(unittest.TestCase):
         mydoc.foo.eggs = 4
         assert mydoc == {'foo':{'bar':None}, 'spam':None}, mydoc
         mydoc.validate()
+
+
+    def test_field_changed(self):
+        class MyDoc(Document):
+            structure = {
+                'foo':int,
+                'bar':unicode,
+            }
+        self.connection.register([MyDoc])
+        
+        doc = self.col.MyDoc()
+        doc['foo'] = 3
+        doc.save()
+
+        class MyDoc(Document):
+            structure = {
+                'foo':int,
+                'arf': unicode,
+            }
+        self.connection.register([MyDoc])
+        
+        fetched_doc = self.col.MyDoc.find_one()
+        self.assertRaises(StructureError, fetched_doc.validate)
+        fetched_doc['foo'] = 2
+        fetched_doc.save(validate=False)
+
+        fetched_doc = self.col.MyDoc.find_one()
+        self.assertRaises(StructureError, fetched_doc.validate)
 
