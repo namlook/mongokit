@@ -31,6 +31,8 @@ from mongokit import *
 from mongokit.auth import User
 from pymongo.objectid import ObjectId
 
+import logging
+logging.basicConfig()
 
 class AuthTestCase(unittest.TestCase):
     def setUp(self):

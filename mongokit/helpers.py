@@ -80,11 +80,17 @@ class DotedDict(dict):
     """
     Dot notation dictionnary access
     """
+    def __init__(self, doc=None, warning=False):
+        self._dot_notation_warning = warning
+        if doc is None: doc = {}
+        super(DotedDict, self).__init__(doc)
+
     def __setattr__(self, key, value):
         if key in self:
             self[key] = value
         else:
-           if not key.startswith('_') and key not in ['db', 'collection', 'connection', 'fs']:
+           if self._dot_notation_warning and not key.startswith('_') and\
+             key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
                log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
            dict.__setattr__(self, key, value) 
     def __getattr__(self, key):

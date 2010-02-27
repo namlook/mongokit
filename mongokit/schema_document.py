@@ -192,6 +192,7 @@ class SchemaDocument(dict):
 
     # If you want to use the dot notation, set this to True:
     use_dot_notation = False
+    dot_notation_warning = False
 
     authorized_types = [
       type(None),
@@ -283,7 +284,8 @@ class SchemaDocument(dict):
             else:
                 self[key] = value
         else:
-           if not key.startswith('_') and key not in ['db', 'collection', 'connection', 'fs']:
+           if self.dot_notation_warning and not key.startswith('_') and\
+             key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
                log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
            dict.__setattr__(self, key, value) 
 
@@ -703,7 +705,7 @@ class SchemaDocument(dict):
                         if self.i18n:
                             doc[key] = i18nDotedDict(doc.get(key, {}), self)
                         else:
-                            doc[key] = DotedDict(doc.get(key, {}))
+                            doc[key] = DotedDict(doc.get(key, {}), warning=self.dot_notation_warning)
                     else:
                         if callable(struct[key]):
                             doc[key] = struct[key]()
@@ -736,7 +738,7 @@ class SchemaDocument(dict):
                         if self.i18n:
                             doc[key] = i18nDotedDict(doc.get(key, {}), self)
                         else:
-                            doc[key] = DotedDict(doc.get(key, {}))
+                            doc[key] = DotedDict(doc.get(key, {}), warning=self.dot_notation_warning)
             #
             # if the value is a dict, we have a another structure to validate
             #
