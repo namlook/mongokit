@@ -29,14 +29,18 @@ from gridfs import GridFS
 from gridfs.grid_file import GridFile
 from pymongo.objectid import ObjectId
 
-from magic import Magic
+try:
+    from magic import Magic
+except ImportError:
+    Magic = None
 
 class FSContainer(object):
     def __init__(self, container_name, obj):
         self._container_name = container_name
         self._obj = obj
         self._fs = GridFS(self._obj.db)
-        self._magic = Magic(mime=True)
+        if Magic:
+            self._magic = Magic(mime=True)
 
     def __getitem__(self, key):
         f = self.open(key)
@@ -46,7 +50,7 @@ class FSContainer(object):
 
     def __setitem__(self, key, value):
         content_type = None
-        if value:
+        if value and Magic:
             content_type = self._magic.from_buffer(value)
         f = self.open(key, 'w')
         try:
@@ -100,7 +104,7 @@ class FS(object):
 
     def __setitem__(self, key, value):
         content_type = None
-        if value:
+        if value and Magic:
             content_type = self._magic.from_buffer(value)
         f = self.open(key, 'w')
         try:
