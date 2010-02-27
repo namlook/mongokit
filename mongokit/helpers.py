@@ -26,6 +26,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
+import logging
+log = logging.getLogger(__name__)
 
 def totimestamp(value):
     """
@@ -82,6 +84,8 @@ class DotedDict(dict):
         if key in self:
             self[key] = value
         else:
+           if not key.startswith('_') and key not in ['db', 'collection', 'connection', 'fs']:
+               log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
            dict.__setattr__(self, key, value) 
     def __getattr__(self, key):
         if key in self:

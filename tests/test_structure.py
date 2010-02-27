@@ -173,6 +173,8 @@ class StructureTestCase(unittest.TestCase):
                 "spam":int,
             }
 
+        import logging
+        logging.basicConfig()
         mydoc = MyDoc()
         mydoc.eggs = 4
         assert mydoc == {'foo':{'bar':None}, 'spam':None}

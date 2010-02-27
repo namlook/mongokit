@@ -283,6 +283,8 @@ class SchemaDocument(dict):
             else:
                 self[key] = value
         else:
+           if not key.startswith('_') and key not in ['db', 'collection', 'connection', 'fs']:
+               log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
            dict.__setattr__(self, key, value) 
 
     def __getattr__(self, key):
