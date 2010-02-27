@@ -27,25 +27,30 @@
 
 from gridfs import GridFS
 from gridfs.grid_file import GridFile
+from pymongo.objectid import ObjectId
+
+from magic import Magic
 
 class FSContainer(object):
     def __init__(self, container_name, obj):
         self._container_name = container_name
         self._obj = obj
         self._fs = GridFS(self._obj.db)
+        self._magic = Magic(mime=True)
 
     def __getitem__(self, key):
-        try:
-            f = GridFile({'metadata':{'name':key, 'container':self._container_name, 'doc_id':self._obj['_id']}}, self._obj.db, 'r', self._obj.collection.name)
-            content = f.read()
-            f.close()
-        except:
-            raise IOError('"%s" is not found in the database' % key)
+        f = self.open(key)
+        content = f.read()
+        f.close()
         return content
 
     def __setitem__(self, key, value):
-        f = GridFile({'metadata':{'name':key, 'container':self._container_name, 'doc_id':self._obj['_id']}}, self._obj.db, 'w', self._obj.collection.name)
+        content_type = None
+        if value:
+            content_type = self._magic.from_buffer(value)
+        f = self.open(key, 'w')
         try:
+            f.content_type = content_type
             f.write(value)
         except TypeError:
             raise TypeError("GridFS value mus be string not %s" % type(value))
@@ -53,7 +58,27 @@ class FSContainer(object):
             f.close()
 
     def __delitem__(self, key):
-        self._fs.remove({'metadata.doc_id':self._obj['_id'], 'metadata.container':self._container_name, 'metadata.name':key}, collection=self._obj.collection.name)
+        spec = {'metadata.doc_id':self._obj['_id'], 'metadata.container':self._container_name, 'metadata.name':key}
+        self._fs.remove(spec,collection=self._obj.collection.name)
+
+    def open(self, name, mode='r'):
+        search_spec = {'metadata.name':name, 'metadata.container': self._container_name, 'metadata.doc_id':self._obj['_id']}
+        if mode == 'r':
+            try:
+                return GridFile(search_spec, self._obj.db, 'r', self._obj.collection.name)
+            except IOError:
+                raise IOError('"%s" is not found in the database' % name)
+        else:
+            file = self._obj.collection.files.find_one(search_spec)
+            if file:
+                return GridFile({'_id':ObjectId(file['_id'])}, self._obj.db, 'w', self._obj.collection.name)
+            write_spec = {'metadata':{'name':name, 'container':self._container_name, 'doc_id':self._obj['_id']}}
+            return GridFile(write_spec, self._obj.db, 'w', self._obj.collection.name)
+
+    def list(self):
+        return ['%s/%s' % (i['metadata']['container'], i['metadata']['name'])\
+          for i in self._obj.collection.files.find(
+            {'metadata.container': self._container_name, 'metadata.doc_id': self._obj['_id']})]
 
     def __repr__(self):
         return "<%s '%s'>" % (self.__class__.__name__, self._container_name)
@@ -65,19 +90,21 @@ class FS(object):
             self.__dict__[container] = FSContainer(container, obj)
         self._obj = obj
         self._fs = GridFS(self._obj.db)
+        self._magic = Magic(mime=True)
 
     def __getitem__(self, key):
-        try:
-            f = GridFile({'metadata':{'name':key, 'doc_id':self._obj['_id']}}, self._obj.db, 'r', self._obj.collection.name)
-            content = f.read()
-            f.close()
-        except IOError:
-            raise IOError('"%s" is not found in the database' % key)
+        f = self.open(key)
+        content = f.read()
+        f.close()
         return content
 
     def __setitem__(self, key, value):
-        f = GridFile({'metadata':{'name':key, 'doc_id':self._obj['_id']}}, self._obj.db, 'w', self._obj.collection.name)
+        content_type = None
+        if value:
+            content_type = self._magic.from_buffer(value)
+        f = self.open(key, 'w')
         try:
+            f.content_type = content_type
             f.write(value)
         except TypeError:
             raise TypeError("GridFS value mus be string not %s" % type(value))
@@ -85,27 +112,43 @@ class FS(object):
             f.close()
 
     def __getattr__(self, key):
-        if key not in ['_gridfs', '_obj', '_fs', '_containers']:
+        if key not in ['_gridfs', '_obj', '_fs', '_containers', '_magic']:
             if key not in self._gridfs.get('containers', []) and key in self._gridfs.get('files', []):
                 return self[key]
         return super(FS, self).__getattribute__(key)
 
     def __setattr__(self, key, value):
-        if key not in ['_gridfs', '_obj', '_fs', '_containers']:
+        if key not in ['_gridfs', '_obj', '_fs', '_containers', '_magic']:
             if key not in self._gridfs.get('containers', []) and key in self._gridfs.get('files', []):
                 self[key] = value
         else:
             super(FS, self).__setattr__(key, value)
 
     def __delitem__(self, key):
-        self._fs.remove({'metadata.doc_id':self._obj['_id'], 'metadata.name':key}, collection=self._obj.collection.name)
+        self._fs.remove({'metadata.doc_id':self._obj['_id'],
+          'metadata.name':key}, collection=self._obj.collection.name)
 
     def __delattr__(self, key):
         del self[key]
 
     def open(self, name, mode='r'):
         assert name in self._gridfs.get('files', []), "%s is not declared in gridfs" % name
-        return GridFile({'metadata':{'name':name, 'doc_id':self._obj['_id']}}, self._obj.db, mode, self._obj.collection.name)
+        search_spec = {'metadata.name':name, 'metadata.doc_id':self._obj['_id']}
+        if mode == 'r':
+            try:
+                return GridFile(search_spec, self._obj.db, 'r', self._obj.collection.name)
+            except IOError:
+                raise IOError('"%s" is not found in the database' % name)
+        else:
+            file = self._obj.collection.files.find_one(search_spec)
+            if file:
+                return GridFile({'_id':ObjectId(file['_id'])}, self._obj.db, 'w', self._obj.collection.name)
+            write_spec = {'metadata':{'name':name, 'doc_id':self._obj['_id']}}
+            return GridFile(write_spec, self._obj.db, 'w', self._obj.collection.name)
+
+    def list(self):
+        return [i['metadata']['name'] for i in self._obj.collection.files.find(
+          {'metadata.doc_id': self._obj['_id']})]
 
     def __repr__(self):
         return "<%s of object '%s'>" % (self.__class__.__name__, self._obj['_id'])

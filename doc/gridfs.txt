@@ -67,7 +67,18 @@ You can read any attachment in a very simple way :
     You can add any image you want to the container "images":
 
     >>> doc.fs.images['image1.png'] = "..."
+    >>> doc.fs.images['image1.png']
+    '...'
     >>> doc.fs.images['image2.png'] = '...'
+
+    This is very usefull when you want of store a number of file but you don't
+    know their names.
+
+.. topic:: new in developpment version
+    
+    If you have python-magic installed (``sudo easy_install -U python-magic``),
+    the content-type of the file is automatically guessed. To access to it, you
+    have to use the "full way".
 
 The full way
 ------------
@@ -92,4 +103,26 @@ forget to close an opened file.
 >>> doc.fs.source
 'Hello World again !'
 
+.. topic:: new in developpment version
+
+    You can add any image you want to the container "images":
+
+    >>> f = doc.fs.images.open('image1.png', 'w')
+    >>> f.write('...')
+    >>> f.close()
+    >>> f = doc.fs.images.open('image1.png')
+    >>> f.read()
+    '...'
+    >>> f.close()
+
+
+.. topic:: new in developpment version
+    
+    You can get the content-type (mime type) of a file :
+
+    >>> f = doc.fs.open("source", 'w')
+    >>> f.write("Hello World again !")
+    >>> f.content_type
+    'text/plain; charset=us-ascii'
+    >>> f.close() 
 

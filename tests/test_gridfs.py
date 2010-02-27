@@ -63,8 +63,11 @@ class GridFSTestCase(unittest.TestCase):
         assert f.read() == "Hello World !"
         f.close()
         assert doc['title'] == u'Hello'
-        assert len(doc.fs.__dict__) == 3
 
+        f = doc.fs.open('source', 'r')
+        print f.content_type
+        print f.name
+        f.close()
         del doc.fs.source
 
         assertion = False
@@ -100,7 +103,6 @@ class GridFSTestCase(unittest.TestCase):
         f = doc.fs.open("source")
         assert f.read() == "Hello World Again !"
         f.close()
-        assert len(doc.fs.__dict__) == 3
 
     def test_gridfs_without_saving(self):
         class Doc(Document):
@@ -119,7 +121,6 @@ class GridFSTestCase(unittest.TestCase):
         assert assertion
         doc.save()
         doc.fs.source = 'Hello world !'
-        assert len(doc.fs.__dict__) == 3
 
     def test_gridfs_bad_type(self):
         class Doc(Document):
@@ -143,7 +144,6 @@ class GridFSTestCase(unittest.TestCase):
         except TypeError:
             assertion = True
         assert assertion
-        assert len(doc.fs.__dict__) == 3
 
     def test_gridfs_with_container(self):
         class Doc(Document):
@@ -157,12 +157,11 @@ class GridFSTestCase(unittest.TestCase):
 
         self.connection.register([Doc])
         doc = self.col.Doc()
-        print dir(doc.fs)
         doc['title'] = u'Hello'
         doc.save()
 
         doc.fs.source = "Hello World !"
-        assert doc.fs.source == u"Hello World !"
+        assert doc.fs.source == "Hello World !"
 
         assertion = False
         try:
@@ -174,12 +173,11 @@ class GridFSTestCase(unittest.TestCase):
         doc.fs.images['first.jpg'] = "My first image"
         doc.fs.images['second.jpg'] = "My second image"
 
-        assert doc.fs.images['first.jpg'] == 'My first image'
+        assert doc.fs.images['first.jpg'] == 'My first image', doc.fs.images['first.jpg']
         assert doc.fs.images['second.jpg'] == 'My second image'
 
         doc.fs.images['first.jpg'] = "My very first image"
-        assert doc.fs.images['first.jpg'] == 'My very first image'
-        print doc.fs.images
+        assert doc.fs.images['first.jpg'] == 'My very first image', doc.fs.images['first.jpg']
 
         del doc.fs.images['first.jpg']
         
@@ -189,4 +187,34 @@ class GridFSTestCase(unittest.TestCase):
         except IOError:
             assertion = True
         assert assertion
+
+    def test_gridfs_multiple_values(self):
+        class Doc(Document):
+            structure = {
+                'title':unicode,
+            }
+            gridfs = {'files': ['source']}
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        doc['title'] = u'Hello'
+        doc.save()
+
+        doc.fs.source = "Hello World !"
+        assert doc.fs.source == "Hello World !"
+        doc.fs.source = "1"
+        assert doc.fs.source == "1"
+        doc.fs.source = "Hello World !"
+        assert doc.fs.source == "Hello World !"
+
+        f = doc.fs.open('source', 'w')
+        f.write("Hello World !")
+        f.content_type = 'text/plain; charset=us-ascii'
+        f.close()
+        assert doc.fs.source == "Hello World !"
+        f = doc.fs.open('source', 'w')
+        f.write("1")
+        f.content_type = 'application/octet-stream'
+        f.close()
+        assert doc.fs.source == "1"
+
 
