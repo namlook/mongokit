@@ -451,7 +451,6 @@ This will allow you to control the behavior of all your objects by setting the R
 >>> class RootDocument(Document):
 ...     structure = {}
 ...     skip_validation = True
-...     use_dot_notation = True
 ...     use_autorefs = True
 
 >>> class MyDoc(RootDocument):
@@ -647,6 +646,13 @@ If you want to use the dot notation (ala json), you must set the
 >>> doc
 {'foo': {'bar': u'bla'}}
 
+Note that if a attribute is not in structure, the value will be added as attribute :
+
+>>> doc.arf = 3 # arf is not in structure
+>>> doc
+{'foo': {'bar': u'bla'}}
+
+If you want to be warned when a value is set as attribute, you can set the `dot_notation_warning` attribute as True.
 
 Embedding Documents as values
 =============================
