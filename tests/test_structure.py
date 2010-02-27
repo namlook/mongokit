@@ -217,9 +217,15 @@ class StructureTestCase(unittest.TestCase):
 
 
     def test_exception_bad_structure(self):
+        import datetime
         class MyDoc(SchemaDocument):
             structure = {
                 'topic': unicode,
                 'when': datetime.datetime.utcnow,
             }
-        mydoc = MyDoc()
+        try:
+            MyDoc()
+        except TypeError, e:
+            assert e.message.startswith("<built-in method utcnow of type object at ")
+            assert e.message.endswith("is not a type")
+

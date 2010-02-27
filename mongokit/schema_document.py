@@ -403,8 +403,11 @@ class SchemaDocument(dict):
                     elif (struct[key] not in self._authorized_types):
                         ok = False
                         for auth_type in self._authorized_types:
-                            if isinstance(struct[key], auth_type) or issubclass(struct[key], auth_type):
-                                ok = True
+                            try:
+                                if isinstance(struct[key], auth_type) or issubclass(struct[key], auth_type):
+                                    ok = True
+                            except TypeError:
+                                raise TypeError("%s is not a type" % struct[key])
                         if not ok:
                             raise StructureError(
                               "%s is not an authorized type" % struct[key])
