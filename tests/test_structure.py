@@ -215,3 +215,11 @@ class StructureTestCase(unittest.TestCase):
         fetched_doc = self.col.MyDoc.find_one()
         self.assertRaises(StructureError, fetched_doc.validate)
 
+
+    def test_exception_bad_structure(self):
+        class MyDoc(SchemaDocument):
+            structure = {
+                'topic': unicode,
+                'when': datetime.datetime.utcnow,
+            }
+        mydoc = MyDoc()
