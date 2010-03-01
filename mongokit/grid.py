@@ -94,7 +94,8 @@ class FS(object):
             self.__dict__[container] = FSContainer(container, obj)
         self._obj = obj
         self._fs = GridFS(self._obj.db)
-        self._magic = Magic(mime=True)
+        if Magic:
+            self._magic = Magic(mime=True)
 
     def __getitem__(self, key):
         f = self.open(key)
