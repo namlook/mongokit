@@ -37,7 +37,8 @@ class Connection(PymongoConnection):
     
     def register(self, obj_list):
         for obj in obj_list:
-            obj()._validate_descriptors()
+            if not obj.skip_validation:
+                obj()._validate_descriptors()
             CallableDocument = type(
               "Callable%s" % obj.__name__,
               (obj, CallableMixin), {"_obj_class":obj, "__repr__":object.__repr__})

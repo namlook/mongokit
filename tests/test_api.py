@@ -723,3 +723,16 @@ class ApiTestCase(unittest.TestCase):
         fetch_doc['bar'] = u'egg'
         fetch_doc.save()
 
+    def test_skip_validation_with_required_field(self):
+        class Task(Document):
+            structure = {
+                'extra' : unicode,
+            }
+            required_fields = ['extra']
+            skip_validation = True
+        self.connection.register([Task])
+        task = self.col.Task()
+        task['extra'] = u'foo'
+        task.validate()
+
+
