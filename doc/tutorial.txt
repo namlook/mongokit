@@ -470,6 +470,32 @@ Traceback (most recent call last):
 SchemaTypeError: foo must be an instance of int not unicode
 
 
+Quiet validation detection
+==========================
+
+.. topic:: new in developpment version
+
+    By default, when validation is on each error raises an Exception. Sometime, you just want to
+    collect errors in one place. This is possible by setting the `raise_validation_errors` to False.
+    At this moment, all errors are store in the `validation_errors` attribute:
+
+    >>> class MyDoc(Document):
+    ...     raise_validation_errors = False
+    ...     structure={
+    ...        "foo":set,
+    ...     }
+    >>> con.register([MyDoc])
+    >>> doc = tutorial.MyDoc()
+    >>> doc.validate()
+    >>> doc.validation_errors
+    {'foo': [StructureError("<type 'set'> is not an authorized type",), RequireFieldError('foo is required',)]}
+
+    `validation_errors` is a dictionnary which take the field name as key and the python exception as value.
+    Here foo has two issues : a structure one (`set` is not an authorized type) and is required.
+
+    >>> doc.validation_errors['foo'][0].message
+    "<type 'set'> is not an authorized type"
+
 Query
 =====
 

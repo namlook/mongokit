@@ -447,42 +447,51 @@ class Document(SchemaDocument):
         if self.indexes:
             for index in self.indexes:
                 if 'fields' not in index:
-                    raise BadIndexError("'fields' key must be specify in indexes")
+                    self._raise_exception(BadIndexError, None,
+                      "'fields' key must be specify in indexes")
                 for key, value in index.iteritems():
                     if key not in ['fields', 'unique', 'ttl']:
-                        raise BadIndexError("%s is unknown key for indexes" % key)
+                        self._raise_exception(BadIndexError, None, 
+                          "%s is unknown key for indexes" % key)
                     if key == "fields":
                         if isinstance(value, basestring):
                             if value not in self._namespaces and value not in STRUCTURE_KEYWORDS:
-                                raise ValueError("Error in indexes: can't"
-                                  " find %s in structure" % value )
+                                self._raise_exception(ValueError, None, 
+                                  "Error in indexes: can't find %s in structure" % value )
                         elif isinstance(value, tuple):
                             if len(value) != 2:
-                                raise BadIndexError("Error in indexes: a tuple must contain "
+                                self._raise_exception(BadIndexError, None, 
+                                  "Error in indexes: a tuple must contain "
                                   "only two value : the field name and the direction")
                             if not isinstance(value[1], int):
-                                raise BadIndexError("Error in %s, the direction must be int (got %s instead)" % (value[0], type(value[1])))
+                                self._raise_exception(BadIndexError, None,
+                                  "Error in %s, the direction must be int (got %s instead)" % (value[0], type(value[1])))
                             if not isinstance(value[0], basestring):
-                                raise BadIndexError("Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
+                                self._raise_exception(BadIndexError, None, 
+                                  "Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
                             if value[0] not in self._namespaces and value[0] not in STRUCTURE_KEYWORDS:
-                                raise ValueError("Error in indexes: can't find %s in structure" % value[0] )
+                                self._raise_exception(ValueError, None, 
+                                  "Error in indexes: can't find %s in structure" % value[0] )
                             if not value[1] in [1, -1]:
-                                raise BadIndexError("index direction must be 1 or -1. Got %s" % value[1])
+                                self._raise_exception(BadIndexError, None, 
+                                  "index direction must be 1 or -1. Got %s" % value[1])
                         elif isinstance(value, list):
                             for val in value:
                                 if isinstance(val, tuple):
                                     for field, direction in value:
                                         if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
-                                            raise ValueError("Error in indexes: can't"
-                                              " find %s in structure" % field )
+                                            self._raise_exception(ValueError, None, 
+                                              "Error in indexes: can't find %s in structure" % field )
                                         if not direction in [1, -1]:
-                                            raise BadIndexError("index direction must be 1 or -1. Got %s" % direction)
+                                            self._raise_exception(BadIndexError, None, 
+                                              "index direction must be 1 or -1. Got %s" % direction)
                                 else:
                                     if val not in self._namespaces and val not in STRUCTURE_KEYWORDS:
-                                        raise ValueError("Error in indexes: can't"
-                                          " find %s in structure" % val )
+                                        self._raise_exception(ValueError, None, 
+                                          "Error in indexes: can't find %s in structure" % val )
                         else:
-                            raise BadIndexError("fields must be a string, a tuple or a list of tuple (got %s instead)" % type(value))
+                            self._raise_exception(BadIndexError, None, 
+                              "fields must be a string, a tuple or a list of tuple (got %s instead)" % type(value))
                     elif key == "ttl":
                         assert isinstance(value, int)
                     else:
@@ -532,7 +541,7 @@ class Document(SchemaDocument):
                     doc._process_custom_type('python', doc, doc.structure)
                 # be sure that we have an instance of MongoDocument
                 if not isinstance(doc[key], struct[key]._doc) and doc[key] is not None:
-                    raise SchemaTypeError(
+                    self._raise_exception(SchemaTypeError, new_path, 
                       "%s must be an instance of %s not %s" % (
                         new_path, struct[key]._doc.__name__, type(doc[key]).__name__))
                 # validate the embed doc
@@ -577,7 +586,7 @@ class Document(SchemaDocument):
                     l_objs = []
                     for no, obj in enumerate(doc[key]):
                         if not isinstance(obj, struct[key][0]._doc) and obj is not None:
-                            raise SchemaTypeError(
+                            self._raise_exception(SchemaTypeError, new_path,
                               "%s must be an instance of Document not %s" % (
                                 new_path, type(obj).__name__))
                         full_new_path = "%s.%s" % (new_path, no)

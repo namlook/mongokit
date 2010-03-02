@@ -187,6 +187,7 @@ class SchemaDocument(dict):
     default_values = {}
     validators = {}
     i18n = []
+    raise_validation_errors = True
 
     skip_validation = False
 
@@ -220,6 +221,8 @@ class SchemaDocument(dict):
         self._current_lang = lang
         self._fallback_lang = fallback_lang
         # init
+        if not self.raise_validation_errors:
+            self.validation_errors = {}
         if gen_auth_types:
             self._authorized_types = self.authorized_types[:]
         if doc is None:
@@ -352,16 +355,16 @@ class SchemaDocument(dict):
     def _validate_descriptors(self):
         for dv in self.default_values:
             if dv not in self._namespaces:
-                raise ValueError(
+                self._raise_exception(ValueError, dv,
                   "Error in default_values: can't find %s in structure" % dv )
         for required in self.required_fields:
             if required not in self._namespaces:
-                raise ValueError( "Error in required_fields: "
-                  "can't find %s in structure" % required )
+                self._raise_exception(ValueError, required,
+                  "Error in required_fields: can't find %s in structure" % required )
         for validator in self.validators:
             if validator not in self._namespaces:
-                raise ValueError("Error in validators: can't"
-                  "find %s in structure" % validator )
+                self._raise_exception(ValueError, validator,
+                  "Error in validators: can't find %s in structure" % validator )
 
     def _validate_structure(self):
         """
@@ -371,25 +374,30 @@ class SchemaDocument(dict):
         def __validate_structure( struct):
             if type(struct) is type:
                 if struct not in self._authorized_types:
-                    raise StructureError("%s is not an authorized_types" % struct)
+                    self._raise_exception(StructureError, None,
+                      "%s is not an authorized_types" % struct)
                 elif struct is None:
-                    raise StructureError("%s can't be None" % struct)
+                    self._raise_exception(StructureError, None, 
+                      "%s can't be None" % struct)
             elif isinstance(struct, dict):
                 for key in struct:
                     if isinstance(key, basestring):
-                        if "." in key: raise BadKeyError(
-                          "%s must not contain '.'" % key)
-                        if key.startswith('$'): raise BadKeyError(
-                          "%s must not start with '$'" % key)
+                        if "." in key: 
+                            self._raise_exception(BadKeyError, key,
+                              "%s must not contain '.'" % key)
+                        if key.startswith('$'): 
+                            self._raise_exception(BadKeyError, key,
+                              "%s must not start with '$'" % key)
                     elif type(key) is type:
                         if not key in self._authorized_types:
-                            raise AuthorizedTypeError(
+                            self._raise_exception(AuthorizedTypeError, key,
                               "%s is not an authorized type" % key)
                     else:
-                        raise StructureError(
+                        self._raise_exception(StructureError, key,
                           "%s must be a basestring or a type" % key)
                     if struct[key] is None:
-                        raise StructureError("%s can't be None in structure declaration" % key)
+                        self._raise_exception(StructureError, key,
+                          "%s can't be None in structure declaration" % key)
                     elif isinstance(struct[key], dict):
                         __validate_structure(struct[key])
                     elif isinstance(struct[key], list):
@@ -411,7 +419,7 @@ class SchemaDocument(dict):
                             except TypeError:
                                 raise TypeError("%s is not a type" % struct[key])
                         if not ok:
-                            raise StructureError(
+                            self._raise_exception(StructureError, key,
                               "%s is not an authorized type" % struct[key])
             elif isinstance(struct, list):
                 for item in struct:
@@ -423,12 +431,12 @@ class SchemaDocument(dict):
                 if isinstance(struct, IS):
                     for operand in struct:
                         if type(operand) not in self._authorized_types:
-                            raise StructureError(
+                            self._raise_exception(StructureError, struct, 
                               "%s in %s is not an authorized type" % (operand, struct))
                 else:
                     for operand in struct:
                         if operand not in self._authorized_types: 
-                            raise StructureError(
+                            self._raise_exception(StructureError, struct,
                               "%s in %s is not an authorized type" % (operand, struct))
             else:
                 ok = False
@@ -436,17 +444,28 @@ class SchemaDocument(dict):
                     if isinstance(struct, auth_type):
                         ok = True
                 if not ok:
-                    raise StructureError("%s is not an authorized_types" % struct)
+                    self._raise_exception(StructureError, struct, 
+                      "%s is not an authorized_types" % struct)
         #################
         if self.structure is None:
-            raise StructureError("self.structure must not be None")
+            self._raise_exception(StructureError, None,
+              "self.structure must not be None")
         if not isinstance(self.structure, dict):
-            raise StructureError("self.structure must be a dict instance")
+            self._raise_exception(StructureError, None, 
+              "self.structure must be a dict instance")
         if self.required_fields:
             if len(self.required_fields) != len(set(self.required_fields)):
-                raise DuplicateRequiredError(
+                self._raise_exception(DuplicateRequiredError, None,
                   "duplicate required_fields : %s" % self.required_fields)
         __validate_structure(self.structure)
+
+    def _raise_exception(self, exception, field, message):
+        if self.raise_validation_errors:
+            raise exception(message)
+        else:
+            if not field in self.validation_errors:
+                self.validation_errors[field] = []
+            self.validation_errors[field].append(exception(message))
                     
     def _validate_doc(self, doc, struct, path = ""):
         """
@@ -455,30 +474,29 @@ class SchemaDocument(dict):
         if type(struct) is type or struct is None:
             if struct is None:
                 if type(doc) not in self._authorized_types:
-                    raise AuthorizedTypeError(
+                    self._raise_exception( AuthorizedTypeError, type(doc).__name__,
                       "%s is not an authorized types" % type(doc).__name__)
             elif not isinstance(doc, struct) and doc is not None:
-                raise SchemaTypeError(
+                self._raise_exception( SchemaTypeError, path,
                   "%s must be an instance of %s not %s" % (
                     path, struct.__name__, type(doc).__name__))
         elif isinstance(struct, CustomType):
             if not isinstance(doc, struct.mongo_type) and doc is not None:
-                raise SchemaTypeError(
+                self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of %s not %s" % (
                     path, struct.mongo_type.__name__, type(doc).__name__))
         elif isinstance(struct, SchemaOperator):
             if not struct.validate(doc) and doc is not None:
                 if isinstance(struct, IS):
-                    raise SchemaTypeError(
-                      "%s must be in %s not %s" % (
-                        path, struct._operands, doc))
+                    self._raise_exception(SchemaTypeError, path,
+                      "%s must be in %s not %s" % (path, struct._operands, doc))
                 else:
-                    raise SchemaTypeError(
+                    self._raise_exception(SchemaTypeError, path,
                       "%s must be an instance of %s not %s" % (
                         path, struct, type(doc).__name__))
         elif isinstance(struct, dict):
             if not isinstance(doc, type(struct)):
-                raise SchemaTypeError(
+                self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of %s not %s" %(
                     path, type(struct).__name__, type(doc).__name__))
             if len(doc) != len(struct):
@@ -486,13 +504,13 @@ class SchemaDocument(dict):
                 if struct_doc_diff:
                     for field in struct_doc_diff:
                         if type(field) is not type:
-                            raise StructureError(
+                            self._raise_exception(StructureError, None,
                               "missed fields : %s" % struct_doc_diff )
                 else:
                     struct_struct_diff = list(set(doc).difference(set(struct)))
                     bad_fields = [s for s in struct_struct_diff if s not in STRUCTURE_KEYWORDS]
                     if bad_fields:
-                        raise StructureError( 
+                        self._raise_exception(StructureError, None,
                           "unknown fields : %s" % bad_fields)
             for key in struct:
                 if type(key) is type:
@@ -503,7 +521,7 @@ class SchemaDocument(dict):
                 if new_key.split('.')[-1].startswith("$"):
                     for doc_key in doc:
                         if not isinstance(doc_key, key):
-                            raise SchemaTypeError(
+                            self._raise_exception(SchemaTypeError, path,
                               "key of %s must be an instance of %s not %s" % (
                                 path, key.__name__, type(doc_key).__name__))
                         self._validate_doc(doc[doc_key], struct[key], new_path)
@@ -511,7 +529,7 @@ class SchemaDocument(dict):
                     self._validate_doc(doc[key], struct[key],  new_path)
         elif isinstance(struct, list):
             if not isinstance(doc, list):
-                raise SchemaTypeError(
+                self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of list not %s" % (
                     path, type(doc).__name__))
             if not len(struct):
@@ -522,11 +540,11 @@ class SchemaDocument(dict):
                 self._validate_doc(obj, struct, path)
         elif isinstance(struct, tuple):
             if not isinstance(doc, list):
-                raise SchemaTypeError(
+                self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of list not %s" % (
                     path, type(doc).__name__))
             if len(doc) != len(struct):
-                raise SchemaTypeError(
+                self._raise_exception(SchemaTypeError, path,
                   "%s must have %s items not %s" % (
                     path, len(struct), len(doc)))
             for i in range(len(struct)):
@@ -541,7 +559,7 @@ class SchemaDocument(dict):
                     validators = [validators]
                 for validator in validators:
                     if not validator(doted_doc[key]):
-                        raise ValidationError(
+                        self._raise_exception(ValidationError, key,
                           "%s does not pass the validator %s" % (
                             key, validator.__name__))
 
@@ -562,7 +580,7 @@ class SchemaDocument(dict):
                 if target == 'bson':
                     if struct[key].python_type is not None:
                         if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
-                            raise SchemaTypeError(
+                            self._raise_exception(SchemaTypeError, new_path,
                               "%s must be an instance of %s not %s" % (
                                 new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
                     doc[key] = struct[key].to_bson(doc[key])
@@ -590,7 +608,7 @@ class SchemaDocument(dict):
                             if target=='bson':
                                 if struct[key][0].python_type is not None:
                                     if not isinstance(obj, struct[key][0].python_type) and obj is not None:
-                                        raise SchemaTypeError(
+                                        self._raise_exception(SchemaTypeError, new_path,
                                           "%s must be an instance of %s not %s" % (
                                             new_path, struct[key][0].python_type.__name__, type(obj).__name__))
                                 obj = struct[key][0].to_bson(obj)
@@ -625,7 +643,7 @@ class SchemaDocument(dict):
                         new_value = new_value[:]
                     if isinstance(struct[key], CustomType):
                         if not isinstance(new_value, struct[key].python_type):
-                            raise DefaultFieldTypeError(
+                            self._raise_exception(DefaultFieldTypeError, new_path,
                               "%s must be an instance of %s not %s" % (
                                 new_path, struct[key].python_type.__name__, type(new_value).__name__))
                     doc[key] = new_value
@@ -661,7 +679,7 @@ class SchemaDocument(dict):
                             new_value = new_value[:]
                         if isinstance(struct[key][0], CustomType):
                             if not isinstance(new_value, struct[key][0].python_type):
-                                raise DefaultFieldTypeError(
+                                self._raise_exception(DefaultFieldTypeError, new_path,
                                   "%s must be an instance of %s not %s" % (
                                     new_path, struct[key][0].python_type.__name__, type(new_value).__name__))
                         doc[key].append(new_value)  
@@ -688,11 +706,11 @@ class SchemaDocument(dict):
         doted_struct = DotCollapsedDict(self.structure)
         for req in self.required_fields:
             if doted_doc.get(req) is None and doted_struct.get(req) is not dict:
-                raise RequireFieldError("%s is required" % req)
+                self._raise_exception(RequireFieldError, req, "%s is required" % req)
             elif doted_doc.get(req) == []:
-                raise RequireFieldError("%s is required" % req)
+                self._raise_exception(RequireFieldError, req, "%s is required" % req)
             elif doted_doc.get(req) == {}:
-                raise RequireFieldError("%s is required" % req)
+                self._raise_exception(RequireFieldError, req, "%s is required" % req)
 
     def __generate_skeleton(self, doc, struct, path = ""):
         for key in struct:
@@ -750,7 +768,8 @@ class SchemaDocument(dict):
         doted_dict = DotCollapsedDict(self.structure)
         for field in self.i18n:
             if field not in doted_dict:
-                raise ValidationError("%s not found in structure" % field)
+                self._raise_exception(ValidationError, field, 
+                  "%s not found in structure" % field)
             if not isinstance(doted_dict[field], i18n):
                 doted_dict[field] = i18n(
                   field_type = doted_dict[field],
