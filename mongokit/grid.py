@@ -79,10 +79,13 @@ class FSContainer(object):
             write_spec = {'metadata':{'name':name, 'container':self._container_name, 'doc_id':self._obj['_id']}}
             return GridFile(write_spec, self._obj.db, 'w', self._obj.collection.name)
 
+    def __iter__(self):
+        for metafile in self._obj.collection.files.find(
+          {'metadata.container': self._container_name, 'metadata.doc_id': self._obj['_id']}):
+          yield metafile['metadata']['name']
+
     def list(self):
-        return ['%s/%s' % (i['metadata']['container'], i['metadata']['name'])\
-          for i in self._obj.collection.files.find(
-            {'metadata.container': self._container_name, 'metadata.doc_id': self._obj['_id']})]
+        return [i for i in self]
 
     def __repr__(self):
         return "<%s '%s'>" % (self.__class__.__name__, self._container_name)
@@ -151,9 +154,15 @@ class FS(object):
             write_spec = {'metadata':{'name':name, 'doc_id':self._obj['_id']}}
             return GridFile(write_spec, self._obj.db, 'w', self._obj.collection.name)
 
+    def __iter__(self):
+        for i in self._obj.collection.files.find({'metadata.doc_id': self._obj['_id']}):
+            container, name = i['metadata'].get('container'), i['metadata']['name']
+            if container:
+                name = "%s/%s" % (container, name)
+            yield name
+
     def list(self):
-        return [i['metadata']['name'] for i in self._obj.collection.files.find(
-          {'metadata.doc_id': self._obj['_id']})]
+        return [i for i in self]
 
     def __repr__(self):
         return "<%s of object '%s'>" % (self.__class__.__name__, self._obj['_id'])

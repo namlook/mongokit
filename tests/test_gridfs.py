@@ -217,4 +217,23 @@ class GridFSTestCase(unittest.TestCase):
         f.close()
         assert doc.fs.source == "1"
 
+    def test_gridfs_list(self):
+        class Doc(Document):
+            structure = {
+                'title':unicode,
+            }
+            gridfs = {'files': ['foo', 'bla'], 'containers':['attachments']}
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        doc['title'] = u'Hello'
+        doc.save()
+
+        doc.fs.foo = "Hello World !"
+        doc.fs.bla = "Salut !"
+        assert doc.fs.list() == ['foo', 'bla'], doc.fs.list()
+        doc.fs.attachments['eggs.txt'] = "Ola !"
+        doc.fs.attachments['spam.txt'] = "Saluton !"
+        assert doc.fs.attachments.list() == [u'eggs.txt', u'spam.txt']
+        assert doc.fs.list() == [u'foo', u'bla', u'attachments/eggs.txt', u'attachments/spam.txt']
+
 

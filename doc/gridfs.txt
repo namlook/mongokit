@@ -80,6 +80,27 @@ You can read any attachment in a very simple way :
     the content-type of the file is automatically guessed. To access to it, you
     have to use the "full way".
 
+.. topic:: new in developpment version
+
+    If you do not know stored file names, you can list them with `list`:
+
+    >>> doc.fs.list()
+    ['source', 'template']
+    
+    or by iteration :
+
+    >>> for file_name in doc.fs:
+    ...     print file_name
+
+    You can list a container as well. In this case, the container name is shown : ``container_name/file_name``
+
+    >>> doc.fs.images.list():
+    ['images/image1.png', 'images/image2.png']
+
+    >>> for file_name in doc.fs.images:
+    ...     print file_name
+
+
 The full way
 ------------
 
