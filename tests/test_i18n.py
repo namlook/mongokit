@@ -85,7 +85,6 @@ class i18nTestCase(unittest.TestCase):
         doc = self.col.Doc()
         doc['title']['en'] = 3
         doc['title']['fr'] = 10
-        print doc, doc.structure
         doc.save()
 
         assert doc == {'_id':doc['_id'], 'title':{'en': 3, 'fr': 10}}, doc
@@ -166,7 +165,6 @@ class i18nTestCase(unittest.TestCase):
         doc.title.foo = u'Salut'
         doc.title.bar.bla = 3
         doc.title.egg = 4
-        print doc
         doc.set_lang('en')
         doc.title.foo = u"Hello"
         doc.title.bar.bla = 2
@@ -302,6 +300,23 @@ class i18nTestCase(unittest.TestCase):
         self.connection.register([Doc])
         doc = self.col.Doc()
         assert doc == {'foo': {'bar': {'fr': u'ble', 'en': u'bla'}}, 'title': {'fr': 4, 'en': 3}}
+        doc.save()
+
+    def test_unicode_type_as_key(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":{
+                    "bar": unicode,
+                    "bla":{
+                        unicode:[unicode],
+                    },
+                },
+            }
+            i18n = ['foo.bar']
+        self.connection.register([MyDoc])
+        doc = self.col.MyDoc()
+        doc['foo']['bla'][u'spam'] = [u'eggs']
+        doc['foo']['bar']['fr'] = u'bla'
         doc.save()
 
 

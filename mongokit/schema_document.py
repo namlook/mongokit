@@ -38,7 +38,7 @@ from helpers import *
 __all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict', 'DotExpandedDict', 'DotCollapsedDict',
   'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
   'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
-  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n', 'i18nError']
+  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n', 'i18nError', 'EvalException']
 
 class CustomType(object): 
     mongo_type = None

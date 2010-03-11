@@ -28,11 +28,19 @@
 import unittest
 
 from mongokit import *
+from mongokit.schema_document import DotExpandedDict
 
 class HelpersTestCase(unittest.TestCase):
         
     def test_DotExpandedDict(self):
-        from mongokit.schema_document import DotExpandedDict
+        d = DotExpandedDict({'a.$int.c.d': 3, 'a.$int.e': 5, '_id': u'user', 'a.g': 2, 'f': 6})
+        assert d == {'_id': u'user', 'a':{int:{'c':{'d':3}, 'e':5}, "g":2}, 'f':6}, d
+
+        d = DotExpandedDict({'foo.bla.$unicode': [unicode], 'foo.bar': {}})
+        assert d == {'foo': {'bar': {}, 'bla': {unicode: [unicode]}}}, d
+
+        self.assertRaises(EvalException, DotExpandedDict, {'foo.bla.$arf': [unicode], 'foo.bar': {}})
+
         d = DotExpandedDict({'person.1.firstname': ['Simon'],
           'person.1.lastname': ['Willison'],
           'person.2.firstname': ['Adrian'], 
@@ -47,6 +55,10 @@ class HelpersTestCase(unittest.TestCase):
         dic = {'foo':{}}
         d = DotCollapsedDict(dic)
         assert d == {'foo':{}}, d
+
+        dic = {'bar':{'foo':{}}}
+        d = DotCollapsedDict(dic)
+        assert d == {'bar.foo':{}}, d
 
         dic = {'_id': u'user', 'a':3, 'e':5, "g":2, 'f':6}
         d = DotCollapsedDict(dic)
@@ -64,8 +76,29 @@ class HelpersTestCase(unittest.TestCase):
         d = DotCollapsedDict(dic)
         assert d == {'a.d': 3, 'a.e.h': 0, 'a.b': 1, 'f': 6, 'a.e.g': 5, '_id': u'user'}, d
 
+
+    def test_DotCollapsedDict_with_remove_under_type(self):
+        dic = {'_id': u'user', 'a':{int:{'c':{'d':3}, 'e':5}, "g":2}, 'f':6}
+        d = DotCollapsedDict(dic, remove_under_type=True)
+        assert d == {'a': {}, '_id': u'user', 'f': 6}, d
+
+        dic = {'bla':{'foo':{unicode:{"bla":int}}, 'bar':unicode}}
+        d = DotCollapsedDict(dic, remove_under_type=True)
+        assert d == {'bla.foo':{}, 'bla.bar':unicode}, d
+
+        dic = {'bla':{'foo':{unicode:[unicode]}, 'bar':"egg"}}
+        d = DotCollapsedDict(dic, remove_under_type=True)
+        assert d == {'bla.foo':{}, 'bla.bar':"egg"}, d
+
+    def test_DotCollapsedDict_with_type(self):
         dic = {'_id': u'user', 'a':{int:{'c':{'d':3}, 'e':5}, "g":2}, 'f':6}
         d = DotCollapsedDict(dic)
         assert d == {'a.$int.c.d': 3, 'a.$int.e': 5, '_id': u'user', 'a.g': 2, 'f': 6}, d
 
+        dic = {'bla':{'foo':{unicode:{"bla":3}}, 'bar':'egg'}}
+        d = DotCollapsedDict(dic)
+        assert d == {'bla.foo.$unicode.bla': 3, 'bla.bar': "egg"}, d
 
+        dic = {'bla':{'foo':{unicode:['egg']}, 'bar':"egg"}}
+        d = DotCollapsedDict(dic)
+        assert d == {'bla.foo.$unicode': ['egg'], 'bla.bar': 'egg'}, d

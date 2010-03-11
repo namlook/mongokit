@@ -122,6 +122,37 @@ class StructureTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError,  mydoc.validate)
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{3:4}}
         mydoc.validate()
+ 
+    def test_big_nested_structure_mongo_document(self):
+        class MyDoc(Document):
+            structure = {
+                "1":{
+                    "2":{
+                        "3":{
+                            "4":{
+                                "5":{
+                                    "6":{
+                                        "7":int,
+                                        "8":{
+                                            unicode:{unicode:int}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        assert mydoc._namespaces == ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$unicode', '1.2.3.4.5.6.7']
+        mydoc['1']['2']['3']['4']['5']['6']['7'] = 8
+        mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{"3":u"bla"}}
+        self.assertRaises(SchemaTypeError,  mydoc.validate)
+        mydoc['1']['2']['3']['4']['5']['6']['8'] = {"9":{"3":10}}
+        self.assertRaises(SchemaTypeError,  mydoc.validate)
+        mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{u"3":4}}
+        mydoc.validate()
             
     def test_dot_notation(self):
         class MyDoc(SchemaDocument):

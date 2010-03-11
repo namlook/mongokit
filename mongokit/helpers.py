@@ -100,6 +100,8 @@ class DotedDict(dict):
         obj = dict(self)
         return deepcopy(obj, memo)
 
+class EvalException(Exception):pass
+
 class DotExpandedDict(dict): 
     """ 
     A special dictionary constructor that takes a dictionary in which the keys 
@@ -127,22 +129,40 @@ class DotExpandedDict(dict):
             current = self 
             bits = k.split('.') 
             for bit in bits[:-1]: 
+               if bit.startswith('$'):
+                   try:
+                        bit = eval(bit[1:])
+                   except:
+                        raise EvalException('%s is not a python type' % bit[:1])
                current = current.setdefault(bit, {}) 
             # Now assign value to current position 
+            last_bit = bits[-1]
+            if last_bit.startswith('$'):
+               try:
+                    last_bit = eval(last_bit[1:])
+               except:
+                    raise EvalException('%s is not a python type' % last_bit)
             try: 
-                current[bits[-1]] = v 
+                current[last_bit] = v 
             except TypeError: # Special-case if current isn't a dict. 
-                current = {bits[-1]: v} 
+                current = {last_bit: v} 
 
 class DotCollapsedDict(dict):
     """
-    A special dictionary constructor that take a dict and which provides
-    a DotExpandedDict.
+    A special dictionary constructor that take a dict and provides
+    a dot collapsed dict:
 
-    >>> DotExpandedDict({'a':{'b':{'c':{'d':3}, 'e':5}, "g":2}, 'f':6})
+    >>> DotCollapsedDict({'a':{'b':{'c':{'d':3}, 'e':5}, "g":2}, 'f':6})
     {'a.b.c.d': 3, 'a.b.e': 5, 'a.g': 2, 'f': 6}
+
+    >>> DotCollapsedDict({'bla':{'foo':{unicode:{"bla":3}}, 'bar':'egg'}})
+    {'bla.foo.$unicode.bla': 3, 'bla.bar': "egg"}
+
+    >>> DotCollapsedDict({'bla':{'foo':{unicode:{"bla":3}}, 'bar':'egg'}}, remove_under_type=True)
+    {'bla.foo':{}, 'bla.bar':unicode}
     """
-    def __init__(self, passed_dict):
+    def __init__(self, passed_dict, remove_under_type=False):
+        self._remove_under_type = remove_under_type
         assert isinstance(passed_dict, dict), "you must pass a dict instance"
         final_dict = {}
         self._make_dotation(passed_dict, final_dict)
@@ -157,7 +177,17 @@ class DotCollapsedDict(dict):
                     _key = "%s.%s" % (key, k)
                 else:
                     _key = k
-                self._make_dotation(v, final_dict, _key)
+                if self._remove_under_type:
+                    if [1 for i in v.keys() if isinstance(i, type)]:
+                        v = v.__class__()
+                        if not key:
+                            final_dict[k] = v
+                        else:
+                            final_dict["%s.%s" % (key, k)] = v
+                    else:
+                        self._make_dotation(v, final_dict, _key)
+                else: 
+                    self._make_dotation(v, final_dict, _key)
             else:
                 if not key:
                     final_dict[k] = v
