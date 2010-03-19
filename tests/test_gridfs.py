@@ -94,6 +94,7 @@ class GridFSTestCase(unittest.TestCase):
         except IOError:
             assertion = True
         assert assertion
+        assert str(doc.fs) == "<FS of object '%s'>" % doc['_id'], str(doc.fs)
         doc.fs.source = "Hello World !"
         assert doc.fs.source == "Hello World !"
         f = doc.fs.open('source', 'w')
