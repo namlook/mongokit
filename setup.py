@@ -38,7 +38,7 @@ import codecs
 
 setup(
     name = 'mongokit',
-    version = '0.5.3',
+    version = '0.5.4',
 
     description = 'Python mongodb kit',
     long_description = codecs.open('README', "r", "utf-8").read(),
@@ -64,6 +64,7 @@ setup(
     install_requires = [
         'pymongo>=1.3',
         'anyjson>=0.2.2',
+        'python-magic>=0.1',
     ]
 
 )

@@ -112,6 +112,23 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v0.5.4
+------
+ * A `lot of features in GridFS`_ with api change
+ * fix bug in autorefs
+ * fix #37 - find_random crash if no collection is empty 
+ * fix #38 - OverflowError in doc.to_json_type() when used over the datetime 2038 
+ * fix #41 - Warnings when setting attributes before enabling use_dot_notation 
+ * fix #40 - Better exception on bad structure. Thanks to peterbe for the patch 
+ * fix #43 - Add ability to `collect errors`_ in one place instead of throwing exceptions while validating 
+ * add `_dot_notation_warning` attribute. If false, disable all dot notation related warning 
+ * add patch to enable data load from map/reduce. See http://groups.google.com/group/mongokit/msg/34efea4c178573d7 
+ * fix bug spotted by Sebastien Estienne - error when using skip_validation with required_fields. Thanks 
+ * fix issue while using {unicode:unicode} in structure and i18n at the same time 
+
+.. _`lot of features in GridFS` : http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html
+.. _`collect errors` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#quiet-validation-detection
+
 v0.5.3
 ------
  * fix default_value issue when using with dict and list (see #35)

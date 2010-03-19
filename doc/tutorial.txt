@@ -473,7 +473,7 @@ SchemaTypeError: foo must be an instance of int not unicode
 Quiet validation detection
 ==========================
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.4
 
     By default, when validation is on each error raises an Exception. Sometime, you just want to
     collect errors in one place. This is possible by setting the `raise_validation_errors` to False.

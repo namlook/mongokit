@@ -14,7 +14,7 @@ GridFS  named as  `source` and `template`:
 ...        }
 ...        gridfs = ['source', 'template']
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.4
     
     The gridfs API as slightly changed. You might want to be able
     to add file in gridfs on the fly without knowing their name.
@@ -62,7 +62,7 @@ You can read any attachment in a very simple way :
 >>> doc.fs.source
 'Hello World !'
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.4
 
     You can add any image you want to the container "images":
 
@@ -74,13 +74,13 @@ You can read any attachment in a very simple way :
     This is very usefull when you want of store a number of file but you don't
     know their names.
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.4
     
     If you have python-magic installed (``sudo easy_install -U python-magic``),
     the content-type of the file is automatically guessed. To access to it, you
     have to use the "full way".
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.4
 
     If you do not know stored file names, you can list them with `list`:
 
@@ -124,7 +124,7 @@ forget to close an opened file.
 >>> doc.fs.source
 'Hello World again !'
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.4
 
     You can add any image you want to the container "images":
 
@@ -137,7 +137,7 @@ forget to close an opened file.
     >>> f.close()
 
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.4
     
     You can get the content-type (mime type) of a file :
 
