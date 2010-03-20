@@ -94,20 +94,19 @@ Mongokit is documented and well tested with 100% of code coverage::
     -----------------------------------------------------------
     mongokit                         11     11   100%   
     mongokit.auth                    43     43   100%   
-    mongokit.collection              31     31   100%   
-    mongokit.connection              14     14   100%   
+    mongokit.collection              32     32   100%   
+    mongokit.connection              15     15   100%   
     mongokit.database                 7      7   100%   
-    mongokit.document               400    400   100%   
+    mongokit.document               381    381   100%   
     mongokit.generators              32     32   100%   
-    mongokit.helpers                 69     69   100%   
+    mongokit.grid                   114    114   100%   
+    mongokit.helpers                 96     96   100%   
     mongokit.mongo_exceptions         8      8   100%   
     mongokit.operators               47     47   100%   
-    mongokit.schema_document        462    462   100%   
+    mongokit.schema_document        479    479   100%   
     mongokit.versioned_document      45     45   100%   
     -----------------------------------------------------------
-    TOTAL                          1169   1169   100%   
-    ----------------------------------------------------------------------
-    Ran 193 tests in 58.080s
+    TOTAL                          1310   1310   100%   
 
 Change Log
 ==========
