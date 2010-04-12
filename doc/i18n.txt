@@ -19,8 +19,8 @@ Let's create a simple i18n BlogPost:
     ...     i18n = ['title', 'body']
     ...     use_dot_notation = True
 
-Declare your structure as usual and add an `i18n` attribute. The `i18n`
-attribute will tel Mongokit that the fields `title` and `body` will be in
+Declare your structure as usual and add an `i18n` descriptor. The `i18n`
+descriptor will tel Mongokit that the fields `title` and `body` will be in
 multiple langage.
 
 Note of the use of `use_dot_notation` attribute. Using i18n with dot notation is more fun

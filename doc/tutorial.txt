@@ -253,6 +253,86 @@ It's possible to add more type in authorized_types:
 >>> mydoc['foo'] = 'bla'
 >>> mydoc.validate()
 
+Descriptors
+===========
+
+In the MongoKIT philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are describes outside the structure.
+Descriptors can be combined and can apply the same field.
+
+required
+--------
+
+This descriptor describes the required fiels::
+
+    class MyDoc(Document):
+        structure = {
+            "bar":unicode,
+            "foo":{
+                "spam":unicode,
+                "eggs":int,
+            }
+        }
+        required = ['bar', 'foo.spam']
+
+If you want to reach nested fields, just use the dot notation.
+
+default_values
+--------------
+
+This descriptors allow to specify a default value at the creation of the document::
+
+   class MyDoc(Document):
+        structure = {
+            "bar":unicode,
+            "foo":{
+                "spam":unicode,
+                "eggs":int,
+            }
+        }
+        default_values = {'bar':u'hello', 'foo.eggs':4}
+
+Not that the default value must be a valid type (here unicode)
+
+validators
+----------
+
+This descriptor bring a validation layer to a field. It take a function which returns a `False` if the validation fails, `True` otherwise::
+
+    import re
+    def email_validator(value):
+       email = re.compile(r"(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)",re.IGNORECASE)
+       return bool(email.match(value))
+
+    class MyDoc(Document):
+       structure = {
+          "email": unicode,
+          "foo": {
+            "eggs":int,
+          }
+       }
+       validators = {
+           "email": email_validator,
+           "foo.eggs": lambda x: x > 10
+       }
+
+i18n
+----
+
+This descriptor will tell MongoKIT that a field has multiple translation. Please see the `i18n section`_ for more details::
+
+   class MyDoc(Document):
+        structure = {
+            "bar":unicode,
+            "foo":{
+                "spam":unicode,
+                "eggs":int,
+            }
+        }
+        i18n = ['bar', 'foo.eggs']
+
+
+.. _`i18n section`: i18n.html
+
 Adding complex validation
 =========================
 
