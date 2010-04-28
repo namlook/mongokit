@@ -59,6 +59,16 @@ class CustomType(object):
         """convert type to a mongodb type"""
         raise NotImplementedError
 
+    def validate(self, value, path):
+        """
+        This method is optionnal. It add a validation layer.
+        This method is been called in Document.validate()
+
+        value: the value of the field
+        path: the field name (ie, 'foo' or 'foo.bar' if nested)
+        """
+        pass
+
 
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = []
