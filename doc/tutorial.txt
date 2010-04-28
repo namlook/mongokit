@@ -2,6 +2,12 @@
 MongoKit Tutorial
 =================
 
+First of all, Mongokit relied heavily on pymongo. As such, all pymongo API is
+exposed. If you don't find what you want in the Mongokit document, please take
+a look at pymongo_ 's one.  All the pymongo API is exposed via connection,
+database and collection.
+
+.. _pymongo : http://api.mongodb.org/python/
 
 Simple Example
 ==============
@@ -757,6 +763,19 @@ find_random()
 -------------
 
 `find_random()` will return a random document from the database. This method doesn't take other arguments.
+
+Updating data
+=============
+
+As it would be very hard an ineficient Mongokit doesn't provide validation on
+update. Instead, it expose all the pymongo API. So if you need to update data,
+use the API of pymongo :
+
+>>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
+
+For more information, please look at the `pymongo documentation`_.
+
+.. _`pymongo documentation` : http://api.mongodb.org/python/
 
 
 Changing collection dynamically
