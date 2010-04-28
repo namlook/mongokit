@@ -319,7 +319,7 @@ This descriptor bring a validation layer to a field. It take a function which re
            "foo.eggs": lambda x: x > 10
        }
 
-You can add custom message in your validators: 
+You can add custom message in your validators::
 
     def email_validator(value):
        email = re.compile(r"(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)",re.IGNORECASE)
@@ -328,7 +328,7 @@ You can add custom message in your validators:
 
 Note that it is a good thing to add one more "%s" in message. This will be use to describes the failing field name.
 
-You can also pass params in your validator. This is how you can do :
+You can also pass params in your validator. This is how you can dor::
 
         class MinLengthValidator(object):
             def __init__(self, min_length):
