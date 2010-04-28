@@ -404,6 +404,37 @@ class DescriptorsTestCase(unittest.TestCase):
         mydoc["foo"] = u"http://google.com"
         mydoc.validate()
 
+    def test_validators_with_custom_validation_message(self):
+        class MinLengthValidator(object):
+            def __init__(self, min_length):
+                self.min_length = min_length
+
+            def __call__(self, value):
+                if len(value) >= self.min_length:
+                    return True
+                else:
+                    raise Exception('%s must be atleast ' + str(self.min_length) + ' characters long.')
+
+        class Client(Document):
+            structure = {
+              'first_name': unicode
+            }
+            validators = {
+              'first_name': MinLengthValidator(2)
+            }
+        self.connection.register([Client])
+        client = self.col.Client()
+        client['first_name'] = u'Georges'
+        client.validate()
+        client['first_name'] = u'J'
+        self.assertRaises(Exception, client.validate)
+        message = ""
+        try:
+            client.validate()
+        except Exception, e:
+            message = unicode(e)
+        assert message == "first_name must be atleast 2 characters long.", message
+
     def test_complexe_validation(self):
         class MyDoc(Document):
             structure = {

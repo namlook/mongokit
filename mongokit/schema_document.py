@@ -558,10 +558,14 @@ class SchemaDocument(dict):
                 if not hasattr(validators, "__iter__"):
                     validators = [validators]
                 for validator in validators:
-                    if not validator(doted_doc[key]):
+                    try:
+                        if not validator(doted_doc[key]):
+                            raise ValidationError(
+                              "%s does not pass the validator " + validator.__name__)
+                    except Exception, e:
                         self._raise_exception(ValidationError, key,
-                          "%s does not pass the validator %s" % (
-                            key, validator.__name__))
+                          unicode(e) % (key)
+                        )
 
     def _process_custom_type(self, target, doc, struct, path = "", root_path=""):
         for key in struct:
