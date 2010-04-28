@@ -624,7 +624,10 @@ class R(CustomType):
     def to_python(self, value):
         if value is not None:
             if not isinstance(value, pymongo.dbref.DBRef):
-                value = pymongo.dbref.DBRef(database=value.get('$db'), collection=value['$ref'], id=value['$id'])
+                if '$ref' not in value:
+                    value = value.get_dbref()
+                else:
+                    value = pymongo.dbref.DBRef(database=value.get('$db'), collection=value['$ref'], id=value['$id'])
             if value.database:
                 database = value.database
             else:

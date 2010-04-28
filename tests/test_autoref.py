@@ -763,3 +763,64 @@ class AutoRefTestCase(unittest.TestCase):
         sbis= self.col.database[SessionDocument.collection_name].SessionDocument.find_one({"token": u"asddadsad" })
         assert sbis == s, sbis
 
+
+    def test_nested_autorefs(self):
+        class DocA(Document):
+            structure = {
+                'name':unicode,
+              }
+            use_autorefs = True
+
+        class DocB(Document):
+            structure = {
+                'name': unicode,
+                'doca' : DocA,
+            }
+            use_autorefs = True
+
+        class DocC(Document):
+            structure = {
+                'name': unicode,
+                'docb': DocB,
+                'doca': DocA,
+            }
+            use_autorefs = True
+
+        class DocD(Document):
+            structure = {
+                'name': unicode,
+                'docc': DocC,
+            }
+            use_autorefs = True
+        self.connection.register([DocA, DocB, DocC, DocD])
+
+        doca = self.col.DocA()
+        doca['name'] = u'Test A'
+        doca.save()
+
+        docb = self.col.DocB()
+        docb['name'] = u'Test B'
+        docb['doca'] = doca
+        docb.save()
+
+        docc = self.col.DocC()
+        docc['name'] = u'Test C'
+        docc['docb'] = docb
+        docc['doca'] = doca
+        docc.save()
+
+        docd = self.col.DocD()
+        docd['name'] = u'Test D'
+        docd['docc'] = docc
+        docd.save()
+
+        doca = self.col.DocA.find_one({'name': 'Test A'})
+        docb = self.col.DocB.find_one({'name': 'Test B'})
+        docc = self.col.DocC.find_one({'name': 'Test C'})
+        docd = self.col.DocD.find_one({'name': 'Test D'})
+
+
+
+
+
+
