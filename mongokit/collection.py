@@ -31,16 +31,22 @@ from mongo_exceptions import MultipleResultsFound
 class Collection(PymongoCollection):
 
     def __init__(self, *args, **kwargs):
+        self._documents = {}
+        self._collections = {}
         super(Collection, self).__init__(*args, **kwargs)
         self._registered_documents = self.database.connection._registered_documents
 
     def __getattr__(self, key):
         if key in self._registered_documents:
-            obj = self._registered_documents[key](collection=self)
-            obj.generate_index()
-            return obj
+            if not key in self._documents:
+                self._documents[key] = self._registered_documents[key](collection=self)
+                self._documents[key].generate_index()
+            return self._documents[key]
         else:
-            return Collection(self.database,  u"%s.%s" % (self.name, key))
+            newkey = u"%s.%s" % (self.name, key)
+            if not newkey in self._collections:
+                self._collections[newkey] = Collection(self.database, newkey)
+            return self._collections[newkey]
 
     def __call__(self, *args, **kwargs):
         if "." not in self.__name:

@@ -200,6 +200,7 @@ class TypesTestCase(unittest.TestCase):
 
         class MyDoc(Document):
             structure = {'foo':[unicode]}
+        self.connection.register([])
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
         mydoc['foo'] = (u'bla', u'bli', u'blu', u'bly')

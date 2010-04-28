@@ -32,10 +32,20 @@ from document import CallableMixin
 class Connection(PymongoConnection):
 
     def __init__(self, *args, **kwargs):
-        super(Connection, self).__init__(*args, **kwargs)
+        self._databases = {} 
         self._registered_documents = {}
+        super(Connection, self).__init__(*args, **kwargs)
     
     def register(self, obj_list):
+        # cleanup
+        for dbname, db in self._databases.items():
+            for colname, col in db._collections.items():
+                for docname, doc in col._documents.items():
+                    del col._documents[docname]
+                for obj_name in [obj.__name__ for obj in obj_list]:
+                    if obj_name in col._registered_documents:
+                        del col._registered_documents[obj_name]
+        # register
         for obj in obj_list:
             if not obj.skip_validation:
                 obj()._validate_descriptors()
@@ -43,8 +53,11 @@ class Connection(PymongoConnection):
               "Callable%s" % obj.__name__,
               (obj, CallableMixin), {"_obj_class":obj, "__repr__":object.__repr__})
             self._registered_documents[obj.__name__] = CallableDocument
+                    
 
     def __getattr__(self, key):
-        return Database(self, key)
+        if key not in self._databases:
+            self._databases[key] = Database(self, key)
+        return self._databases[key]
 
 
