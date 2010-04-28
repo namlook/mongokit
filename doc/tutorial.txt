@@ -76,6 +76,10 @@ each time.
 
 >>> bp.save()
 
+You can disable or force the validation with the `validate` argument in the `save` method:
+
+>>> bp.save(validate=False)
+
 The structure
 =============
 
