@@ -103,6 +103,14 @@ Field types are simple python type.  By default, MongoKit allow the following ty
       CustomType,
     ]
 
+The `set()` python type is not supported in pymongo. If you want to use it anyway please use the `Set()` custom type::
+
+    class MyDoc(Document):
+        structure = {
+            "tags": Set(unicode),
+        }
+
+
 validate keys
 -------------
 
@@ -505,6 +513,8 @@ A CustomType object must implement two methods and one attribute:
     to fit the correct authorized type before beeing saved in the db.
  - `to_python(self, value)`: this method will convert the value
     taken from the db into a python object
+ - `validate(self, value, path)`: this method is optionnal and will add a
+    validation layer. Please, see the `Set()` CustomType code for more example.
  -  You must specify a `mongo_type` property in the `CustomType` class. this
     will describes the type of the value stored in the mongodb.  
  -  If you want more validation, you can specify a `python_type` property which is
@@ -514,13 +524,21 @@ A CustomType object must implement two methods and one attribute:
 >>> class CustomDate(CustomType):
 ...     mongo_type = unicode
 ...     python_type = datetime.datetime # optional, just for more validation
+...
 ...     def to_bson(self, value):
 ...         """convert type to a mongodb type"""
 ...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+...
 ...     def to_python(self, value):
 ...         """convert type to a python object"""
 ...         if value is not None:
 ...            return datetime.datetime.strptime(value, '%y-%m-%d')
+...
+...     def validate(self, value, path):
+...         """OPTIONAL : useful to add a validation layer"""
+...         if value is not None:
+...             pass # ... do something here
+...             
 
 Now, let's create a Document:
 

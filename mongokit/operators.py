@@ -89,3 +89,20 @@ class IS(SchemaOperator):
                     return True
         return False
 
+class _SET(SchemaOperator):
+    repr = 'set'
+
+    def __init__(self, *args):
+        super(SET, self).__init__(*args)
+
+    def __str__(self):
+        return "set(%s)" % ','.join(self._operands)
+
+    def validate(self, value):
+        assert isinstance(value, list)
+        for op in self._operands:
+            if isinstance(value, op):
+                pass
+        if value in self._operands:
+            pass
+                

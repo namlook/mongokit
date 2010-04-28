@@ -454,3 +454,20 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
 
 
+    def test_set_type(self):
+        from mongokit import Set
+        class MyDoc(Document):
+            structure = {
+                "tags":Set(int),
+            }
+
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc['tags'] = set(["1","1","2","3","4"])
+        self.assertRaises(ValueError, mydoc.validate)
+        mydoc['tags'] = set([1,1,2,3,4])
+        mydoc.save()
+
+        doc = self.col.MyDoc.find_one()
+        assert doc['tags'] == set([1,2,3,4]), doc['tags']
+

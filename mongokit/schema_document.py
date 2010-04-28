@@ -38,7 +38,8 @@ from helpers import *
 __all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict', 'DotExpandedDict', 'DotCollapsedDict',
   'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
   'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
-  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n', 'i18nError', 'EvalException']
+  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n', 'i18nError', 'EvalException',
+  'Set']
 
 class CustomType(object): 
     mongo_type = None
@@ -421,10 +422,7 @@ class SchemaDocument(dict):
                         if not ok:
                             self._raise_exception(StructureError, key,
                               "%s is not an authorized type" % struct[key])
-            elif isinstance(struct, list):
-                for item in struct:
-                    __validate_structure(item)
-            elif isinstance(struct, tuple):
+            elif isinstance(struct, list) or isinstance(struct, tuple):
                 for item in struct:
                     __validate_structure(item)
             elif isinstance(struct, SchemaOperator):
@@ -485,6 +483,7 @@ class SchemaDocument(dict):
                 self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of %s not %s" % (
                     path, struct.mongo_type.__name__, type(doc).__name__))
+            struct.validate(doc, path=path)
         elif isinstance(struct, SchemaOperator):
             if not struct.validate(doc) and doc is not None:
                 if isinstance(struct, IS):
@@ -822,3 +821,23 @@ class i18n(dict, CustomType):
                 i18n_dict[i['lang']] = i['value']
             return i18n_dict
 
+class Set(CustomType):
+    """ SET custom type to handle python set() type """
+    mongo_type = list
+    python_type = set
+    def __init__(self, structure_type=None):
+        super(Set, self).__init__()
+        self._structure_type = structure_type
+    def to_bson(self, value):
+        if value is not None:
+            return list(value)
+    def to_python(self, value):
+        if value is not None:
+            return set(value)
+    def validate(self, value, path):
+        if value is not None and self._structure_type is not None:
+            for val in value:
+                if not isinstance(val, self._structure_type):
+                    raise ValueError('%s must be an instance of %s not %s' %
+                      (path, self._structure_type.__name__, type(val).__name__))
+        
