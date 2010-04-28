@@ -93,6 +93,7 @@ class Document(SchemaDocument):
         # collection
         self.collection = collection
         if collection:
+            self.generate_index()
             self.db = collection.database
             self.connection = self.db.connection
             # indexing all embed doc if any (autorefs feature)

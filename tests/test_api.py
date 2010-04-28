@@ -735,4 +735,13 @@ class ApiTestCase(unittest.TestCase):
         task['extra'] = u'foo'
         task.validate()
 
+    def test_passing_collection_in_argument(self):
+        class MyDoc(Document):
+            structure = {
+                'foo':unicode
+            }
+        doc = MyDoc(collection=self.col)
+        doc['foo'] = u'bla'
+        doc.save()
+        
 
