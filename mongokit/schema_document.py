@@ -528,7 +528,7 @@ class SchemaDocument(dict):
                 else:
                     self._validate_doc(doc[key], struct[key],  new_path)
         elif isinstance(struct, list):
-            if not isinstance(doc, list):
+            if not isinstance(doc, list) and not isinstance(doc, tuple):
                 self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of list not %s" % (
                     path, type(doc).__name__))
@@ -539,7 +539,7 @@ class SchemaDocument(dict):
             for obj in doc:
                 self._validate_doc(obj, struct, path)
         elif isinstance(struct, tuple):
-            if not isinstance(doc, list):
+            if not isinstance(doc, list) and not isinstance(doc, tuple):
                 self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of list not %s" % (
                     path, type(doc).__name__))

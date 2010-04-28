@@ -28,8 +28,17 @@
 import unittest
 
 from mongokit.schema_document import *
+from mongokit import Document, Connection
 
 class TypesTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.connection = Connection()
+        self.col = self.connection['test']['mongokit']
+        
+    def tearDown(self):
+        self.connection.drop_database('test')
+
 
     def test_authorized_type(self):
        for auth_type in SchemaDocument.authorized_types:
@@ -176,6 +185,27 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo']['bar'][0] = 50
         mydoc.validate()
+
+    def test_saving_tuple(self):
+        class MyDoc(Document):
+            structure = { 'foo': (int, unicode, float) }
+        self.connection.register([MyDoc])
+
+        mydoc = self.col.MyDoc()
+        assert mydoc == {'foo': [None, None, None]}, mydoc
+        mydoc['foo'] = (1, u'a', 1.1) # note that this will be converted to list
+        assert mydoc == {'foo': (1, u'a', 1.1000000000000001)}, mydoc
+        mydoc.save()
+        mydoc = self.col.find_one()
+
+        class MyDoc(Document):
+            structure = {'foo':[unicode]}
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = (u'bla', u'bli', u'blu', u'bly')
+        mydoc.save()
+        mydoc = self.col.get_from_id(mydoc['_id'])
+
 
     def test_nested_typed_tuple_in_list(self):
         class MyDoc(SchemaDocument):
@@ -421,4 +451,5 @@ class TypesTestCase(unittest.TestCase):
         mydoc = MyDoc()
         mydoc['foo'] = CustomFloat(4)
         mydoc.validate()
+
 
