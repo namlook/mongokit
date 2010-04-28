@@ -319,6 +319,35 @@ This descriptor bring a validation layer to a field. It take a function which re
            "foo.eggs": lambda x: x > 10
        }
 
+You can add custom message in your validators: 
+
+    def email_validator(value):
+       email = re.compile(r"(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)",re.IGNORECASE)
+       if not bool(email.match(value))
+          raise ValidatorError("%s is not a valid email")
+
+Note that it is a good thing to add one more "%s" in message. This will be use to describes the failing field name.
+
+You can also pass params in your validator. This is how you can do :
+
+        class MinLengthValidator(object):
+            def __init__(self, min_length):
+                self.min_length = min_length
+
+            def __call__(self, value):
+                if len(value) >= self.min_length:
+                    return True
+                else:
+                    raise Exception('%s must be atleast ' + str(self.min_length) + ' characters long.')
+
+        class Client(Document):
+            structure = {
+              'first_name': unicode
+            }
+            validators = { 'first_name': MinLengthValidator(2) }
+
+In this example, `first_name` must contain at least 2 characters.
+
 i18n
 ----
 
