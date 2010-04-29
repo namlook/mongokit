@@ -745,3 +745,34 @@ class ApiTestCase(unittest.TestCase):
         doc.save()
         
 
+    def test_reload(self):
+        class MyDoc(Document):
+            structure = {
+                'foo':{
+                    'bar':unicode,
+                    'eggs':{'spam':int},
+                },
+                'bla':unicode
+            }
+        self.connection.register([MyDoc])
+
+        doc = self.col.MyDoc()
+        self.assertRaises(KeyError, doc.reload)
+        doc['_id'] = 3
+        doc['foo']['bar'] = u'mybar'
+        doc['foo']['eggs']['spam'] = 4
+        doc['bla'] = u'ble'
+        self.assertRaises(OperationFailure, doc.reload)
+        doc.save()
+
+        doc['bla'] = u'bli'
+
+        self.col.update({'_id':doc['_id']}, {'$set':{'foo.eggs.spam':2}})
+
+        doc.reload()
+        assert doc == {'_id': 3, 'foo': {u'eggs': {u'spam': 2}, u'bar': u'mybar'}, 'bla': u'ble'}
+
+
+
+
+

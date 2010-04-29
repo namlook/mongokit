@@ -254,7 +254,25 @@ class Document(SchemaDocument):
         elif count == 1:
             return bson_obj.next()
 
+    def reload(self):
+        """
+        allow to refresh the document, so after using update(), it could reload
+        its value from the database.
+        
+        Be carrefull : reload() will erase all unsaved values.
+
+        If no _id is set in the document, a KeyError is raised.
+        """
+        doc = self.collection.get_from_id(self['_id'])
+        if doc is None:
+            raise OperationFailure('Can not reload an unsaved document.'
+              ' %s is not found in the database' % self['_id'])
+        self.update(self.collection.get_from_id(self['_id']))
+
     def get_dbref(self):
+        """
+        return a pymongo DBRef instance related to the document
+        """
         assert '_id' in self, "You must specify an '_id' for using this method"
         return pymongo.dbref.DBRef(database=self.db.name, collection=self.collection.name, id=self['_id'])
 

@@ -5,7 +5,8 @@ MongoKit Tutorial
 First of all, Mongokit relied heavily on pymongo. As such, all pymongo API is
 exposed. If you don't find what you want in the Mongokit document, please take
 a look at pymongo_ 's one.  All the pymongo API is exposed via connection,
-database and collection.
+database and collection so Connection, Database and Collection are wrapper
+around pymongo objects.
 
 .. _pymongo : http://api.mongodb.org/python/
 
@@ -776,6 +777,42 @@ use the API of pymongo :
 For more information, please look at the `pymongo documentation`_.
 
 .. _`pymongo documentation` : http://api.mongodb.org/python/
+
+reload()
+--------
+
+After updading a document, it would be interresting to refresh the document to
+match changes from the database. To do that, use the `reload()` method.
+
+Two thing you should know before using this method :
+
+ * If no _id is set in the document, a KeyError is raised.
+ * If a document is not saved into the database, the OperationFailure exception is raised.
+ * using `reload()` will erase all unsaved values !
+
+Example::
+
+    >>> class MyDoc(Document):
+    ...    structure = {
+    ...        'foo':{
+    ...            'eggs':{'spam':int},
+    ...        },
+    ...        'bla':unicode
+    ...    }
+    >>> self.connection.register([MyDoc])
+
+    >>> doc = self.col.MyDoc()
+    # calling reload() here will raise a KeyError
+    >>> doc['_id'] = 3
+    >>> doc['foo']['eggs']['spam'] = 4
+    >>> doc['bla'] = u'ble'
+    # calling reload() here will raise an OperationFailure
+    >>> doc.save()
+    >>> doc['bla'] = u'bli' # we don't save this change this will be erased
+    >>> self.col.update({'_id':doc['_id']}, {'$set':{'foo.eggs.spam':2}})
+    >>> doc.reload()
+    >>> doc
+    {'_id': 3, 'foo': {u'eggs': {u'spam': 2}}, 'bla': u'ble'}
 
 
 Changing collection dynamically
