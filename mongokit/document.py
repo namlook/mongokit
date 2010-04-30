@@ -315,7 +315,6 @@ class Document(SchemaDocument):
             # check version
             last_version_doc = self.collection.get_from_id(self['_id'])
             if not '_version' in last_version_doc:
-                print "bla bla"
                 db_version = 1
                 current_version = 1
             else:

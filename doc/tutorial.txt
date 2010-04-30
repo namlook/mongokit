@@ -275,7 +275,7 @@ It's possible to add more type in authorized_types:
 Descriptors
 ===========
 
-In the MongoKIT philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are describes outside the structure.
+In the MongoKit philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are describes outside the structure.
 Descriptors can be combined and can apply the same field.
 
 required
