@@ -744,7 +744,6 @@ class ApiTestCase(unittest.TestCase):
         doc['foo'] = u'bla'
         doc.save()
         
-
     def test_reload(self):
         class MyDoc(Document):
             structure = {
@@ -771,8 +770,4 @@ class ApiTestCase(unittest.TestCase):
 
         doc.reload()
         assert doc == {'_id': 3, 'foo': {u'eggs': {u'spam': 2}, u'bar': u'mybar'}, 'bla': u'ble'}
-
-
-
-
 

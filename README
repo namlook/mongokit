@@ -111,6 +111,21 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v0.5.5
+------
+ * fix 54 - Add reload method. Please read the documentation_
+ * put generate_index into Document.__init__. This is usefull for instanciating Document like this : MyDoc(collection=mycol)
+ * fix #44 - add  `set type support`_ + add validate() method to CustomType_
+ * fix #52 - Custom validation error messages (thanks to @cjoudrey for the patch)
+ * fix #50 - need optimizations in connection (won 20s on the benchmark_)
+ * fix #48 - Tuple assignment does not convert to list
+ * fix 49 - KeyError when using deep nested autorefs
+
+.. _documentation : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#reload
+.. _`set type support` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#the-structure
+.. _CustomType : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types
+.. _benchmark : http://groups.google.com/group/mongodb-user/browse_thread/thread/77c91641858e1e20/ea71afc4de24f2e9
+
 v0.5.4
 ------
  * A `lot of features in GridFS`_ with api change
