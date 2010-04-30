@@ -28,7 +28,7 @@
 from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties
-from mongokit.helpers import totimestamp, fromtimestamp
+from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict
 from mongokit.grid import *
 import pymongo
 from pymongo.bson import BSON
@@ -39,7 +39,7 @@ from uuid import uuid4
 import logging
 import datetime
 
-STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision']
+STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +70,7 @@ class Document(SchemaDocument):
 
     __metaclass__ = DocumentProperties
 
+    atomic_save = False
     skip_validation = False
     use_autorefs = False
     force_autorefs_current_db = False
@@ -90,6 +91,7 @@ class Document(SchemaDocument):
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
         super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang, fallback_lang=fallback_lang)
+        self._old_footprint = None
         # collection
         self.collection = collection
         if collection:
@@ -157,7 +159,9 @@ class Document(SchemaDocument):
         """
         bson_obj = self.collection.find_one(*args, **kwargs)
         if bson_obj:
-            return self._obj_class(doc=bson_obj, collection=self.collection)
+            doc = self._obj_class(doc=bson_obj, collection=self.collection)
+            doc._old_footprint = DotCollapsedDict(doc).items()
+            return doc
 
     def one(self, *args, **kwargs):
         """
@@ -177,7 +181,9 @@ class Document(SchemaDocument):
             except StopIteration:
                 doc = None
             if doc:
-                return self._obj_class(doc=doc, collection=self.collection)
+                doc = self._obj_class(doc=doc, collection=self.collection)
+                doc._old_footprint = DotCollapsedDict(doc).items()
+                return doc
 
     def find_random(self):
         """
@@ -187,10 +193,12 @@ class Document(SchemaDocument):
         max = self.collection.count()
         if max:
             num = random.randint(0, max-1)
-            return self._obj_class(
+            doc =  self._obj_class(
               self.collection.find().skip(num).next(),
               collection=self.collection
             )
+            doc._old_footprint = DotCollapsedDict(doc).items()
+            return doc
 
     def get_from_id(self, id):
         """
@@ -268,6 +276,7 @@ class Document(SchemaDocument):
             raise OperationFailure('Can not reload an unsaved document.'
               ' %s is not found in the database' % self['_id'])
         self.update(self.collection.get_from_id(self['_id']))
+        self._old_footprint = DotCollapsedDict(self).items()
 
     def get_dbref(self):
         """
@@ -298,8 +307,46 @@ class Document(SchemaDocument):
             if uuid:
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         self._process_custom_type('bson', self, self.structure)
-        id = self.collection.save(self, safe=safe, *args, **kwargs)
+        if self._old_footprint is None or not self.atomic_save:
+            if self.atomic_save:
+                self['_version'] = 1
+            id = self.collection.save(self, safe=safe, *args, **kwargs)
+        else:
+            # check version
+            last_version_doc = self.collection.get_from_id(self['_id'])
+            if not '_version' in last_version_doc:
+                print "bla bla"
+                db_version = 1
+                current_version = 1
+            else:
+                db_version = last_version_doc['_version']
+                if '_version' not in self:
+                    current_version = db_version
+                else:
+                    current_version = self['_version']
+            if current_version !=  db_version:
+                raise ConflictError('document version must be %s, found %s instead' % (
+                  db_version, current_version))
+            # prepare query
+            footprint = []
+            for field_name, value in DotCollapsedDict(self).iteritems():
+                if isinstance(value, list):
+                    value = tuple(value)
+                footprint.append((field_name, value))
+            old_footprint = []
+            for field_name, value in dict(self._old_footprint).iteritems():
+                if isinstance(value, list):
+                    value = tuple(value)
+                old_footprint.append((field_name, value))
+            difference = set(footprint).difference(set(old_footprint))
+            if difference:
+                update_query = {'$set':dict(difference)}
+                update_query['$inc'] = {'_version':1}
+                # update
+                self.collection.update({'_id':self['_id']}, update_query, safe=safe)
+                self.reload()
         self._process_custom_type('python', self, self.structure)
+        self._old_footprint = DotCollapsedDict(self).items()
 
     def delete(self):
         """

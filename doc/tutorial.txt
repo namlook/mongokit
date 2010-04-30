@@ -768,11 +768,92 @@ find_random()
 Updating data
 =============
 
-As it would be very hard an ineficient Mongokit doesn't provide validation on
-update. Instead, it expose all the pymongo API. So if you need to update data,
-use the API of pymongo :
+Update a document
+-----------------
 
->>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
+.. topic:: new in developpment version
+
+    Mongokit now support atomic update out of the box !
+
+    Update in Mongokit is as easy than saving an object. Just modify your
+    document, save it and that's it ! Your document is updated using atomic
+    update. To do that, your document must contain the field `_version`. Here's an
+    complete example of how updating work with Mongokit::
+
+        >>> class MyDoc(Document):
+        ...    structure = {
+        ...        'foo':{
+        ...            'bar':[unicode],
+        ...            'eggs':{'spam':int},
+        ...        },
+        ...        'bla':unicode
+        ...    }
+        ...    atomic_save = True # enable atomic saving
+
+        NOTE : as atomic saving required to modify documents by adding a new
+        field (`_version`), you have to explicitly tell mongokit that you wan't
+        to use this new feature by setting the attribute `atomic_save` as True.
+
+        >>> self.connection.register([MyDoc])
+
+        >>> doc = self.col.MyDoc()
+        >>> doc['_id'] = 3
+        >>> doc['foo']['bar'] = [u'mybar', u'yourbar']
+        >>> doc['foo']['eggs']['spam'] = 4
+        >>> doc['bla'] = u'ble'
+        >>> doc.save() 
+
+        Here, the field `_version` is automatically added :
+
+        >>> doc['_version']
+        1
+
+        Let's modify our doc :
+
+        >>> doc['foo']['eggs']['spam'] = 2
+        >>> doc['bla']= u'bli'
+
+        But now, someone is getting our doc and update it before we could save it:
+
+        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
+        >>> new_doc['bla'] = u'blo'
+        >>> new_doc.save()
+        
+        The doc `_version` is incremented :
+
+        >>> new_doc['_version']
+        2
+
+        So, if we try to save our doc, this would raise a ConflictError as the
+        data has changed. What we have to do is reload the document and try to
+        save it again :
+
+        >>> try:
+        ...    doc.save()
+        ... except ConflictError,e:
+        ...    doc.reload()
+        ...    doc['foo']['eggs']['spam'] = 2
+        ...    doc['bla']= u'bli'
+        ...    doc.save()
+
+        our doc version is now 3:
+
+        >>> doc['_version']
+        3
+
+        If we get a fresh instance of your doc, we can check that all is correct :
+
+        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
+        >>> new_doc
+        {'foo': {'eggs': {'spam': 2}, 'bar': [u'mybar', u'yourbar']}, 'bla': u'bli', '_version': 3, '_id': 3}
+
+
+Bulk update
+-----------
+
+Bulk update is not yet supported (but will be soon). For now, as Mongokit expose all the pymongo API, you can use the pymongo's update on collection:
+
+    >>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
 
 For more information, please look at the `pymongo documentation`_.
 
@@ -781,7 +862,7 @@ For more information, please look at the `pymongo documentation`_.
 reload()
 --------
 
-After updading a document, it would be interresting to refresh the document to
+If a document was update in another thread, it would be interresting to refresh the document to
 match changes from the database. To do that, use the `reload()` method.
 
 Two thing you should know before using this method :

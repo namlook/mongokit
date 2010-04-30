@@ -25,6 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from mongokit.helpers import DotCollapsedDict
 
 class MongoDocumentCursor(object):
     def __init__(self, cursor, cls):
@@ -56,7 +57,9 @@ class MongoDocumentCursor(object):
 
     def next(self, *args, **kwargs):
         data = self._cursor.next(*args, **kwargs)
-        return self._class_object(data, collection=self._collection)
+        doc = self._class_object(data, collection=self._collection)
+        doc._old_footprint = DotCollapsedDict(doc).items()
+        return doc
 
     def skip(self, *args, **kwargs):
         return self.__class__(self._cursor.skip(*args, **kwargs), self._class_object)
@@ -69,5 +72,7 @@ class MongoDocumentCursor(object):
 
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
-            yield self._class_object(obj, collection=self._collection)
+            doc = self._class_object(obj, collection=self._collection)
+            doc._old_footprint = DotCollapsedDict(doc).items()
+            yield doc
 
