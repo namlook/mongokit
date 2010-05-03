@@ -42,6 +42,7 @@ __all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict', 'Dot
   'Set']
 
 class CustomType(object): 
+    init_type = None
     mongo_type = None
     python_type = None
     
@@ -746,6 +747,11 @@ class SchemaDocument(dict):
                     doc[key] = {}
                 elif isinstance(struct[key], list):
                     doc[key] = type(struct[key])()
+                elif isinstance(struct[key], CustomType):
+                    if struct[key].init_type is not None:
+                        doc[key] = struct[key].init_type()
+                    else:
+                        doc[key] = None
                 elif struct[key] is list:
                     doc[key] = []
                 elif isinstance(struct[key], tuple):
@@ -833,17 +839,22 @@ class i18n(dict, CustomType):
 
 class Set(CustomType):
     """ SET custom type to handle python set() type """
+    init_type = set
     mongo_type = list
     python_type = set
+
     def __init__(self, structure_type=None):
         super(Set, self).__init__()
         self._structure_type = structure_type
+
     def to_bson(self, value):
         if value is not None:
             return list(value)
+
     def to_python(self, value):
         if value is not None:
             return set(value)
+
     def validate(self, value, path):
         if value is not None and self._structure_type is not None:
             for val in value:
