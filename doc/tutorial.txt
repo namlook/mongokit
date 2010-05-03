@@ -527,10 +527,14 @@ A CustomType object must implement two methods and one attribute:
  -  If you want more validation, you can specify a `python_type` property which is
     the python type the value will be converted. This is a good thing to specify it
     as it make a good documentation.
+ - `init_type` attribute will allow to describes an empty value. For example,
+   if you implement the python set as CustomType, you'll set `init_type` to
+   `set`. Note that `init_type` must be a type or a callable instance.
  
 >>> class CustomDate(CustomType):
 ...     mongo_type = unicode
 ...     python_type = datetime.datetime # optional, just for more validation
+...     init_type = None # optional, fill the first empty value
 ...
 ...     def to_bson(self, value):
 ...         """convert type to a mongodb type"""
