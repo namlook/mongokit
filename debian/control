@@ -1,0 +1,11 @@
+Source: python-mongokit
+Section: python
+Priority: extra
+Maintainer: Sebastien Estienne <sebastien.estienne@dailymotion.com>
+Build-Depends: debhelper (>= 6), python-support (>= 0.3), cdbs (>= 0.4.49)
+Standards-Version: 3.7.2
+
+Package: python-mongokit
+Architecture: all
+Depends: python (>=2.5), python-magic, python-pymongo
+Description: Mongokit Python library
