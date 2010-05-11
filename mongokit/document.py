@@ -27,8 +27,8 @@
 
 from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
-from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties
-from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict
+from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties, StructureError
+from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict, DotExpandedDict
 from mongokit.grid import *
 import pymongo
 from pymongo.bson import BSON
@@ -76,6 +76,7 @@ class Document(SchemaDocument):
     force_autorefs_current_db = False
     indexes = []
     gridfs = []
+    migration_handler = None
 
     authorized_types = SchemaDocument.authorized_types + [
       pymongo.binary.Binary,
@@ -107,6 +108,17 @@ class Document(SchemaDocument):
                 self.fs = FS(self.gridfs, self)
         else:
             self.fs = None
+        if self.migration_handler:
+            self.skip_validation = False
+            self._migration = self.migration_handler(self.__class__)
+
+    def migrate(self, safe=True):
+        self._migration.migrate(self, safe=safe)
+        new_value = DotCollapsedDict(self)
+        self.reload()
+        old_value = DotCollapsedDict(self)
+        old_value.update(new_value)
+        self.update(DotExpandedDict(old_value))
 
     def validate(self):
         if self.use_autorefs:
@@ -115,7 +127,19 @@ class Document(SchemaDocument):
         if size > 3999999:
             raise MaxDocumentSizeError("The document size is too big, documents "
               "lower than 4Mb is allowed (got %s bytes)" % size)
-        super(Document, self).validate()
+        error = None
+        try:
+            super(Document, self).validate()
+        except StructureError, e:
+            error = e
+        except KeyError, e:
+            error = e
+        if error:
+            if not self.migration_handler:
+                raise StructureError(str(e))
+            else:
+                self.migrate()
+                self._process_custom_type('python', self, self.structure)
 
     def get_size(self):
         """
