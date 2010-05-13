@@ -1186,6 +1186,17 @@ passing a list of tuple.  Direction must be one of `INDEX_ASCENDING` (or 1) or
 ...         },
 ...     ]
 
+To prevent to add an index on the wrong field (mispelled for instance),
+Mongokit will check by default the `indexes` descriptor. There's some case you
+may wan't to disable this. To do so, add ``"check":True``::
+
+    indexes = [
+        {
+            # I know this field is not in the document structure, don't check it
+            'fields':['foo'], 'checked':False, 
+        },
+    ]
+
 JSON support
 ============
 

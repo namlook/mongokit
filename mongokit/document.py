@@ -533,58 +533,60 @@ class Document(SchemaDocument):
 
     def _validate_descriptors(self):
         super(Document, self)._validate_descriptors()
+        # validate index descriptor
         if self.indexes:
             for index in self.indexes:
-                if 'fields' not in index:
-                    self._raise_exception(BadIndexError, None,
-                      "'fields' key must be specify in indexes")
-                for key, value in index.iteritems():
-                    if key not in ['fields', 'unique', 'ttl']:
-                        self._raise_exception(BadIndexError, None, 
-                          "%s is unknown key for indexes" % key)
-                    if key == "fields":
-                        if isinstance(value, basestring):
-                            if value not in self._namespaces and value not in STRUCTURE_KEYWORDS:
-                                self._raise_exception(ValueError, None, 
-                                  "Error in indexes: can't find %s in structure" % value )
-                        elif isinstance(value, tuple):
-                            if len(value) != 2:
-                                self._raise_exception(BadIndexError, None, 
-                                  "Error in indexes: a tuple must contain "
-                                  "only two value : the field name and the direction")
-                            if not isinstance(value[1], int):
-                                self._raise_exception(BadIndexError, None,
-                                  "Error in %s, the direction must be int (got %s instead)" % (value[0], type(value[1])))
-                            if not isinstance(value[0], basestring):
-                                self._raise_exception(BadIndexError, None, 
-                                  "Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
-                            if value[0] not in self._namespaces and value[0] not in STRUCTURE_KEYWORDS:
-                                self._raise_exception(ValueError, None, 
-                                  "Error in indexes: can't find %s in structure" % value[0] )
-                            if not value[1] in [1, -1]:
-                                self._raise_exception(BadIndexError, None, 
-                                  "index direction must be 1 or -1. Got %s" % value[1])
-                        elif isinstance(value, list):
-                            for val in value:
-                                if isinstance(val, tuple):
-                                    for field, direction in value:
-                                        if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
-                                            self._raise_exception(ValueError, None, 
-                                              "Error in indexes: can't find %s in structure" % field )
-                                        if not direction in [1, -1]:
-                                            self._raise_exception(BadIndexError, None, 
-                                              "index direction must be 1 or -1. Got %s" % direction)
-                                else:
-                                    if val not in self._namespaces and val not in STRUCTURE_KEYWORDS:
-                                        self._raise_exception(ValueError, None, 
-                                          "Error in indexes: can't find %s in structure" % val )
-                        else:
+                if index.get('check', True):
+                    if 'fields' not in index:
+                        self._raise_exception(BadIndexError, None,
+                          "'fields' key must be specify in indexes")
+                    for key, value in index.iteritems():
+                        if key not in ['fields', 'unique', 'ttl']:
                             self._raise_exception(BadIndexError, None, 
-                              "fields must be a string, a tuple or a list of tuple (got %s instead)" % type(value))
-                    elif key == "ttl":
-                        assert isinstance(value, int)
-                    else:
-                        assert value in [False, True], value
+                              "%s is unknown key for indexes" % key)
+                        if key == "fields":
+                            if isinstance(value, basestring):
+                                if value not in self._namespaces and value not in STRUCTURE_KEYWORDS:
+                                    self._raise_exception(ValueError, None, 
+                                      "Error in indexes: can't find %s in structure" % value )
+                            elif isinstance(value, tuple):
+                                if len(value) != 2:
+                                    self._raise_exception(BadIndexError, None, 
+                                      "Error in indexes: a tuple must contain "
+                                      "only two value : the field name and the direction")
+                                if not isinstance(value[1], int):
+                                    self._raise_exception(BadIndexError, None,
+                                      "Error in %s, the direction must be int (got %s instead)" % (value[0], type(value[1])))
+                                if not isinstance(value[0], basestring):
+                                    self._raise_exception(BadIndexError, None, 
+                                      "Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
+                                if value[0] not in self._namespaces and value[0] not in STRUCTURE_KEYWORDS:
+                                    self._raise_exception(ValueError, None, 
+                                      "Error in indexes: can't find %s in structure" % value[0] )
+                                if not value[1] in [1, -1]:
+                                    self._raise_exception(BadIndexError, None, 
+                                      "index direction must be 1 or -1. Got %s" % value[1])
+                            elif isinstance(value, list):
+                                for val in value:
+                                    if isinstance(val, tuple):
+                                        for field, direction in value:
+                                            if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
+                                                self._raise_exception(ValueError, None, 
+                                                  "Error in indexes: can't find %s in structure" % field )
+                                            if not direction in [1, -1]:
+                                                self._raise_exception(BadIndexError, None, 
+                                                  "index direction must be 1 or -1. Got %s" % direction)
+                                    else:
+                                        if val not in self._namespaces and val not in STRUCTURE_KEYWORDS:
+                                            self._raise_exception(ValueError, None, 
+                                              "Error in indexes: can't find %s in structure" % val )
+                            else:
+                                self._raise_exception(BadIndexError, None, 
+                                  "fields must be a string, a tuple or a list of tuple (got %s instead)" % type(value))
+                        elif key == "ttl":
+                            assert isinstance(value, int)
+                        else:
+                            assert value in [False, True], value
 
     def __hash__(self):
         if '_id' in self:
