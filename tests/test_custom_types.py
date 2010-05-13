@@ -397,4 +397,42 @@ class CustomTypesTestCase(unittest.TestCase):
         document['amount'] = Decimal(u'100.00')
         document.validate()
 
+    def test_required_custom_type_mongotype_dict(self):
+        class CustomObject(CustomType):
+            mongo_type = dict
+            python_type = float
+            def to_bson(self, value):
+                return {'f':unicode(value)}
+            def to_python(self, value):
+                return float(value['f'])
+
+        class MyDocument(Document):
+           structure = {'amount': CustomObject()}
+           required_fields = ['amount']
+           indexes = [{'fields':['amount.f'], 'check':False}]
+
+        self.connection.register([MyDocument])
+
+        document = self.col.MyDocument()
+        document['_id'] = u'test'
+        document['amount'] = 100.00
+        document.save()
+        assert self.col.find_one() == {u'amount': {u'f': u'100.0'}, u'_id': u'test'}, self.col.find_one()
+        assert self.col.MyDocument.find_one() == {u'amount': 100.00, u'_id': u'test'}, self.col.MyDocument.find_one()
+ 
+    def test_custom_type_mongotype_dict_index_not_checked(self):
+        class CustomObject(CustomType):
+            mongo_type = dict
+            python_type = float
+            def to_bson(self, value):
+                return {'f':unicode(value)}
+            def to_python(self, value):
+                return float(value['f'])
+
+        class MyDocument(Document):
+           structure = {'amount': CustomObject()}
+           required_fields = ['amount']
+           indexes = [{'fields':['amount.f']}]
+
+        self.assertRaises(ValueError, self.connection.register, [MyDocument])
 

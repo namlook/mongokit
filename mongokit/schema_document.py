@@ -719,7 +719,8 @@ class SchemaDocument(dict):
         doted_doc = DotCollapsedDict(doc)
         doted_struct = DotCollapsedDict(self.structure)
         for req in self.required_fields:
-            if doted_doc.get(req) is None and doted_struct.get(req) is not dict:
+            if doted_doc.get(req) is None and doted_struct.get(req) is not dict and\
+              (isinstance(doted_struct.get(req), CustomType) and doted_struct[req].mongo_type is not dict):
                 self._raise_exception(RequireFieldError, req, "%s is required" % req)
             elif doted_doc.get(req) == []:
                 self._raise_exception(RequireFieldError, req, "%s is required" % req)
