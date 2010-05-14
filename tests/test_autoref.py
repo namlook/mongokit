@@ -665,7 +665,9 @@ class AutoRefTestCase(unittest.TestCase):
                "token": unicode,
            }
         # raise an assertion because User is a CallableUser, not User
-        self.assertRaises(StructureError, self.connection.register, [ExampleSession])
+        self.connection.register([ExampleSession])
+        ex = self.col.ExampleSession()
+        self.assertRaises(SchemaTypeError, ex.validate)
 
     def test_autoref_without_database_specified(self):
         class EmbedDoc(Document):

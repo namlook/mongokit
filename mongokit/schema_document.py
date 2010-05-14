@@ -388,9 +388,6 @@ class SchemaDocument(dict):
                 if struct not in self._authorized_types:
                     self._raise_exception(StructureError, None,
                       "%s is not an authorized_types" % struct)
-                elif struct is None:
-                    self._raise_exception(StructureError, None, 
-                      "%s can't be None" % struct)
             elif isinstance(struct, dict):
                 for key in struct:
                     if isinstance(key, basestring):
@@ -408,8 +405,7 @@ class SchemaDocument(dict):
                         self._raise_exception(StructureError, key,
                           "%s must be a basestring or a type" % key)
                     if struct[key] is None:
-                        self._raise_exception(StructureError, key,
-                          "%s can't be None in structure declaration" % key)
+                        pass
                     elif isinstance(struct[key], dict):
                         __validate_structure(struct[key])
                     elif isinstance(struct[key], list):
@@ -425,11 +421,14 @@ class SchemaDocument(dict):
                     elif (struct[key] not in self._authorized_types):
                         ok = False
                         for auth_type in self._authorized_types:
-                            try:
-                                if isinstance(struct[key], auth_type) or issubclass(struct[key], auth_type):
-                                    ok = True
-                            except TypeError:
-                                raise TypeError("%s is not a type" % struct[key])
+                            if struct[key] is None:
+                                ok = True
+                            else:
+                                try:
+                                    if isinstance(struct[key], auth_type) or issubclass(struct[key], auth_type):
+                                        ok = True
+                                except TypeError:
+                                    raise TypeError("%s is not a type" % struct[key])
                         if not ok:
                             self._raise_exception(StructureError, key,
                               "%s is not an authorized type" % struct[key])
@@ -719,9 +718,11 @@ class SchemaDocument(dict):
         doted_doc = DotCollapsedDict(doc)
         doted_struct = DotCollapsedDict(self.structure)
         for req in self.required_fields:
-            if doted_doc.get(req) is None and doted_struct.get(req) is not dict and\
-              (isinstance(doted_struct.get(req), CustomType) and doted_struct[req].mongo_type is not dict):
-                self._raise_exception(RequireFieldError, req, "%s is required" % req)
+            if doted_doc.get(req) is None and doted_struct.get(req) is not dict:
+                if not isinstance(doted_struct.get(req), CustomType):
+                    self._raise_exception(RequireFieldError, req, "%s is required" % req)
+                elif isinstance(doted_struct.get(req), CustomType) and doted_struct[req].mongo_type is not dict:
+                    self._raise_exception(RequireFieldError, req, "%s is required" % req)
             elif doted_doc.get(req) == []:
                 self._raise_exception(RequireFieldError, req, "%s is required" % req)
             elif doted_doc.get(req) == {}:

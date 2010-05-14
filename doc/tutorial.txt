@@ -146,6 +146,26 @@ True
 
 So, default_values nor validators will work.
 
+
+Untyped field
+-------------
+
+.. topic:: new in development version
+
+    Sometime you don't want to specify a type for a field. In order to allow a
+    field to have any authorized types, just set the field to None into the
+    structure::
+
+
+    >>> class MyDoc(Document):
+    ...     structure = {
+    ...         'foo':unicode,
+    ...         'bar':None
+    ...     }
+    ...
+
+    In this example, `bar` can be of any authorized types but not CustomTypes.
+
 Difference beetween [] and the type list
 ----------------------------------------
 

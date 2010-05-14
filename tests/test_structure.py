@@ -90,8 +90,18 @@ class StructureTestCase(unittest.TestCase):
         class MyDoc(SchemaDocument):
             structure = {
                 "foo":None,
+                "bar":{
+                    "bla":None
+                }
             }
-        self.assertRaises(StructureError, MyDoc)
+        mydoc = MyDoc()
+        mydoc['foo'] = u'bla'
+        mydoc.validate()
+        mydoc['foo'] = 3
+        mydoc['bar']['bla'] = 2
+        mydoc.validate()
+        mydoc['foo'] = 'arf'
+        self.assertRaises(AuthorizedTypeError, mydoc.validate)
 
     def test_big_nested_structure(self):
         class MyDoc(SchemaDocument):
