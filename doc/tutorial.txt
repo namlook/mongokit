@@ -156,13 +156,12 @@ Untyped field
     field to have any authorized types, just set the field to None into the
     structure::
 
-
-    >>> class MyDoc(Document):
-    ...     structure = {
-    ...         'foo':unicode,
-    ...         'bar':None
-    ...     }
-    ...
+        >>> class MyDoc(Document):
+        ...     structure = {
+        ...         'foo':unicode,
+        ...         'bar':None
+        ...     }
+        ...
 
     In this example, `bar` can be of any authorized types but not CustomTypes.
 
