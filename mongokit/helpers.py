@@ -160,11 +160,17 @@ class DotCollapsedDict(dict):
 
     >>> DotCollapsedDict({'bla':{'foo':{unicode:{"bla":3}}, 'bar':'egg'}}, remove_under_type=True)
     {'bla.foo':{}, 'bla.bar':unicode}
+
+    >>> dic = {'bar':{'foo':3}, 'bla':{'g':2, 'h':3}}
+    >>> DotCollapsedDict(dic, reference={'bar.foo':None, 'bla':{'g':None, 'h':None}})
+    {'bar.foo':3, 'bla':{'g':2, 'h':3}}
+
     """
-    def __init__(self, passed_dict, remove_under_type=False):
+    def __init__(self, passed_dict, remove_under_type=False, reference=None):
         self._remove_under_type = remove_under_type
         assert isinstance(passed_dict, dict), "you must pass a dict instance"
         final_dict = {}
+        self._reference = reference
         self._make_dotation(passed_dict, final_dict)
         self.update(final_dict)
 
@@ -177,6 +183,8 @@ class DotCollapsedDict(dict):
                     _key = "%s.%s" % (key, k)
                 else:
                     _key = k
+                if self._reference and _key in self._reference:
+                    final_dict[_key]=v
                 if self._remove_under_type:
                     if [1 for i in v.keys() if isinstance(i, type)]:
                         v = v.__class__()
@@ -192,4 +200,10 @@ class DotCollapsedDict(dict):
                 if not key:
                     final_dict[k] = v
                 else:
-                    final_dict["%s.%s" % (key, k)] = v
+                    if not self._reference:
+                        final_dict["%s.%s" % (key, k)] = v
+                    elif "%s.%s" % (key, k) in self._reference:
+                        final_dict["%s.%s" % (key, k)] = v
+                    #else:
+                    #    final_dict[key] = {k: v}
+                    #    print "+++", {k:v}

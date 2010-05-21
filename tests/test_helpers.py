@@ -76,6 +76,35 @@ class HelpersTestCase(unittest.TestCase):
         d = DotCollapsedDict(dic)
         assert d == {'a.d': 3, 'a.e.h': 0, 'a.b': 1, 'f': 6, 'a.e.g': 5, '_id': u'user'}, d
 
+    def test_DotCollapsedDict_with_reference(self):
+        dic = {'foo':{}}
+        d = DotCollapsedDict(dic, reference={'foo':{}})
+        assert d == {'foo':{}}, d
+
+        dic = {'bar':{'foo':{}}}
+        d = DotCollapsedDict(dic, reference={'bar':{'foo':{}}})
+        assert d == {'bar':{'foo':{}}}, d
+
+        dic = {'bar':{'foo':3}, 'bla':{'g':2, 'h':3}}
+        d = DotCollapsedDict(dic, reference={'bar.foo':None, 'bla':{'g':None, 'h':None}})
+        assert d == {'bar.foo':3, 'bla':{'g':2, 'h':3}}, d
+
+#        # XXX TODO
+#        dic = {'bar':{'foo':3, 'bla':2}}
+#        d = DotCollapsedDict(dic, reference={'bar.foo':None, 'bar':{'bla':None}})
+#        assert d == {'bar.foo':3, 'bar':{'bla':2}}, d
+
+        dic = {'_id': u'user', 'a':3, 'e':5, "g":2, 'f':6}
+        d = DotCollapsedDict(dic,  reference=dic)
+        assert d == {'_id': u'user', 'a':3, 'e':5, "g":2, 'f':6}, d
+
+        dic = {'_id': u'user', 'a':{'b':1, 'd':3, 'e':{'g':5, 'h':0}}, 'f':6}
+        d = DotCollapsedDict(dic, reference={'_id':None, 'a.b':1, 'a.d':3, 'a.e':{'g':5, 'h':0}, 'a.f':6})
+        assert d == {'a.d': 3, 'a.b': 1, 'f': 6, 'a.e':{'g': 5, 'h':0}, '_id': u'user'}, d
+
+        dic = {'_id': u'user', 'a':{'b':{'c':{'d':3}, 'e':5}, "g":2}, 'f':6}
+        d = DotCollapsedDict(dic, reference={'_id':None, 'a.b':{'c':{'d':3}, 'e':5}, 'a.g':2, 'f':6})
+        assert d == {'_id': u'user', 'a.b':{'c': {'d': 3}, 'e':5}, 'a.g': 2, 'f': 6}, d
 
     def test_DotCollapsedDict_with_remove_under_type(self):
         dic = {'_id': u'user', 'a':{int:{'c':{'d':3}, 'e':5}, "g":2}, 'f':6}
