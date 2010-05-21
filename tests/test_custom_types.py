@@ -410,11 +410,14 @@ class CustomTypesTestCase(unittest.TestCase):
            structure = {'amount': CustomObject()}
            required_fields = ['amount']
            indexes = [{'fields':['amount.f'], 'check':False}]
+           validators = {'amount':lambda x: x > 3.0}
 
         self.connection.register([MyDocument])
 
         document = self.col.MyDocument()
         document['_id'] = u'test'
+        document['amount'] = 1.00
+        self.assertRaises(ValidationError, document.validate)
         document['amount'] = 100.00
         document.save()
         assert self.col.find_one() == {u'amount': {u'f': u'100.0'}, u'_id': u'test'}, self.col.find_one()
