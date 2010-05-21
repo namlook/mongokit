@@ -1,7 +1,7 @@
 Migration
 =========
 
-**new in development version**
+**new in version 0.5.6**
 
 Let's say we have created a blog post which look like this::
 

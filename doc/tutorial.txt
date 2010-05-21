@@ -150,7 +150,7 @@ So, default_values nor validators will work.
 Untyped field
 -------------
 
-.. topic:: new in development version
+.. topic:: new in version 0.5.6
 
     Sometime you don't want to specify a type for a field. In order to allow a
     field to have any authorized types, just set the field to None into the
@@ -794,7 +794,7 @@ Updating data
 Update a document
 -----------------
 
-.. topic:: new in developpment version
+.. topic:: new in version 0.5.6
 
     Mongokit now support atomic update out of the box !
 

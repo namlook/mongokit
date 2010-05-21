@@ -17,9 +17,11 @@ Features
  * schema validation (wich use simple python type for the declaration)
  * doted notation
  * nested and complex schema declaration
+ * untyped field support
  * required fields validation
  * default values
  * custom validators
+ * simple atomic update (just save the document again)
  * cross database document reference
  * random query support (which returns a random document from the database)
  * inheritance and polymorphisme support
@@ -110,6 +112,28 @@ Mongokit is documented and well tested with 100% of code coverage::
 
 Change Log
 ==========
+
+v0.5.6
+------
+
+ * add `atomic update`_ (just save the document again)
+ * add `init_type`_ to CustomType. This allow to fill an empty skeletton at instanciation 
+ * add debian package build rules. Thanks to Sebastien Estienne
+ * add `lazy migration`_ and `bulk migration`_ support
+ * fix a bug in CustomType
+ * add `'check' option`_ in indexes descriptor 
+ * add `untyped field support`_
+ * fix #58 - Document Validators not working for CustomType
+ * improve DotCollapsedDict by adding reference structure
+
+
+.. _`atomic update` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#updating-data
+.. _`init_type` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types
+.. _`lazy migration` : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html
+.. _`bulk migration` : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html#bulk-migration
+.. _`'check' option` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes
+.. _`untyped field support` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#untyped-field
+
 
 v0.5.5
 ------
