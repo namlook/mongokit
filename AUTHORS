@@ -15,4 +15,7 @@ Great contributors:
   Christian Joudrey (@cjoudrey)
     * patch for adding custom message to validators
 
+  Andreas Jung, <info@zopyx.com>
+    * Master-slave connection support
+
 
