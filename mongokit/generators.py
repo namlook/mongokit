@@ -57,7 +57,7 @@ class MongoDocumentCursor(object):
 
     def next(self, *args, **kwargs):
         data = self._cursor.next(*args, **kwargs)
-        doc = self._class_object(data, collection=self._collection)
+        doc = self._class_object(data, collection=self._collection, generate_index=False)
         doc._old_footprint = DotCollapsedDict(doc).items()
         return doc
 
@@ -72,7 +72,7 @@ class MongoDocumentCursor(object):
 
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
-            doc = self._class_object(obj, collection=self._collection)
+            doc = self._class_object(obj, collection=self._collection, generate_index=False)
             doc._old_footprint = DotCollapsedDict(doc).items()
             yield doc
 

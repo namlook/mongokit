@@ -86,7 +86,7 @@ class Document(SchemaDocument):
       type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en'):
+    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en', generate_index=True):
         self._authorized_types = self.authorized_types[:]
         # If using autorefs, we need another authorized
         if self.use_autorefs:
@@ -96,7 +96,8 @@ class Document(SchemaDocument):
         # collection
         self.collection = collection
         if collection:
-            self.generate_index()
+            if generate_index:
+                self.generate_index()
             self.db = collection.database
             self.connection = self.db.connection
             # indexing all embed doc if any (autorefs feature)
@@ -183,7 +184,7 @@ class Document(SchemaDocument):
         """
         bson_obj = self.collection.find_one(*args, **kwargs)
         if bson_obj:
-            doc = self._obj_class(doc=bson_obj, collection=self.collection)
+            doc = self._obj_class(doc=bson_obj, collection=self.collection, generate_index=False)
             doc._old_footprint = DotCollapsedDict(doc).items()
             return doc
 
@@ -205,7 +206,7 @@ class Document(SchemaDocument):
             except StopIteration:
                 doc = None
             if doc:
-                doc = self._obj_class(doc=doc, collection=self.collection)
+                doc = self._obj_class(doc=doc, collection=self.collection, generate_index=False)
                 doc._old_footprint = DotCollapsedDict(doc).items()
                 return doc
 
@@ -219,7 +220,8 @@ class Document(SchemaDocument):
             num = random.randint(0, max-1)
             doc =  self._obj_class(
               self.collection.find().skip(num).next(),
-              collection=self.collection
+              collection=self.collection,
+              generate_index=False,
             )
             doc._old_footprint = DotCollapsedDict(doc).items()
             return doc
@@ -524,7 +526,7 @@ class Document(SchemaDocument):
         if '_id' in obj:
             if '$oid' in obj['_id']:
                 obj['_id'] = ObjectId(obj['_id']['$oid'])
-        return self._obj_class(obj, collection=self.collection)
+        return self._obj_class(obj, collection=self.collection, generate_index=False)
  
 
     #
