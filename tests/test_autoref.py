@@ -822,7 +822,42 @@ class AutoRefTestCase(unittest.TestCase):
         docd = self.col.DocD.find_one({'name': 'Test D'})
 
 
+    def test_nested_autoref_in_list_and_dict(self):
+        class DocA(Document):
+            structure = {
+                'name':unicode,
+              }
+            use_autorefs = True
 
+
+        class DocB(Document):
+            structure = {
+                'name': unicode,
+                'test': [{
+                    'something' : unicode,
+                    'doca' : DocA,
+                }]
+            }
+            use_autorefs = True
+
+        self.connection.register([DocA, DocB])
+
+        doca = self.col.DocA()
+        doca['name'] = u'Test A'
+        doca.save()
+
+        docc = self.col.DocA()
+        docc['name'] = u'Test C'
+        docc.save()
+
+        docb = self.col.DocB()
+        docb['name'] = u'Test B'
+        docb['test'].append({u'something': u'foo', 'doca': doca})
+        docb['test'].append({u'something': u'foo', 'doca': docc})
+        docb.save()
+
+        raw_docb = self.col.find_one({'name':'Test B'})
+        assert isinstance(raw_docb['test'][0]['doca'], DBRef), raw_docb['test'][0]
 
 
 

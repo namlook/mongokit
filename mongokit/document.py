@@ -697,6 +697,10 @@ class Document(SchemaDocument):
                                 obj.save()
                                 self._dbrefs[full_new_path].update(obj)
                         l_objs.append(obj)
+                elif isinstance(struct[key][0], dict):
+                    for no, obj in enumerate(doc[key]):
+                        self._make_reference(obj, struct[key][0], "%s.%s" % (new_path,no))
+                else:
                     doc[key] = l_objs
 
 class R(CustomType):
