@@ -1129,6 +1129,19 @@ u'test'
 NOTE: You have to be very carefull when you enable this option to be sure that you are using the correct database.
 If you expect some strange behavior (like not document found), you may look at this first.
 
+Reference and dereference
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. topic:: new in development version
+
+    You can get the dbref of a document with the `get_dbref()` method. The
+    `dereference()` allow to get a Document from a dbref. You can pass a Document
+    to tell mongokit to what model it should dereferenced::
+
+        >>> dbref = mydoc.get_dbref()
+        >>> raw_doc = con.mydb.dereference(dbref) # the result is a regular dict
+        >>> doc = con.mydb.dereference(dbref, MyDoc) # the result is a MyDoc instance
+
 Indexes
 =======
 

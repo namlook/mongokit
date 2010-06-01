@@ -41,6 +41,7 @@ class AutoRefTestCase(unittest.TestCase):
         
     def tearDown(self):
         self.connection.drop_database('test')
+        self.connection.drop_database('test2')
 
     def test_simple_autoref(self):
         class DocA(Document):
@@ -859,5 +860,31 @@ class AutoRefTestCase(unittest.TestCase):
         raw_docb = self.col.find_one({'name':'Test B'})
         assert isinstance(raw_docb['test'][0]['doca'], DBRef), raw_docb['test'][0]
 
+    def test_dereference(self):
+
+        class DocA(Document):
+            structure = {
+                'name':unicode,
+              }
+            use_autorefs = True
+
+        self.connection.register([DocA])
+
+        doca = self.col.DocA()
+        doca['name'] = u'Test A'
+        doca.save()
+
+        docb = self.connection.test2.mongokit.DocA()
+        docb['name'] = u'Test B'
+        docb.save()
+
+        dbref = doca.get_dbref()
+
+        self.assertRaises(TypeError, self.connection.test.dereference, 1)
+        self.assertRaises(ValueError, self.connection.test.dereference, docb.get_dbref(), DocA)
+        assert self.connection.test.dereference(dbref) == {'_id':doca['_id'], 'name': 'Test A'}
+        assert isinstance(self.connection.test.dereference(dbref), dict)
+        assert self.connection.test.dereference(dbref, DocA) == {'_id':doca['_id'], 'name': 'Test A'}
+        assert isinstance(self.connection.test.dereference(dbref, DocA), DocA)
 
 

@@ -26,6 +26,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymongo.database import Database as PymongoDatabase
+from pymongo.dbref import DBRef
+from mongokit.document import Document
 from collection import Collection
 
 class Database(PymongoDatabase):
@@ -39,4 +41,19 @@ class Database(PymongoDatabase):
             self._collections[key] = Collection(self, key) 
         return self._collections[key]
 
+
+    def dereference(self, dbref, model = None):
+        if model is None:
+          return super(Database, self).dereference(dbref)
+
+        if not isinstance(dbref, DBRef):
+            raise TypeError("first argument must be a DBRef")
+
+        if dbref.database is not None and dbref.database != self.name:
+            raise ValueError("dereference must be called on the database `%s`" % dbref.database)
+
+        if not issubclass(model, Document):
+            raise TypeError("second argument must be a Document")
+
+        return self[dbref.collection][model.__name__].one({'_id': dbref.id})
 

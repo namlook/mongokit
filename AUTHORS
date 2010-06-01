@@ -14,6 +14,7 @@ Great contributors:
 
   Christian Joudrey (@cjoudrey)
     * patch for adding custom message to validators
+    * patch for deferencing to models
 
   Andreas Jung, <info@zopyx.com>
     * Master-slave connection support
