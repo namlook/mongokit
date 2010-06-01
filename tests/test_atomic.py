@@ -124,5 +124,62 @@ class AtomicTestCase(unittest.TestCase):
         new_doc = self.col.MyDoc.get_from_id(doc['_id'])
         assert new_doc == {'foo': {'eggs': {'spam': 2}, 'bar': u'mybar'}, 'bla': u'bli', '_version': 2, '_id': 3}, new_doc
 
+    def test_atomic_save_with_unicode_type_as_key(self):
+        class MyDoc(Document):
+           structure = {
+               'foo':unicode,
+               'bar': {
+                   unicode: {
+                       'name': unicode,
+                       'spam': bool,
+                   },
+               },
+           }
+           atomic_save = True
 
+        self.connection.register([MyDoc])
+        doc = self.col.MyDoc()
+        doc['foo'] = u'Billy'
+        doc.save()
+
+        doc = self.col.MyDoc.get_from_id(doc['_id'])
+        doc['bar'][u'dob'] = {
+           'name': u'Date of Birth',
+           'spam': True,
+        }
+        doc.save()
+
+    def test_atomic_save_with_autorefs(self):
+        class DocA(Document):
+            structure = {
+                'name':unicode
+            }
+
+        class MyDoc(Document):
+            structure = {
+               'foo':unicode,
+               'bar': DocA,
+            }
+            atomic_save = True
+            use_autorefs = True
+
+        self.connection.register([DocA, MyDoc])
+        doca = self.col.DocA()
+        doca['name'] = u'hello'
+        doca.save()
+
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = u'bla'
+        mydoc['bar'] = doca
+        mydoc.save()
+
+        mydoc = self.col.MyDoc.get_from_id(mydoc['_id'])
+        mydoc['foo'] = u'blo'
+        mydoc['bar']['name'] = u'arf'
+        mydoc.save()
+
+        doca.reload()
+        assert doca['name'] == u'arf'
+
+        assert self.col.get_from_id(doca['_id']) == {'_id':doca['_id'], "name":"arf"}, self.col.get_from_id(doca['_id'])
 

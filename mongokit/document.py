@@ -113,13 +113,31 @@ class Document(SchemaDocument):
             self.skip_validation = False
             self._migration = self.migration_handler(self.__class__)
 
-    def migrate(self, safe=True):
+    def migrate(self, safe=True, _process_to_bson=True):
+        """
+        migrate the document following the migration_handler rules
+
+        safe : if True perform a safe update (see pymongo documentation for more details
+        """
+        self._migration(safe=safe)
+
+    def _migrate(self, safe=True, process_to_bson=True):
+        if process_to_bson:
+            self._process_custom_type('bson', self, self.structure)
         self._migration.migrate(self, safe=safe)
         new_value = DotCollapsedDict(self)
-        self.reload()
+        # reload
+        try:
+            self.update(self.collection.get_from_id(self['_id']))
+        except:
+            raise OperationFailure('Can not reload an unsaved document.'
+              ' %s is not found in the database' % self['_id'])
+        # self.reload()
         old_value = DotCollapsedDict(self)
         old_value.update(new_value)
         self.update(DotExpandedDict(old_value))
+        self._old_footprint = deepcopy(DotCollapsedDict(self)) 
+        self._process_custom_type('python', self, self.structure)
 
     def validate(self):
         if self.use_autorefs:
@@ -139,8 +157,9 @@ class Document(SchemaDocument):
             if not self.migration_handler:
                 raise StructureError(str(e))
             else:
-                self.migrate()
-                self._process_custom_type('python', self, self.structure)
+                # if we are here that's becose super.validate failed
+                # but it has processed custom type to bson.
+                self._migrate(process_to_bson=False)
 
     def get_size(self):
         """
@@ -185,7 +204,7 @@ class Document(SchemaDocument):
         bson_obj = self.collection.find_one(*args, **kwargs)
         if bson_obj:
             doc = self._obj_class(doc=bson_obj, collection=self.collection, generate_index=False)
-            doc._old_footprint = DotCollapsedDict(doc).items()
+            doc._build_footprint()
             return doc
 
     def one(self, *args, **kwargs):
@@ -207,7 +226,7 @@ class Document(SchemaDocument):
                 doc = None
             if doc:
                 doc = self._obj_class(doc=doc, collection=self.collection, generate_index=False)
-                doc._old_footprint = DotCollapsedDict(doc).items()
+                doc._build_footprint()
                 return doc
 
     def find_random(self):
@@ -223,7 +242,7 @@ class Document(SchemaDocument):
               collection=self.collection,
               generate_index=False,
             )
-            doc._old_footprint = DotCollapsedDict(doc).items()
+            doc._build_footprint()
             return doc
 
     def get_from_id(self, id):
@@ -297,12 +316,14 @@ class Document(SchemaDocument):
 
         If no _id is set in the document, a KeyError is raised.
         """
-        doc = self.collection.get_from_id(self['_id'])
-        if doc is None:
+        self._process_custom_type('bson', self, self.structure)
+        try:
+            self.update(self.collection.get_from_id(self['_id']))
+        except:
             raise OperationFailure('Can not reload an unsaved document.'
               ' %s is not found in the database' % self['_id'])
-        self.update(self.collection.get_from_id(self['_id']))
-        self._old_footprint = DotCollapsedDict(self).items()
+        self._old_footprint = deepcopy(DotCollapsedDict(self)) 
+        self._process_custom_type('python', self, self.structure)
 
     def get_dbref(self):
         """
@@ -357,11 +378,15 @@ class Document(SchemaDocument):
             for field_name, value in DotCollapsedDict(self).iteritems():
                 if isinstance(value, list):
                     value = tuple(value)
+                if isinstance(value, dict) and not value:
+                    continue
                 footprint.append((field_name, value))
             old_footprint = []
-            for field_name, value in dict(self._old_footprint).iteritems():
+            for field_name, value in self._old_footprint.iteritems():
                 if isinstance(value, list):
                     value = tuple(value)
+                if isinstance(value, dict) and not value:
+                    continue
                 old_footprint.append((field_name, value))
             difference = set(footprint).difference(set(old_footprint))
             if difference:
@@ -369,9 +394,20 @@ class Document(SchemaDocument):
                 update_query['$inc'] = {'_version':1}
                 # update
                 self.collection.update({'_id':self['_id']}, update_query, safe=safe)
-                self.reload()
+                # reload
+                try:
+                    self.update(self.collection.get_from_id(self['_id']))
+                except:
+                    raise OperationFailure('Can not reload an unsaved document.'
+                      ' %s is not found in the database' % self['_id'])
+                # self.reload()
+        self._old_footprint = deepcopy(DotCollapsedDict(self))
         self._process_custom_type('python', self, self.structure)
-        self._old_footprint = DotCollapsedDict(self).items()
+
+    def _build_footprint(self):
+        self._process_custom_type('bson', self, self.structure)
+        self._old_footprint = deepcopy(DotCollapsedDict(self)) 
+        self._process_custom_type('python', self, self.structure)
 
     def delete(self):
         """
