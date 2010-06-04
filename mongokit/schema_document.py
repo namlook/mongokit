@@ -630,7 +630,7 @@ class SchemaDocument(dict):
                             l_objs.append(obj)
                         doc[key] = l_objs
                     elif isinstance(struct[key][0], dict):
-                        if doc[key]:
+                        if doc.get(key):
                             for obj in doc[key]:
                                 self._process_custom_type(target, obj, struct[key][0], new_path, root_path)
             

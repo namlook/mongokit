@@ -5,6 +5,9 @@ Migration
 
 Let's say we have created a blog post which look like this::
 
+    >>> from mongokit import *
+    >>> con = Connection()
+
     class BlogPost(Document):
         structure = {
             "blog_post":{
@@ -19,7 +22,7 @@ Let's say we have created a blog post which look like this::
 Let's create some blog posts:
 
     >>> for i in range(10):
-    ...     BlogPost({'title':u'hello %s' % i, 'body': u'I the post number %s' % i}).save()
+    ...     con.test.tutorial.BlogPost({'title':u'hello %s' % i, 'body': u'I the post number %s' % i}).save()
 
 Now, developpment goes on and we add a 'tags' field in our `BlogPost`::
 

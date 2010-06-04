@@ -112,6 +112,7 @@ class Document(SchemaDocument):
         if self.migration_handler:
             self.skip_validation = False
             self._migration = self.migration_handler(self.__class__)
+            self.validate(auto_migrate=True)
 
     def migrate(self, safe=True, _process_to_bson=True):
         """
@@ -119,7 +120,7 @@ class Document(SchemaDocument):
 
         safe : if True perform a safe update (see pymongo documentation for more details
         """
-        self._migration(safe=safe)
+        self._migrate(safe=safe)
 
     def _migrate(self, safe=True, process_to_bson=True):
         if process_to_bson:
@@ -133,33 +134,42 @@ class Document(SchemaDocument):
             raise OperationFailure('Can not reload an unsaved document.'
               ' %s is not found in the database' % self['_id'])
         # self.reload()
-        old_value = DotCollapsedDict(self)
-        old_value.update(new_value)
-        self.update(DotExpandedDict(old_value))
+        #old_value = DotCollapsedDict(self)
+        #old_value.update(new_value)
+        #self.update(DotExpandedDict(old_value))
         self._old_footprint = deepcopy(DotCollapsedDict(self)) 
         self._process_custom_type('python', self, self.structure)
 
-    def validate(self):
+    def validate(self, auto_migrate=False):
         if self.use_autorefs:
-            self._make_reference(self, self.structure)
+            if not auto_migrate:
+                # don't make reference if auto_migrate is True because this
+                # mean validate was called from __init__ and no collection is
+                # found when validating at __init__ with autorefs
+                self._make_reference(self, self.structure)
         size = self.get_size()
         if size > 3999999:
             raise MaxDocumentSizeError("The document size is too big, documents "
               "lower than 4Mb is allowed (got %s bytes)" % size)
-        error = None
-        try:
+        if auto_migrate:
+            error = None
+            try:
+                super(Document, self).validate()
+            except StructureError, e:
+                error = e
+            except KeyError, e:
+                error = e
+            except SchemaTypeError, e:
+                error = e
+            if error:
+                if not self.migration_handler:
+                    raise StructureError(str(error))
+                else:
+                    # if we are here that's becose super.validate failed
+                    # but it has processed custom type to bson.
+                    self._migrate(process_to_bson=False)
+        else:
             super(Document, self).validate()
-        except StructureError, e:
-            error = e
-        except KeyError, e:
-            error = e
-        if error:
-            if not self.migration_handler:
-                raise StructureError(str(e))
-            else:
-                # if we are here that's becose super.validate failed
-                # but it has processed custom type to bson.
-                self._migrate(process_to_bson=False)
 
     def get_size(self):
         """
@@ -346,7 +356,7 @@ class Document(SchemaDocument):
         `save()` follow the pymongo.collection.save arguments
         """
         if validate is True or (validate is None and self.skip_validation is False):
-            self.validate()
+            self.validate(auto_migrate=False)
         else:
             if self.use_autorefs:
                 self._make_reference(self, self.structure)

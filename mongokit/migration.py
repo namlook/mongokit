@@ -63,6 +63,13 @@ class DocumentMigration(object):
                 if '_id' in doc:
                     self.target['_id'] = doc['_id']
                 doc.collection.update(self.target, self.update, multi=False, safe=safe)
+                # reload
+                try:
+                    doc.update(doc.collection.get_from_id(doc['_id']))
+                except:
+                    raise OperationFailure('Can not reload an unsaved document.'
+                      ' %s is not found in the database' % doc['_id'])
+                # self.reload()
 
     def migrate_all(self, collection, safe=True):
         method_names = sorted([i for i in dir(self) if i.startswith('allmigration')])

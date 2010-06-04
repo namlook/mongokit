@@ -40,13 +40,14 @@ class MigrationTestCase(unittest.TestCase):
         # create initial blog post class
         class BlogPost(Document):
             structure = {
+                'author':unicode,
                 "blog_post":{
                     "title": unicode,
                     "created_at": datetime,
                     "body": unicode,
                 }
             }
-            default_values = {'blog_post.created_at':datetime.utcnow()}
+            default_values = {'blog_post.created_at':datetime(2010, 1, 1)}
         self.connection.register([BlogPost])
 
         # creating some blog posts
@@ -63,6 +64,7 @@ class MigrationTestCase(unittest.TestCase):
     def test_simple_doc_migration(self):
         class BlogPost(Document):
             structure = {
+                "author":unicode,
                 "blog_post":{
                     "title": unicode,
                     "created_at": datetime,
@@ -89,6 +91,7 @@ class MigrationTestCase(unittest.TestCase):
     def test_simple_all_migration(self):
         class BlogPost(Document):
             structure = {
+                "author":unicode,
                 "blog_post":{
                     "title": unicode,
                     "created_at": datetime,
@@ -115,6 +118,7 @@ class MigrationTestCase(unittest.TestCase):
     def test_simple_all_migration_with_bad_update(self):
         class BlogPost(Document):
             structure = {
+                "author": unicode,
                 "blog_post":{
                     "title": unicode,
                     "created_at": datetime,
@@ -149,9 +153,10 @@ class MigrationTestCase(unittest.TestCase):
         # update blog post class
         class BlogPost(Document):
             structure = {
+                "author":unicode,
                 "blog_post":{
                     "title": unicode,
-                    "created_at": datetime,
+                    "creation_date": datetime,
                     "body": unicode,
                     "tags": [unicode],
                 }
@@ -161,18 +166,15 @@ class MigrationTestCase(unittest.TestCase):
 
         # fetching a blog post
         bp = self.col.BlogPost.find_one()
-        created_at = bp['blog_post']['created_at']
-        assert 'tags' not in bp['blog_post']
+        # the field 'tags' has been added automatically
+        assert 'tags' in bp['blog_post']
+        assert 'created_at' not in bp['blog_post']
+        assert bp['blog_post']['creation_date'] == datetime(2010, 1, 1)
 
         # via lazzy migration, the following line don't raise errors
         bp['blog_post']['title'] = u'Hello big World'
         bp.save()
         assert bp['blog_post']['title'] == 'Hello big World', bp['blog_post']
-
-        # the field 'tags' has been added automatically
-        assert 'tags' in bp['blog_post'], bp
-        assert 'creation_date' in bp['blog_post'], bp
-        assert bp['blog_post']['creation_date'] == created_at
 
     def test_lazy_migration_with_skip_validation(self):
         # creating blog post migration
@@ -190,9 +192,10 @@ class MigrationTestCase(unittest.TestCase):
         class BlogPost(Document):
             skip_validation = True
             structure = {
+                "author":unicode,
                 "blog_post":{
                     "title": unicode,
-                    "created_at": datetime,
+                    "creation_date": datetime,
                     "body": unicode,
                     "tags": [unicode],
                 }
@@ -202,17 +205,13 @@ class MigrationTestCase(unittest.TestCase):
 
         # fetching a blog post
         bp = self.col.BlogPost.find_one()
-        created_at = bp['blog_post']['created_at']
-        assert 'tags' not in bp['blog_post']
+        # the field 'tags' has been added automatically
+        assert 'tags' in bp['blog_post']
+        assert 'created_at' not in bp['blog_post']
+        assert bp['blog_post']['creation_date'] == datetime(2010, 1, 1)
 
         # via lazzy migration, the following line don't raise errors
         bp.save()
-
-        # the field 'tags' has been added automatically
-        assert 'tags' in bp['blog_post'], bp
-        assert 'creation_date' in bp['blog_post'], bp
-        assert bp['blog_post']['creation_date'] == created_at
-
 
     def test_lazy_migration_with_autorefs(self):
         # creating blog post migration
@@ -230,9 +229,10 @@ class MigrationTestCase(unittest.TestCase):
         # update blog post class
         class BlogPost(Document):
             structure = {
+                "author":unicode,
                 "blog_post":{
                     "title": unicode,
-                    "created_at": datetime,
+                    "creation_date": datetime,
                     "body": unicode,
                     "tags": [unicode],
                 }
@@ -266,8 +266,48 @@ class MigrationTestCase(unittest.TestCase):
         self.connection.register([A])
         
         a = self.col.A.fetch().next()
-        assert 'bar' not in a['a'], a
+        assert 'bar' in a['a'], a
         assert 'creation_date' in a['a']['blogpost']['blog_post'], a
         a.validate()
         assert 'bar' in a['a'], a
+
+    def test_lazy_migration_with_dynamic_type(self):
+        # creating blog post migration
+        class BlogPostMigration(DocumentMigration):
+            def migration01__add_tags(self):
+                self.target = {'blog_post':{'$exists':True}}
+                self.update = {'$set':{'blog_post.tags':[]}}
+            def migration02__rename_create_at_to_creation_date(self):
+                if 'created_at' in self.doc['blog_post']:
+                    self.target = {'blog_post.created_at':{'$exists':True}}
+                    self.update = {
+                      '$set':{'blog_post.creation_date': self.doc['blog_post']['created_at']},
+                      '$unset':{'blog_post.created_at':1}
+                    }
+            def migration03__change_title_structure(self):
+                self.target = {'blog_post.title':{'$exists':True, '$type':2}}
+                self.update = {'$set':{'blog_post.title':{'lang':u'fr', 'value':self.doc['blog_post']['title']}}}
+                #self.update = {'$set':{'blog_post.title':1}}
+
+            def migration04__change_tags_structure(self):
+                self.target = {'blog_post.tags':{'$exists':True}}
+                self.update = {'$set':{'blog_post.tags':[{'foo': self.doc['blog_post']['title']}]}}
+
+        # update blog post class
+        class BlogPost(Document):
+            structure = {
+                "author":unicode,
+                "blog_post":{
+                    "title": {'lang':unicode, 'value':unicode},
+                    "creation_date": datetime,
+                    "body": unicode,
+                    "tags": [{'foo':unicode}],
+                }
+            }
+            migration_handler = BlogPostMigration
+        self.connection.register([BlogPost])
+
+        doc = self.col.BlogPost.find_one({'blog_post.title':'hello 0'})
+        assert doc == {u'blog_post': {u'body': u'I the post number 0', u'title': {u'lang': u'fr', u'value': u'hello 0'}, u'tags': [{u'foo': {u'lang': u'fr', u'value': u'hello 0'}}], u'creation_date': datetime(2010, 1, 1, 0, 0)}, u'author': None, u'_id': doc['_id']},  doc
+
 
