@@ -32,6 +32,7 @@ Features
  * import/export to json
  * i18n support
  * GridFS support
+ * document migration support
 
 A quick example
 ===============
@@ -112,6 +113,15 @@ Mongokit is documented and well tested with 100% of code coverage::
 
 Change Log
 ==========
+
+v0.5.7
+------
+
+ * fix #63 - Creating index for each document instance operation. Brings speed improvements
+ * fix #60 - autorefs doesn't work with complex structures
+ * fix #62 - Dereference to model. Thanks to Christian Joudrey for the patch
+ * fix #64 - error with atomic_save when using embed document
+ * fix #65 - Lazy migrations with dict in list and documentation fix
 
 v0.5.6
 ------

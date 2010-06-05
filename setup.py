@@ -38,7 +38,7 @@ import codecs
 
 setup(
     name = 'mongokit',
-    version = '0.5.6',
+    version = '0.5.7',
 
     description = 'Python mongodb kit',
     long_description = codecs.open('README', "r", "utf-8").read(),
