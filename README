@@ -114,6 +114,14 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v0.5.8
+------
+
+ * add rewind to cursor
+ * killed many bug in `from_json()`
+ * fix #66 - local variable 'l_objs' referenced before assignment
+ * fix #61 - Issue with indexing on multi-columns with directions
+
 v0.5.7
 ------
 
