@@ -627,4 +627,76 @@ class JsonTestCase(unittest.TestCase):
         assert mydoc.to_json_type() == {'_id': 'mydoc2', 'bla': {'bar': 42, 'foo': {'en': u'bar'}, 'egg': None}, 'spam': [946684800000, 1218153600000]}
         assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"bar": 42, "foo": {"en": "bar"}, "egg": null}, "spam": [946684800000, 1218153600000]}', mydoc.to_json()
 
+    def test_from_json_with_ref(self):
+        class A(Document):
+            structure = {
+                'foo': unicode
+            }
+        class B(Document):
+            structure = {
+                'bar': int,
+                'a': A,
+            }
+            use_autorefs = True
+        self.connection.register([A, B])
+        a = self.col.A()
+        a['_id'] = u'a'
+        a['foo'] = u'a'
+        a.save()
+
+        json = '{"_id": "b", "bar":1, "a":{"$id": "a", "$ref": "%s", "$db": "%s"}}' % (self.col.name, self.col.database.name)
+        print json
+        b = self.col.B.from_json(json)
+        b.save()
+        assert isinstance(b['a'], A), type(b['a'])
+
+    def test_from_json_with_ref_in_list(self):
+        class A(Document):
+            structure = {
+                'foo': unicode
+            }
+        class B(Document):
+            structure = {
+                'bar': int,
+                'a': [A],
+            }
+            use_autorefs = True
+        self.connection.register([A, B])
+        a = self.col.A()
+        a['_id'] = u'a'
+        a['foo'] = u'a'
+        a.save()
+
+        json = '{"_id": "b", "bar":1, "a":[{"$id": "a", "$ref": "%s", "$db": "%s"}]}' % (self.col.name, self.col.database.name)
+        b = self.col.B.from_json(json)
+        b.save()
+        assert isinstance(b['a'][0], A), type(b['a'][0])
+  
+    def test_from_json_with_type_as_key(self):
+        class MyDoc(Document):
+            structure = {
+                'foo': {unicode:[unicode]}
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'a'
+        mydoc['foo'][u'bar'] = [u'bla', u'ble']
+
+        json = '{"_id": "a", "foo": {"bar":["bla", "ble"]}}'
+        mydoc_from_json = self.col.MyDoc.from_json(json)
+        assert mydoc == mydoc_from_json, (mydoc, mydoc_from_json)
+
  
+    def test_from_json_with_null_date(self):
+        class MyDoc(Document):
+            structure = {
+                'date': datetime.datetime,
+                'date_in_list': [datetime.datetime],
+            }
+        self.connection.register([MyDoc])
+        
+        json = '{"_id": "a", "date": null, "date_in_list":[]}'
+        mydoc_from_json = self.col.MyDoc.from_json(json)
+        assert mydoc_from_json['_id'] == 'a'
+        assert mydoc_from_json['date'] is None
+        assert mydoc_from_json['date_in_list'] == []

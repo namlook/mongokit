@@ -32,6 +32,7 @@ from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict, DotEx
 from mongokit.grid import *
 import pymongo
 from pymongo.bson import BSON
+from pymongo.dbref import DBRef
 from pymongo.objectid import ObjectId
 import re
 from copy import deepcopy
@@ -80,8 +81,8 @@ class Document(SchemaDocument):
 
     authorized_types = SchemaDocument.authorized_types + [
       pymongo.binary.Binary,
-      pymongo.objectid.ObjectId,
-      pymongo.dbref.DBRef,
+      ObjectId,
+      DBRef,
       pymongo.code.Code,
       type(re.compile("")),
     ]
@@ -340,7 +341,7 @@ class Document(SchemaDocument):
         return a pymongo DBRef instance related to the document
         """
         assert '_id' in self, "You must specify an '_id' for using this method"
-        return pymongo.dbref.DBRef(database=self.db.name, collection=self.collection.name, id=self['_id'])
+        return DBRef(database=self.db.name, collection=self.collection.name, id=self['_id'])
 
     def save(self, uuid=False, validate=None, safe=True, *args, **kwargs):
         """
@@ -525,7 +526,10 @@ class Document(SchemaDocument):
         """
         def _convert_to_python(doc, struct, path = "", root_path=""):
             for key in struct:
-                new_key = key
+                if type(key) is type:
+                    new_key = '$%s' % key.__name__
+                else:
+                    new_key = key
                 new_path = ".".join([path, new_key]).strip('.')
                 if isinstance(struct[key], dict):
                     if doc: # we don't need to process an empty doc
@@ -542,27 +546,42 @@ class Document(SchemaDocument):
                         elif isinstance(struct[key][0], R):
                             l_objs = []
                             for obj in doc[key]:
-                                db = obj['_database']
-                                col = obj['_collection']
+                                db = obj.get('_database') or obj.get('$db')
+                                col = obj.get('_collection') or obj.get('$ref')
                                 if '_id' in obj:
+                                    id_ref = '_id'
                                     if '$oid' in obj['_id']:
                                         obj['_id'] = ObjectId(obj['_id']['$oid'])
-                                obj = struct[key][0]._doc(obj, collection=self.connection[db][col]).get_dbref()
+                                elif '$id' in obj:
+                                    id_ref = '$id'
+                                obj_class = struct[key][0]._doc
+                                _id = obj[id_ref]
+                                obj = getattr(self.connection[db][col], obj_class.__name__).one({'_id': _id})
+                                #obj = struct[key][0]._doc(obj, collection=self.connection[db][col]).get_dbref()
                                 l_objs.append(obj)
                             doc[key] = l_objs
                         elif isinstance(struct[key][0], dict):
                             if doc[key]:
                                 for obj in doc[key]:
                                     _convert_to_python(obj, struct[key][0], new_path, root_path)
-                elif struct[key] is datetime.datetime:
+                elif struct[key] is datetime.datetime and doc[key] is not None:
                     doc[key] = fromtimestamp(doc[key])
-                elif isinstance(struct[key], R) and doc[key] is not None:
-                    db = doc[key]['_database']
-                    col = doc[key]['_collection']
+                elif (isinstance(struct[key], R) or isinstance(struct[key], DocumentProperties)) and doc[key] is not None:
+                    db = doc[key].get('_database') or doc[key].get('$db')
+                    col = doc[key].get('_collection') or doc[key].get('$ref')
                     if '_id' in doc[key]:
-                        if '$oid' in doc[key]['_id']:
-                            doc[key]['_id'] = ObjectId(doc[key]['_id']['$oid'])
-                    doc[key] = struct[key]._doc(doc[key], collection=self.connection[db][col]).get_dbref()
+                        id_ref = '_id'
+                    elif '$id' in doc[key]:
+                        id_ref = '$id'
+                    if '$oid' in doc[key][id_ref]:
+                        doc[key][id_ref] = ObjectId(doc[key][id_ref]['$oid'])
+                    if isinstance(struct[key], R):
+                        obj_class = struct[key]._doc
+                    else:
+                        obj_class = struct[key]
+                    #_id = obj_class(doc[key], collection=self.connection[db][col])[id_ref]
+                    _id = doc[key][id_ref]
+                    doc[key] = getattr(self.connection[db][col], obj_class.__name__).one({'_id': _id})
         try:
             import anyjson
         except ImportError:
@@ -676,8 +695,14 @@ class Document(SchemaDocument):
                     struct[key] = R(struct[key], self.connection, db_name)
                 # if we have DBRef into the document we have to call
                 # _process_custom_type another time.
-                if isinstance(doc[key], pymongo.dbref.DBRef):
-                    doc._process_custom_type('python', doc, doc.structure)
+                if isinstance(doc[key], DBRef):
+                    # XXX check this
+                    db = doc[key].database
+                    col = doc[key].collection
+                    _id = doc[key].id
+                    obj_class = struct[key]._doc
+                    doc[key] = getattr(self.connection[db][col], obj_class.__name__).one({'_id': _id})
+                    #doc._process_custom_type('python', doc, doc.structure)
                 # be sure that we have an instance of MongoDocument
                 if not isinstance(doc[key], struct[key]._doc) and doc[key] is not None:
                     self._raise_exception(SchemaTypeError, new_path, 
@@ -716,13 +741,13 @@ class Document(SchemaDocument):
                 else:# case {unicode:int}
                     pass
             elif isinstance(struct[key], list) and len(struct[key]):
+                l_objs = []
                 if isinstance( struct[key][0], SchemaProperties) or isinstance(struct[key][0], R):
                     if not isinstance(struct[key][0], R):
                         db_name = None
                         if self.force_autorefs_current_db:
                             db_name = self.db.name
                         struct[key][0] = R(struct[key][0], self.connection, db_name)
-                    l_objs = []
                     for no, obj in enumerate(doc[key]):
                         if not isinstance(obj, struct[key][0]._doc) and obj is not None:
                             self._raise_exception(SchemaTypeError, new_path,
@@ -751,7 +776,7 @@ class Document(SchemaDocument):
 
 class R(CustomType):
     """ CustomType to deal with autorefs documents """
-    mongo_type = pymongo.dbref.DBRef
+    mongo_type = DBRef
     python_type = Document
 
     def __init__(self, doc, connection, fallback_database=None):
@@ -762,15 +787,15 @@ class R(CustomType):
     
     def to_bson(self, value):
         if value is not None:
-            return pymongo.dbref.DBRef(database=value.db.name, collection=value.collection.name, id=value['_id'])
+            return DBRef(database=value.db.name, collection=value.collection.name, id=value['_id'])
         
     def to_python(self, value):
         if value is not None:
-            if not isinstance(value, pymongo.dbref.DBRef):
+            if not isinstance(value, DBRef):
                 if '$ref' not in value:
                     value = value.get_dbref()
                 else:
-                    value = pymongo.dbref.DBRef(database=value.get('$db'), collection=value['$ref'], id=value['$id'])
+                    value = DBRef(database=value.get('$db'), collection=value['$ref'], id=value['$id'])
             if value.database:
                 database = value.database
             else:

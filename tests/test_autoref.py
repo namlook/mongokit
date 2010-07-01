@@ -888,3 +888,10 @@ class AutoRefTestCase(unittest.TestCase):
         assert isinstance(self.connection.test.dereference(dbref, DocA), DocA)
 
 
+    def test_autorefs_with_list(self):
+        class User(Document):
+           structure = {'permissions': [unicode]}
+           use_autorefs = True
+        self.connection.register([User])
+        self.col.User()
+

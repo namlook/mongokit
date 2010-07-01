@@ -55,5 +55,5 @@ class Database(PymongoDatabase):
         if not issubclass(model, Document):
             raise TypeError("second argument must be a Document")
 
-        return self[dbref.collection][model.__name__].one({'_id': dbref.id})
+        return getattr(self[dbref.collection], model.__name__).one({'_id': dbref.id})
 
