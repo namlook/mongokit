@@ -771,3 +771,30 @@ class ApiTestCase(unittest.TestCase):
         doc.reload()
         assert doc == {'_id': 3, 'foo': {u'eggs': {u'spam': 2}, u'bar': u'mybar'}, 'bla': u'ble'}
 
+    def test_rewind(self):
+        class MyDoc(Document):
+            structure = {
+                'foo':int,
+            }
+        self.connection.register([MyDoc])
+
+        for i in range(10):
+            doc = self.col.MyDoc() 
+            doc['foo'] = i
+            doc.save()
+
+        cur = self.col.MyDoc.find()
+        for i in cur:
+            assert isinstance(i, MyDoc), type(MyDoc)
+        try:
+            cur.next()
+        except StopIteration:
+            pass
+        cur.rewind()
+        for i in cur:
+            assert isinstance(i, MyDoc), type(MyDoc)
+        for i in cur.rewind():
+            assert isinstance(i, MyDoc), type(MyDoc)
+            
+            
+

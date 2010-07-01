@@ -76,3 +76,6 @@ class MongoDocumentCursor(object):
             doc._build_footprint()
             yield doc
 
+    def rewind(self, *args, **kwargs):
+        return self.__class__(self._cursor.rewind(*args, **kwargs), self._class_object)
+
