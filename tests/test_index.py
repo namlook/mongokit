@@ -532,3 +532,20 @@ class IndexTestCase(unittest.TestCase):
         doc = self.col.D()
         assert doc.indexes == [{'fields': 'b.title'}, {'fields': 'a.title'}, {'fields': 'c.title'}]
 
+    def test_index_with_default_direction(self):
+        class MyDoc(Document):
+            structure = {
+                'foo': unicode,
+                'bar': int
+            }
+            indexes = [
+                {'fields': ['foo', ('bar', -1)]},
+            ]
+        self.connection.register([MyDoc])
+        for i in range(10):
+           doc = self.col.MyDoc()
+           doc['foo'] = unicode(i)
+           doc['bar'] = i
+           doc.save()
+        assert self.col.database.system.indexes.find_one({'name': 'foo_1_bar_-1'})
+

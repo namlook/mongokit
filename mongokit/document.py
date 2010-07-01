@@ -437,13 +437,14 @@ class Document(SchemaDocument):
                 ttl = index['ttl']
             if isinstance(index['fields'], tuple):
                 fields = [index['fields']]
-            elif hasattr(index['fields'], '__iter__'):
-                if isinstance(index['fields'][0], tuple):
-                    fields = [(name, direction) for name, direction in index['fields']]
-                else:
-                    fields = [(name, 1) for name in index['fields']]
+            elif isinstance(index['fields'], basestring):
+                fields = [(index['fields'], 1)]
             else:
-                fields = index['fields']
+                fields = []
+                for field in index['fields']:
+                    if isinstance(field, basestring):
+                        field = (field, 1)
+                    fields.append(field)
             log.debug('Creating index for %s' % str(index['fields']))
             self.collection.ensure_index(fields, unique=unique, ttl=ttl)
 
@@ -636,13 +637,13 @@ class Document(SchemaDocument):
                             elif isinstance(value, list):
                                 for val in value:
                                     if isinstance(val, tuple):
-                                        for field, direction in value:
-                                            if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
-                                                self._raise_exception(ValueError, None, 
-                                                  "Error in indexes: can't find %s in structure" % field )
-                                            if not direction in [1, -1]:
-                                                self._raise_exception(BadIndexError, None, 
-                                                  "index direction must be 1 or -1. Got %s" % direction)
+                                        field, direction = val
+                                        if field not in self._namespaces and field not in STRUCTURE_KEYWORDS:
+                                            self._raise_exception(ValueError, None,
+                                              "Error in indexes: can't find %s in structure" % field )
+                                        if not direction in [1, -1]:
+                                            self._raise_exception(BadIndexError, None,
+                                              "index direction must be 1 or -1. Got %s" % direction)
                                     else:
                                         if val not in self._namespaces and val not in STRUCTURE_KEYWORDS:
                                             self._raise_exception(ValueError, None, 
