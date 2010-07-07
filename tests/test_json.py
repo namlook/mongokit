@@ -478,7 +478,7 @@ class JsonTestCase(unittest.TestCase):
         self.connection.register([MyDoc])
         json = '{"doc": {"embed": [{"foo": "bar", "bar": 42}]}, "_id": "mydoc"}'
         mydoc = self.col.MyDoc.from_json(json)
-        assert mydoc == {'doc': {'embed': [{'foo': 'bar', 'bar': 42}]}, '_id': 'mydoc'}
+        assert mydoc == {'doc': {'embed': [{'foo': 'bar', 'bar': 42}]}, '_id': 'mydoc'}, mydoc
 
     def test_from_json_unicode(self):
         class MyDoc(Document):
@@ -626,6 +626,21 @@ class JsonTestCase(unittest.TestCase):
         mydoc.save()
         assert mydoc.to_json_type() == {'_id': 'mydoc2', 'bla': {'bar': 42, 'foo': {'en': u'bar'}, 'egg': None}, 'spam': [946684800000, 1218153600000]}
         assert mydoc.to_json() == '{"_id": "mydoc2", "bla": {"bar": 42, "foo": {"en": "bar"}, "egg": null}, "spam": [946684800000, 1218153600000]}', mydoc.to_json()
+
+    def test_from_json_with_list(self):
+        class MyDoc(Document):
+            structure = {
+                'foo': {'bar': [unicode]}
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc['_id'] = u'mydoc'
+        mydoc['foo']['bar'] = [u'a', u'b', u'c']
+        mydoc.save()
+        json = u'{"_id": "mydoc", "foo":{"bar":["a", "b", "c"]}}'
+        doc_from_json = self.col.MyDoc.from_json(json)
+        doc_from_json.save()
+        assert doc_from_json == mydoc
 
     def test_from_json_with_ref(self):
         class A(Document):

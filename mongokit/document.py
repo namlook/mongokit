@@ -742,13 +742,13 @@ class Document(SchemaDocument):
                 else:# case {unicode:int}
                     pass
             elif isinstance(struct[key], list) and len(struct[key]):
-                l_objs = []
                 if isinstance( struct[key][0], SchemaProperties) or isinstance(struct[key][0], R):
                     if not isinstance(struct[key][0], R):
                         db_name = None
                         if self.force_autorefs_current_db:
                             db_name = self.db.name
                         struct[key][0] = R(struct[key][0], self.connection, db_name)
+                    l_objs = []
                     for no, obj in enumerate(doc[key]):
                         if not isinstance(obj, struct[key][0]._doc) and obj is not None:
                             self._raise_exception(SchemaTypeError, new_path,
@@ -769,11 +769,10 @@ class Document(SchemaDocument):
                                 obj.save()
                                 self._dbrefs[full_new_path].update(obj)
                         l_objs.append(obj)
+                        doc[key] = l_objs
                 elif isinstance(struct[key][0], dict):
                     for no, obj in enumerate(doc[key]):
                         self._make_reference(obj, struct[key][0], "%s.%s" % (new_path,no))
-                else:
-                    doc[key] = l_objs
 
 class R(CustomType):
     """ CustomType to deal with autorefs documents """
