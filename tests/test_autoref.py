@@ -889,9 +889,27 @@ class AutoRefTestCase(unittest.TestCase):
 
 
     def test_autorefs_with_list(self):
-        class User(Document):
-           structure = {'permissions': [unicode]}
-           use_autorefs = True
-        self.connection.register([User])
-        self.col.User()
+        class VDocument(Document):
+            db_name = 'MyDB'
+            use_dot_notation = True
+            use_autorefs = True
+            skip_validation = True
+        
+            def __init__(self, *args, **kwargs):
+                super(VDocument, self).__init__(*args, **kwargs)
+        
+            def save(self, *args, **kwargs):
+                kwargs.update({'validate':True})
+                return super(VDocument, self).save(*args, **kwargs)
 
+        class H(VDocument):
+            structure = {'name':[ObjectId], 'blah':[unicode], 'foo': [{'x':unicode}]}
+        self.connection.register([H, VDocument])
+
+        h = self.col.H()
+        obj_id = ObjectId()
+        h.name.append(obj_id)
+        h.blah.append(u'some string')
+        h.foo.append({'x':u'hey'})
+        h.save()
+        assert h == {'blah': [u'some string'], 'foo': [{'x': u'hey'}], 'name': [obj_id], '_id': h['_id']}
