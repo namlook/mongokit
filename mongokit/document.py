@@ -750,6 +750,8 @@ class Document(SchemaDocument):
                         struct[key][0] = R(struct[key][0], self.connection, db_name)
                     l_objs = []
                     for no, obj in enumerate(doc[key]):
+                        if isinstance(obj, DBRef):
+                            obj = getattr(self.connection[obj.database][obj.collection], struct[key][0]._doc.__name__).get_from_id(obj.id)
                         if not isinstance(obj, struct[key][0]._doc) and obj is not None:
                             self._raise_exception(SchemaTypeError, new_path,
                               "%s must be an instance of Document not %s" % (

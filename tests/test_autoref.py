@@ -887,17 +887,16 @@ class AutoRefTestCase(unittest.TestCase):
         assert self.connection.test.dereference(dbref, DocA) == {'_id':doca['_id'], 'name': 'Test A'}
         assert isinstance(self.connection.test.dereference(dbref, DocA), DocA)
 
-
     def test_autorefs_with_list(self):
         class VDocument(Document):
             db_name = 'MyDB'
             use_dot_notation = True
             use_autorefs = True
             skip_validation = True
-        
+
             def __init__(self, *args, **kwargs):
                 super(VDocument, self).__init__(*args, **kwargs)
-        
+
             def save(self, *args, **kwargs):
                 kwargs.update({'validate':True})
                 return super(VDocument, self).save(*args, **kwargs)
@@ -913,3 +912,33 @@ class AutoRefTestCase(unittest.TestCase):
         h.foo.append({'x':u'hey'})
         h.save()
         assert h == {'blah': [u'some string'], 'foo': [{'x': u'hey'}], 'name': [obj_id], '_id': h['_id']}
+
+    def test_autorefs_with_list2(self):
+        class DocA(Document):
+            structure = {'name':unicode}
+
+        class DocB(Document):
+            structure = {
+                'docs':[{
+                    'doca': [DocA],
+                    'inc':int,
+                }],
+            }
+            use_autorefs = True
+
+        self.connection.register([DocA, DocB])
+
+        doca = self.col.DocA()
+        doca['_id'] = u'doca'
+        doca['name'] = u"foo"
+        doca.save()
+
+        self.col.insert(
+          {'_id': 'docb', 'docs':[
+            {
+              'doca':[DBRef(database='test', collection='mongokit', id='doca')],
+              'inc':2,
+            },
+          ]
+        })
+        assert self.col.DocB.find_one({'_id':'docb'}) == {u'docs': [{u'doca': [{u'_id': u'doca', u'name': u'foo'}], u'inc': 2}], u'_id': u'docb'}
