@@ -114,6 +114,11 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v0.5.10
+-------
+
+ * fix bug in autorefs when reference in double list
+
 v0.5.9
 ------
 
