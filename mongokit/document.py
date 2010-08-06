@@ -28,7 +28,7 @@
 from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties, StructureError
-from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict, DotExpandedDict
+from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict, DotExpandedDict, DotedDict
 from mongokit.grid import *
 import pymongo
 from pymongo.bson import BSON
@@ -129,11 +129,12 @@ class Document(SchemaDocument):
         self._migration.migrate(self, safe=safe)
         new_value = DotCollapsedDict(self)
         # reload
-        try:
-            self.update(self.collection.get_from_id(self['_id']))
-        except:
+        old_doc = self.collection.get_from_id(self['_id'])
+        if not old_doc:
             raise OperationFailure('Can not reload an unsaved document.'
               ' %s is not found in the database' % self['_id'])
+        else:
+            self.update(DotedDict(old_doc))
         # self.reload()
         #old_value = DotCollapsedDict(self)
         #old_value.update(new_value)
@@ -328,11 +329,12 @@ class Document(SchemaDocument):
         If no _id is set in the document, a KeyError is raised.
         """
         self._process_custom_type('bson', self, self.structure)
-        try:
-            self.update(self.collection.get_from_id(self['_id']))
-        except:
+        old_doc = self.collection.get_from_id(self['_id'])
+        if not old_doc:
             raise OperationFailure('Can not reload an unsaved document.'
               ' %s is not found in the database' % self['_id'])
+        else:
+            self.update(DotedDict(old_doc))
         self._old_footprint = deepcopy(DotCollapsedDict(self)) 
         self._process_custom_type('python', self, self.structure)
 
@@ -406,11 +408,12 @@ class Document(SchemaDocument):
                 # update
                 self.collection.update({'_id':self['_id']}, update_query, safe=safe)
                 # reload
-                try:
-                    self.update(self.collection.get_from_id(self['_id']))
-                except:
+                old_doc = self.collection.get_from_id(self['_id'])
+                if not old_doc:
                     raise OperationFailure('Can not reload an unsaved document.'
                       ' %s is not found in the database' % self['_id'])
+                else:
+                    self.update(DotedDict(old_doc))
                 # self.reload()
         self._old_footprint = deepcopy(DotCollapsedDict(self))
         self._process_custom_type('python', self, self.structure)

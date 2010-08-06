@@ -84,7 +84,12 @@ class DotedDict(dict):
         self._dot_notation_warning = warning
         if doc is None: doc = {}
         super(DotedDict, self).__init__(doc)
-
+        self.__dotify_dict(self)
+    def __dotify_dict(self, doc):
+        for k,v in doc.iteritems():
+            if isinstance(v, dict):
+                doc[k] = DotedDict(v)
+                self.__dotify_dict(v)
     def __setattr__(self, key, value):
         if key in self:
             self[key] = value

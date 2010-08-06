@@ -172,7 +172,7 @@ class ApiTestCase(unittest.TestCase):
         assert self.col.MyDoc.find().hint([('foo', 1)])
         assert [i['foo'] for i in self.col.MyDoc.find().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
         allPlans = self.col.MyDoc.find().explain()['allPlans']
-        assert allPlans == [{u'cursor': u'BasicCursor', u'startKey': {}, u'endKey': {}}]
+        assert allPlans == [{u'cursor': u'BasicCursor', u'indexBounds': {}}]
         next_doc =  self.col.MyDoc.find().sort('foo',1).next()
         assert callable(next_doc) is False
         assert isinstance(next_doc, MyDoc)

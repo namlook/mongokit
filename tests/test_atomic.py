@@ -28,7 +28,7 @@
 import unittest
 
 from mongokit import *
-from pymongo.objectid import ObjectId
+import datetime
 
 
 class AtomicTestCase(unittest.TestCase):
@@ -183,3 +183,71 @@ class AtomicTestCase(unittest.TestCase):
 
         assert self.col.get_from_id(doca['_id']) == {'_id':doca['_id'], "name":"arf"}, self.col.get_from_id(doca['_id'])
 
+
+    def test_atomic_save_with_dot_notation(self):
+        class VDocument(Document):
+           db_name = 'MyDB'
+           use_dot_notation = True
+           use_autorefs = True
+           skip_validation = True
+           atomic_save = True
+
+           def __init__(self, *args, **kwargs):
+               super(VDocument, self).__init__(*args, **kwargs)
+
+           def save(self, *args, **kwargs):
+               kwargs.update({'validate':True})
+               return super(VDocument, self).save(*args, **kwargs)
+
+        class MyDoc(VDocument):
+            structure = {
+                'details': unicode,
+                'end_date': datetime.datetime,
+                'is_active': bool,
+                'is_removed': bool,
+                'owner': ObjectId,
+                'questions': [{
+                    'content': unicode,
+                    'is_active': bool,
+                    'qid': int,
+                    'type': IS(u'text', u'code', u'file'),
+                }],
+                'tags': [ObjectId],
+                'title': unicode,
+                'xa_index': {'indexed': bool, 'needs_update': bool},
+            }
+        self.connection.register([MyDoc])
+
+        x = {u'_id': ObjectId('4c485c9e1d7c293f99000001'),
+         u'_version': 11,
+         u'details': u'detail var burada lorem morem ',
+         u'end_date': datetime.datetime(2000, 1, 1, 0, 0),
+         u'is_active': False,
+         u'is_removed': False,
+         u'owner': ObjectId('4c483bd41d7c291b55000000'),
+         u'questions': [],
+         u'tags': [ObjectId('4c541dde1d7c293345000000'),
+                  ObjectId('4c485c9e1d7c293f99000000')],
+         u'title': u'bebey',
+         u'xa_index': {u'indexed': True, u'needs_update': True}}
+        self.col.insert(x)
+
+        mydoc = self.col.MyDoc.get_from_id(ObjectId('4c485c9e1d7c293f99000001'))
+        mydoc.xa_index['needs_update'] = False
+        mydoc.save()
+        assert mydoc.xa_index['needs_update'] is False
+        assert self.col.MyDoc.get_from_id(ObjectId('4c485c9e1d7c293f99000001')).xa_index['needs_update'] is False
+        assert mydoc.xa_index.needs_update is False
+        mydoc.reload()
+        assert mydoc.xa_index['needs_update'] is False
+        assert mydoc.xa_index.needs_update is False
+        mydoc.xa_index['needs_update'] = True
+        mydoc.save()
+        assert mydoc.xa_index['needs_update'] is True
+        assert self.col.MyDoc.get_from_id(ObjectId('4c485c9e1d7c293f99000001')).xa_index['needs_update'] is True
+        assert mydoc.xa_index.needs_update is True
+        mydoc.xa_index.needs_update = False
+        mydoc.save()
+        assert mydoc.xa_index['needs_update'] is False
+        assert self.col.MyDoc.get_from_id(ObjectId('4c485c9e1d7c293f99000001')).xa_index['needs_update'] is False
+        assert mydoc.xa_index.needs_update is False
