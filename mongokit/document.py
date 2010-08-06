@@ -113,7 +113,7 @@ class Document(SchemaDocument):
         if self.migration_handler:
             self.skip_validation = False
             self._migration = self.migration_handler(self.__class__)
-            self.validate(auto_migrate=True)
+            Document.validate(self, auto_migrate=True)
 
     def migrate(self, safe=True, _process_to_bson=True):
         """

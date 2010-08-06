@@ -305,9 +305,13 @@ class MigrationTestCase(unittest.TestCase):
                 }
             }
             migration_handler = BlogPostMigration
+
+            def validate(self, auto_migrate=False):
+                assert self['body']
+                super(BlogPost, self).validate(auto_migrate)
+
         self.connection.register([BlogPost])
 
         doc = self.col.BlogPost.find_one({'blog_post.title':'hello 0'})
         assert doc == {u'blog_post': {u'body': u'I the post number 0', u'title': {u'lang': u'fr', u'value': u'hello 0'}, u'tags': [{u'foo': {u'lang': u'fr', u'value': u'hello 0'}}], u'creation_date': datetime(2010, 1, 1, 0, 0)}, u'author': None, u'_id': doc['_id']},  doc
-
 
