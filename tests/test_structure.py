@@ -267,6 +267,6 @@ class StructureTestCase(unittest.TestCase):
         try:
             MyDoc()
         except TypeError, e:
-            assert e.message.startswith("<built-in method utcnow of type object at ")
-            assert e.message.endswith("is not a type")
+            assert str(e).startswith("<built-in method utcnow of type object at ")
+            assert str(e).endswith("is not a type")
 
