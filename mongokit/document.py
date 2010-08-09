@@ -386,24 +386,55 @@ class Document(SchemaDocument):
             if current_version !=  db_version:
                 raise ConflictError('document version must be %s, found %s instead' % (
                   db_version, current_version))
+
+            def document_to_tuples(value):
+                result = []
+                if isinstance(value, dict):
+                    for key, val in value.iteritems():
+                        result.append((key, document_to_tuples(val)))
+
+                elif isinstance(value, list):
+                    for item in value:
+                        result.append(document_to_tuples(item))
+                else:
+                    return value
+
+                return tuple(result)
+
+
             # prepare query
             footprint = []
-            for field_name, value in DotCollapsedDict(self).iteritems():
-                if isinstance(value, list):
-                    value = tuple(value)
-                if isinstance(value, dict) and not value:
-                    continue
-                footprint.append((field_name, value))
+            #for field_name, value in DotCollapsedDict(self).iteritems():
+            for field_name, value in dict(self).iteritems():
+                footprint.append((field_name, document_to_tuples(value)))
             old_footprint = []
             for field_name, value in self._old_footprint.iteritems():
-                if isinstance(value, list):
-                    value = tuple(value)
-                if isinstance(value, dict) and not value:
-                    continue
-                old_footprint.append((field_name, value))
+                old_footprint.append((field_name, document_to_tuples(value)))
             difference = set(footprint).difference(set(old_footprint))
             if difference:
-                update_query = {'$set':dict(difference)}
+                def set_to_document(obj, structure):
+                    result = None
+
+                    if isinstance(structure, list):
+                        structure = structure[0]
+                        result = []
+                        for item in obj:
+                            result.append(set_to_document(item, structure))
+                    elif isinstance(structure, dict):
+                        result = {}
+
+                        for key, val in obj:
+                            result.update({key: set_to_document(val, structure[key])})
+                    else:
+                        return obj
+
+                    return result
+
+                #update_query = {'$set':dict(difference)}
+                difdict = {}
+                for key, val in difference:
+                    difdict.update({key: set_to_document(val, self.structure[key])})
+                update_query = {'$set':difdict}
                 update_query['$inc'] = {'_version':1}
                 # update
                 self.collection.update({'_id':self['_id']}, update_query, safe=safe)

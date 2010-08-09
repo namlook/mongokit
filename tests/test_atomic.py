@@ -225,7 +225,7 @@ class AtomicTestCase(unittest.TestCase):
          u'is_active': False,
          u'is_removed': False,
          u'owner': ObjectId('4c483bd41d7c291b55000000'),
-         u'questions': [],
+         u'questions': [{'content':u'deneme', 'is_active':False, 'qid':1, 'type':u'text'}],
          u'tags': [ObjectId('4c541dde1d7c293345000000'),
                   ObjectId('4c485c9e1d7c293f99000000')],
          u'title': u'bebey',
@@ -251,3 +251,5 @@ class AtomicTestCase(unittest.TestCase):
         assert mydoc.xa_index['needs_update'] is False
         assert self.col.MyDoc.get_from_id(ObjectId('4c485c9e1d7c293f99000001')).xa_index['needs_update'] is False
         assert mydoc.xa_index.needs_update is False
+
+        assert mydoc.questions[0]['content']  == u'deneme'
