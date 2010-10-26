@@ -114,7 +114,8 @@ class Document(SchemaDocument):
         if self.migration_handler:
             self.skip_validation = False
             self._migration = self.migration_handler(self.__class__)
-            Document.validate(self, auto_migrate=True)
+            if self.get('_id'):
+                Document.validate(self, auto_migrate=True)
         if self.atomic_save is True:
             raise DeprecationWarning('atomic_save is not supported anymore. Please update you code')
 
