@@ -31,7 +31,7 @@ from pymongo import ASCENDING, DESCENDING
 
 try:
     from magic import Magic
-except ImportError:
+except:
     Magic = None
 
 class FS(GridFS):
