@@ -25,145 +25,140 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gridfs import GridFS
-from gridfs.grid_file import GridFile
+from gridfs import GridFS, NoFile, GridOut
 from pymongo.objectid import ObjectId
+from pymongo import ASCENDING, DESCENDING
 
 try:
     from magic import Magic
 except ImportError:
     Magic = None
 
-class FSContainer(object):
-    def __init__(self, container_name, obj):
-        self._container_name = container_name
+class FS(GridFS):
+    def __init__(self, obj):
         self._obj = obj
-        self._fs = GridFS(self._obj.db)
-        if Magic:
-            self._magic = Magic(mime=True)
+        super(FS, self).__init__(obj.db)
+        if not isinstance(self, FSContainer):
+            for container in obj.gridfs.get('containers', []):
+                self.__dict__[container] = FSContainer(container, obj)
+        #self._fs = GridFS(self._obj.db)
+        #if Magic:
+        #    self._magic = Magic(mime=True)
+
+    def _get_spec(self, **kwargs):
+        if not self._obj.get('_id'):
+            raise RuntimeError('This document is not saved, no files should be attached')
+        spec = {'docid': self._obj['_id']}
+        spec.update(kwargs)
+        return spec
 
     def __getitem__(self, key):
-        f = self.open(key)
-        content = f.read()
-        f.close()
-        return content
+        if not self._obj.get('_id'):
+            raise RuntimeError('This document is not saved, no files should be attached')
+        return self.get_last_version(key).read()
 
     def __setitem__(self, key, value):
         content_type = None
-        if value and Magic:
-            content_type = self._magic.from_buffer(value)
-        f = self.open(key, 'w')
+        #if value and Magic:
+        #    content_type = self._magic.from_buffer(value)
+        spec = self._get_spec(filename=key, content_type=content_type)
         try:
-            f.content_type = content_type
-            f.write(value)
+            self.put(value, **spec)
         except TypeError:
             raise TypeError("GridFS value mus be string not %s" % type(value))
-        finally:
-            f.close()
-
-    def __delitem__(self, key):
-        spec = {'metadata.doc_id':self._obj['_id'], 'metadata.container':self._container_name, 'metadata.name':key}
-        self._fs.remove(spec,collection=self._obj.collection.name)
-
-    def open(self, name, mode='r'):
-        search_spec = {'metadata.name':name, 'metadata.container': self._container_name, 'metadata.doc_id':self._obj['_id']}
-        if mode == 'r':
-            try:
-                return GridFile(search_spec, self._obj.db, 'r', self._obj.collection.name)
-            except IOError:
-                raise IOError('"%s" is not found in the database' % name)
-        else:
-            file = self._obj.collection.files.find_one(search_spec)
-            if file:
-                return GridFile({'_id':ObjectId(file['_id'])}, self._obj.db, 'w', self._obj.collection.name)
-            write_spec = {'metadata':{'name':name, 'container':self._container_name, 'doc_id':self._obj['_id']}}
-            return GridFile(write_spec, self._obj.db, 'w', self._obj.collection.name)
-
-    def __iter__(self):
-        for metafile in self._obj.collection.files.find(
-          {'metadata.container': self._container_name, 'metadata.doc_id': self._obj['_id']}):
-          yield metafile['metadata']['name']
-
-    def list(self):
-        return [i for i in self]
-
-    def __repr__(self):
-        return "<%s '%s'>" % (self.__class__.__name__, self._container_name)
-
-class FS(object):
-    def __init__(self, gridfs, obj):
-        self._gridfs = gridfs
-        for container in self._gridfs.get('containers', []):
-            self.__dict__[container] = FSContainer(container, obj)
-        self._obj = obj
-        self._fs = GridFS(self._obj.db)
-        if Magic:
-            self._magic = Magic(mime=True)
-
-    def __getitem__(self, key):
-        f = self.open(key)
-        content = f.read()
-        f.close()
-        return content
-
-    def __setitem__(self, key, value):
-        content_type = None
-        if value and Magic:
-            content_type = self._magic.from_buffer(value)
-        f = self.open(key, 'w')
-        try:
-            f.content_type = content_type
-            f.write(value)
-        except TypeError:
-            raise TypeError("GridFS value mus be string not %s" % type(value))
-        finally:
-            f.close()
 
     def __getattr__(self, key):
-        if key not in ['_gridfs', '_obj', '_fs', '_containers', '_magic']:
-            if key not in self._gridfs.get('containers', []) and key in self._gridfs.get('files', []):
+        if not key.startswith('_'):
+            if key not in self._obj.gridfs.get('containers', []) and key in self._obj.gridfs.get('files', []):
                 return self[key]
         return super(FS, self).__getattribute__(key)
 
     def __setattr__(self, key, value):
-        if key not in ['_gridfs', '_obj', '_fs', '_containers', '_magic']:
-            if key not in self._gridfs.get('containers', []) and key in self._gridfs.get('files', []):
+        if not key.startswith('_'):
+            if key not in self._obj.gridfs.get('containers', []) and key in self._obj.gridfs.get('files', []):
                 self[key] = value
         else:
             super(FS, self).__setattr__(key, value)
 
     def __delitem__(self, key):
-        self._fs.remove({'metadata.doc_id':self._obj['_id'],
-          'metadata.name':key}, collection=self._obj.collection.name)
+        self._GridFS__files.remove(self._get_spec(filename=key))
 
     def __delattr__(self, key):
-        del self[key]
-
-    def open(self, name, mode='r'):
-        assert name in self._gridfs.get('files', []), "%s is not declared in gridfs" % name
-        search_spec = {'metadata.name':name, 'metadata.doc_id':self._obj['_id']}
-        if mode == 'r':
-            try:
-                return GridFile(search_spec, self._obj.db, 'r', self._obj.collection.name)
-            except IOError:
-                raise IOError('"%s" is not found in the database' % name)
+        if not key.startswith('_'):
+            del self[key]
         else:
-            file = self._obj.collection.files.find_one(search_spec)
-            if file:
-                return GridFile({'_id':ObjectId(file['_id'])}, self._obj.db, 'w', self._obj.collection.name)
-            write_spec = {'metadata':{'name':name, 'doc_id':self._obj['_id']}}
-            return GridFile(write_spec, self._obj.db, 'w', self._obj.collection.name)
+            super(FS, self).__delattr__(key)
 
     def __iter__(self):
-        for i in self._obj.collection.files.find({'metadata.doc_id': self._obj['_id']}):
-            container, name = i['metadata'].get('container'), i['metadata']['name']
-            if container:
-                name = "%s/%s" % (container, name)
-            yield name
-
-    def list(self):
-        return [i for i in self]
+        if self._obj.get('_id'):
+            for metafile in self._GridFS__files.find(self._get_spec()):
+                yield self.get(metafile['_id'])
 
     def __repr__(self):
-        return "<%s of object '%s'>" % (self.__class__.__name__, self._obj['_id'])
+        return "<%s of object '%s'>" % (self.__class__.__name__, self._obj.__class__.__name__)
+
+    def new_file(self, filename):
+        return super(FS, self).new_file(**self._get_spec(filename=filename))
+
+    def put(self, data, **kwargs):
+        return super(FS, self).put(data, **self._get_spec(**kwargs))
+
+    def get_version(self, filename, version=-1):
+        """Get a file from GridFS by ``"filename"``.
+
+        Returns a version of the file in GridFS with the name
+        `filename` as an instance of
+        :class:`~gridfs.grid_file.GridOut`. Version ``-1`` will be the
+        most recently uploaded, ``-2`` the second most recently
+        uploaded, etc. Version ``0`` will be the first version
+        uploaded, ``1`` the second version, etc. So if three versions
+        have been uploaded, then version ``0`` is the same as version
+        ``-3``, version ``1`` is the same as version ``-2``, and
+        version ``2`` is the same as version ``-1``.
+
+        Raises :class:`~gridfs.errors.NoFile` if no such version of
+        that file exists.
+
+        An index on ``{filename: 1, uploadDate: -1}`` will
+        automatically be created when this method is called the first
+        time.
+
+        :Parameters:
+          - `filename`: ``"filename"`` of the file to get
+          - `version` (optional): version of the file to get (defualts
+            to -1, the most recent version uploaded)
+
+        .. versionadded:: 1.9
+        """
+        # This is took from pymongo source. We need to go a little deeper here
+        self._GridFS__files.ensure_index([("filename", ASCENDING),
+                                   ("uploadDate", DESCENDING)])
+        ########## Begin of MongoKit hack ##########
+        cursor = self._GridFS__files.find(self._get_spec(filename=filename))
+        ########## end of MongoKit hack ############
+        if version < 0:
+            skip = abs(version) - 1
+            cursor.limit(-1).skip(skip).sort("uploadDate", DESCENDING)
+        else:
+            cursor.limit(-1).skip(version).sort("uploadDate", ASCENDING)
+        try:
+            grid_file = cursor.next()
+            return GridOut(self._GridFS__collection, grid_file["_id"])
+        except StopIteration:
+            raise NoFile("no version %d for filename %r" % (version, filename))
+
+class FSContainer(FS):
+    def __init__(self, container_name, obj):
+        self._container_name = container_name
+        super(FSContainer, self).__init__(obj)
+
+    def _get_spec(self, **kwargs):
+        if not self._obj.get('_id'):
+            raise RuntimeError('This document is not saved, no files should be attached')
+        spec = {'container': self._container_name, 'docid': self._obj['_id']}
+        spec.update(kwargs)
+        return spec
+
+    def __repr__(self):
+        return "<%s (%s) of object '%s'>" % (self.__class__.__name__, self._container_name, self._obj.__class__.__name__)
 

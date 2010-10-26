@@ -12,19 +12,17 @@ GridFS  named as  `source` and `template`:
 ...        structure = {
 ...            'title':unicode,
 ...        }
-...        gridfs = ['source', 'template']
+...        gridfs = {'files':['source', 'template']}
 
-.. topic:: new in version 0.5.4
-    
-    The gridfs API as slightly changed. You might want to be able
-    to add file in gridfs on the fly without knowing their name.
-    The new API allow to add "containers" to gridfs. So, the gridfs
-    declaration look like this ::
 
-        gridfs = {
-          'files':['source', 'template'],
-          'containers': ['images'],
-        }
+You might want to be able to add file in gridfs on the fly without knowing
+their name.  The new API allow to add "containers" to gridfs. So, the gridfs
+declaration look like this ::
+
+    gridfs = {
+      'files':['source', 'template'],
+      'containers': ['images'],
+    }
 
 As you can see, nothing hard. We just declare our attachment files
 in the `gridfs` attribute. Filling this attribute will generate
@@ -62,43 +60,34 @@ You can read any attachment in a very simple way :
 >>> doc.fs.source
 'Hello World !'
 
-.. topic:: new in version 0.5.4
 
-    You can add any image you want to the container "images":
+You can add any image you want to the container "images":
 
-    >>> doc.fs.images['image1.png'] = "..."
-    >>> doc.fs.images['image1.png']
-    '...'
-    >>> doc.fs.images['image2.png'] = '...'
+>>> doc.fs.images['image1.png'] = "..."
+>>> doc.fs.images['image1.png']
+'...'
+>>> doc.fs.images['image2.png'] = '...'
 
-    This is very usefull when you want of store a number of file but you don't
-    know their names.
+This is very usefull when you want of store a number of file but you don't
+know their names.
 
-.. topic:: new in version 0.5.4
-    
-    If you have python-magic installed (``sudo easy_install -U python-magic``),
-    the content-type of the file is automatically guessed. To access to it, you
-    have to use the "full way".
 
-.. topic:: new in version 0.5.4
+If you have python-magic installed (``sudo easy_install -U python-magic``),
+the content-type of the file is automatically guessed. To access to it, you
+have to use the "full way".
 
-    If you do not know stored file names, you can list them with `list`:
 
-    >>> doc.fs.list()
+If you do not know stored file names, you can list them by iterate::
+
+    >>> [f.name for f in doc.fs]
     ['source', 'template']
-    
-    or by iteration :
 
-    >>> for file_name in doc.fs:
-    ...     print file_name
+You can list a container as well. The container name is accessible via the `container` attribute::
 
-    You can list a container as well. In this case, the container name is shown : ``container_name/file_name``
-
-    >>> doc.fs.images.list():
-    ['images/image1.png', 'images/image2.png']
-
-    >>> for file_name in doc.fs.images:
-    ...     print file_name
+>>> for f in doc.fs.images:
+...    print '%s/%s' % (f.container, f.name)
+images/image1.png
+images/image2.png
 
 
 The full way
@@ -109,41 +98,53 @@ if you're dealing with very big files or want to use some file
 related feature (for instance, using seek to not have to load
 all the file in memory)
 
-You can do that with using the `open()` method on the ``fs`` object.
-The `open()` method take the file name and the opened mode 
-('r' for read, 'w' for write) :
+You can do that with using the `get_last_version()` method on the ``fs`` object.
 
->>> f = doc.fs.open("source", 'w')
+>>> f = doc.fs.get_last_version("source")
+>>> f.read(10)
+
+If you want to create a file and write in it, you can do that with using the
+`new_file()` method on the ``fs`` object.  The `new_file()` method take the
+file name and all other properties pymongo
+accepts here::
+
+>>> f = doc.fs.new_file('source')
 >>> f.write("Hello World again !")
 >>> f.close() 
 
-Caution ! Don't forget to close the file or every else will be blocked.
-If you experiencing some general blocking, you might check if you don't
-forget to close an opened file.
 
->>> doc.fs.source
-'Hello World again !'
+By supporting PyMongo 1.6 you can use the advanced ``with`` keyword
+to handle write operations:
 
-.. topic:: new in version 0.5.4
+   >>> with doc.fs.new_file("source") as f:
+   ...     f.write("Hello World again !")
+   ...
 
-    You can add any image you want to the container "images":
+You can add any image you want to the container "images":
 
-    >>> f = doc.fs.images.open('image1.png', 'w')
+    >>> f = doc.fs.images.new_file('image1.png')
     >>> f.write('...')
     >>> f.close()
-    >>> f = doc.fs.images.open('image1.png')
-    >>> f.read()
-    '...'
+    >>> f = doc.fs.images.get_last_version('image1.png')
+    >>> f.read(10)
+
+
+All PyMongo API is supported::
+
+    >>> id = doc.fs.put("Hello World", filename="source")
+    >>> doc.fs.get(id).read()
+    'Hello World'
+    >>> doc.fs.get_last_version("source")
+    <gridfs.grid_file.GridOut object at 0x1573610>
+    >>> doc.fs.get_last_version("source").read()
+    'Hello World'
+    >>> f = doc.fs.new_file("source")
+    >>> f.write("New Hello World!")
     >>> f.close()
-
-
-.. topic:: new in version 0.5.4
-    
-    You can get the content-type (mime type) of a file :
-
-    >>> f = doc.fs.open("source", 'w')
-    >>> f.write("Hello World again !")
-    >>> f.content_type
-    'text/plain; charset=us-ascii'
-    >>> f.close() 
+    >>> doc.fs.source
+    'New Hello World!'
+    >>> new_id = doc.fs.get_last_version("source")._id
+    >>> doc.fs.delete(new_id)
+    >>> doc.fs.source
+    'Hello World'
 

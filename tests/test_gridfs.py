@@ -29,6 +29,7 @@ import unittest
 
 from mongokit import *
 from pymongo.objectid import ObjectId
+from gridfs import NoFile
 
 
 class GridFSTestCase(unittest.TestCase):
@@ -52,58 +53,37 @@ class GridFSTestCase(unittest.TestCase):
 
         assertion = False
         try:
-            print doc.fs.source
-        except IOError:
+            assert doc.fs.source is None
+        except NoFile:
+            assertion = True
+        assert assertion
+
+        assertion = False
+        try:
+            print doc.fs.not_a_file
+        except AttributeError:
             assertion = True
         assert assertion
         doc.fs.source = "Hello World !"
+        assert doc.fs.source == u"Hello World !", doc.fs.source
 
+        doc = self.col.Doc.find_one({'title':'Hello'})
         assert doc.fs.source == u"Hello World !"
-        f = doc.fs.open("source", 'r')
-        assert f.read() == "Hello World !"
-        f.close()
-        assert doc['title'] == u'Hello'
 
-        f = doc.fs.open('source', 'r')
-        print f.content_type
-        print f.name
-        f.close()
+        f = doc.fs.get_last_version('source')
+        assert f.name == 'source'
+
         del doc.fs.source
 
         assertion = False
         try:
-            print doc.fs.source
-        except IOError:
+            assert doc.fs.source is None
+        except NoFile:
             assertion = True
         assert assertion
 
-    def test_gridfs_with_open(self):
-        class Doc(Document):
-            structure = {
-                'title':unicode,
-            }
-            gridfs = {'files': ['source']}
-        self.connection.register([Doc])
-        doc = self.col.Doc()
-        doc['title'] = u'Hello'
-        doc.save()
-
-        assertion = False
-        try:
-            print doc.fs.open('source', 'r')
-        except IOError:
-            assertion = True
-        assert assertion
-        assert str(doc.fs) == "<FS of object '%s'>" % doc['_id'], str(doc.fs)
-        doc.fs.source = "Hello World !"
-        assert doc.fs.source == "Hello World !"
-        f = doc.fs.open('source', 'w')
-        f.write("Hello World Again !")
-        f.close()
-        assert doc.fs.source == u"Hello World Again !"
-        f = doc.fs.open("source")
-        assert f.read() == "Hello World Again !"
-        f.close()
+        doc.fs.source = "bla"
+        assert [i.name for i in doc.fs] == ['source'], [i.name for i in doc.fs]
 
     def test_gridfs_without_saving(self):
         class Doc(Document):
@@ -117,7 +97,7 @@ class GridFSTestCase(unittest.TestCase):
         assertion = False
         try:
             doc.fs.source = "Hello World !"
-        except KeyError:
+        except RuntimeError:
             assertion = True
         assert assertion
         doc.save()
@@ -185,11 +165,11 @@ class GridFSTestCase(unittest.TestCase):
         assertion = False
         try:
             doc.fs.images['first.jpg']
-        except IOError:
+        except NoFile:
             assertion = True
         assert assertion
 
-    def test_gridfs_multiple_values(self):
+    def test_gridfs_mimetype_support(self):
         class Doc(Document):
             structure = {
                 'title':unicode,
@@ -203,20 +183,12 @@ class GridFSTestCase(unittest.TestCase):
         doc.fs.source = "Hello World !"
         assert doc.fs.source == "Hello World !"
         doc.fs.source = "1"
-        assert doc.fs.source == "1"
+        assert doc.fs.source == "1", doc.fs.source
         doc.fs.source = "Hello World !"
         assert doc.fs.source == "Hello World !"
-
-        f = doc.fs.open('source', 'w')
-        f.write("Hello World !")
-        f.content_type = 'text/plain; charset=us-ascii'
-        f.close()
-        assert doc.fs.source == "Hello World !"
-        f = doc.fs.open('source', 'w')
-        f.write("1")
-        f.content_type = 'application/octet-stream'
-        f.close()
-        assert doc.fs.source == "1"
+        assert doc.fs.source.content_type == 'text/plain; charset=us-ascii', doc.fs.source.content_type
+        doc.fs.source = "1"
+        assert doc.fs.source.content_type == 'application/octet-stream', doc.fs.source.content_type
 
     def test_gridfs_list(self):
         class Doc(Document):
@@ -231,10 +203,62 @@ class GridFSTestCase(unittest.TestCase):
 
         doc.fs.foo = "Hello World !"
         doc.fs.bla = "Salut !"
-        assert doc.fs.list() == ['foo', 'bla'], doc.fs.list()
+        assert [i.name for i in doc.fs] == ['foo', 'bla'], [i.name for i in doc.fs]
         doc.fs.attachments['eggs.txt'] = "Ola !"
         doc.fs.attachments['spam.txt'] = "Saluton !"
-        assert doc.fs.attachments.list() == [u'eggs.txt', u'spam.txt']
-        assert doc.fs.list() == [u'foo', u'bla', u'attachments/eggs.txt', u'attachments/spam.txt']
+        assert [(i.container, i.name) for i in doc.fs.attachments] == [('attachments', 'eggs.txt'), ('attachments', 'spam.txt')], [(i.container, i.name) for i in doc.fs.attachments]
+        assert [i.name for i in doc.fs] == [u'foo', u'bla', u'eggs.txt', u'spam.txt'], [(i.container, i.name) for i in doc.fs]
 
 
+    def test_gridfs_new_file(self):
+        class Doc(Document):
+            structure = {
+                'title':unicode,
+            }
+            gridfs = {'files': ['foo', 'bla'], 'containers':['attachments']}
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        doc['title'] = u'Hello'
+        doc.save()
+
+        doc.fs.foo = "Hello World !"
+        f = doc.fs.new_file("bla")
+        f.write('Salut !')
+        f.close()
+        assert doc.fs.bla == "Salut !"
+        assert doc.fs.foo == "Hello World !"
+
+        f = doc.fs.attachments.new_file('test')
+        f.write('this is a test')
+        f.close()
+        assert doc.fs.attachments['test'] == 'this is a test'
+
+        doc = self.col.Doc.find_one()
+        assert doc.fs.bla == "Salut !"
+        assert doc.fs.foo == "Hello World !"
+        assert doc.fs.attachments['test'] == 'this is a test', doc.fs.attachments['test']
+        assert doc.fs.attachments.get_last_version('test').read() == 'this is a test'
+
+
+    def test_pymongo_compatibility(self):
+        class Doc(Document):
+            structure = {
+                'title':unicode,
+            }
+            gridfs = {'files': ['source', 'foo'], 'containers':['attachments']}
+        self.connection.register([Doc])
+        doc = self.col.Doc()
+        doc['title'] = u'Hello'
+        doc.save()
+        id = doc.fs.put("Hello World", filename="source")
+        assert doc.fs.get(id).read() == 'Hello World'
+        assert doc.fs.get_last_version("source").name == 'source'
+        assert doc.fs.get_last_version("source").read() == 'Hello World'
+        f = doc.fs.new_file("source")
+        f.write("New Hello World!")
+        f.close()
+        assert doc.fs.source == 'New Hello World!', doc.fs.source
+        new_id = doc.fs.get_last_version("source")._id
+        doc.fs.delete(new_id)
+        assert doc.fs.source == 'Hello World', doc.fs.source
+         
