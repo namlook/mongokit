@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pymongo.bson import InvalidDocument
+from bson import InvalidDocument
 from pymongo.connection import OperationFailure
 class ConnectionError(Exception):pass
 class MongoAuthException(Exception):pass

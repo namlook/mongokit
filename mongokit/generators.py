@@ -58,7 +58,6 @@ class MongoDocumentCursor(object):
     def next(self, *args, **kwargs):
         data = self._cursor.next(*args, **kwargs)
         doc = self._class_object(data, collection=self._collection, generate_index=False)
-        doc._build_footprint()
         return doc
 
     def skip(self, *args, **kwargs):
@@ -73,7 +72,6 @@ class MongoDocumentCursor(object):
     def __iter__(self, *args, **kwargs):
         for obj in self._cursor:
             doc = self._class_object(obj, collection=self._collection, generate_index=False)
-            doc._build_footprint()
             yield doc
 
     def rewind(self, *args, **kwargs):

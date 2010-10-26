@@ -31,7 +31,9 @@ from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeE
 from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict, DotExpandedDict, DotedDict
 from mongokit.grid import *
 import pymongo
-from pymongo.bson import BSON
+from bson import BSON
+from bson.binary import Binary
+from bson.code import Code
 from pymongo.dbref import DBRef
 from pymongo.objectid import ObjectId
 import re
@@ -71,7 +73,7 @@ class Document(SchemaDocument):
 
     __metaclass__ = DocumentProperties
 
-    atomic_save = False
+    atomic_save = False # XXX Deprecated
     skip_validation = False
     use_autorefs = False
     force_autorefs_current_db = False
@@ -80,10 +82,10 @@ class Document(SchemaDocument):
     migration_handler = None
 
     authorized_types = SchemaDocument.authorized_types + [
-      pymongo.binary.Binary,
+      Binary,
       ObjectId,
       DBRef,
-      pymongo.code.Code,
+      Code,
       type(re.compile("")),
     ]
 
@@ -93,7 +95,6 @@ class Document(SchemaDocument):
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
         super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang, fallback_lang=fallback_lang)
-        self._old_footprint = None
         # collection
         self.collection = collection
         if collection:
@@ -107,13 +108,15 @@ class Document(SchemaDocument):
                 self._make_reference(self, self.structure)
             # gridfs
             if self.gridfs:
-                self.fs = FS(self.gridfs, self)
+                self.fs = FS(self)
         else:
             self.fs = None
         if self.migration_handler:
             self.skip_validation = False
             self._migration = self.migration_handler(self.__class__)
             Document.validate(self, auto_migrate=True)
+        if self.atomic_save is True:
+            raise DeprecationWarning('atomic_save is not supported anymore. Please update you code')
 
     def migrate(self, safe=True, _process_to_bson=True):
         """
@@ -139,7 +142,6 @@ class Document(SchemaDocument):
         #old_value = DotCollapsedDict(self)
         #old_value.update(new_value)
         #self.update(DotExpandedDict(old_value))
-        self._old_footprint = deepcopy(DotCollapsedDict(self)) 
         self._process_custom_type('python', self, self.structure)
 
     def validate(self, auto_migrate=False):
@@ -215,9 +217,7 @@ class Document(SchemaDocument):
         """
         bson_obj = self.collection.find_one(*args, **kwargs)
         if bson_obj:
-            doc = self._obj_class(doc=bson_obj, collection=self.collection, generate_index=False)
-            doc._build_footprint()
-            return doc
+            return self._obj_class(doc=bson_obj, collection=self.collection, generate_index=False)
 
     def one(self, *args, **kwargs):
         """
@@ -237,9 +237,7 @@ class Document(SchemaDocument):
             except StopIteration:
                 doc = None
             if doc:
-                doc = self._obj_class(doc=doc, collection=self.collection, generate_index=False)
-                doc._build_footprint()
-                return doc
+                return self._obj_class(doc=doc, collection=self.collection, generate_index=False)
 
     def find_random(self):
         """
@@ -254,7 +252,6 @@ class Document(SchemaDocument):
               collection=self.collection,
               generate_index=False,
             )
-            doc._build_footprint()
             return doc
 
     def get_from_id(self, id):
@@ -335,7 +332,6 @@ class Document(SchemaDocument):
               ' %s is not found in the database' % self['_id'])
         else:
             self.update(DotedDict(old_doc))
-        self._old_footprint = deepcopy(DotCollapsedDict(self)) 
         self._process_custom_type('python', self, self.structure)
 
     def get_dbref(self):
@@ -367,91 +363,7 @@ class Document(SchemaDocument):
             if uuid:
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         self._process_custom_type('bson', self, self.structure)
-        if self._old_footprint is None or not self.atomic_save:
-            if self.atomic_save:
-                self['_version'] = 1
-            id = self.collection.save(self, safe=safe, *args, **kwargs)
-        else:
-            # check version
-            last_version_doc = self.collection.get_from_id(self['_id'])
-            if not '_version' in last_version_doc:
-                db_version = 1
-                current_version = 1
-            else:
-                db_version = last_version_doc['_version']
-                if '_version' not in self:
-                    current_version = db_version
-                else:
-                    current_version = self['_version']
-            if current_version !=  db_version:
-                raise ConflictError('document version must be %s, found %s instead' % (
-                  db_version, current_version))
-
-            def document_to_tuples(value):
-                result = []
-                if isinstance(value, dict):
-                    for key, val in value.iteritems():
-                        result.append((key, document_to_tuples(val)))
-
-                elif isinstance(value, list):
-                    for item in value:
-                        result.append(document_to_tuples(item))
-                else:
-                    return value
-
-                return tuple(result)
-
-
-            # prepare query
-            footprint = []
-            #for field_name, value in DotCollapsedDict(self).iteritems():
-            for field_name, value in dict(self).iteritems():
-                footprint.append((field_name, document_to_tuples(value)))
-            old_footprint = []
-            for field_name, value in self._old_footprint.iteritems():
-                old_footprint.append((field_name, document_to_tuples(value)))
-            difference = set(footprint).difference(set(old_footprint))
-            if difference:
-                def set_to_document(obj, structure):
-                    result = None
-
-                    if isinstance(structure, list):
-                        structure = structure[0]
-                        result = []
-                        for item in obj:
-                            result.append(set_to_document(item, structure))
-                    elif isinstance(structure, dict):
-                        result = {}
-
-                        for key, val in obj:
-                            result.update({key: set_to_document(val, structure[key])})
-                    else:
-                        return obj
-
-                    return result
-
-                #update_query = {'$set':dict(difference)}
-                difdict = {}
-                for key, val in difference:
-                    difdict.update({key: set_to_document(val, self.structure[key])})
-                update_query = {'$set':difdict}
-                update_query['$inc'] = {'_version':1}
-                # update
-                self.collection.update({'_id':self['_id']}, update_query, safe=safe)
-                # reload
-                old_doc = self.collection.get_from_id(self['_id'])
-                if not old_doc:
-                    raise OperationFailure('Can not reload an unsaved document.'
-                      ' %s is not found in the database' % self['_id'])
-                else:
-                    self.update(DotedDict(old_doc))
-                # self.reload()
-        self._old_footprint = deepcopy(DotCollapsedDict(self))
-        self._process_custom_type('python', self, self.structure)
-
-    def _build_footprint(self):
-        self._process_custom_type('bson', self, self.structure)
-        self._old_footprint = deepcopy(DotCollapsedDict(self)) 
+        id = self.collection.save(self, safe=safe, *args, **kwargs)
         self._process_custom_type('python', self, self.structure)
 
     def delete(self):
