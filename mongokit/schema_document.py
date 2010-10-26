@@ -288,9 +288,9 @@ class SchemaDocument(dict):
             self._process_validators(self, self.structure)
         self._process_custom_type('bson', self, self.structure)
         self._validate_doc(self, self.structure)
+        self._process_custom_type('python', self, self.structure)
         if self.required_fields:
             self._validate_required(self, self.structure)
-        self._process_custom_type('python', self, self.structure)
 
     def __setattr__(self, key, value):
         if key not in self._protected_field_names and self.use_dot_notation and key in self:

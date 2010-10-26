@@ -471,3 +471,23 @@ class TypesTestCase(unittest.TestCase):
         doc = self.col.MyDoc.find_one()
         assert doc['tags'] == set([1,2,3,4]), doc['tags']
 
+    def test_set_type2(self):
+        class MyDoc(Document):
+                structure = {
+                        'title':unicode,
+                        'category':Set(unicode)
+                }
+                required_fields=['title']
+        self.connection.register([MyDoc])
+        doc = self.col.MyDoc()
+        print doc # {'category': set([]), 'title': None}
+        assert isinstance(doc['category'], set)
+        try:
+                doc.validate()
+        except RequireFieldError as e:
+                print e # title is required
+
+        print doc # {'category': [], 'title': None}
+        assert isinstance(doc['category'], set)
+        doc['title']=u'hello'
+        doc.validate()
