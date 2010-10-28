@@ -205,127 +205,192 @@ class IndexTestCase(unittest.TestCase):
         assert index2 is not None, 'Index not found'
 
     def test_bad_index_descriptor(self):
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'unique':True,
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':('standard',INDEX_DESCENDING),
-                    'uniq':True,
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':'std',
-                },
-            ]
-        self.assertRaises(ValueError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':{'standard':1},
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':('standard',2),
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':('standard',1, "blah"),
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':('standard',"2"),
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':(3,1),
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':("blah",1),
-                },
-            ]
-        self.assertRaises(ValueError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':[('standard',1), ('bla',1)],
-                },
-            ]
-        self.assertRaises(ValueError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':[('standard',3)],
-                },
-            ]
-        self.assertRaises(BadIndexError, self.connection.register, [Movie])
-        class Movie(Document):
-            structure = {
-                'standard':unicode,
-            }
-            indexes = [
-                {
-                    'fields':['std'],
-                },
-            ]
-        self.assertRaises(ValueError, self.connection.register, [Movie])
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {'standard':unicode}
+                indexes = [{'unique':True}]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "'fields' key must be specify in indexes")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':('standard',INDEX_DESCENDING),
+                        'uniq':True,
+                    },
+                ]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "uniq is unknown key for indexes")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':'std',
+                    },
+                ]
+        except ValueError, e:
+            self.assertEqual(str(e), "Error in indexes: can't find std in structure")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':{'standard':1},
+                    },
+                ]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "fields must be a string, a tuple or a list of tuple (got <type 'dict'> instead)")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':('standard',2),
+                    },
+                ]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "index direction must be 1 or -1. Got 2")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':('standard',1, "blah"),
+                    },
+                ]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "Error in indexes: a tuple must contain only two value : the field name and the direction")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':('standard',"2"),
+                    },
+                ]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "Error in standard, the direction must be int (got <type 'str'> instead)")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':(3,1),
+                    },
+                ]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "Error in 3, the field name must be string (got <type 'int'> instead)")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':("blah",1),
+                    },
+                ]
+        except ValueError, e:
+            self.assertEqual(str(e), "Error in indexes: can't find blah in structure")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':[('standard',1), ('bla',1)],
+                    },
+                ]
+        except ValueError, e:
+            self.assertEqual(str(e), "Error in indexes: can't find bla in structure")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':[('standard',3)],
+                    },
+                ]
+        except BadIndexError, e:
+            self.assertEqual(str(e), "index direction must be 1 or -1. Got 3")
+            failed = True
+        self.assertEqual(failed, True)
+
+        failed = False
+        try:
+            class Movie(Document):
+                structure = {
+                    'standard':unicode,
+                }
+                indexes = [
+                    {
+                        'fields':['std'],
+                    },
+                ]
+        except ValueError, e:
+            self.assertEqual(str(e), "Error in indexes: can't find std in structure")
+            failed = True
+        self.assertEqual(failed, True)
 
     def test_index_ttl(self):
         class Movie(Document):

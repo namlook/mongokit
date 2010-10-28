@@ -55,22 +55,47 @@ class TypesTestCase(unittest.TestCase):
  
     def test_not_authorized_type(self):
         for unauth_type in [set, str]:
-            class MyDoc(SchemaDocument):
-                structure = { "foo":[unauth_type] }
-            self.assertRaises( StructureError, MyDoc )
-            class MyDoc(SchemaDocument):
-                structure = { "foo":(unauth_type) }
-            self.assertRaises( StructureError, MyDoc )
-            class MyDoc2(SchemaDocument):
-                structure = { 'foo':[{int:unauth_type }]}
-            self.assertRaises( StructureError, MyDoc2 )
-            class MyDoc3(SchemaDocument):
-                structure = { 'foo':[{unauth_type:int }]}
-            self.assertRaises( AuthorizedTypeError, MyDoc3 )
+            failed = False
+            try:
+                class MyDoc(SchemaDocument):
+                    structure = { "foo":[unauth_type] }
+            except StructureError, e:
+                self.assertEqual(str(e), "MyDoc: %s is not an authorized type" % unauth_type)
+                failed = True
+            self.assertEqual(failed, True)
+            failed = False
+            try:
+                class MyDoc(SchemaDocument):
+                    structure = { "foo":(unauth_type) }
+            except StructureError, e:
+                self.assertEqual(str(e), "MyDoc: %s is not an authorized type" % unauth_type)
+                failed = True
+            self.assertEqual(failed, True)
+            failed = False
+            try:
+                class MyDoc2(SchemaDocument):
+                    structure = { 'foo':[{int:unauth_type }]}
+            except StructureError, e:
+                self.assertEqual(str(e), "MyDoc2: %s is not an authorized type" % unauth_type)
+                failed = True
+            self.assertEqual(failed, True)
+            failed = False
+            try:
+                class MyDoc3(SchemaDocument):
+                    structure = { 'foo':[{unauth_type:int }]}
+            except AuthorizedTypeError, e:
+                self.assertEqual(str(e), "MyDoc3: %s is not an authorized type" % unauth_type)
+                failed = True
+            self.assertEqual(failed, True)
 
-        class MyDoc4(SchemaDocument):
-            structure = {1:unicode}
-        self.assertRaises( StructureError, MyDoc4 )
+        failed = False
+        try:
+            class MyDoc4(SchemaDocument):
+                structure = {1:unicode}
+        except StructureError, e:
+            self.assertEqual(str(e), "MyDoc4: 1 must be a basestring or a type")
+            failed = True
+        self.assertEqual(failed, True)
 
 
     def test_type_from_functions(self):
@@ -328,9 +353,14 @@ class TypesTestCase(unittest.TestCase):
         from mongokit import OR
         assert repr(OR(unicode, str)) == "<unicode or str>"
 
-        class BadMyDoc(SchemaDocument):
-            structure = {"bla":OR(unicode,str)}
-        self.assertRaises(StructureError, BadMyDoc)
+        failed = False
+        try:
+            class BadMyDoc(SchemaDocument):
+                structure = {"bla":OR(unicode,str)}
+        except StructureError, e:
+            self.assertEqual(str(e), "BadMyDoc: <type 'str'> in <unicode or str> is not an authorized type (type found)")
+            failed = True
+        self.assertEqual(failed, True)
 
         from datetime import datetime
         class MyDoc(SchemaDocument):
@@ -364,9 +394,14 @@ class TypesTestCase(unittest.TestCase):
 
     def test_not_operator(self):
         from mongokit import NOT
-        class BadMyDoc(SchemaDocument):
-            structure = {"bla":NOT(unicode,str)}
-        self.assertRaises(StructureError, BadMyDoc)
+        failed = False
+        try:
+            class BadMyDoc(SchemaDocument):
+                structure = {"bla":NOT(unicode,str)}
+        except StructureError, e:
+            self.assertEqual(str(e), "BadMyDoc: <type 'str'> in <not unicode, not str> is not an authorized type (type found)")
+            failed = True
+        self.assertEqual(failed, True)
 
         from datetime import datetime
         class MyDoc(SchemaDocument):
@@ -399,9 +434,14 @@ class TypesTestCase(unittest.TestCase):
 
     def test_is_operator(self):
         from mongokit import IS
-        class BadMyDoc(SchemaDocument):
-            structure = {"bla":IS('bla',3)}
-        self.assertRaises(StructureError, BadMyDoc)
+        failed = False
+        try:
+            class BadMyDoc(SchemaDocument):
+                structure = {"bla":IS('bla',3)}
+        except StructureError, e:
+            self.assertEqual(str(e), "BadMyDoc: bla in <is 'bla' or is 3> is not an authorized type (str found)")
+            failed = True
+        self.assertEqual(failed, True)
 
         from datetime import datetime
         class MyDoc(SchemaDocument):

@@ -38,8 +38,12 @@ class StructureTestCase(unittest.TestCase):
         self.connection['test'].drop_collection('mongokit')
 
     def test_no_structure(self):
-        class MyDoc(SchemaDocument): pass
-        self.assertRaises(StructureError, MyDoc)
+        failed = False
+        try:
+            class MyDoc(SchemaDocument): pass
+        except StructureError:
+            failed = True
+        self.assertEqual(failed, False)
 
     def test_empty_structure(self):
         class MyDoc(SchemaDocument):
@@ -47,9 +51,13 @@ class StructureTestCase(unittest.TestCase):
         assert MyDoc() == {}
 
     def test_structure_not_dict(self):
-        class MyDoc(SchemaDocument):
-            structure = 3
-        self.assertRaises(StructureError, MyDoc)
+        failed = False
+        try:
+            class MyDoc(SchemaDocument):
+                structure = 3
+        except StructureError:
+            failed = True
+        self.assertEqual(failed, True)
 
     def test_load_with_dict(self):
         doc = {"foo":1, "bla":{"bar":u"spam"}}
@@ -259,14 +267,16 @@ class StructureTestCase(unittest.TestCase):
 
     def test_exception_bad_structure(self):
         import datetime
-        class MyDoc(SchemaDocument):
-            structure = {
-                'topic': unicode,
-                'when': datetime.datetime.utcnow,
-            }
+        failed = False
         try:
-            MyDoc()
+            class MyDoc(SchemaDocument):
+                structure = {
+                    'topic': unicode,
+                    'when': datetime.datetime.utcnow,
+                }
         except TypeError, e:
-            assert str(e).startswith("<built-in method utcnow of type object at ")
+            assert str(e).startswith("MyDoc: <built-in method utcnow of type object at "), str(e)
             assert str(e).endswith("is not a type")
+            failed = True
+        self.assertEqual(failed, True)
 

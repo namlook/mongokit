@@ -38,10 +38,15 @@ class DescriptorsTestCase(unittest.TestCase):
         self.connection.drop_database('test')
         
     def test_duplicate_required(self):
-        class MyDoc(Document):
-            structure = {"foo":unicode}
-            required_fields = ["foo", "foo"]
-        self.assertRaises(DuplicateRequiredError, MyDoc)
+        failed = False
+        try:
+            class MyDoc(Document):
+                structure = {"foo":unicode}
+                required_fields = ["foo", "foo"]
+        except DuplicateRequiredError, e:
+            self.assertEqual(str(e), "duplicate required_fields : ['foo', 'foo']")
+            failed = True
+        self.assertEqual(failed, True)
     
     def test_flat_required(self):
         class MyDoc(Document):
@@ -507,35 +512,49 @@ class DescriptorsTestCase(unittest.TestCase):
         assert mydoc['ble'] is None
 
     def test_bad_default_values(self):
-        class MyDoc(Document):
-            structure = {
-                "foo":{"bar":int},
-            }
-            default_values = {"foo.bla":2}
-        self.assertRaises(ValueError, MyDoc)
+        failed = False
+        try:
+            class MyDoc(Document):
+                structure = {
+                    "foo":{"bar":int},
+                }
+                default_values = {"foo.bla":2}
+        except ValueError, e:
+            failed = True
+            self.assertEqual(str(e), "Error in default_values: can't find foo.bla in structure")
+        self.assertEqual(failed, True)
 
     def test_bad_validators(self):
-        class MyDoc(Document):
-            structure = {
-                "foo":{"bar":int},
-            }
-            validators = {"foo.bla":lambda x:x}
-        self.assertRaises(ValueError, MyDoc)
+        failed = False
+        try:
+            class MyDoc(Document):
+                structure = {
+                    "foo":{"bar":int},
+                }
+                validators = {"foo.bla":lambda x:x}
+        except ValueError, e:
+            failed = True
+            self.assertEqual(str(e), "Error in validators: can't find foo.bla in structure")
+        self.assertEqual(failed, True)
 
     def test_bad_required(self):
-        class MyDoc(Document):
-            db_name = "test"
-            collection_name = "mongokit"
-            structure = {
-                "profil":{
-                    "screen_name":unicode,
-                    "age":int
+        failed = False
+        try:
+            class MyDoc(Document):
+                db_name = "test"
+                collection_name = "mongokit"
+                structure = {
+                    "profil":{
+                        "screen_name":unicode,
+                        "age":int
+                    }
                 }
-            }
-            required_fields = ['profil.screen_nam']
+                required_fields = ['profil.screen_nam']
+        except ValueError, e:
+            failed = True
+            self.assertEqual(str(e), "Error in required_fields: can't find profil.screen_nam in structure")
+        self.assertEqual(failed, True)
 
-        self.assertRaises( ValueError, MyDoc )
-        
     def test_nested_structure2(self):
         class MyDoc(Document):
             db_name = "test"

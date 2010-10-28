@@ -432,10 +432,14 @@ class CustomTypesTestCase(unittest.TestCase):
             def to_python(self, value):
                 return float(value['f'])
 
-        class MyDocument(Document):
-           structure = {'amount': CustomObject()}
-           required_fields = ['amount']
-           indexes = [{'fields':['amount.f']}]
-
-        self.assertRaises(ValueError, self.connection.register, [MyDocument])
+        failed = False
+        try:
+            class MyDocument(Document):
+               structure = {'amount': CustomObject()}
+               required_fields = ['amount']
+               indexes = [{'fields':['amount.f']}]
+        except ValueError, e:
+            self.assertEqual(str(e), "Error in indexes: can't find amount.f in structure")
+            failed = True
+        self.assertEqual(failed, True)
 

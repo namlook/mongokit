@@ -8,7 +8,7 @@ from pymongo.master_slave_connection import MasterSlaveConnection
 from pymongo import Connection as PyMongoConnection
 
 from mongokit.database import Database
-from mongokit.document import CallableMixin
+from mongokit.connection import CallableMixin, CursorMixin
 
 class MongokitMasterSlaveConnection(MasterSlaveConnection):
     """ Master-Slave support for MongoKit """
@@ -63,14 +63,12 @@ class MongokitMasterSlaveConnection(MasterSlaveConnection):
                         del col._registered_documents[obj_name]
         # register
         for obj in obj_list:
-            if not obj.skip_validation:
-                obj()._validate_descriptors()
+            CursorDocument = type("Cursor%s" % obj.__name__, (obj, CursorMixin), {"_obj_class":obj, "__repr__":object.__repr__})
             CallableDocument = type(
               "Callable%s" % obj.__name__,
-              (obj, CallableMixin), {"_obj_class":obj, "__repr__":object.__repr__})
+              (obj, CallableMixin), {'cursor': CursorDocument(), "_obj_class":obj, "__repr__":object.__repr__})
             self._registered_documents[obj.__name__] = CallableDocument
-
-
+ 
     def __getattr__(self, key):
         if key not in self._databases:
             self._databases[key] = Database(self, key)

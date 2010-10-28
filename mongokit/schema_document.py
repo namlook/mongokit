@@ -93,7 +93,7 @@ class SchemaProperties(type):
             parent = base.__mro__[0]
             if hasattr(parent, 'structure'):
                 if parent.structure is not None:
-                    parent = parent()
+                    #parent = parent()
                     if parent.structure:
                         if 'structure' not in attrs and parent.structure:
                             attrs['structure'] = parent.structure
@@ -115,10 +115,47 @@ class SchemaProperties(type):
                     if parent.i18n:
                         attrs['i18n'] = list(set(
                           attrs.get('i18n', [])+parent.i18n))
+                if attrs.get('authorized_types'):
+                    attrs['authorized_types'] = list(set(parent.authorized_types).union(set(attrs['authorized_types'])))
         for mro in bases[0].__mro__:
             attrs['_protected_field_names'] = attrs['_protected_field_names'].union(list(mro.__dict__))
         attrs['_protected_field_names'] = list(attrs['_protected_field_names'])
+        if attrs.get('structure') and name not in ["SchemaDocument", "Document", "VersionedDocument", "RevisionDocument"]:
+            base = bases[0]
+            if not attrs.get('authorized_types'):
+                attrs['authorized_types'] = base.authorized_types
+            base._validate_structure(attrs['structure'], name, attrs.get('authorized_types'))
+            attrs['_namespaces'] = list(base._SchemaDocument__walk_dict(attrs['structure']))
+            if [1 for i in attrs['_namespaces'] if type(i) is type]:
+                raise DeprecationError("%s: types are not allowed as structure key anymore" % name)
+            cls._validate_descriptors(attrs)
+            ## building required fields namespace
+            attrs['_required_namespace'] = set([])
+            for rf in attrs.get('required_fields', []):
+                splited_rf = rf.split('.')
+                for index in range(len(splited_rf)):
+                    attrs['_required_namespace'].add(".".join(splited_rf[:index+1]))
+            attrs['_collapsed_struct'] = DotCollapsedDict(attrs['structure'], remove_under_type=True)
+        elif attrs.get('structure') is not None and name not in ["SchemaDocument", "Document", "VersionedDocument", "RevisionDocument"]:
+            attrs['_collapsed_struct'] = {}
         return type.__new__(cls, name, bases, attrs)        
+
+    @classmethod
+    def _validate_descriptors(cls, attrs):
+        # TODO i18n validator
+        for dv in attrs.get('default_values', {}):
+            if not dv in attrs['_namespaces']:
+                raise ValueError("Error in default_values: can't find %s in structure" % dv )
+        for required in attrs.get('required_fields', []):
+            if required not in attrs['_namespaces']:
+                raise ValueError("Error in required_fields: can't find %s in structure" % required )
+        for validator in attrs.get('validators', {}):
+            if validator not in attrs['_namespaces']:
+                raise ValueError("Error in validators: can't find %s in structure" % validator )
+        # required_field
+        if attrs.get('required_fields'):
+            if len(attrs['required_fields']) != len(set(attrs['required_fields'])):
+                raise DuplicateRequiredError("duplicate required_fields : %s" % attrs['required_fields'])
 
 
 class SchemaDocument(dict):
@@ -227,41 +264,27 @@ class SchemaDocument(dict):
             filled with NoneType each time validate() is called. Note that
             if doc is not {}, gen_skel is always False. If gen_skel is False,
             default_values cannot be filled.
-        gen_auth_types: if True, generate automaticly the self._authorized_types
+        gen_auth_types: if True, generate automaticly the self.authorized_types
             attribute from self.authorized_types
         """
+        if self.structure is None:
+            self.structure = {}
         self._current_lang = lang
         self._fallback_lang = fallback_lang
+        self.validation_errors = {}
         # init
-        if not self.raise_validation_errors:
-            self.validation_errors = {}
-        if gen_auth_types:
-            self._authorized_types = self.authorized_types[:]
-        if doc is None:
-            doc = {}
-        if not self.skip_validation and validate: 
-            self._validate_structure()
-            self._namespaces = list(self.__walk_dict(self.structure))
-            self._validate_descriptors()
-        for k, v in doc.iteritems():
-            self[k] = v
         if doc:
+            for k, v in doc.iteritems():
+                self[k] = v
             gen_skel = False
-            if self.i18n or self.use_dot_notation:
-                self.__generate_doted_dict(self, self.structure)
         if gen_skel:
             self.generate_skeleton()
             if self.default_values:
                 self._set_default_fields(self, self.structure)
         else:
             self._process_custom_type('python', self, self.structure)
-        ## building required fields namespace
-        if not self.skip_validation:
-            self._required_namespace = set([])
-            for rf in self.required_fields:
-                splited_rf = rf.split('.')
-                for index in range(len(splited_rf)):
-                    self._required_namespace.add(".".join(splited_rf[:index+1]))
+        if self.i18n or self.use_dot_notation:
+            self.__generate_doted_dict(self, self.structure)
         if self.i18n:
             self._make_i18n()
 
@@ -318,7 +341,8 @@ class SchemaDocument(dict):
     # Public API end
     #
  
-    def __walk_dict(self, dic):
+    @classmethod
+    def __walk_dict(cls, dic):
         # thanks jean_b for the patch
         for key, value in dic.items():
             if isinstance(value, dict) and len(value):
@@ -326,7 +350,7 @@ class SchemaDocument(dict):
                     yield '$%s' % key.__name__
                 else:
                     yield key
-                for child_key in self.__walk_dict(value):
+                for child_key in cls.__walk_dict(value):
                     if type(key) is type:
                         new_key = "$%s" % key.__name__
                     else:
@@ -341,7 +365,7 @@ class SchemaDocument(dict):
                 yield '$%s' % key.__name__
             elif isinstance(value, list) and len(value):
                 if isinstance(value[0], dict):
-                    for child_key in self.__walk_dict(value[0]):
+                    for child_key in cls.__walk_dict(value[0]):
                         #if type(key) is type:
                         #    new_key = "$%s" % key.__name__
                         #else:
@@ -364,63 +388,52 @@ class SchemaDocument(dict):
                 #else:
                 #    yield ""
 
-    def _validate_descriptors(self):
-        for dv in self.default_values:
-            if dv not in self._namespaces:
-                self._raise_exception(ValueError, dv,
-                  "Error in default_values: can't find %s in structure" % dv )
-        for required in self.required_fields:
-            if required not in self._namespaces:
-                self._raise_exception(ValueError, required,
-                  "Error in required_fields: can't find %s in structure" % required )
-        for validator in self.validators:
-            if validator not in self._namespaces:
-                self._raise_exception(ValueError, validator,
-                  "Error in validators: can't find %s in structure" % validator )
-
-    def _validate_structure(self):
+    @classmethod
+    def _validate_structure(cls, structure, name, authorized_types):
         """
         validate if all fields in self.structure are in authorized types.
         """
         ##############
-        def __validate_structure( struct):
+        def __validate_structure(struct, name,  authorized):
             if type(struct) is type:
-                if struct not in self._authorized_types:
-                    self._raise_exception(StructureError, None,
-                      "%s is not an authorized_types" % struct)
+                if struct not in authorized_types:
+                    if struct not in authorized_types:
+                        raise StructureError("%s: %s is not an authorized type" % (name, struct))
             elif isinstance(struct, dict):
                 for key in struct:
                     if isinstance(key, basestring):
                         if "." in key: 
-                            self._raise_exception(BadKeyError, key,
-                              "%s must not contain '.'" % key)
+                            raise BadKeyError(
+                              "%s: %s must not contain '.'" % (name, key))
                         if key.startswith('$'): 
-                            self._raise_exception(BadKeyError, key,
-                              "%s must not start with '$'" % key)
+                            raise BadKeyError(
+                              "%s: %s must not start with '$'" % (name, key))
                     elif type(key) is type:
-                        if not key in self._authorized_types:
-                            self._raise_exception(AuthorizedTypeError, key,
-                              "%s is not an authorized type" % key)
+                        if not key in authorized_types:
+                            raise AuthorizedTypeError(
+                              "%s: %s is not an authorized type" % (name, key))
                     else:
-                        self._raise_exception(StructureError, key,
-                          "%s must be a basestring or a type" % key)
+                        raise StructureError(
+                          "%s: %s must be a basestring or a type" % (name, key))
                     if struct[key] is None:
                         pass
                     elif isinstance(struct[key], dict):
-                        __validate_structure(struct[key])
+                        __validate_structure(struct[key], name, authorized_types)
                     elif isinstance(struct[key], list):
-                        __validate_structure(struct[key])
+                        __validate_structure(struct[key], name, authorized_types)
                     elif isinstance(struct[key], tuple):
-                        __validate_structure(struct[key])
+                        __validate_structure(struct[key], name, authorized_types)
                     elif isinstance(struct[key], CustomType):
-                        __validate_structure(struct[key].mongo_type)
+                        __validate_structure(struct[key].mongo_type, name, authorized_types)
+                    elif isinstance(struct[key], SchemaProperties):
+                        pass
                     elif isinstance(struct[key], SchemaOperator):
-                        __validate_structure(struct[key])
+                        __validate_structure(struct[key], name, authorized_types)
                     elif hasattr(struct[key], 'structure'):
-                        __validate_structure(struct[key])
-                    elif (struct[key] not in self._authorized_types):
+                        __validate_structure(struct[key], name, authorized_types)
+                    elif (struct[key] not in authorized_types):
                         ok = False
-                        for auth_type in self._authorized_types:
+                        for auth_type in authorized_types:
                             if struct[key] is None:
                                 ok = True
                             else:
@@ -428,44 +441,42 @@ class SchemaDocument(dict):
                                     if isinstance(struct[key], auth_type) or issubclass(struct[key], auth_type):
                                         ok = True
                                 except TypeError:
-                                    raise TypeError("%s is not a type" % struct[key])
+                                    raise TypeError("%s: %s is not a type" % (name, struct[key]))
                         if not ok:
-                            self._raise_exception(StructureError, key,
-                              "%s is not an authorized type" % struct[key])
+                            raise StructureError(
+                              "%s: %s is not an authorized type" % (name, struct[key]))
             elif isinstance(struct, list) or isinstance(struct, tuple):
                 for item in struct:
-                    __validate_structure(item)
+                    __validate_structure(item, name, authorized_types)
             elif isinstance(struct, SchemaOperator):
                 if isinstance(struct, IS):
                     for operand in struct:
-                        if type(operand) not in self._authorized_types:
-                            self._raise_exception(StructureError, struct, 
-                              "%s in %s is not an authorized type" % (operand, struct))
+                        if type(operand) not in authorized_types:
+                            raise StructureError(
+                              "%s: %s in %s is not an authorized type (%s found)" % (name, operand, struct, type(operand).__name__))
                 else:
                     for operand in struct:
-                        if operand not in self._authorized_types: 
-                            self._raise_exception(StructureError, struct,
-                              "%s in %s is not an authorized type" % (operand, struct))
+                        if operand not in authorized_types: 
+                            raise StructureError(
+                              "%s: %s in %s is not an authorized type (%s found)" % (name, operand, struct, type(operand).__name__))
+            elif isinstance(struct, SchemaProperties):
+                pass
             else:
                 ok = False
-                for auth_type in self._authorized_types:
+                for auth_type in authorized_types:
                     if isinstance(struct, auth_type):
                         ok = True
                 if not ok:
-                    self._raise_exception(StructureError, struct, 
-                      "%s is not an authorized_types" % struct)
+                    raise StructureError(
+                      "%s: %s is not an authorized_types" % (name, struct))
         #################
-        if self.structure is None:
-            self._raise_exception(StructureError, None,
-              "self.structure must not be None")
-        if not isinstance(self.structure, dict):
-            self._raise_exception(StructureError, None, 
-              "self.structure must be a dict instance")
-        if self.required_fields:
-            if len(self.required_fields) != len(set(self.required_fields)):
-                self._raise_exception(DuplicateRequiredError, None,
-                  "duplicate required_fields : %s" % self.required_fields)
-        __validate_structure(self.structure)
+        if structure is None:
+            raise StructureError(
+              "%s.structure must not be None" % name)
+        if not isinstance(structure, dict):
+            raise StructureError(
+              "%s.structure must be a dict instance" % name)
+        __validate_structure(structure, name, authorized_types)
 
     def _raise_exception(self, exception, field, message):
         if self.raise_validation_errors:
@@ -481,7 +492,7 @@ class SchemaDocument(dict):
         """
         if type(struct) is type or struct is None:
             if struct is None:
-                if type(doc) not in self._authorized_types:
+                if type(doc) not in self.authorized_types:
                     self._raise_exception( AuthorizedTypeError, type(doc).__name__,
                       "%s is not an authorized types" % type(doc).__name__)
             elif not isinstance(doc, struct) and doc is not None:
