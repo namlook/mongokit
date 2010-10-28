@@ -46,14 +46,6 @@ STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
 
-class CallableMixin(object):
-    """
-    brings the callable method to a Document. usefull for the connection's
-    register method
-    """
-    def __call__(self, doc=None, gen_skel=True, lang='en', fallback_lang='en'):
-        return self._obj_class(doc=doc, gen_skel=gen_skel, collection=self.collection, lang=lang, fallback_lang=fallback_lang)
-
 class DocumentProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
         for base in bases:
