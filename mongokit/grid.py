@@ -29,10 +29,10 @@ from gridfs import GridFS, NoFile, GridOut
 from pymongo.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 
-try:
-    from magic import Magic
-except:
-    Magic = None
+#try:
+#    from magic import Magic
+#except:
+#    Magic = None
 
 class FS(GridFS):
     def __init__(self, obj):
