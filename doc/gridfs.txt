@@ -76,6 +76,10 @@ If you have python-magic installed (``sudo easy_install -U python-magic``),
 the content-type of the file is automatically guessed. To access to it, you
 have to use the "full way".
 
+.. topic:: new in version 0.5.11 
+
+    There were many problems with the python-magic support so it has been removed.
+
 
 If you do not know stored file names, you can list them by iterate::
 
@@ -84,10 +88,10 @@ If you do not know stored file names, you can list them by iterate::
 
 You can list a container as well. The container name is accessible via the `container` attribute::
 
->>> for f in doc.fs.images:
-...    print '%s/%s' % (f.container, f.name)
-images/image1.png
-images/image2.png
+    >>> for f in doc.fs.images:
+    ...    print '%s/%s' % (f.container, f.name)
+    images/image1.png
+    images/image2.png
 
 
 The full way

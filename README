@@ -21,7 +21,6 @@ Features
  * required fields validation
  * default values
  * custom validators
- * simple atomic update (just save the document again)
  * cross database document reference
  * random query support (which returns a random document from the database)
  * inheritance and polymorphisme support
@@ -113,6 +112,20 @@ Mongokit is documented and well tested with 100% of code coverage::
 
 Change Log
 ==========
+
+v0.5.11
+-------
+
+ * support latest pymongo version
+ * some changes in GridFS support (please read http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html)
+ * Deprecate atomic_save feature
+ * remove libmagic import from grid.py : to many trouble with this lib, we have to find another way to guess the content-type
+ * fix #79 -- Tries to migrate non-saved document
+ * fix #70 -- Set changes from set to list when a validation error occurs
+ * add contributor + fix email address to prevent spam
+ * fix deprecation warning of Python 2.6
+ * fix issue with validation and migration
+ * fix #75 -- add "version" attribute to module
 
 v0.5.10
 -------

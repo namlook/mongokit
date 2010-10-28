@@ -35,10 +35,11 @@ except ImportError:
 import os
 import sys
 import codecs
+from mongokit import __version__
 
 setup(
     name = 'mongokit',
-    version = '0.5.10',
+    version = __version__, # TODO don't forget to change version
 
     description = 'Python mongodb kit',
     long_description = codecs.open('README', "r", "utf-8").read(),
@@ -62,9 +63,8 @@ setup(
     zip_safe = False,
 
     install_requires = [
-        'pymongo>=1.3, <1.6',
+        'pymongo>=1.9',
         'anyjson>=0.2.2',
-        'python-magic>=0.1',
     ]
 
 )
