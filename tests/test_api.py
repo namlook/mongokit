@@ -802,4 +802,19 @@ class ApiTestCase(unittest.TestCase):
             assert isinstance(i, MyDoc), type(MyDoc)
             
             
+    def test_decorator(self):
+        @self.connection.register
+        class MyDoc(Document):
+            structure = {
+                'foo':int,
+            }
+
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = 3
+        mydoc.save()
+
+        raw_doc = self.col.MyDoc.find_one()
+        self.assertEqual(raw_doc['foo'], 3)
+        assert isinstance(raw_doc, MyDoc)
+
 
