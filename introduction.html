@@ -131,6 +131,7 @@ as possible with the KISS and DRY principles in mind.</p>
 <li>document migration support</li>
 </ul>
 </blockquote>
+<p>Go to the full <a href="#id2"><span class="problematic" id="id3">documentation_</span></a>.</p>
 </div>
 <div class="section" id="a-quick-example">
 <h2>A quick example<a class="headerlink" href="#a-quick-example" title="Permalink to this headline">¶</a></h2>
@@ -139,7 +140,10 @@ A Document declaration look like that:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@connection.register</span>
+<span class="gp">... </span><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>            <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
 <span class="gp">... </span>            <span class="s">&#39;body&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
@@ -176,7 +180,7 @@ A Document declaration look like that:</p>
 <span class="gp">... </span>    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;foo.content&#39;</span><span class="p">,</span> <span class="s">&#39;bar.$int&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>Please, see the <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html">tutorial</a> for more examples.</p>
+<p>Please, see the <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html">tutorial</a> for more examples.</p>
 <p>Suggestion and patches are really welcome. If you find mistakes in the documentation
 (english is not my primary langage) feel free to contact me. You can find me (namlook)
 on the freenode #mongodb irc channel or on <a class="reference external" href="http://twitter.com/namlook">twitter</a>.</p>
@@ -223,7 +227,7 @@ TOTAL                          1310   1310   100%</pre>
 <blockquote>
 <ul class="simple">
 <li>support latest pymongo version</li>
-<li>some changes in GridFS support (please read <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html">http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html</a>)</li>
+<li>some changes in GridFS support (please read <a class="reference external" href="http://namlook.github.com/mongokit/gridfs.html">http://namlook.github.com/mongokit/gridfs.html</a>)</li>
 <li>Deprecate atomic_save feature</li>
 <li>remove libmagic import from grid.py : to many trouble with this lib, we have to find another way to guess the content-type</li>
 <li>fix #79 &#8211; Tries to migrate non-saved document</li>
@@ -278,13 +282,13 @@ TOTAL                          1310   1310   100%</pre>
 <h3>v0.5.6<a class="headerlink" href="#v0-5-6" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <ul class="simple">
-<li>add <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#updating-data">atomic update</a> (just save the document again)</li>
-<li>add <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types">init_type</a> to CustomType. This allow to fill an empty skeletton at instanciation</li>
+<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#updating-data">atomic update</a> (just save the document again)</li>
+<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#custom-types">init_type</a> to CustomType. This allow to fill an empty skeletton at instanciation</li>
 <li>add debian package build rules. Thanks to Sebastien Estienne</li>
-<li>add <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/migration.html">lazy migration</a> and <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/migration.html#bulk-migration">bulk migration</a> support</li>
+<li>add <a class="reference external" href="http://namlook.github.com/mongokit/migration.html">lazy migration</a> and <a class="reference external" href="http://namlook.github.com/mongokit/migration.html#bulk-migration">bulk migration</a> support</li>
 <li>fix a bug in CustomType</li>
-<li>add <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes">&#8216;check&#8217; option</a> in indexes descriptor</li>
-<li>add <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#untyped-field">untyped field support</a></li>
+<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#indexes">&#8216;check&#8217; option</a> in indexes descriptor</li>
+<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#untyped-field">untyped field support</a></li>
 <li>fix #58 - Document Validators not working for CustomType</li>
 <li>improve DotCollapsedDict by adding reference structure</li>
 </ul>
@@ -294,9 +298,9 @@ TOTAL                          1310   1310   100%</pre>
 <h3>v0.5.5<a class="headerlink" href="#v0-5-5" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <ul class="simple">
-<li>fix 54 - Add reload method. Please read the <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#reload">documentation</a></li>
+<li>fix 54 - Add reload method. Please read the <a href="#id4"><span class="problematic" id="id5">documentation_</span></a></li>
 <li>put generate_index into Document.__init__. This is usefull for instanciating Document like this : MyDoc(collection=mycol)</li>
-<li>fix #44 - add  <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#the-structure">set type support</a> + add validate() method to <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types">CustomType</a></li>
+<li>fix #44 - add  <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#the-structure">set type support</a> + add validate() method to <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#custom-types">CustomType</a></li>
 <li>fix #52 - Custom validation error messages (thanks to &#64;cjoudrey for the patch)</li>
 <li>fix #50 - need optimizations in connection (won 20s on the <a class="reference external" href="http://groups.google.com/group/mongodb-user/browse_thread/thread/77c91641858e1e20/ea71afc4de24f2e9">benchmark</a>)</li>
 <li>fix #48 - Tuple assignment does not convert to list</li>
@@ -308,13 +312,13 @@ TOTAL                          1310   1310   100%</pre>
 <h3>v0.5.4<a class="headerlink" href="#v0-5-4" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <ul class="simple">
-<li>A <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html">lot of features in GridFS</a> with api change</li>
+<li>A <a class="reference external" href="http://namlook.github.com/mongokit/gridfs.html">lot of features in GridFS</a> with api change</li>
 <li>fix bug in autorefs</li>
 <li>fix #37 - find_random crash if no collection is empty</li>
 <li>fix #38 - OverflowError in doc.to_json_type() when used over the datetime 2038</li>
 <li>fix #41 - Warnings when setting attributes before enabling use_dot_notation</li>
 <li>fix #40 - Better exception on bad structure. Thanks to peterbe for the patch</li>
-<li>fix #43 - Add ability to <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#quiet-validation-detection">collect errors</a> in one place instead of throwing exceptions while validating</li>
+<li>fix #43 - Add ability to <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#quiet-validation-detection">collect errors</a> in one place instead of throwing exceptions while validating</li>
 <li>add <cite>_dot_notation_warning</cite> attribute. If false, disable all dot notation related warning</li>
 <li>add patch to enable data load from map/reduce. See <a class="reference external" href="http://groups.google.com/group/mongokit/msg/34efea4c178573d7">http://groups.google.com/group/mongokit/msg/34efea4c178573d7</a></li>
 <li>fix bug spotted by Sebastien Estienne - error when using skip_validation with required_fields. Thanks</li>
@@ -343,7 +347,7 @@ TOTAL                          1310   1310   100%</pre>
 <ul class="simple">
 <li>bugs fix in json import/export</li>
 <li>bugs fix in default values and required values</li>
-<li><a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html">gridfs support</a></li>
+<li><a class="reference external" href="http://namlook.github.com/mongokit/gridfs.html">gridfs support</a></li>
 </ul>
 </blockquote>
 </div>
@@ -364,12 +368,12 @@ TOTAL                          1310   1310   100%</pre>
 <h3>v0.5<a class="headerlink" href="#v0-5" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <ul class="simple">
-<li>refactoring API which is getting much much more cleaner. Please see the <a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/migration.html">migration</a> page to keep your code up to date</li>
+<li>refactoring API which is getting much much more cleaner. Please see the <a class="reference external" href="http://namlook.github.com/mongokit/migration.html">migration</a> page to keep your code up to date</li>
 <li>100% code coverage by 162 unit tests</li>
 <li>lot of bug fix (too many to list them here)</li>
 <li>add document size validation</li>
 <li>add cross database reference support</li>
-<li><a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/i18n.html">i18n support</a></li>
+<li><a class="reference external" href="http://namlook.github.com/mongokit/i18n.html">i18n support</a></li>
 </ul>
 </blockquote>
 </div>
@@ -377,20 +381,13 @@ TOTAL                          1310   1310   100%</pre>
 <h3>v0.4<a class="headerlink" href="#v0-4" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <ul class="simple">
-<li>add autoref support to belong_to (delete cascade)
-(<a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/cascade.html#delete-cascade">http://bytebucket.org/namlook/mongokit/wiki/html/cascade.html#delete-cascade</a>)</li>
-<li>changing collection dynamically
-(<a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically">http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically</a>)</li>
-<li>add immutable field (python tuple support)
-(<a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#case-of-tuple-or-immutable-field">http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#case-of-tuple-or-immutable-field</a>)</li>
-<li>add direction and ttl to index support
-(<a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes">http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes</a>)</li>
-<li>add connection sharing support
-(<a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#sharing-connection">http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#sharing-connection</a>)</li>
-<li>add json import/export for MongoDocument
-(<a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#json-support">http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#json-support</a>)</li>
-<li>full relation support (related_to)
-(<a class="reference external" href="http://bytebucket.org/namlook/mongokit/wiki/html/relations.html">http://bytebucket.org/namlook/mongokit/wiki/html/relations.html</a>)</li>
+<li>add autoref support to belong_to (delete cascade)</li>
+<li>changing collection dynamically</li>
+<li>add immutable field (python tuple support)</li>
+<li>add direction and ttl to index support</li>
+<li>add connection sharing support</li>
+<li>add json import/export for MongoDocument</li>
+<li>full relation support (related_to)</li>
 <li>add long type support</li>
 </ul>
 </blockquote>
