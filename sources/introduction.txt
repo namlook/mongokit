@@ -1,0 +1,296 @@
+========
+MongoKit
+========
+
+MongoDB_ is a great schema-less document oriented database. It have a lot of
+driver for many langages (python, ruby, perl, java, php...).
+
+.. _MongoDB : http://www.mongodb.org/display/DOCS/Home
+
+MongoKit is a python module that brings structured schema and validation layer
+on top of the great pymongo driver. It has be written to be simpler and lighter
+as possible with the KISS and DRY principles in mind.
+
+Features
+========
+
+ * schema validation (wich use simple python type for the declaration)
+ * doted notation
+ * nested and complex schema declaration
+ * untyped field support
+ * required fields validation
+ * default values
+ * custom validators
+ * cross database document reference
+ * random query support (which returns a random document from the database)
+ * inheritance and polymorphisme support
+ * versionized document support (in beta stage)
+ * partial auth support (it brings a simple User model) 
+ * operator for validation (currently : OR, NOT and IS)
+ * simple web framework integration
+ * import/export to json
+ * i18n support
+ * GridFS support
+ * document migration support
+
+A quick example
+===============
+
+Document are enhanced python dictionnary with a ``validate()`` method.
+A Document declaration look like that::
+
+    >>> from mongokit import *
+    >>> import datetime
+
+    >>> class BlogPost(Document):
+    ...     structure = {
+    ...             'title':unicode,
+    ...             'body':unicode,
+    ...             'author':unicode,
+    ...             'date_creation':datetime.datetime,
+    ...             'rank':int
+    ...     }
+    ...     required_fields = ['title','author', 'date_creation']
+    ...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
+    ... 
+
+We fire a connection and register our objects.
+
+    >>> con = Connection()
+    >>> con.register([BlogPost])
+    >>> blogpost = con.test.example.BlogPost() # this use the db "test" and the collection "example"
+    >>> blogpost['title'] = u'my title'
+    >>> blogpost['body'] = u'a body'
+    >>> blogpost['author'] = u'me'
+    >>> blogpost
+    {'body': u'a body', 'title': u'my title', 'date_creation': datetime.datetime(...), 'rank': 0, 'author': u'me'}
+    >>> blogpost.save()
+   
+Saving the object will call the `validate()` method.
+
+And you can use more complex structure::
+
+    >>> class ComplexDoc(Document):
+    ...     structure = {
+    ...         "foo" : {"content":int},
+    ...         "bar" : {
+    ...             int:{unicode:int}
+    ...         }
+    ...     }
+    ...     required_fields = ['foo.content', 'bar.$int']
+     
+Please, see the tutorial_ for more examples.
+
+.. _tutorial : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html
+
+Suggestion and patches are really welcome. If you find mistakes in the documentation
+(english is not my primary langage) feel free to contact me. You can find me (namlook) 
+on the freenode #mongodb irc channel or on twitter_.
+
+.. _twitter : http://twitter.com/namlook
+
+
+Mongokit is documented and well tested with 100% of code coverage::
+
+    Name                          Stmts   Exec  Cover   Missing
+    -----------------------------------------------------------
+    mongokit                         11     11   100%   
+    mongokit.auth                    43     43   100%   
+    mongokit.collection              32     32   100%   
+    mongokit.connection              15     15   100%   
+    mongokit.database                 7      7   100%   
+    mongokit.document               381    381   100%   
+    mongokit.generators              32     32   100%   
+    mongokit.grid                   114    114   100%   
+    mongokit.helpers                 96     96   100%   
+    mongokit.mongo_exceptions         8      8   100%   
+    mongokit.operators               47     47   100%   
+    mongokit.schema_document        479    479   100%   
+    mongokit.versioned_document      45     45   100%   
+    -----------------------------------------------------------
+    TOTAL                          1310   1310   100%   
+
+Change Log
+==========
+
+v.0.5.12
+---------
+
+ * allow register method to be a decorator (thanks to Christopher Grebs for the inspiration)
+ * get ride of MongoDocumentCursor and use a subclass of pymongo's Cursor instead
+ * structure and descriptors validation is now done at object creation (not instantiation)
+
+   - *advantage* : mongokit is 40% faster
+   - *beware* : if you put a Document into a structure for reference, mongokit doesn't check anymore if use_autorefs is set
+
+ * add i18n descriptor validation + better i18n support
+ * code cleaning
+
+v0.5.11
+-------
+
+ * support latest pymongo version
+ * some changes in GridFS support (please read http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html)
+ * Deprecate atomic_save feature
+ * remove libmagic import from grid.py : to many trouble with this lib, we have to find another way to guess the content-type
+ * fix #79 -- Tries to migrate non-saved document
+ * fix #70 -- Set changes from set to list when a validation error occurs
+ * add contributor + fix email address to prevent spam
+ * fix deprecation warning of Python 2.6
+ * fix issue with validation and migration
+ * fix #75 -- add "version" attribute to module
+
+v0.5.10
+-------
+
+ * fix bug in autorefs when reference in double list
+
+v0.5.9
+------
+
+ * minors fixes
+
+v0.5.8
+------
+
+ * add rewind to cursor
+ * killed many bug in `from_json()`
+ * fix #66 - local variable 'l_objs' referenced before assignment
+ * fix #61 - Issue with indexing on multi-columns with directions
+
+v0.5.7
+------
+
+ * fix #63 - Creating index for each document instance operation. Brings speed improvements
+ * fix #60 - autorefs doesn't work with complex structures
+ * fix #62 - Dereference to model. Thanks to Christian Joudrey for the patch
+ * fix #64 - error with atomic_save when using embed document
+ * fix #65 - Lazy migrations with dict in list and documentation fix
+
+v0.5.6
+------
+
+ * add `atomic update`_ (just save the document again)
+ * add `init_type`_ to CustomType. This allow to fill an empty skeletton at instanciation 
+ * add debian package build rules. Thanks to Sebastien Estienne
+ * add `lazy migration`_ and `bulk migration`_ support
+ * fix a bug in CustomType
+ * add `'check' option`_ in indexes descriptor 
+ * add `untyped field support`_
+ * fix #58 - Document Validators not working for CustomType
+ * improve DotCollapsedDict by adding reference structure
+
+
+.. _`atomic update` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#updating-data
+.. _`init_type` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types
+.. _`lazy migration` : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html
+.. _`bulk migration` : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html#bulk-migration
+.. _`'check' option` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes
+.. _`untyped field support` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#untyped-field
+
+
+v0.5.5
+------
+ * fix 54 - Add reload method. Please read the documentation_
+ * put generate_index into Document.__init__. This is usefull for instanciating Document like this : MyDoc(collection=mycol)
+ * fix #44 - add  `set type support`_ + add validate() method to CustomType_
+ * fix #52 - Custom validation error messages (thanks to @cjoudrey for the patch)
+ * fix #50 - need optimizations in connection (won 20s on the benchmark_)
+ * fix #48 - Tuple assignment does not convert to list
+ * fix 49 - KeyError when using deep nested autorefs
+
+.. _documentation : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#reload
+.. _`set type support` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#the-structure
+.. _CustomType : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types
+.. _benchmark : http://groups.google.com/group/mongodb-user/browse_thread/thread/77c91641858e1e20/ea71afc4de24f2e9
+
+v0.5.4
+------
+ * A `lot of features in GridFS`_ with api change
+ * fix bug in autorefs
+ * fix #37 - find_random crash if no collection is empty 
+ * fix #38 - OverflowError in doc.to_json_type() when used over the datetime 2038 
+ * fix #41 - Warnings when setting attributes before enabling use_dot_notation 
+ * fix #40 - Better exception on bad structure. Thanks to peterbe for the patch 
+ * fix #43 - Add ability to `collect errors`_ in one place instead of throwing exceptions while validating 
+ * add `_dot_notation_warning` attribute. If false, disable all dot notation related warning 
+ * add patch to enable data load from map/reduce. See http://groups.google.com/group/mongokit/msg/34efea4c178573d7 
+ * fix bug spotted by Sebastien Estienne - error when using skip_validation with required_fields. Thanks 
+ * fix issue while using {unicode:unicode} in structure and i18n at the same time 
+
+.. _`lot of features in GridFS` : http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html
+.. _`collect errors` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#quiet-validation-detection
+
+v0.5.3
+------
+ * fix default_value issue when using with dict and list (see #35)
+ * fix bug reported by Andrew Degtiariov : http://bit.ly/c1vcUv
+ * add clone and explain method to MongoDocumentCursor
+ * add distinct to cursor (thanks to Flaper87)
+ * fix index test
+ * fix : when a field is added to a saved document and not specified in the structure, the validation wasn't work properly
+ * use current database if DBRef has no database information. Please, see the doc
+ * support of pymongo 1.4
+
+
+v0.5.2
+------
+ * bugs fix in json import/export
+ * bugs fix in default values and required values
+ * `gridfs support`_
+
+.. _`gridfs support` : http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html
+
+v0.5.1
+------
+ * `save()` doesn't return ``self`` anymore (was an API monster)
+ * fix bug in `find_one()` method. Now returns None if no Document is found
+ * fix bug when using default values
+ * adding i18n list support
+ * add i18n inheritance support
+ * adding index inheritance support
+
+v0.5
+----
+ * refactoring API which is getting much much more cleaner. Please see the migration_ page to keep your code up to date
+ * 100% code coverage by 162 unit tests
+ * lot of bug fix (too many to list them here)
+ * add document size validation
+ * add cross database reference support
+ * `i18n support`_
+
+.. _migration : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html
+.. _`i18n support` : http://bytebucket.org/namlook/mongokit/wiki/html/i18n.html
+
+v0.4
+----
+    * add autoref support to belong_to (delete cascade)
+      (http://bytebucket.org/namlook/mongokit/wiki/html/cascade.html#delete-cascade)
+    * changing collection dynamically 
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically)
+    * add immutable field (python tuple support)
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#case-of-tuple-or-immutable-field)
+    * add direction and ttl to index support
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes)
+    * add connection sharing support
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#sharing-connection)
+    * add json import/export for MongoDocument
+      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#json-support)
+    * full relation support (related_to)
+      (http://bytebucket.org/namlook/mongokit/wiki/html/relations.html)
+    * add long type support
+
+v0.3.3
+------
+
+   * add autoref support (thanks to @bwmcadams)
+   * add mongodb index support (thanks to @marcammann) 
+   * adding CustomType (original idea from Phillip Oldham) 
+   * support now all type of subclassed supported type 
+   * add "delete cascade" feature
+   * add the possibility to skip the validation layer for more performances
+   * fix issue while passing queries to fetch() and update tutorial 
+   * self._collection must not be None in __init__ 
+   * fix #11 - pylons_env extension documentation typo 
+   * add more complete test + docstring 
+   * fix issue #9 - bug with custom_types and nested dict in list 
