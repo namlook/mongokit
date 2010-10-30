@@ -292,7 +292,7 @@ class SchemaDocument(dict):
     ]
 
     def __init__(self, doc=None, gen_skel=True, gen_auth_types=True,
-      validate=True, lang='en', fallback_lang='en', gen_doted_dict=True):
+      validate=True, lang='en', fallback_lang='en'):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -318,7 +318,7 @@ class SchemaDocument(dict):
                 self._set_default_fields(self, self.structure)
         else:
             self._process_custom_type('python', self, self.structure)
-        if self.i18n or (gen_doted_dict and  self.use_dot_notation):
+        if self.use_dot_notation:
             self.__generate_doted_dict(self, self.structure)
         if self.i18n:
             self._make_i18n()

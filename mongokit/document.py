@@ -156,13 +156,9 @@ class Document(SchemaDocument):
         # If using autorefs, we need another authorized
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
-        if from_son:
-            gen_doted_dict = False
-        else:
-            gen_doted_dict = True
         super(Document, self).__init__(
           doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang,
-          fallback_lang=fallback_lang, gen_doted_dict=gen_doted_dict
+          fallback_lang=fallback_lang
         )
         # collection
         self.collection = collection
@@ -276,10 +272,7 @@ class Document(SchemaDocument):
 
         See pymongo's documentation for more details on arguments.
         """
-        as_class = None
-        if self.use_dot_notation:
-            as_class = DotedDict
-        return self.collection.find(wrap=self._obj_class, as_class=as_class, *args, **kwargs)
+        return self.collection.find(wrap=self._obj_class, *args, **kwargs)
 
     def find_one(self, *args, **kwargs):
         """
@@ -287,10 +280,7 @@ class Document(SchemaDocument):
 
         See pymongo's documentation for more details on arguments.
         """
-        as_class = None
-        if self.use_dot_notation:
-            as_class = DotedDict
-        return self.collection.find_one(wrap=self._obj_class, as_class=as_class, *args, **kwargs)
+        return self.collection.find_one(wrap=self._obj_class, *args, **kwargs)
 
     def one(self, *args, **kwargs):
         """
