@@ -1,0 +1,146 @@
+=========================
+Migration from 0.4 to 0.5
+=========================
+
+The version 0.5 not only changes the API but brings a lot of bug fix so,
+you may really want to upgrade.
+
+Presentation
+------------
+
+One of the main feature of MongoDB is speed. Why using MongoDB if libraries on
+top of it are slow ? I created MongoKit to be as simple and faster as possible.
+
+It appears that collection are really important and are used all the time when
+we tend to use them dynamically.  And using dynamic collections with MongoKit
+was a pain : there was too much code to write and many bugs underlying.
+
+I noticed that I was using a lot the pymongo library in my code when I wanted
+dynamic collection or quickly fetching raw data.  So, I decided to follow the
+pymongo api for MongoKit.
+
+Pymongo use the following scheme : `connection.database.collection`. Let's say
+we have created many ``Doc`` object in a collection "migration" on the db "test":
+
+    >>> from pymongo import Connection
+    >>> con = Connection()
+    >>> data = con.test.migration.find()
+    >>> type(data.next()) is dict
+    True
+
+The issue here is that we get raw data. 
+
+Let's create our ``Doc`` object so it look like this::
+    
+    >>> from mongokit import Document
+    >>> class Doc(Document):
+    ...    structure = {'title':unicode}
+
+The `db_name` and `collection_name` are not hard explained in the object
+declaration anymore. We juste describe the validation schema. Then, we have
+to fire a connection and register our ``Doc`` object ::
+
+>>> from mongokit import Connection
+>>> con = Connection()
+>>> con.register([Doc])
+
+Let's the BlogPost object seen in the introduction:
+
+>>> con.register([BlogPost])
+>>> blogpost = con.test.migration.BlogPost()
+>>> blogpost['title'] = u'my title'
+>>> blogpost['body'] = u'a body'
+>>> blogpost['author'] = u'me'
+>>> blogpost.save()
+
+Note that this is quite the same as the current api. We just get the BlogPost object
+via the collection. The main advantage of this approche is that we don't have to
+bother about the collection.
+
+You can simulate the current api behavior like this:
+
+    class BlogPostDocument(Document): # <-- just rename the class by adding "Document"
+        ...
+    >>> con.register([BlogPostDocument]) # register the document
+    >>> BlogPost = con.test.migration.BlogPostDocument()
+
+    >>> blogpost = BlogPost()
+    >>> blogpost2 = BlogPost()
+
+Another advantage is the ability of using the collection dynamically without pain.
+Let's say that we want to put all BlogPost into a user collection (so one collection
+by user) :
+
+>>> user_col = 'me'
+>>> blogpost = con.test[user_col].BlogPost()
+
+Quering is as simple as instanciating object. There's two way of fetching objects :
+
+ * getting raw data (the pymongo's way)
+ * getting instanciated object with all method defined (the mongokit way)
+
+The first approche will produce only python dict and is very fast.
+The seconde will wrap the data into the MongoDocument. This is useful if we defined
+methods and want to use them.
+
+Getting raw data :
+
+>>> raw_data = con.test.migration.find()
+
+Actually, all pymongo's method can be apply :
+    
+>>> con.test.migration.remove({})
+>>> con.test.drop_collection('migration')
+
+Getting instanciated objects :
+
+>>> blogpost_cursor = con.test.migration.BlogPost.find()
+>>> bp = blogpost_cursor.next()
+
+We can apply MongoDocument methods (`validate`, `to_json` etc...)
+
+>>> bp.validate()
+>>> bp
+{'body': u'a body', 'title': u'my title', 'date_creation': datetime.datetime(...), 'rank': 0, 'author': u'me'}
+
+Other mongokit queries are available :
+
+>>> blogpost_cursor = con.test.migration.BlogPost.fetch() # get only BlogPost
+
+So, what changed ?
+------------------
+
+ * replace `MongoDocument` by `Document`. I changed the name in order to facilitate the migration. So there won't be surprises
+ * uuid is False by default in the `save()` method (instead of True)
+ * replaced `all()` by `find()`. This in order to keep consistancy with the pymongo driver
+ * replace `one()` by `find_one().
+ * remove `db_name` and `collection_name`. Instead, you have to register your object to the connection.
+ * passing a dictionnary in "fields" is now deprecated.  The problem when passing a dictionnary is that a dictionnary is unordered. This might be a problem for compound keys. If you want to make compound keys indexes, you now need to pass a list of tuples::
+
+    >>> from mongokit import *
+    >>> class MyDoc(Document):
+    ...     structure = {
+    ...         'standard':unicode,
+    ...         'other':{
+    ...             'deep':unicode,
+    ...         },
+    ...         'notindexed':unicode,
+    ...     }
+    ...     
+    ...     indexes = [
+    ...         {
+    ...             'fields':[('standard',INDEX_ASCENDING), ('other.deep',INDEX_DESCENDING)],
+    ...             'unique':True,
+    ...         },
+    ...     ]
+
+ * removed cascade (`belong_to`) and related features. MongoKit is writed to be fast and production ready. Adding such feature brings bugs and complication in maintainability. As far as I know, those features was not really used and there are easy to implemented. So, I removed them. This bring more less and cleaner code. If you don't know how to implemente thoses features, send me a message on the mailing list, Bitbucket or Twitter and I'll write a tutorial.
+ * dropped Mongodb auth support. I'm not happy with the way it was handled. I have to think on a better API. So, in order to avoid another API changed, I removed this feature. If you really need this feature, contact me so we can think a new API together.
+ * last but not least : better integration with web framework. All that you have to do is to set a connection and register all your objects.
+
+ 
+
+
+
+
+

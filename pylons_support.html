@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pylons integration support &mdash; MongoKit v0.5 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/pylons_support.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <p>-<em>- restructuredtext -</em>-</p>
+<div class="section" id="pylons-integration-support">
+<h1>Pylons integration support<a class="headerlink" href="#pylons-integration-support" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This documentation is part of the merge from Mongokit-Pylons of Brendan McAdams.</p>
+</div>
+<p>MongoPylonsEnv is a helper class for using <a class="reference external" href="http://bitbucket.org/namlook/mongokit/wiki/Home">MongoKit</a> inside of <a class="reference external" href="http://pylonshq.com">Pylons</a>.
+The recommended deployment is to add a call to init_mongo()
+in config/environment.py for your pylons project.
+Like with <a class="reference external" href="http://sqlalchemy.org">SQLAlchemy</a>, this will setup your connections
+at Pylons boot; the <a href="#id1"><span class="problematic" id="id2">MongoDB_</span></a> Pool code should ensure you have enough connections.</p>
+<p>Add the import at the top:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit.ext.pylons_env</span> <span class="kn">import</span> <span class="n">MongoPylonsEnv</span>
+</pre></div>
+</div>
+<p>And lower down, in load_environment():</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MongoPylonsEnv</span><span class="o">.</span><span class="n">init_mongo</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Additionally, you&#8217;ll need to add several items to your configuration ini file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># Mongo Database settings</span>
+<span class="gp">... </span><span class="n">mongodb</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">localhost</span>
+<span class="gp">... </span><span class="n">mongodb</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="mf">27017</span>
+<span class="gp">... </span><span class="n">mongodb</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">your_db_name</span>
+<span class="gp">... </span><span class="n">mongodb</span><span class="o">.</span><span class="n">connection_timeout</span> <span class="o">=</span> <span class="mf">30</span>
+<span class="gp">... </span><span class="n">mongodb</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">enable</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">... </span><span class="n">mongodb</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mf">20</span>
+</pre></div>
+</div>
+<p>Then, you can pass keyword argument &#8216;use_pylons&#8217; to your Document constructor, or define attribute</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">_use_pylons</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>on your subclass.</p>
+<p>Alternately, for the ultimate in lazy:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit.document</span> <span class="kn">import</span> <span class="n">MongoPylonsDocument</span>
+</pre></div>
+</div>
+<p>And then subclass from that (It&#8217;s a proxy subclass of MongoDocument that enables use_pylons)</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>

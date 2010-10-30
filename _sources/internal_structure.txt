@@ -1,0 +1,66 @@
+Changing collection dynamically
+===============================
+
+Each `MongoDocument` must have a `db_host`, a `db_port`, a `db_name` and a `collection_name`.
+Those attributes are set when describing mongo documents. The connection, the db and the
+collection are then automatically created and attached to the object.
+
+But you might need to specify a different db or collection dynamically. For instance,
+say you want to store a User by database. You can't set the `db_name` and `collection_name`
+because it will change at each user.
+
+>>> class User(MongoDocument):
+...     strucute = {'login':unicode, 'screen_name':unicode}
+...     # we can set `db_name` here...
+
+Mongokit allow you to change those parameters on the fly. For this, you need to create
+another collection with the helper `get_collection`.
+
+>>> user_col = User.get_collection(db_name='namlook', collection_name='profile')
+
+Now, we can query the database by passing our new collection :
+
+>>> User.all({}, collection=col)
+
+You can pass those value to the `MongoDocument.__init__` :
+
+>>> user = User(db_name='namlook', collection_name='profile')
+>>> user['login'] = 'namlook'
+>>> user['screen_name'] = 'Namlook'
+
+calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
+
+Internal structure
+==================
+
+SchemaDocument
+--------------
+
+A `SchemaDocument` brings all the structure and the validation layer. It is designed to be
+light and powerful with an simple api. This object is completely disconnected from the db and
+can be used stand-alone in another projects. Just copy the `schema_document.py` and the
+`operators.py` files. This object is pretty usefull if you wan to brings the validation layers
+of mongokit into another db. You'll need to implement all the database layer thought.
+
+MongoDocument
+-------------
+
+A `MongoDocument` brings all mongodb related staff to the SchemaDocument.
+This object defines all methods to deal with a mongod server.
+
+
+Little api changes
+==================
+
+There is a little api changes with this new changeset :
+
+ *  `MongoDocument._connection` and  `MongoDocument._collection` are removed and replaced by
+   public one : `MongoDocument.connection` and `MongoDocument.collection`.
+ * `MongoDocument.db` has appeared.
+ * `_get_connection()` was removed.
+ * `MongokitOperator` is now named to `SchemaOperator` for more consistency.
+ * `belong_to` becomes `belongs_to`
+
+Note that if you stiked to the tutorial and don't used internal methods or
+attributes, you don't need to change anything.
+

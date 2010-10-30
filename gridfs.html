@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>GridFS &mdash; MongoKit v0.5 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" />
+    <link rel="next" title="Migration" href="migration.html" />
+    <link rel="prev" title="Internationalization and Localization" href="i18n.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="migration.html" title="Migration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="i18n.html" title="Internationalization and Localization"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">GridFS</a><ul>
+<li><a class="reference external" href="#the-simple-way">The simple way</a></li>
+<li><a class="reference external" href="#the-full-way">The full way</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="i18n.html"
+                                  title="previous chapter">Internationalization and Localization</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="migration.html"
+                                  title="next chapter">Migration</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/gridfs.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="gridfs">
+<h1>GridFS<a class="headerlink" href="#gridfs" title="Permalink to this headline">¶</a></h1>
+<p>MongoKit implements GridFS support and brings some helpers
+to facilitate the use of relative small files.</p>
+<p>Let&#8217;s create a document <tt class="docutils literal"><span class="pre">Doc</span></tt> which have two attachment in
+GridFS  named as  <cite>source</cite> and <cite>template</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Doc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>           <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>       <span class="p">}</span>
+<span class="gp">... </span>       <span class="n">gridfs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;files&#39;</span><span class="p">:[</span><span class="s">&#39;source&#39;</span><span class="p">,</span> <span class="s">&#39;template&#39;</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>You might want to be able to add file in gridfs on the fly without knowing
+their name.  The new API allow to add &#8220;containers&#8221; to gridfs. So, the gridfs
+declaration look like this</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gridfs</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s">&#39;files&#39;</span><span class="p">:[</span><span class="s">&#39;source&#39;</span><span class="p">,</span> <span class="s">&#39;template&#39;</span><span class="p">],</span>
+  <span class="s">&#39;containers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;images&#39;</span><span class="p">],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>As you can see, nothing hard. We just declare our attachment files
+in the <cite>gridfs</cite> attribute. Filling this attribute will generate
+an <cite>fs</cite> attribute at runtime. This <cite>fs</cite> attribute is actually an
+object which deal with GridFS.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Doc</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">Doc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;Hello&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Before using gridfs attachment, you have to save the document.
+This is required as under the hood, mongokit use the document
+<tt class="docutils literal"><span class="pre">_id</span></tt> to link with GridFS files.</p>
+<div class="section" id="the-simple-way">
+<h2>The simple way<a class="headerlink" href="#the-simple-way" title="Permalink to this headline">¶</a></h2>
+<p>All gridfs attachments are accessible via the <cite>fs</cite> object.
+Now, we can fill the <tt class="docutils literal"><span class="pre">source</span></tt> and <tt class="docutils literal"><span class="pre">template</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="s">&quot;Hello World !&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="s">&quot;My pretty template&quot;</span>
+</pre></div>
+</div>
+<p>And that&#8217;s it ! By doing this, MongoKit will open a GridFile,
+fill it with the value, and close it.</p>
+<p>Note that you have to be carefull to the type : attachments
+only accept string.</p>
+<p>You can read any attachment in a very simple way :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">source</span>
+<span class="go">&#39;Hello World !&#39;</span>
+</pre></div>
+</div>
+<p>You can add any image you want to the container &#8220;images&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="s">&#39;image1.png&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;...&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="s">&#39;image1.png&#39;</span><span class="p">]</span>
+<span class="go">&#39;...&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="s">&#39;image2.png&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;...&#39;</span>
+</pre></div>
+</div>
+<p>This is very usefull when you want of store a number of file but you don&#8217;t
+know their names.</p>
+<p>If you have python-magic installed (<tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">easy_install</span> <span class="pre">-U</span> <span class="pre">python-magic</span></tt>),
+the content-type of the file is automatically guessed. To access to it, you
+have to use the &#8220;full way&#8221;.</p>
+<div class="topic">
+<p class="topic-title first">new in version 0.5.11</p>
+<p>There were many problems with the python-magic support so it has been removed.</p>
+</div>
+<p>If you do not know stored file names, you can list them by iterate:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="p">]</span>
+<span class="go">[&#39;source&#39;, &#39;template&#39;]</span>
+</pre></div>
+</div>
+<p>You can list a container as well. The container name is accessible via the <cite>container</cite> attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">images</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="k">print</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">container</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">images/image1.png</span>
+<span class="go">images/image2.png</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-full-way">
+<h2>The full way<a class="headerlink" href="#the-full-way" title="Permalink to this headline">¶</a></h2>
+<p>While the previous method is very easy, it might not be enougth
+if you&#8217;re dealing with very big files or want to use some file
+related feature (for instance, using seek to not have to load
+all the file in memory)</p>
+<p>You can do that with using the <cite>get_last_version()</cite> method on the <tt class="docutils literal"><span class="pre">fs</span></tt> object.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">get_last_version</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you want to create a file and write in it, you can do that with using the
+<cite>new_file()</cite> method on the <tt class="docutils literal"><span class="pre">fs</span></tt> object.  The <cite>new_file()</cite> method take the
+file name and all other properties pymongo
+accepts here:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">new_file</span><span class="p">(</span><span class="s">&#39;source&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Hello World again !&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>By supporting PyMongo 1.6 you can use the advanced <tt class="docutils literal"><span class="pre">with</span></tt> keyword
+to handle write operations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">new_file</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Hello World again !&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>You can add any image you want to the container &#8220;images&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">images</span><span class="o">.</span><span class="n">new_file</span><span class="p">(</span><span class="s">&#39;image1.png&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;...&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">images</span><span class="o">.</span><span class="n">get_last_version</span><span class="p">(</span><span class="s">&#39;image1.png&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All PyMongo API is supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&quot;source&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="go">&#39;Hello World&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">get_last_version</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">)</span>
+<span class="go">&lt;gridfs.grid_file.GridOut object at 0x1573610&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">get_last_version</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="go">&#39;Hello World&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">new_file</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;New Hello World!&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">source</span>
+<span class="go">&#39;New Hello World!&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_id</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">get_last_version</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">_id</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">new_id</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">source</span>
+<span class="go">&#39;Hello World&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="migration.html" title="Migration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="i18n.html" title="Internationalization and Localization"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

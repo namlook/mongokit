@@ -1,0 +1,1369 @@
+=================
+MongoKit Tutorial
+=================
+
+First of all, Mongokit relied heavily on pymongo. As such, all pymongo API is
+exposed. If you don't find what you want in the Mongokit document, please take
+a look at pymongo_ 's one.  All the pymongo API is exposed via connection,
+database and collection so Connection, Database and Collection are wrapper
+around pymongo objects.
+
+.. _pymongo : http://api.mongodb.org/python/
+
+Simple Example
+==============
+
+>>> from mongokit import *
+
+>>> import datetime
+
+>>> class BlogPost(Document):
+...     structure = {
+...             'title':unicode,
+...             'body':unicode,
+...             'author':unicode,
+...             'date_creation':datetime.datetime,
+...             'rank':int,
+...             'tags': [unicode],
+...     }
+...     required_fields = ['title','author', 'date_creation']
+...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
+... 
+
+The structure is a simply dictionnary with python type. In this example, `title` must be unicode and `rank`
+must be an int.
+
+Optionaly, you can add some descriptors. In order to specify fields which are required, just add a `required_fields`
+attribute. This is a simple list which list all required_fields (ie, those field must not be None when validating).
+
+Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
+you can pass callable object (like a datetime).
+
+Now, fire a connection and register the ``BlogPost`` object:
+
+>>> con = Connection()
+>>> con.register([BlogPost])
+
+.. topic:: new in version 0.5.12
+
+    now the register method can be used as a decorator::
+
+        @con.register
+        class BlogPost(Document):
+            structure = {...}
+
+Let's do some cleanup before continue:
+
+>>> con.test.drop_collection('tutorial')
+
+Now, let's create a blogpost we want to work on the collection "tutorial" on the database "test":
+
+>>> tutorial = con.test.tutorial
+
+>>> bp = tutorial.BlogPost()
+>>> bp
+{'body': None, 'title': None, 'date_creation': datetime.datetime(...), 'rank': 0, 'author': None} 
+
+Not that `date_creation` was automaticly filled by `utcnow()` and rank is 0.
+
+>>> bp['title'] = "my first blog post"
+>>> bp.validate() 
+Traceback (most recent call last):
+...
+SchemaTypeError: title must be an instance of unicode not str
+
+`str` type is not authorized, you must use unicode : 
+
+>>> bp['title'] = u"my first blog post"
+
+`validate` method will check if required fields are set :
+
+>>> bp.validate()
+Traceback (most recent call last):
+...
+RequireFieldError: author is required
+
+>>> bp['author'] = u'myself'
+>>> bp.validate()
+
+Note that `save` will call the `validate` method, so you don't have to validate
+each time.
+
+>>> bp.save()
+
+You can disable or force the validation with the `validate` argument in the `save` method:
+
+>>> bp.save(validate=False)
+
+The structure
+=============
+
+The ``structure`` is a simple dict which define how document fields will be validated.
+Field types are simple python type.  By default, MongoKit allow the following types::
+
+    authorized_types = [type(None),
+      bool, 
+      int, 
+      float,
+      long,
+      unicode,
+      list,
+      dict,
+      datetime.datetime, 
+      pymongo.binary.Binary,
+      pymongo.objectid.ObjectId,
+      pymongo.dbref.DBRef,
+      pymongo.code.Code,
+      type(re.compile("")),
+      CustomType,
+    ]
+
+The `set()` python type is not supported in pymongo. If you want to use it anyway please use the `Set()` custom type::
+
+    class MyDoc(Document):
+        structure = {
+            "tags": Set(unicode),
+        }
+
+
+validate keys
+-------------
+
+If the value of key is not known but we want to validate some deeper structure, 
+we use the "$<type>" descriptor :
+
+>>> class MyDoc(Document):
+...    structure = {
+...        "key1":{
+...            unicode:{
+...                "bla":int,
+...                "bar":{unicode:int}
+...            },
+...        },
+...        "bla":float,
+...    }
+...    required_fields = ["key1.$unicode.bla"]
+...
+
+Not that if you use python type as key in structure, generate_skeleton
+won't be able to build the entired underline structure :
+
+>>> con.register([MyDoc])
+>>> tutorial.MyDoc() == {'key1': {}, 'bla': None}
+True
+
+So, default_values nor validators will work.
+
+
+Untyped field
+-------------
+
+.. topic:: new in version 0.5.6
+
+    Sometime you don't want to specify a type for a field. In order to allow a
+    field to have any authorized types, just set the field to None into the
+    structure::
+
+        >>> class MyDoc(Document):
+        ...     structure = {
+        ...         'foo':unicode,
+        ...         'bar':None
+        ...     }
+        ...
+
+    In this example, `bar` can be of any authorized types but not CustomTypes.
+
+Difference beetween [] and the type list
+----------------------------------------
+
+This is pretty simple. if you want to define a list of heterogen types just do:
+
+        tags : list
+
+If you use the type `list`, no validation will be done on this field other than
+checking that the field is a list. If you want to define a list of unicode :
+
+        tag : [unicode]
+
+When validating the document, this will iterate to the list and check if all value
+are unicode.
+
+Difference beetween {} and the type dict
+----------------------------------------
+
+{} is used for describing the structure like {"foo":unicode, "bar":int}
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {"foo":unicode, "bar":int}
+...    }
+
+
+If you don't specify the structure :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {}
+...    }
+
+You won't be able to do that because "foo" is not defined into the structure.
+
+>>> con.register([Person])
+>>> bob = tutorial.Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+>>> bob.validate()
+Traceback (most recent call last):
+...
+StructureError: unknown fields : [u'foo']
+
+
+If you want to add new items to a dict if they're not defined, you must use the dict type instead :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": dict
+...    }
+
+>>> con.register([Person])
+>>> bob = tutorial.Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+>>> bob.validate()
+
+Using dict type is useful if you don't know what field will be added *and* what will be the type of the field.
+If you know the type of the field, it's better to do that :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {unicode:unicode}
+...    }
+
+This will add another layer to validate the content. See "validate keys" section for more informations.
+
+Case of tuple or immutable field
+--------------------------------
+
+If you need a structured list with a limited
+number of field, you can use tuple to describe
+your object :
+
+>>> class MyDoc(Document):
+...     structure = {
+...         "foo":(int, unicode, float)
+...     }
+>>> con.register([MyDoc])
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo']
+[None, None, None]
+
+Tuple are converted into a simple list.
+They add another validation layer. Field must
+follow the right type:
+
+>>> mydoc['foo'] = [u"bla", 1, 4.0]
+>>> mydoc.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
+
+and they must have the right number of items:
+
+>>> mydoc['foo'] = [1, u"bla"]
+>>> mydoc.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must have 3 items not 2
+
+As tuples are converted to list internally, you
+can make all list operations:
+
+>>> mydoc['foo'] = [1,u'bar',3.2]
+>>> mydoc.validate()
+>>> mydoc['foo'] = [None, u"bla", 3.1]
+>>> mydoc.validate()
+>>> mydoc['foo'][0] = 50
+>>> mydoc.validate()
+
+
+Adding more authorized types
+----------------------------
+
+It's possible to add more type in authorized_types: 
+
+>>> class MyDoc(Document):
+...     structure = {
+...         "foo":str,
+...     }
+...     authorized_types = Document.authorized_types + [str]
+>>> con.register([MyDoc])
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo'] = 'bla'
+>>> mydoc.validate()
+
+Descriptors
+===========
+
+In the MongoKit philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are describes outside the structure.
+Descriptors can be combined and can apply the same field.
+
+required
+--------
+
+This descriptor describes the required fiels::
+
+    class MyDoc(Document):
+        structure = {
+            "bar":unicode,
+            "foo":{
+                "spam":unicode,
+                "eggs":int,
+            }
+        }
+        required = ['bar', 'foo.spam']
+
+If you want to reach nested fields, just use the dot notation.
+
+default_values
+--------------
+
+This descriptors allow to specify a default value at the creation of the document::
+
+   class MyDoc(Document):
+        structure = {
+            "bar":unicode,
+            "foo":{
+                "spam":unicode,
+                "eggs":int,
+            }
+        }
+        default_values = {'bar':u'hello', 'foo.eggs':4}
+
+Not that the default value must be a valid type (here unicode)
+
+validators
+----------
+
+This descriptor bring a validation layer to a field. It take a function which returns a `False` if the validation fails, `True` otherwise::
+
+    import re
+    def email_validator(value):
+       email = re.compile(r"(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)",re.IGNORECASE)
+       return bool(email.match(value))
+
+    class MyDoc(Document):
+       structure = {
+          "email": unicode,
+          "foo": {
+            "eggs":int,
+          }
+       }
+       validators = {
+           "email": email_validator,
+           "foo.eggs": lambda x: x > 10
+       }
+
+You can add custom message in your validators::
+
+    def email_validator(value):
+       email = re.compile(r"(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)",re.IGNORECASE)
+       if not bool(email.match(value))
+          raise ValidatorError("%s is not a valid email")
+
+Note that it is a good thing to add one more "%s" in message. This will be use to describes the failing field name.
+
+You can also pass params in your validator. This is how you can dor::
+
+        class MinLengthValidator(object):
+            def __init__(self, min_length):
+                self.min_length = min_length
+
+            def __call__(self, value):
+                if len(value) >= self.min_length:
+                    return True
+                else:
+                    raise Exception('%s must be atleast ' + str(self.min_length) + ' characters long.')
+
+        class Client(Document):
+            structure = {
+              'first_name': unicode
+            }
+            validators = { 'first_name': MinLengthValidator(2) }
+
+In this example, `first_name` must contain at least 2 characters.
+
+i18n
+----
+
+This descriptor will tell MongoKIT that a field has multiple translation. Please see the `i18n section`_ for more details::
+
+   class MyDoc(Document):
+        structure = {
+            "bar":unicode,
+            "foo":{
+                "spam":unicode,
+                "eggs":int,
+            }
+        }
+        i18n = ['bar', 'foo.eggs']
+
+
+.. _`i18n section`: i18n.html
+
+Adding complex validation
+=========================
+
+If the use of a validator is not enougth, you can overload the validation method
+to feet your needs.
+
+Example the following document:
+
+>>> class MyDoc(Document):
+...     structure={
+...             "foo":int,
+...             "bar":int,
+...             "baz":unicode,
+...     }
+... 
+
+We want to be sure that before saving our object, foo is greater than bar and baz is
+unicode(foo). Do do that, we juste overload the validation method::
+
+    def validate(self):
+        assert self['foo'] > self['bar']
+        assert self['baz'] == unicode(self['foo'])
+        super(MyDoc, self).validate(self)
+
+
+MongokitOperator
+================
+
+It is possible to add another layer of validation to fields.
+
+OR operator
+-----------
+
+Let's say that we have a field which can be unicode or int or a float.
+We can use the OR operator to tell MongoKit to validate the field :
+
+>>> from mongokit import OR
+>>> from datetime import datetime
+>>> class Account(Document): 
+...     structure = { 
+...         "balance": {'foo': OR(unicode, int, float)} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['balance']['foo'] = u'3.0'
+>>> account.validate()
+>>> account['balance']['foo'] = 3.0
+>>> account.validate()
+
+but :
+
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <unicode or int or float> not datetime
+
+NOT operator
+------------
+
+You can also use the NOT operator to tell MongoKit that you don't want a such type
+for a field :
+
+>>> from mongokit import NOT
+>>> class Account(Document): 
+...     structure = { 
+...         "balance": {'foo': NOT(unicode, datetime)} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['balance']['foo'] = 3
+>>> account.validate()
+>>> account['balance']['foo'] = 3.0
+>>> account.validate()
+
+and :
+
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not datetime
+
+>>> account['balance']['foo'] = u'3.0'
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not unicode
+
+IS operator
+-----------
+
+Sometime, you might want to force a fields to be in a specifique value. The IS operator
+must be use for this purpose :
+
+>>> from mongokit import IS
+>>> class Account(Document): 
+...     structure = { 
+...         "flag": {'foo': IS(u'spam', u'controversy', u'phishing')} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['flag']['foo'] = u'spam'
+>>> account.validate()
+>>> account['flag']['foo'] = u'phishing'
+>>> account.validate()
+
+and :
+
+>>> account['flag']['foo'] = u'foo'
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: flag.foo must be in [u'spam', u'controversy', u'phishing'] not foo
+
+Custom types
+============
+
+Sometime, we need to work with complexe object while their
+footprint in the database is fairly simple. Let's take a  
+datetime object. Datetime object can be usefull to compute
+complexe date but while mongodb can deal with datetime object,
+let's say that we just want to store the unicode representation.
+
+MongoKit allow the use to work on a datetime object and store the unicode
+representation on the fly. In order to do this, we have to implement a CustomType
+and fill the custom_types attributes:
+
+>>> import datetime
+
+A CustomType object must implement two methods and one attribute:
+
+ - `to_bson(self, value)`: this method will convert the value
+    to fit the correct authorized type before beeing saved in the db.
+ - `to_python(self, value)`: this method will convert the value
+    taken from the db into a python object
+ - `validate(self, value, path)`: this method is optionnal and will add a
+    validation layer. Please, see the `Set()` CustomType code for more example.
+ -  You must specify a `mongo_type` property in the `CustomType` class. this
+    will describes the type of the value stored in the mongodb.  
+ -  If you want more validation, you can specify a `python_type` property which is
+    the python type the value will be converted. This is a good thing to specify it
+    as it make a good documentation.
+ - `init_type` attribute will allow to describes an empty value. For example,
+   if you implement the python set as CustomType, you'll set `init_type` to
+   `set`. Note that `init_type` must be a type or a callable instance.
+ 
+>>> class CustomDate(CustomType):
+...     mongo_type = unicode
+...     python_type = datetime.datetime # optional, just for more validation
+...     init_type = None # optional, fill the first empty value
+...
+...     def to_bson(self, value):
+...         """convert type to a mongodb type"""
+...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+...
+...     def to_python(self, value):
+...         """convert type to a python object"""
+...         if value is not None:
+...            return datetime.datetime.strptime(value, '%y-%m-%d')
+...
+...     def validate(self, value, path):
+...         """OPTIONAL : useful to add a validation layer"""
+...         if value is not None:
+...             pass # ... do something here
+...             
+
+Now, let's create a Document:
+
+>>> class Foo(Document):
+...     structure = {
+...         'foo':{
+...             'date': CustomDate(),
+...         },
+...     }
+
+Now, we can create Foo's objects and working with python datetime objects
+
+>>> con.register([Foo])
+>>> foo = tutorial.Foo()
+>>> foo['_id'] = 1
+>>> foo['foo']['date'] = datetime.datetime(2003,2,1)
+>>> foo.save()
+
+The saved object in db has the unicode footprint as expected:
+
+>>> tutorial.find_one({'_id':1})
+{u'_id': 1, u'foo': {u'date': u'03-02-01'}}
+
+Quering an object will convert automaticly the CustomType into the correct
+python object:
+
+>>> foo = tutorial.Foo.get_from_id(1)
+>>> foo['foo']['date']
+datetime.datetime(2003, 2, 1, 0, 0)
+
+Skipping validation
+===================
+
+Once your application is ready for production and you are sure that the data is consistant,
+you might want to skip the validation layer. This will make mongokit significant faster
+(as fast as pymongo). In order to do that, just set the `skip_validation` attribute to `True`.
+
+TIP: this is a good idea to create a "RootDocument" and to inherite all you object from it.
+This will allow you to control the behavior of all your objects by setting the RootDocument:
+
+>>> class RootDocument(Document):
+...     structure = {}
+...     skip_validation = True
+...     use_autorefs = True
+
+>>> class MyDoc(RootDocument):
+...     structure={
+...             "foo":int,
+...     }
+
+
+Note that you can always force the validation at any moment on saving even if `skip_validation` is `True`:
+
+>>> con.register([MyDoc]) # No need to register RootDocument as we do not instanciate it
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo'] = u'bar'
+>>> mydoc.save(validate=True)
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
+
+
+Quiet validation detection
+==========================
+
+.. topic:: new in version 0.5.4
+
+    By default, when validation is on each error raises an Exception. Sometime, you just want to
+    collect errors in one place. This is possible by setting the `raise_validation_errors` to False.
+    At this moment, all errors are store in the `validation_errors` attribute:
+
+    >>> class MyDoc(Document):
+    ...     raise_validation_errors = False
+    ...     structure={
+    ...        "foo":set,
+    ...     }
+    >>> con.register([MyDoc])
+    >>> doc = tutorial.MyDoc()
+    >>> doc.validate()
+    >>> doc.validation_errors
+    {'foo': [StructureError("<type 'set'> is not an authorized type",), RequireFieldError('foo is required',)]}
+
+    `validation_errors` is a dictionnary which take the field name as key and the python exception as value.
+    Here foo has two issues : a structure one (`set` is not an authorized type) and is required.
+
+    >>> doc.validation_errors['foo'][0].message
+    "<type 'set'> is not an authorized type"
+
+Query
+=====
+
+There's two ways to query a collection : getting raw data or ``Document`` instance.
+
+Getting raw data
+----------------
+
+Getting raw data is usefull when you only want to have value from your data. This is fast
+as there's no validation or wrapping. There is two methods to query raw data : `find()` and
+`find_one()`, `one()` and `find_random()`.
+
+find() and find_one()
+~~~~~~~~~~~~~~~~~~~~~
+
+`find()`, and `find_one()` act like the similar pymongo's methods.
+Please, see the pymongo documentation
+
+one()
+~~~~~
+
+`one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
+there is more than one result.
+
+>>> bp2 = tutorial.BlogPost()
+>>> bp2['title'] = u'my second blog post'
+>>> bp2['author'] = u'you'
+>>> bp2.save()
+
+>>> tutorial.one()
+Traceback (most recent call last):
+...
+MultipleResultsFound: 2 results found
+
+>>> tutorial.one({'title':'my first blog post'})
+{u'body': None, u'author': u'myself', u'title': u'my first blog post', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
+
+If no document is found, `one()` returns `None`
+
+find_random()
+~~~~~~~~~~~~~
+
+`find_random()` will return a random document from the database. This method doesn't take other arguments.
+
+Getting Document instance
+-----------------------------
+
+There is 4 methods to query your data and get Document's instance :
+`find()`, `find_one()`, `fetch()`, `fetch_one` and `find_random()`.
+`find()` and `fetch()` return a cursor of collection.  A cursor is a container
+which lazy evaluate the results. A cursor is acting like an iterator.
+`find_one()` and `fetch_one()` return the document itself.
+
+All theses method can take a query as argument. A query is a simple dict. Please,
+see the mongodb and the pymongo documentation for further details.
+
+find()
+------
+
+`find()` without argument will return a cursor of all documents of the collection.
+If a query is passed, it will return a cursor all documents which match the query.
+
+`find()` takes the same arguments than the the `pymongo.collection.find` method.
+
+>>> for post in tutorial.BlogPost.find():
+...     print post['title']
+my first blog post
+my second blog post
+
+
+>>> for post in tutorial.BlogPost.find({'title':'my first blog post'}):
+...     print post['title']
+my first blog post
+
+find_one()
+----------
+
+`find_one()` act like `find()` but return only the first document of result. This
+method takes the same arguments than the pymongo's `find_one()` method. Please, check
+the pymongo's documentation.
+
+one()
+-----
+
+`one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
+there is more than one result.
+
+>>> tutorial.BlogPost.one()
+Traceback (most recent call last):
+...
+MultipleResultsFound: 2 results found
+
+>>> doc = tutorial.BlogPost.one({'title':'my first blog post'})
+>>> doc
+{u'body': None, u'title': u'my first blog post', u'author': u'myself', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
+>>> isinstance(doc, BlogPost)
+True
+
+If no document is found, `one()` returns None
+
+fetch()
+-------
+
+Unlike `find()`, `fetch()` will return only documents which match the structure of the Document.
+
+>>> all_blog_posts = tutorial.BlogPost.fetch()
+
+This will return only all blog post (which have 'title', 'body', 'author', 'date_creation', 'rank' as fields).
+This is an helper for :
+
+>>> all_blog_posts = tutorial.BlogPost.find({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': {'$exists': True}})
+
+Note, like `find()` and and `one()`, you can pass advanced queries:
+
+>>> my_blog_posts = tutorial.BlogPost.fetch({'author':'myself'})
+
+which is equivalent to:
+
+>>> all_blog_posts = tutorial.BlogPost.find({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': 'myself'})
+
+fetch_one()
+-----------
+
+Juste like `fetch()` but raise a  `mongokit.MultipleResultsFound` exception if
+there is more than one result.
+
+find_random()
+-------------
+
+`find_random()` will return a random document from the database. This method doesn't take other arguments.
+
+Updating data
+=============
+
+Update a document
+-----------------
+
+.. topic:: new in version 0.5.6
+
+    Mongokit now support atomic update out of the box !
+
+    Update in Mongokit is as easy than saving an object. Just modify your
+    document, save it and that's it ! Your document is updated using atomic
+    update. To do that, your document must contain the field `_version`. Here's an
+    complete example of how updating work with Mongokit::
+
+        >>> class MyDoc(Document):
+        ...    structure = {
+        ...        'foo':{
+        ...            'bar':[unicode],
+        ...            'eggs':{'spam':int},
+        ...        },
+        ...        'bla':unicode
+        ...    }
+        ...    atomic_save = True # enable atomic saving
+
+        NOTE : as atomic saving required to modify documents by adding a new
+        field (`_version`), you have to explicitly tell mongokit that you wan't
+        to use this new feature by setting the attribute `atomic_save` as True.
+
+        >>> self.connection.register([MyDoc])
+
+        >>> doc = self.col.MyDoc()
+        >>> doc['_id'] = 3
+        >>> doc['foo']['bar'] = [u'mybar', u'yourbar']
+        >>> doc['foo']['eggs']['spam'] = 4
+        >>> doc['bla'] = u'ble'
+        >>> doc.save() 
+
+        Here, the field `_version` is automatically added :
+
+        >>> doc['_version']
+        1
+
+        Let's modify our doc :
+
+        >>> doc['foo']['eggs']['spam'] = 2
+        >>> doc['bla']= u'bli'
+
+        But now, someone is getting our doc and update it before we could save it:
+
+        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
+        >>> new_doc['bla'] = u'blo'
+        >>> new_doc.save()
+        
+        The doc `_version` is incremented :
+
+        >>> new_doc['_version']
+        2
+
+        So, if we try to save our doc, this would raise a ConflictError as the
+        data has changed. What we have to do is reload the document and try to
+        save it again :
+
+        >>> try:
+        ...    doc.save()
+        ... except ConflictError,e:
+        ...    doc.reload()
+        ...    doc['foo']['eggs']['spam'] = 2
+        ...    doc['bla']= u'bli'
+        ...    doc.save()
+
+        our doc version is now 3:
+
+        >>> doc['_version']
+        3
+
+        If we get a fresh instance of your doc, we can check that all is correct :
+
+        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
+        >>> new_doc
+        {'foo': {'eggs': {'spam': 2}, 'bar': [u'mybar', u'yourbar']}, 'bla': u'bli', '_version': 3, '_id': 3}
+
+
+Bulk update
+-----------
+
+Bulk update is not yet supported (but will be soon). For now, as Mongokit expose all the pymongo API, you can use the pymongo's update on collection:
+
+    >>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
+
+For more information, please look at the `pymongo documentation`_.
+
+.. _`pymongo documentation` : http://api.mongodb.org/python/
+
+reload()
+--------
+
+If a document was update in another thread, it would be interresting to refresh the document to
+match changes from the database. To do that, use the `reload()` method.
+
+Two thing you should know before using this method :
+
+ * If no _id is set in the document, a KeyError is raised.
+ * If a document is not saved into the database, the OperationFailure exception is raised.
+ * using `reload()` will erase all unsaved values !
+
+Example::
+
+    >>> class MyDoc(Document):
+    ...    structure = {
+    ...        'foo':{
+    ...            'eggs':{'spam':int},
+    ...        },
+    ...        'bla':unicode
+    ...    }
+    >>> self.connection.register([MyDoc])
+
+    >>> doc = self.col.MyDoc()
+    # calling reload() here will raise a KeyError
+    >>> doc['_id'] = 3
+    >>> doc['foo']['eggs']['spam'] = 4
+    >>> doc['bla'] = u'ble'
+    # calling reload() here will raise an OperationFailure
+    >>> doc.save()
+    >>> doc['bla'] = u'bli' # we don't save this change this will be erased
+    >>> self.col.update({'_id':doc['_id']}, {'$set':{'foo.eggs.spam':2}})
+    >>> doc.reload()
+    >>> doc
+    {'_id': 3, 'foo': {u'eggs': {u'spam': 2}}, 'bla': u'ble'}
+
+
+Changing collection dynamically
+===============================
+
+But you might need to specify a different db or collection dynamically. For instance,
+say you want to store a User by database. 
+
+>>> class User(Document):
+...     structure = {'login':unicode, 'screen_name':unicode}
+
+>>> con.register([User])
+
+Like Pymongo, Mongokit allow you to change those parameters on the fly:
+
+>>> user_name = 'namlook'
+>>> user_col = con[user_name].profile
+
+Now, we can query the database by passing our new collection :
+
+>>> profiles = user_col.User.find()
+
+>>> user = user_col.User()
+>>> user['login'] = 'namlook'
+>>> user['screen_name'] = 'Namlook'
+
+calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
+
+Dot notation 
+============
+
+If you want to use the dot notation (ala json), you must set the
+`use_dot_notation` attribute to True:
+
+>>> class TestDotNotation(Document):
+...     structure = {
+...         "foo":{ "bar":unicode}
+...     }
+...     use_dot_notation=True
+
+>>> con.register([TestDotNotation])
+>>> doc = tutorial.TestDotNotation()
+>>> doc.foo.bar = u"bla"
+>>> doc
+{'foo': {'bar': u'bla'}}
+
+Note that if a attribute is not in structure, the value will be added as attribute :
+
+>>> doc.arf = 3 # arf is not in structure
+>>> doc
+{'foo': {'bar': u'bla'}}
+
+If you want to be warned when a value is set as attribute, you can set the `dot_notation_warning` attribute as True.
+
+Embedding Documents as values
+=============================
+
+MongoKit has optional support for MongoDB's autoreferencing/dbref 
+features. Autoreferencing allows you to embed MongoKit objects/instances
+inside another MongoKit object.  With autoreferencing enabled, MongoKit and
+the pymongo driver will translate the embedded MongoKit object
+values into internal MongoDB DBRefs.  The (de)serialization is
+handled automatically by the pymongo driver.
+
+.. _autoref_sample: http://github.com/mongodb/mongo-python-driver/blob/cd47b2475c5fe567e98696e6bc5af3c402891d12/examples/auto_reference.py
+
+Autoreferences allow you to pass other Documents as values.
+pymongo_.  (with help from MongoKit) automatically
+translates these object values into DBRefs before persisting to
+Mongo.  When fetching, it translates them back, so that you have
+the data values for your referenced object. See the autoref_sample_. for 
+further details/internals  on this driver-level functionality. As for 
+enabling it in your own MongoKit code, simply define the following class 
+attribute upon your Document subclass::
+
+        use_autorefs = True
+
+With autoref enabled, MongoKit's connection management will attach the
+appropriate BSON manipulators to your document's connection handles.  We 
+require you to explicitly enable autoref for two reasons:
+
+    * Using autoref and it's BSON manipulators (As well as DBRefs) can carry a performance penalty.  We opt for performance and simplicity first, so you must explicitly enable autoreferencing.
+    * You may not wish to use auto-referencing in some cases where you're using DBRefs.
+
+Once you have autoref enabled, MongoKit will allow you to define
+any valid subclass of Document as part of your document
+structure.  **If your class does not define `use_autorefs` as 
+True, MongoKit's structure validation code will REJECT your 
+structure.**
+
+A detailed example
+------------------
+
+First let's create a simple doc:
+
+>>> class DocA(Document):
+...    structure = {
+...        "a":{'foo':int},
+...        "abis":{'bar':int},
+...    }
+...    default_values = {'a.foo':2}
+...    required_fields = ['abis.bar']
+
+>>> con.register([DocA])
+>>> doca = tutorial.DocA()
+>>> doca['_id'] = 'doca'
+>>> doca['abis']['bar'] = 3
+>>> doca.save()
+
+Now, let's create a DocB which have a reference to DocA:
+
+>>> class DocB(Document):
+...    structure = {
+...        "b":{"doc_a":DocA},
+...    }
+...    use_autorefs = True
+
+Note that to be able to specify a Document into the structure, we must
+set `use_autorefs` as `True`.
+
+>>> con.register([DocB])
+>>> docb = tutorial.DocB()
+
+The default value for an embeded doc is None:
+
+>>> docb
+{'b': {'doc_a': None}}
+
+The validation act as expected:
+
+>>> docb['b']['doc_a'] = 4
+>>> docb.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: b.doc_a must be an instance of DocA not int
+
+>>> docb['_id'] = 'docb'
+>>> docb['b']['doc_a'] = doca
+>>> docb 
+{'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
+
+Note that the reference can be cross collection but also cross database. So, it doesn't matter
+where you save the DocA object as long as it can be fetch with the same connection.
+
+Now the interresting part. If we change a field in an embeded doc, the change will be done
+for all DocA which have the same '_id':
+
+>>> docb['b']['doc_a']['a']['foo'] = 4
+>>> docb.save()
+
+>>> doca['a']['foo']
+4
+
+Required fields are also supported in embeded documents.i
+Remember DocA have the 'abis.bar' field required. If we set it to None
+via the docb document, the RequireFieldError is raised:
+
+>>> docb['b']['doc_a']['abis']['bar'] = None
+>>> docb.validate()
+Traceback (most recent call last):
+...
+RequireFieldError: abis.bar is required
+
+About cross-database references
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+pymongo's DBRef doesn't take a database by default so Mongokit needs this
+information to fetch the correct Document.
+
+An example is better than thousand words. Let's create an ``EmbedDoc`` and a ``Doc`` object::
+
+>>> class EmbedDoc(Document):
+...   structure = {
+...       "foo": unicode,
+...   }
+
+>>> class Doc(Document):
+...   use_dot_notation=True
+...   use_autorefs = True
+...   structure = {
+...       "embed": EmbedDoc,
+...   }
+>>> con.register([EmbedDoc, Doc])
+
+>>> embed = tutorial.EmbedDoc()
+>>> embed['foo'] = u'bar'
+>>> embed.save()
+
+Now let's insert a raw document with a DBRef but we do not specify the database:
+
+>>> raw_doc = {'embed':DBRef(collection='tutorial', id=embed['_id'])}
+>>> doc_id = tutorial.insert(raw_doc)
+
+Now what append when we want to load the data:
+
+>>> doc = tutorial.Doc.get_from_id(doc_id)
+Traceback (most recent call last):
+...
+RuntimeError: It appears that you try to use autorefs. I found a DBRef without database specified.
+ If you do want to use the current database, you have to add the attribute `force_autorefs_current_db` as True. Please see the doc for more details.
+ The DBRef without database is : DBRef(u'tutorial', ObjectId('4b6a949890bce72958000002'))
+
+This mean that you may load data which could have been generated by map/reduce or raw data (like fixtures for instance)
+and the database information is not set into the DBRef. The error message tells you that you can add turn the
+`force_autorefs_current_db` as True to allow mongokit to use the current collection by default (here 'test')::
+
+>>> tutorial.database.name
+u'test'
+
+NOTE: You have to be very carefull when you enable this option to be sure that you are using the correct database.
+If you expect some strange behavior (like not document found), you may look at this first.
+
+Reference and dereference
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. topic:: new in development version
+
+    You can get the dbref of a document with the `get_dbref()` method. The
+    `dereference()` allow to get a Document from a dbref. You can pass a Document
+    to tell mongokit to what model it should dereferenced::
+
+        >>> dbref = mydoc.get_dbref()
+        >>> raw_doc = con.mydb.dereference(dbref) # the result is a regular dict
+        >>> doc = con.mydb.dereference(dbref, MyDoc) # the result is a MyDoc instance
+
+Indexes
+=======
+
+Sometimes, it's desirable to have indexes on your dataset - especially unique ones.
+In order to do that, you must fill the `indexes` attribute. The `indexes` attribute
+is a liste of dictionnary with the following structure:
+
+:"fields":
+    # take a list of fields or a field name (required)
+:"unique":
+    should this index guarantee uniqueness? (optional, False by default)
+:"ttl":
+    (optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to `ensure_index` - see pymongo documentation for `ensure_index` for details.
+
+Example:
+
+>>> class MyDoc(Document):
+...     structure = {
+...         'standard':unicode,
+...         'other':{
+...             'deep':unicode,
+...         },
+...         'notindexed':unicode,
+...     }
+...     
+...     indexes = [
+...         {
+...             'fields':['standard', 'other.deep'],
+...             'unique':True,
+...         },
+...     ]
+
+or if you have more than one index:
+
+>>> class Movie(Document):
+...     db_name = 'test'
+...     collection_name = 'mongokit'
+...     structure = {
+...         'standard':unicode,
+...         'other':{
+...             'deep':unicode,
+...         },
+...         'alsoindexed':unicode,
+...     }
+... 
+...     indexes = [
+...         {
+...             'fields':'standard',
+...             'unique':True,
+...         },
+...         {
+...             'fields': ['alsoindexed', 'other.deep']
+...         },
+...     ]
+
+
+By default, the index direction is set to 1. You can change the direction by
+passing a list of tuple.  Direction must be one of `INDEX_ASCENDING` (or 1) or
+`INDEX_DESCENDING` (or -1):
+
+>>> class MyDoc(Document):
+...     structure = {
+...         'standard':unicode,
+...         'other':{
+...             'deep':unicode,
+...         },
+...         'notindexed':unicode,
+...     }
+...     
+...     indexes = [
+...         {
+...             'fields':[('standard',INDEX_ASCENDING), ('other.deep',INDEX_DESCENDING)],
+...             'unique':True,
+...         },
+...     ]
+
+To prevent to add an index on the wrong field (mispelled for instance),
+Mongokit will check by default the `indexes` descriptor. There's some case you
+may wan't to disable this. To do so, add ``"check":True``::
+
+    indexes = [
+        {
+            # I know this field is not in the document structure, don't check it
+            'fields':['foo'], 'checked':False, 
+        },
+    ]
+
+JSON support
+============
+
+While building web application, you might want to create an rest api with json
+support. Then, you may need to convert all your Document into a json format
+in order to pass it via the rest api. Unfortunately (or fortunately), MongoDB
+support field format which is not supported by json. This is the case for `datetime`
+but also for all your `CustomTypes` you may have built and your embeded objects.
+
+Document support the json import/export. Note that you'll need to install `anyjson`
+to enable this feature. (`sudo easy_install anyjson`)
+
+:`to_json`:
+
+`to_json` is a simply method which export you document into a json document:
+
+>>> class MyDoc(Document):
+...         structure = {
+...             "bla":{
+...                 "foo":unicode,
+...                 "bar":int,
+...             },
+...             "spam":[],
+...         }
+>>> con.register([MyDoc])
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['_id'] = u'mydoc'
+>>> mydoc["bla"]["foo"] = u"bar"
+>>> mydoc["bla"]["bar"] = 42
+>>> mydoc['spam'] = range(10)
+>>> mydoc.save()
+>>> json = mydoc.to_json()
+>>> json
+u'{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+
+:`from_json`:
+
+To load a json string into a Document, use the `from_json` class method:
+
+>>> class MyDoc(Document):
+...     structure = {
+...         "bla":{
+...             "foo":unicode,
+...             "bar":int,
+...         },
+...         "spam":[],
+...     }
+>>> json = '{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
+>>> mydoc = tutorial.MyDoc.from_json(json)
+>>> mydoc
+{'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+
+Note that `from_json` will take care of all your embeded Docs if you used the `to_json()` method to
+generated the json. Indeed, some extra value has to be set : the datatabase and the collection where
+the embed document lives. This is added by the `to_json()` method:
+
+>>> class EmbedDoc(Document):
+...     db_name = "test"
+...     collection_name = "mongokit"
+...     structure = {
+...         "foo":unicode
+...     }
+>>> class MyDoc(Document):
+...    db_name = "test"
+...    collection_name = "mongokit"
+...    structure = {
+...        "doc":{
+...            "embed":EmbedDoc,
+...        },
+...    }
+...    use_autorefs = True
+>>> con.register([EmbedDoc, MyDoc])
+
+Let's create an embed doc:
+
+>>> embed = tutorial.EmbedDoc()
+>>> embed['_id'] = u"embed"
+>>> embed['foo'] = u"bar"
+>>> embed.save()
+
+and embed this doc to another doc
+
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['_id'] = u'mydoc'
+>>> mydoc['doc']['embed'] = embed
+>>> mydoc.save()
+
+Now let's see how look the generated json:
+
+>>> json = mydoc.to_json()
+>>> json
+u'{"doc": {"embed": {"_collection": "tutorial", "_database": "test", "_id": "embed", "foo": "bar"}}, "_id": "mydoc"}'
+
+As you can see, two new fields have been added : `_collection` and `_database`
+which represent respectively the collection and the database where the embed
+doc has been saved. Thoses informations are needed to generate the embed
+document. There are removed when calling the `from_json()` method:
+
+>>> mydoc = tutorial.MyDoc.from_json(json)
+>>> mydoc
+{u'doc': {u'embed': {u'_id': u'embed', u'foo': u'bar'}}, u'_id': u'mydoc'}
+
+An the embed document is an instance of EmbedDoc:
+
+>>> isinstance(mydoc['doc']['embed'], EmbedDoc)
+True
+
+ObjectId support
+----------------
+
+`from_json()` can detect if the `_id` is an ``ObjectId`` instance or a simple string. When you serialize an object
+with ``ObjectId`` instance to json, the generated json object look like this:
+
+    '{"_id": {"$oid": "..."}, ...}'
+
+>>> embed = tutorial.EmbedDoc()
+>>> embed['foo'] = u"bar"
+>>> embed.save()
+>>> embed.to_json()
+u'{"foo": "bar", "_id": {"$oid": "4b5ec47390bce737e5000002"}}'
+
+the "$oid" field is added to tell `from_json()` that '_id' is an ``ObjectId`` instance.
+The same append with embed doc:
+
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['doc']['embed'] = embed
+>>> mydoc.save()
+>>> mydoc.to_json()
+{'doc': {'embed': {u'_id': ObjectId('4b5ec45090bce737cb000002'), u'foo': u'bar'}}, '_id': ObjectId('4b5ec45090bce737cb000003')}
+

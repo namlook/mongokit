@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Migration from 0.4 to 0.5 &mdash; MongoKit v0.5 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" />
+    <link rel="prev" title="Pylons support" href="pylons.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pylons.html" title="Pylons support"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Migration from 0.4 to 0.5</a><ul>
+<li><a class="reference external" href="#presentation">Presentation</a></li>
+<li><a class="reference external" href="#so-what-changed">So, what changed ?</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="pylons.html"
+                                  title="previous chapter">Pylons support</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/version_migration.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="migration-from-0-4-to-0-5">
+<h1>Migration from 0.4 to 0.5<a class="headerlink" href="#migration-from-0-4-to-0-5" title="Permalink to this headline">¶</a></h1>
+<p>The version 0.5 not only changes the API but brings a lot of bug fix so,
+you may really want to upgrade.</p>
+<div class="section" id="presentation">
+<h2>Presentation<a class="headerlink" href="#presentation" title="Permalink to this headline">¶</a></h2>
+<p>One of the main feature of MongoDB is speed. Why using MongoDB if libraries on
+top of it are slow ? I created MongoKit to be as simple and faster as possible.</p>
+<p>It appears that collection are really important and are used all the time when
+we tend to use them dynamically.  And using dynamic collections with MongoKit
+was a pain : there was too much code to write and many bugs underlying.</p>
+<p>I noticed that I was using a lot the pymongo library in my code when I wanted
+dynamic collection or quickly fetching raw data.  So, I decided to follow the
+pymongo api for MongoKit.</p>
+<p>Pymongo use the following scheme : <cite>connection.database.collection</cite>. Let&#8217;s say
+we have created many <tt class="docutils literal"><span class="pre">Doc</span></tt> object in a collection &#8220;migration&#8221; on the db &#8220;test&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">Connection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">migration</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">next</span><span class="p">())</span> <span class="ow">is</span> <span class="nb">dict</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The issue here is that we get raw data.</p>
+<p>Let&#8217;s create our <tt class="docutils literal"><span class="pre">Doc</span></tt> object so it look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">Document</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Doc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The <cite>db_name</cite> and <cite>collection_name</cite> are not hard explained in the object
+declaration anymore. We juste describe the validation schema. Then, we have
+to fire a connection and register our <tt class="docutils literal"><span class="pre">Doc</span></tt> object</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">Connection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Doc</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Let&#8217;s the BlogPost object seen in the introduction:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">BlogPost</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">migration</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;my title&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;a body&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;me&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note that this is quite the same as the current api. We just get the BlogPost object
+via the collection. The main advantage of this approche is that we don&#8217;t have to
+bother about the collection.</p>
+<p>You can simulate the current api behavior like this:</p>
+<blockquote>
+<dl class="docutils">
+<dt>class BlogPostDocument(Document): # &lt;&#8211; just rename the class by adding &#8220;Document&#8221;</dt>
+<dd>...</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">BlogPostDocument</span><span class="p">])</span> <span class="c"># register the document</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BlogPost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">migration</span><span class="o">.</span><span class="n">BlogPostDocument</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost2</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="p">()</span>
+</pre></div>
+</div>
+</blockquote>
+<p>Another advantage is the ability of using the collection dynamically without pain.
+Let&#8217;s say that we want to put all BlogPost into a user collection (so one collection
+by user) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user_col</span> <span class="o">=</span> <span class="s">&#39;me&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="n">user_col</span><span class="p">]</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Quering is as simple as instanciating object. There&#8217;s two way of fetching objects :</p>
+<blockquote>
+<ul class="simple">
+<li>getting raw data (the pymongo&#8217;s way)</li>
+<li>getting instanciated object with all method defined (the mongokit way)</li>
+</ul>
+</blockquote>
+<p>The first approche will produce only python dict and is very fast.
+The seconde will wrap the data into the MongoDocument. This is useful if we defined
+methods and want to use them.</p>
+<p>Getting raw data :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">raw_data</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">migration</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Actually, all pymongo&#8217;s method can be apply :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">migration</span><span class="o">.</span><span class="n">remove</span><span class="p">({})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">drop_collection</span><span class="p">(</span><span class="s">&#39;migration&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Getting instanciated objects :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost_cursor</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">migration</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">blogpost_cursor</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We can apply MongoDocument methods (<cite>validate</cite>, <cite>to_json</cite> etc...)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span>
+<span class="go">{&#39;body&#39;: u&#39;a body&#39;, &#39;title&#39;: u&#39;my title&#39;, &#39;date_creation&#39;: datetime.datetime(...), &#39;rank&#39;: 0, &#39;author&#39;: u&#39;me&#39;}</span>
+</pre></div>
+</div>
+<p>Other mongokit queries are available :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost_cursor</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">migration</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span> <span class="c"># get only BlogPost</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="so-what-changed">
+<h2>So, what changed ?<a class="headerlink" href="#so-what-changed" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<ul>
+<li><p class="first">replace <cite>MongoDocument</cite> by <cite>Document</cite>. I changed the name in order to facilitate the migration. So there won&#8217;t be surprises</p>
+</li>
+<li><p class="first">uuid is False by default in the <cite>save()</cite> method (instead of True)</p>
+</li>
+<li><p class="first">replaced <cite>all()</cite> by <cite>find()</cite>. This in order to keep consistancy with the pymongo driver</p>
+</li>
+<li><p class="first">replace <cite>one()</cite> by <a href="#id1"><span class="problematic" id="id2">`</span></a>find_one().</p>
+</li>
+<li><p class="first">remove <cite>db_name</cite> and <cite>collection_name</cite>. Instead, you have to register your object to the connection.</p>
+</li>
+<li><p class="first">passing a dictionnary in &#8220;fields&#8221; is now deprecated.  The problem when passing a dictionnary is that a dictionnary is unordered. This might be a problem for compound keys. If you want to make compound keys indexes, you now need to pass a list of tuples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;standard&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s">&#39;other&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;deep&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;notindexed&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;fields&#39;</span><span class="p">:[(</span><span class="s">&#39;standard&#39;</span><span class="p">,</span><span class="n">INDEX_ASCENDING</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;other.deep&#39;</span><span class="p">,</span><span class="n">INDEX_DESCENDING</span><span class="p">)],</span>
+<span class="gp">... </span>            <span class="s">&#39;unique&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">removed cascade (<cite>belong_to</cite>) and related features. MongoKit is writed to be fast and production ready. Adding such feature brings bugs and complication in maintainability. As far as I know, those features was not really used and there are easy to implemented. So, I removed them. This bring more less and cleaner code. If you don&#8217;t know how to implemente thoses features, send me a message on the mailing list, Bitbucket or Twitter and I&#8217;ll write a tutorial.</p>
+</li>
+<li><p class="first">dropped Mongodb auth support. I&#8217;m not happy with the way it was handled. I have to think on a better API. So, in order to avoid another API changed, I removed this feature. If you really need this feature, contact me so we can think a new API together.</p>
+</li>
+<li><p class="first">last but not least : better integration with web framework. All that you have to do is to set a connection and register all your objects.</p>
+</li>
+</ul>
+</blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pylons.html" title="Pylons support"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

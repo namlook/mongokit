@@ -1,0 +1,51 @@
+-*- restructuredtext -*-
+
+==========================
+Pylons integration support
+==========================
+
+.. NOTE::
+  This documentation is part of the merge from Mongokit-Pylons of Brendan McAdams.
+
+MongoPylonsEnv is a helper class for using MongoKit_ inside of Pylons_.
+The recommended deployment is to add a call to init_mongo()
+in config/environment.py for your pylons project.
+Like with SQLAlchemy_, this will setup your connections
+at Pylons boot; the MongoDB_ Pool code should ensure you have enough connections.
+
+.. _MongoKit: http://bitbucket.org/namlook/mongokit/wiki/Home
+.. _Pylons: http://pylonshq.com
+.. _SQLAlchemy: http://sqlalchemy.org
+
+Add the import at the top:
+
+    >>> from mongokit.ext.pylons_env import MongoPylonsEnv
+
+And lower down, in load_environment():
+
+    >>> MongoPylonsEnv.init_mongo()
+    
+Additionally, you'll need to add several items to your configuration ini file:
+
+
+    >>> # Mongo Database settings
+    ... mongodb.host = localhost
+    ... mongodb.port = 27017
+    ... mongodb.db = your_db_name
+    ... mongodb.connection_timeout = 30
+    ... mongodb.pool.enable = True
+    ... mongodb.pool.size = 20
+
+Then, you can pass keyword argument 'use_pylons' to your Document constructor, or define attribute
+
+    >>> _use_pylons = True 
+
+on your subclass.
+
+Alternately, for the ultimate in lazy: 
+    
+    >>> from mongokit.document import MongoPylonsDocument
+    
+And then subclass from that (It's a proxy subclass of MongoDocument that enables use_pylons)
+
+

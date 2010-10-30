@@ -1,0 +1,201 @@
+Internationalization and Localization
+=====================================
+
+Sometime you might want to present your data in differents languages and have
+i18n fields. Mongokit provides helper to do it.
+
+i18n with dot_notation
+----------------------
+
+Let's create a simple i18n BlogPost:
+
+    >>> from mongokit import *
+    >>> class BlogPost(Document):
+    ...     structure = {
+    ...             'title':unicode,
+    ...             'body':unicode,
+    ...             'author':unicode,
+    ...     }
+    ...     i18n = ['title', 'body']
+    ...     use_dot_notation = True
+
+Declare your structure as usual and add an `i18n` descriptor. The `i18n`
+descriptor will tel Mongokit that the fields `title` and `body` will be in
+multiple langage.
+
+Note of the use of `use_dot_notation` attribute. Using i18n with dot notation is more fun
+but a little slower (not critical thought). We will see later how to use i18n is a blasing
+fast way (but less fun).
+
+Let's create a BlogPost object and fill some fields:
+
+>>> con = Connection()
+>>> con.register([BlogPost])
+>>> blog_post = con.test.i18n.BlogPost()
+>>> blog_post['_id'] = u'bp1'
+>>> blog_post.title = u"Hello"
+>>> blog_post.body = u"How are you ?"
+>>> blog_post.author = u"me"
+
+Now let's say we want to write your blog post in French. We select the language
+with the `set_lang()` method:
+
+>>> blog_post.set_lang('fr')
+>>> blog_post.title = u"Salut"
+>>> blog_post.body = u"Comment allez-vous ?"
+
+the `author` field is not i18n so we don't have to set it again.
+
+Now let's play with our object :
+
+>>> blog_post.title
+u'Salut'
+>>> blog_post.set_lang('en')
+>>> blog_post.title
+u'Hello'
+
+Now, let's see how it work:
+
+>>> blog_post
+{'body': {'fr': u'Comment allez-vous ?', 'en': u'How are you ?'}, '_id': u'bp1', 'title': {'fr': u'Salut', 'en': u'Hello'}, 'author': u'me'}
+
+The `title` field is actually a dictionnary which keys are the language and the values are the text. This is usefull if you don't want
+to use the dot notation. Let's save our object:
+
+>>> blog_post.save()
+>>> raw_blog_post = con.test.i18n.find_one({'_id':'bp1'})
+>>> raw_blog_post
+{u'body': [{u'lang': u'fr', u'value': u'Comment allez-vous ?'}, {u'lang': u'en', u'value': u'How are you ?'}], u'_id': u'bp1', u'author': u'me', u'title': [{u'lang': u'fr', u'value': u'Salut'}, {u'lang': u'en', u'value': u'Hello'}]}
+
+Now, the `title` field looks little different. This is a list of dictionnary which have the following structure:
+
+    [{'lang': lang, 'value', text}, ...]
+
+So, when an i18n object is save to the mongo database, it structure is changed. This is done to make indexation possible.
+
+Note that you can still use this way event if you enable dot notation.
+
+Default language
+----------------
+
+By default, the default language is english ('en'). You can change it easily by passing arguments in object creation:
+
+>>> blog_post = con.test.i18n.BlogPost()
+>>> blog_post.get_lang() # english by default
+'en'
+>>> blog_post = con.test.i18n.BlogPost(lang='fr')
+>>> blog_post.get_lang()
+'fr'
+
+you can also specify a fallblack language. This is useful if a field was translated yet:
+
+>>> blog_post = con.test.i18n.BlogPost(lang='en', fallback_lang='en')
+>>> blog_post.title = u"Hello"
+>>> blog_post.set_lang('fr')
+>>> blog_post.title # no title in french yet
+u'Hello'
+>>> blog_post.title = u'Salut'
+>>> blog_post.title
+u'Salut'
+
+
+i18n without dot notation (the fast way)
+----------------------------------------
+
+If for you, speed is very very important, you might not want to use the dot
+notation (which brings some extra wrapping). While the API would be more fun,
+you can still use i18n. Let's take our BlogPost:
+
+    >>> from mongokit import *
+    >>> class BlogPost(Document):
+    ...     structure = {
+    ...             'title':unicode,
+    ...             'body':unicode,
+    ...             'author':unicode,
+    ...     }
+    ...     i18n = ['title', 'body']
+
+>>> con = Connection()
+>>> con.register([BlogPost])
+>>> blog_post = con.test.i18n.BlogPost()
+>>> blog_post['_id'] = u'bp1'
+>>> blog_post['title']['en'] = u"Hello"
+>>> blog_post['body']['en'] = u"How are you ?"
+>>> blog_post['author'] = u"me"
+
+As you can see, fields `title` and `body` are now dictionnary which take the language as key. The result is the same:
+
+>>> blog_post
+{'body': {'en': u'How are you ?'}, '_id': u'bp1', 'title': {'en': u'Hello'}, 'author': u'me'}
+
+
+The good thing is you don't have to use `set_lang()` and `get_lang()` anymore, the bad thing is you get some ugly:
+
+>>> blog_post['title']['fr'] = u'Salut'
+>>> blog_post['title']
+{'fr': u'Salut', 'en': u'Hello'}
+
+>>> blog_post['body']['fr'] = u'Comment allez-vous ?'
+>>> blog_post['body']
+{'fr': u'Comment allez-vous ?', 'en': u'How are you ?'}
+
+Note that you don't have to fear to miss a i18n field. Validation will take care of that :
+
+>>> blog_post['body'] = u'Comment allez-vous ?'
+>>> blog_post.save()
+Traceback (most recent call last):
+...
+SchemaTypeError: body must be an instance of i18n not unicode
+
+
+i18n with different type
+------------------------
+
+i18n in Mongokit was designed to handled any python types authorized in
+MongoKit. To illustrate, let's take a fake example : temperature.
+
+>>> class Temperature(Document):
+...     structure = {
+...        "temperature":{
+...           "degree": float
+...        }
+...     }
+...     i18n = ['temperature.degree']
+...     use_dot_notation = True
+
+>>> con.register([Temperature])
+>>> temp = con.test.i18n.Temperature()
+>>> temp.set_lang('us')
+>>> temp.temperature.degree = 75.2
+>>> temp.set_lang('fr')
+>>> temp.temperature.degree = 24.0
+>>> temp.save()
+
+This example describes that float can be translated too. Using i18n to handle
+temperature is a bad idea but you may find a useful usage of this feature.
+
+Using i18n different type allow you to translate list :
+
+>>> class Doc(Document):
+...     structure = {
+...        "tags":[unicode]
+...     }
+...     i18n = ['tags']
+...     use_dot_notation = True
+
+>>> con.register([Doc])
+>>> doc = con.test.i18n.Doc()
+>>> doc.set_lang('en')
+>>> doc.tags = [u'apple', u'juice']
+>>> doc.set_lang('fr')
+>>> doc.tags = [u'pomme', u'jus']
+>>> doc
+{'tags': {'fr': [u'pomme', u'jus'], 'en': [u'apple', u'juice']}}
+
+ 
+
+
+
+
+
+

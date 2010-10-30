@@ -1,0 +1,305 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Migration &mdash; MongoKit v0.5 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" />
+    <link rel="next" title="Pylons support" href="pylons.html" />
+    <link rel="prev" title="GridFS" href="gridfs.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pylons.html" title="Pylons support"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gridfs.html" title="GridFS"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Migration</a><ul>
+<li><a class="reference external" href="#lazy-migration">Lazy migration</a></li>
+<li><a class="reference external" href="#bulk-migration">Bulk migration</a></li>
+<li><a class="reference external" href="#migration-status">Migration status</a></li>
+<li><a class="reference external" href="#advanced-migration">Advanced migration</a><ul>
+<li><a class="reference external" href="#id1">Lazy migration</a></li>
+<li><a class="reference external" href="#advanced-and-bulk-migration">Advanced and bulk migration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="gridfs.html"
+                                  title="previous chapter">GridFS</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="pylons.html"
+                                  title="next chapter">Pylons support</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/migration.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="migration">
+<h1>Migration<a class="headerlink" href="#migration" title="Permalink to this headline">¶</a></h1>
+<p><strong>new in version 0.5.6</strong></p>
+<p>Let&#8217;s say we have created a blog post which look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+
+<span class="go">class BlogPost(Document):</span>
+<span class="go">    structure = {</span>
+<span class="go">        &quot;blog_post&quot;:{</span>
+<span class="go">            &quot;title&quot;: unicode,</span>
+<span class="go">            &quot;created_at&quot;: datetime,</span>
+<span class="go">            &quot;body&quot;: unicode,</span>
+<span class="go">        }</span>
+<span class="go">    }</span>
+<span class="go">    default_values = {&#39;blog_post.created_at&#39;:datetime.utcnow()}</span>
+</pre></div>
+</div>
+<p>Let&#8217;s create some blog posts:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">({</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="s">u&#39;hello </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">:</span> <span class="s">u&#39;I the post number </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">})</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now, developpment goes on and we add a &#8216;tags&#8217; field in our <cite>BlogPost</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;blog_post&quot;</span><span class="p">:{</span>
+            <span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+            <span class="s">&quot;created_at&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+            <span class="s">&quot;body&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+            <span class="s">&quot;tags&quot;</span><span class="p">:</span>  <span class="p">[</span><span class="nb">unicode</span><span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()}</span>
+</pre></div>
+</div>
+<p>We&#8217;re gonna be in trouble when we&#8217;ll save a fetched document because the
+structure don&#8217;t match:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find_one</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;blog_post&#39;</span><span class="p">][</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;Hello World&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="nc">StructureError: missed fields </span>: <span class="n-Identifier">[&#39;tags&#39;]</span>
+</pre></div>
+</div>
+<p>If we want to fix this issue, we have to add the &#8216;tags&#8217; field manually in all
+<cite>BlogPost</cite> of the database:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;blog_post&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">},</span> <span class="s">&#39;blog_post.tags&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">}},</span>
+<span class="gp">... </span>   <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;blog_post.tags&#39;</span><span class="p">:[]}},</span> <span class="n">multi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and now we can save our blog_post:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">reload</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;blog_post&#39;</span><span class="p">][</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;Hello World&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="lazy-migration">
+<h2>Lazy migration<a class="headerlink" href="#lazy-migration" title="Permalink to this headline">¶</a></h2>
+<p>Mongokit provides a convenient way to set migration rules an apply them lazily.
+Here&#8217;s how to do, we use the previous example.</p>
+<p>Let&#8217;s create a <cite>BlogPostMigration</cite> which inherit from <cite>DocumentMigration</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BlogPostMigration</span><span class="p">(</span><span class="n">DocumentMigration</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">migration01__add_tags_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">},</span> <span class="s">&#39;blog_post.tags&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;blog_post.tags&#39;</span><span class="p">:[]}}</span>
+</pre></div>
+</div>
+<p>How does it work ? All migration rules are simple method in the
+<cite>BlogPostMigration</cite>. They must begin by <cite>migration</cite> and be numeroted (so they
+can be applied in certain order). The rest of the name should describes the
+rules. Here, we create our first rule (<cite>migration01</cite>) which add a &#8216;tags&#8217; field
+into our <cite>BlogPost</cite>.</p>
+<p>Then you must set two attribute : <cite>self.target</cite> and <cite>self.update</cite>. There&#8217;s both
+mongodb regular query.</p>
+<p><cite>self.target</cite> will tell mongokit which document will match this rule. So, any
+document which match this query will would get a migration.</p>
+<p><cite>self.update</cite> is a mongodb update query with modifiers. This will describes
+what update shoud be apply to the matching document.</p>
+<p>Now that our <cite>BlogPostMigration</cite> is created, we have to tell Mongokit to what
+document thoses migration rules should be applied.  To do that, we have to set
+the <cite>migration_handler</cite> in <cite>BlogPost</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;blog_post&quot;</span><span class="p">:{</span>
+            <span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+            <span class="s">&quot;created_at&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+            <span class="s">&quot;body&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+            <span class="s">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">unicode</span><span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()}</span>
+    <span class="n">migration_handler</span> <span class="o">=</span> <span class="n">BlogPostMigration</span>
+</pre></div>
+</div>
+<p>Each time that an error is raised while validating a document, migration rules
+are applied to the object and the document is reloaded.</p>
+<p>CAUTION: if <cite>migration_handler</cite> is set then <cite>skip_validation</cite> is desactivated.
+Validation must be on to allow lazy migration.</p>
+</div>
+<div class="section" id="bulk-migration">
+<h2>Bulk migration<a class="headerlink" href="#bulk-migration" title="Permalink to this headline">¶</a></h2>
+<p>Lazy migration is usefull if you have many document to migrate because update
+will lock the database. But sometime, you might want to make a migration on few
+documents and you don&#8217;t want slow down your application with validation. You
+should then use bulk migration.</p>
+<p>Bulk migration work like lazy migration but <cite>DocumentMigration</cite> method must
+start with <cite>allmigration</cite>. Because lazy migration add document <cite>_id</cite> to
+<cite>self.target</cite>, with bulk migration, you should provide more informations on
+<cite>self.target</cite>. Here&#8217;s an example of bulk migration, finally, we wan&#8217;t to remove
+the <cite>tags</cite> field from <cite>BlogPost</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;blog_post&quot;</span><span class="p">:{</span>
+            <span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+            <span class="s">&quot;creation_date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+            <span class="s">&quot;body&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()}</span>
+</pre></div>
+</div>
+<p>Note that we don&#8217;t need to add the <cite>migration_hanlder</cite>, it is required only for
+lazy migration.</p>
+<p>Let&#8217;s edit the <cite>BlogPostMigration</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BlogPostMigration</span><span class="p">(</span><span class="n">DocumentMigration</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">allmigration01_remove_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.tags&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;$unset&#39;</span><span class="p">:{</span><span class="s">&#39;blog_post.tags&#39;</span><span class="p">:[]}}</span>
+</pre></div>
+</div>
+<p>To apply the migration, instanciate the <cite>BlogPostMigration</cite> and call the
+<cite>migrate_all</cite> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">migration</span> <span class="o">=</span> <span class="n">BlogPostMigration</span><span class="p">(</span><span class="n">BlogPost</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">migration</span><span class="o">.</span><span class="n">migrate_all</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>NOTE: because <cite>migration_*</cite> methods are not called with <cite>migrate_all()</cite>, you
+can mix <cite>migration_*</cite> and <cite>allmigration_*</cite> methods.</p>
+</div>
+<div class="section" id="migration-status">
+<h2>Migration status<a class="headerlink" href="#migration-status" title="Permalink to this headline">¶</a></h2>
+<p>Once all your documents have been migrated, some migration rules could become
+deprecated. To know wich rules are deprecated, use the <cite>get_deprecated</cite> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;&gt; migration = BlogPostMigration(BlogPost)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">migration</span><span class="o">.</span><span class="n">get_deprecated</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="p">)</span>
+<span class="go">{&#39;deprecated&#39;:[&#39;allmigration01__remove_tags&#39;], &#39;active&#39;:[&#39;migration02__rename_created_at&#39;]}</span>
+</pre></div>
+</div>
+<p>Here, we can remove the rule <cite>allmigration01__remove_tags</cite>.</p>
+</div>
+<div class="section" id="advanced-migration">
+<h2>Advanced migration<a class="headerlink" href="#advanced-migration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Lazy migration<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Sometime, we might want to build more advanced migration. For instance, say you
+want to copy a field value into another field, you can have access to the
+current doc value via <cite>self.doc</cite>. In the following example, we want to add an
+<cite>update_date</cite> field and copy the <cite>creation_date</cite> value into it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BlogPostMigration</span><span class="p">(</span><span class="n">DocumentMigration</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">migration01__add_update_field_and_fill_it</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.update_date&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">},</span> <span class="s">&#39;blog_post&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;blog_post.update_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;blog_post&#39;</span><span class="p">][</span><span class="s">&#39;creation_date&#39;</span><span class="p">]}}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="advanced-and-bulk-migration">
+<h3>Advanced and bulk migration<a class="headerlink" href="#advanced-and-bulk-migration" title="Permalink to this headline">¶</a></h3>
+<p>If you want to do the same thing with bulk migration, things are a little differents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BlogPostMigration</span><span class="p">(</span><span class="n">DocumentMigration</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">allmigration01__add_update_field_and_fill_it</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.update_date&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">},</span> <span class="s">&#39;blog_post&#39;</span><span class="p">:{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">}}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;blog_post.update_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;blog_post&#39;</span><span class="p">][</span><span class="s">&#39;creation_date&#39;</span><span class="p">]}}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">,</span> <span class="n">multi</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, the method <cite>allmigration01__add_update_field_and_fill_it</cite> will
+directly modify the database and will be called by <cite>get_deprecated()</cite>. But calling
+<cite>get_deprecated()</cite> should not arm the database so, we need to specify what portion
+of the code must be ignored when calling <cite>get_deprecated()</cite>. This explain the
+second line.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pylons.html" title="Pylons support"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gridfs.html" title="GridFS"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

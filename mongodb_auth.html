@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MongoDB Auth &mdash; MongoKit v0.4 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.4 documentation" href="index.html" />
+    <link rel="prev" title="Pylons integration support" href="pylons_support.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pylons_support.html" title="Pylons integration support"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="pylons_support.html"
+                                  title="previous chapter">Pylons integration support</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/mongodb_auth.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mongodb-auth">
+<h1>MongoDB Auth<a class="headerlink" href="#mongodb-auth" title="Permalink to this headline">¶</a></h1>
+<p>MongoKit support the mongodb auth introduced <a class="reference external" href="http://www.mongodb.org/display/DOCS/Security+and+Authentication">here</a>.</p>
+<p>In order to use the auth, add the <cite>db_username</cite> and <cite>db_password</cite>
+attributes to the document class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">MongoDocument</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">db_name</span> <span class="o">=</span> <span class="s">&quot;test&quot;</span>
+<span class="gp">... </span>   <span class="n">db_username</span> <span class="o">=</span> <span class="s">&quot;foo&quot;</span>
+<span class="gp">... </span>   <span class="n">db_password</span> <span class="o">=</span> <span class="s">&quot;bar&quot;</span>
+<span class="gp">... </span>   <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&quot;mongokit_auth&quot;</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;bla&quot;</span><span class="p">:{</span>
+<span class="gp">... </span>           <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>       <span class="p">},</span>
+<span class="gp">... </span>       <span class="s">&quot;spam&quot;</span><span class="p">:[],</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<p>Please, make sure that the user is well created :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Connection</span><span class="p">()[</span><span class="s">&#39;admin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&#39;db.removeUser(&quot;theadmin&quot;)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Connection</span><span class="p">()[</span><span class="s">&#39;test&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&#39;db.addUser(&quot;foo&quot;, &quot;bar&quot;)&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where &#8216;test&#8217; is the db name</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Note that you must create a admin user before using the auth in mongodb.
+Otherwise, the <cite>MongoAuthException</cite> will be raised</p>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;mydoc&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&quot;bla&quot;</span><span class="p">][</span><span class="s">&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bar&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&quot;bla&quot;</span><span class="p">][</span><span class="s">&quot;bar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">MongoAuthException: no admin user found in database</span>
+</pre></div>
+</div>
+<p>Creating a admin user :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Connection</span><span class="p">()</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&#39;db.addUser(&quot;theadmin&quot;, &quot;anadminpassword&quot;)&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="go">{&#39;_id&#39;: u&#39;mydoc&#39;, &#39;bla&#39;: {&#39;foo&#39;: u&#39;bar&#39;, &#39;bar&#39;: 42}, &#39;spam&#39;: []}</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pylons_support.html" title="Pylons integration support"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>

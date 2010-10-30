@@ -1,0 +1,39 @@
+Polymorphism with MongoKit
+==========================
+
+In the following example, we have to object A and B wich herite from Root.
+And we want to build an object C from A and B. Let's build Root, A and B
+first :
+
+>>> from mongokit import *
+>>> class Root(Document):
+...     structure = {
+...         "root":int,
+...     }
+...     required_fields = ['root']
+
+>>> class A(Root):
+...     structure = {
+...         "a_field":unicode,
+...     }
+...     required_fields = ['a_field']
+...
+
+>>> class B(Root):
+...     structure = {
+...         "b_field":unicode,
+...     }
+...
+
+Polymorphisme just work as expected:
+
+>>> class C(A,B):
+...     structure = {"c_field":float}
+
+>>> c = C()
+>>> c == {'b_field': None, 'root': None, 'c_field': None, 'a_field': None}
+True
+>>> C.required_fields
+['root', 'a_field']
+
+

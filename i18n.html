@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Internationalization and Localization &mdash; MongoKit v0.5 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" />
+    <link rel="next" title="GridFS" href="gridfs.html" />
+    <link rel="prev" title="Polymorphism with MongoKit" href="inheritance.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gridfs.html" title="GridFS"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Internationalization and Localization</a><ul>
+<li><a class="reference external" href="#i18n-with-dot-notation">i18n with dot_notation</a></li>
+<li><a class="reference external" href="#default-language">Default language</a></li>
+<li><a class="reference external" href="#i18n-without-dot-notation-the-fast-way">i18n without dot notation (the fast way)</a></li>
+<li><a class="reference external" href="#i18n-with-different-type">i18n with different type</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="inheritance.html"
+                                  title="previous chapter">Polymorphism with MongoKit</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="gridfs.html"
+                                  title="next chapter">GridFS</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/i18n.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="internationalization-and-localization">
+<h1>Internationalization and Localization<a class="headerlink" href="#internationalization-and-localization" title="Permalink to this headline">¶</a></h1>
+<p>Sometime you might want to present your data in differents languages and have
+i18n fields. Mongokit provides helper to do it.</p>
+<div class="section" id="i18n-with-dot-notation">
+<h2>i18n with dot_notation<a class="headerlink" href="#i18n-with-dot-notation" title="Permalink to this headline">¶</a></h2>
+<p>Let&#8217;s create a simple i18n BlogPost:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;body&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;author&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">i18n</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">use_dot_notation</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>Declare your structure as usual and add an <cite>i18n</cite> descriptor. The <cite>i18n</cite>
+descriptor will tel Mongokit that the fields <cite>title</cite> and <cite>body</cite> will be in
+multiple langage.</p>
+<p>Note of the use of <cite>use_dot_notation</cite> attribute. Using i18n with dot notation is more fun
+but a little slower (not critical thought). We will see later how to use i18n is a blasing
+fast way (but less fun).</p>
+<p>Let&#8217;s create a BlogPost object and fill some fields:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">BlogPost</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;bp1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s">u&quot;Hello&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="s">u&quot;How are you ?&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="s">u&quot;me&quot;</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s say we want to write your blog post in French. We select the language
+with the <cite>set_lang()</cite> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="s">&#39;fr&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s">u&quot;Salut&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="s">u&quot;Comment allez-vous ?&quot;</span>
+</pre></div>
+</div>
+<p>the <cite>author</cite> field is not i18n so we don&#8217;t have to set it again.</p>
+<p>Now let&#8217;s play with our object :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span>
+<span class="go">u&#39;Salut&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="s">&#39;en&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span>
+<span class="go">u&#39;Hello&#39;</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s see how it work:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span>
+<span class="go">{&#39;body&#39;: {&#39;fr&#39;: u&#39;Comment allez-vous ?&#39;, &#39;en&#39;: u&#39;How are you ?&#39;}, &#39;_id&#39;: u&#39;bp1&#39;, &#39;title&#39;: {&#39;fr&#39;: u&#39;Salut&#39;, &#39;en&#39;: u&#39;Hello&#39;}, &#39;author&#39;: u&#39;me&#39;}</span>
+</pre></div>
+</div>
+<p>The <cite>title</cite> field is actually a dictionnary which keys are the language and the values are the text. This is usefull if you don&#8217;t want
+to use the dot notation. Let&#8217;s save our object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raw_blog_post</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s">&#39;_id&#39;</span><span class="p">:</span><span class="s">&#39;bp1&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raw_blog_post</span>
+<span class="go">{u&#39;body&#39;: [{u&#39;lang&#39;: u&#39;fr&#39;, u&#39;value&#39;: u&#39;Comment allez-vous ?&#39;}, {u&#39;lang&#39;: u&#39;en&#39;, u&#39;value&#39;: u&#39;How are you ?&#39;}], u&#39;_id&#39;: u&#39;bp1&#39;, u&#39;author&#39;: u&#39;me&#39;, u&#39;title&#39;: [{u&#39;lang&#39;: u&#39;fr&#39;, u&#39;value&#39;: u&#39;Salut&#39;}, {u&#39;lang&#39;: u&#39;en&#39;, u&#39;value&#39;: u&#39;Hello&#39;}]}</span>
+</pre></div>
+</div>
+<p>Now, the <cite>title</cite> field looks little different. This is a list of dictionnary which have the following structure:</p>
+<blockquote>
+[{&#8216;lang&#8217;: lang, &#8216;value&#8217;, text}, ...]</blockquote>
+<p>So, when an i18n object is save to the mongo database, it structure is changed. This is done to make indexation possible.</p>
+<p>Note that you can still use this way event if you enable dot notation.</p>
+</div>
+<div class="section" id="default-language">
+<h2>Default language<a class="headerlink" href="#default-language" title="Permalink to this headline">¶</a></h2>
+<p>By default, the default language is english (&#8216;en&#8217;). You can change it easily by passing arguments in object creation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">get_lang</span><span class="p">()</span> <span class="c"># english by default</span>
+<span class="go">&#39;en&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">(</span><span class="n">lang</span><span class="o">=</span><span class="s">&#39;fr&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">get_lang</span><span class="p">()</span>
+<span class="go">&#39;fr&#39;</span>
+</pre></div>
+</div>
+<p>you can also specify a fallblack language. This is useful if a field was translated yet:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">(</span><span class="n">lang</span><span class="o">=</span><span class="s">&#39;en&#39;</span><span class="p">,</span> <span class="n">fallback_lang</span><span class="o">=</span><span class="s">&#39;en&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s">u&quot;Hello&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="s">&#39;fr&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span> <span class="c"># no title in french yet</span>
+<span class="go">u&#39;Hello&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s">u&#39;Salut&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">title</span>
+<span class="go">u&#39;Salut&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="i18n-without-dot-notation-the-fast-way">
+<h2>i18n without dot notation (the fast way)<a class="headerlink" href="#i18n-without-dot-notation-the-fast-way" title="Permalink to this headline">¶</a></h2>
+<p>If for you, speed is very very important, you might not want to use the dot
+notation (which brings some extra wrapping). While the API would be more fun,
+you can still use i18n. Let&#8217;s take our BlogPost:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;body&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;author&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">i18n</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">BlogPost</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;bp1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">][</span><span class="s">&#39;en&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;Hello&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">][</span><span class="s">&#39;en&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;How are you ?&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;me&quot;</span>
+</pre></div>
+</div>
+<p>As you can see, fields <cite>title</cite> and <cite>body</cite> are now dictionnary which take the language as key. The result is the same:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span>
+<span class="go">{&#39;body&#39;: {&#39;en&#39;: u&#39;How are you ?&#39;}, &#39;_id&#39;: u&#39;bp1&#39;, &#39;title&#39;: {&#39;en&#39;: u&#39;Hello&#39;}, &#39;author&#39;: u&#39;me&#39;}</span>
+</pre></div>
+</div>
+<p>The good thing is you don&#8217;t have to use <cite>set_lang()</cite> and <cite>get_lang()</cite> anymore, the bad thing is you get some ugly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">][</span><span class="s">&#39;fr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;Salut&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span>
+<span class="go">{&#39;fr&#39;: u&#39;Salut&#39;, &#39;en&#39;: u&#39;Hello&#39;}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">][</span><span class="s">&#39;fr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;Comment allez-vous ?&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">]</span>
+<span class="go">{&#39;fr&#39;: u&#39;Comment allez-vous ?&#39;, &#39;en&#39;: u&#39;How are you ?&#39;}</span>
+</pre></div>
+</div>
+<p>Note that you don&#8217;t have to fear to miss a i18n field. Validation will take care of that :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;Comment allez-vous ?&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blog_post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">SchemaTypeError</span>: <span class="n-Identifier">body must be an instance of i18n not unicode</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="i18n-with-different-type">
+<h2>i18n with different type<a class="headerlink" href="#i18n-with-different-type" title="Permalink to this headline">¶</a></h2>
+<p>i18n in Mongokit was designed to handled any python types authorized in
+MongoKit. To illustrate, let&#8217;s take a fake example : temperature.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Temperature</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;temperature&quot;</span><span class="p">:{</span>
+<span class="gp">... </span>          <span class="s">&quot;degree&quot;</span><span class="p">:</span> <span class="nb">float</span>
+<span class="gp">... </span>       <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">i18n</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;temperature.degree&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">use_dot_notation</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Temperature</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">temp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">Temperature</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">temp</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="s">&#39;us&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">temp</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">degree</span> <span class="o">=</span> <span class="mf">75.2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">temp</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="s">&#39;fr&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">temp</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">degree</span> <span class="o">=</span> <span class="mf">24.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">temp</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This example describes that float can be translated too. Using i18n to handle
+temperature is a bad idea but you may find a useful usage of this feature.</p>
+<p>Using i18n different type allow you to translate list :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Doc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;tags&quot;</span><span class="p">:[</span><span class="nb">unicode</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">i18n</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;tags&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">use_dot_notation</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Doc</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">i18n</span><span class="o">.</span><span class="n">Doc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="s">&#39;en&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="s">u&#39;apple&#39;</span><span class="p">,</span> <span class="s">u&#39;juice&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="s">&#39;fr&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="s">u&#39;pomme&#39;</span><span class="p">,</span> <span class="s">u&#39;jus&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
+<span class="go">{&#39;tags&#39;: {&#39;fr&#39;: [u&#39;pomme&#39;, u&#39;jus&#39;], &#39;en&#39;: [u&#39;apple&#39;, u&#39;juice&#39;]}}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gridfs.html" title="GridFS"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

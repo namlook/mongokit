@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title><no title> &mdash; MongoKit v0.5 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/new_way.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">Connection</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Let&#8217;s say we have previously created 3 MongoDocuments : Blog, BlogPost and User.
+Those objects have to be rechable via the connections so we register them :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Blog</span><span class="p">,</span> <span class="n">BlogPost</span><span class="p">,</span> <span class="n">User</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>and now, we can play. All begin via the connection <cite>con</cite>. Just like the pymongo
+api, we get to the collection Via the connection and the db.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this line, we query the collection named &#8216;tutorial&#8217; (which is attached to the
+db named &#8216;mongokit&#8217;) and fetch all documents in the collection (the pymongo&#8217;s way).</p>
+<p>Now enter the MongoDocument objects. Let&#8217;s create a blog post:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;my title&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;a body&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;me&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note that this is quite the same as the current api. We just get the BlogPost object
+via the collection. The main advantage of this approche is that we don&#8217;t have to
+bother about the collection.</p>
+<p>Note that we can simulate the current api behavior by getting the BlogPost object
+before :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">BlogPost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost2</span> <span class="o">=</span> <span class="n">BlogPost</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Another advantage is the ability of using the collection dynamically without pain.
+Let&#8217;s say that we want to put all BlogPost into a user collection (so one collection
+by user) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user_col</span> <span class="o">=</span> <span class="s">&#39;me&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="p">[</span><span class="n">user_col</span><span class="p">]</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Quering is as simple as instanciating object. There&#8217;s two way of fetching objects :</p>
+<blockquote>
+<ul class="simple">
+<li>getting raw data (the pymongo&#8217;s way)</li>
+<li>getting instanciated object with all method defined (the mongokit way)</li>
+</ul>
+</blockquote>
+<p>The first approche will produce only python dict and is very fast.
+The seconde will wrap the data into the MongoDocument. This is useful if we defined
+methods and want to use them.</p>
+<p>Getting raw data :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">raw_data</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Actually, all pymongo&#8217;s method can be apply :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">remove</span><span class="p">({})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">drop_collection</span><span class="p">(</span><span class="s">&#39;tutorial&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Getting instanciated objects :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost_cursor</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">blogpost_cursor</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We can apply MongoDocument methods (<cite>validate</cite>, <cite>to_json</cite> etc...)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span>
+<span class="go">{&#39;body&#39;: u&#39;a body&#39;, &#39;title&#39;: u&#39;my title&#39;, &#39;date_creation&#39;: datetime.datetime(...), &#39;rank&#39;: 0, &#39;author&#39;: u&#39;me&#39;}</span>
+</pre></div>
+</div>
+<p>Other mongokit queries are available :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost_cursor</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mongokit</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span> <span class="c"># get only BlogPost</span>
+</pre></div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

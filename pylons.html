@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pylons support &mdash; MongoKit v0.5 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" />
+    <link rel="next" title="Migration from 0.4 to 0.5" href="version_migration.html" />
+    <link rel="prev" title="Migration" href="migration.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="version_migration.html" title="Migration from 0.4 to 0.5"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="migration.html" title="Migration"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="migration.html"
+                                  title="previous chapter">Migration</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="version_migration.html"
+                                  title="next chapter">Migration from 0.4 to 0.5</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/pylons.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pylons-support">
+<h1>Pylons support<a class="headerlink" href="#pylons-support" title="Permalink to this headline">¶</a></h1>
+<p>You can very easily interface Mongokit with Pylons. This tutorial explains how to do this.
+Note that there&#8217;s a lot of way to do the same thing. If you found another better solution,
+please contact me, I&#8217;ll update this tutorial.</p>
+<p>Write you all models in <tt class="docutils literal"><span class="pre">model/</span></tt>.  In the <tt class="docutils literal"><span class="pre">model/__init__.py</span></tt>, import all the module
+you want to register and then add them to a list called <cite>register_models</cite>.</p>
+<p>Example of <tt class="docutils literal"><span class="pre">model/__init__.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">blog</span> <span class="kn">import</span> <span class="n">Blog</span>
+<span class="kn">from</span> <span class="nn">blogpost</span> <span class="kn">import</span> <span class="n">BlogPost</span>
+
+<span class="n">register_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">Blog</span><span class="p">,</span> <span class="n">BlogPost</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Then go to the <tt class="docutils literal"><span class="pre">lib/app_globals.py</span></tt> and edit this file so it look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pylons</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">ekeet.models</span> <span class="kn">import</span> <span class="n">register_models</span>
+<span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">class</span> <span class="nc">Globals</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Globals acts as a container for objects available throughout the</span>
+<span class="sd">    life of the application</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;One instance of Globals is created during application</span>
+<span class="sd">        initialization and is available during requests via the</span>
+<span class="sd">        &#39;app_globals&#39; variable</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span>
+          <span class="n">host</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s">&#39;db_host&#39;</span><span class="p">],</span>
+          <span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;db_port&#39;</span><span class="p">]),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">[</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;db_name&#39;</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">register_models</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this file, we create the connection (optionaly the db if we use only on) and then
+we register all our models.</p>
+<p>Now, you can access to the connection via the pylons.config :</p>
+<blockquote>
+config[&#8216;pylons.app_globals&#8217;].connection</blockquote>
+<p>A more convenient way is to add the connection to the BaseController so you can access
+it just with <tt class="docutils literal"><span class="pre">self.connection</span></tt>. The file <tt class="docutils literal"><span class="pre">lib/base.py</span></tt> has to look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pylons.controllers</span> <span class="kn">import</span> <span class="n">WSGIController</span>
+<span class="kn">from</span> <span class="nn">pylons.templating</span> <span class="kn">import</span> <span class="n">render_mako</span> <span class="k">as</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">pylons</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">import</span> <span class="nn">pylons</span>
+
+<span class="k">class</span> <span class="nc">BaseController</span><span class="p">(</span><span class="n">WSGIController</span><span class="p">):</span>
+
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s">&#39;pylons.app_globals&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">connection</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Invoke the Controller&quot;&quot;&quot;</span>
+        <span class="c"># WSGIController.__call__ dispatches to the Controller method</span>
+        <span class="c"># the request is routed to. This routing information is</span>
+        <span class="c"># available in environ[&#39;pylons.routes_dict&#39;]</span>
+        <span class="k">return</span> <span class="n">WSGIController</span><span class="o">.</span><span class="n">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="version_migration.html" title="Migration from 0.4 to 0.5"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="migration.html" title="Migration"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

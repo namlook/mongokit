@@ -1,0 +1,55 @@
+MongoDB Auth
+============
+
+MongoKit support the mongodb auth introduced here_.
+
+.. _here : http://www.mongodb.org/display/DOCS/Security+and+Authentication
+
+In order to use the auth, add the `db_username` and `db_password`
+attributes to the document class:
+    
+>>> from mongokit import *
+>>> class MyDoc(MongoDocument):
+...    db_name = "test"
+...    db_username = "foo"
+...    db_password = "bar"
+...    collection_name = "mongokit_auth"
+...    structure = {
+...        "bla":{
+...            "foo":unicode,
+...            "bar":int,
+...        },
+...        "spam":[],
+...    }
+
+Please, make sure that the user is well created :
+
+>>> from pymongo import *
+>>> Connection()['admin'].eval('db.removeUser("theadmin")')
+>>> Connection()['test'].eval('db.addUser("foo", "bar")')
+
+where 'test' is the db name
+
+.. NOTE::
+    Note that you must create a admin user before using the auth in mongodb.
+    Otherwise, the `MongoAuthException` will be raised
+
+>>> mydoc = MyDoc()
+>>> mydoc['_id'] = u'mydoc'
+>>> mydoc["bla"]["foo"] = u"bar"
+>>> mydoc["bla"]["bar"] = 42
+>>> mydoc.save()
+Traceback (most recent call last):
+...
+MongoAuthException: no admin user found in database
+
+Creating a admin user :
+
+>>> Connection().admin.eval('db.addUser("theadmin", "anadminpassword")')
+
+>>> mydoc.save()
+{'_id': u'mydoc', 'bla': {'foo': u'bar', 'bar': 42}, 'spam': []}
+
+
+
+
