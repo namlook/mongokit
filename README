@@ -33,6 +33,10 @@ Features
  * GridFS support
  * document migration support
 
+Go to the full documentation_.
+
+.. _documentation : http://namlook.github.com/mongokit/
+
 A quick example
 ===============
 
@@ -42,7 +46,10 @@ A Document declaration look like that::
     >>> from mongokit import *
     >>> import datetime
 
-    >>> class BlogPost(Document):
+    >>> connection = Connection()
+    
+    >>> @connection.register
+    ... class BlogPost(Document):
     ...     structure = {
     ...             'title':unicode,
     ...             'body':unicode,
@@ -81,7 +88,7 @@ And you can use more complex structure::
      
 Please, see the tutorial_ for more examples.
 
-.. _tutorial : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html
+.. _tutorial : http://namlook.github.com/mongokit/tutorial.html
 
 Suggestion and patches are really welcome. If you find mistakes in the documentation
 (english is not my primary langage) feel free to contact me. You can find me (namlook) 
@@ -130,7 +137,7 @@ v0.5.11
 -------
 
  * support latest pymongo version
- * some changes in GridFS support (please read http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html)
+ * some changes in GridFS support (please read http://namlook.github.com/mongokit/gridfs.html)
  * Deprecate atomic_save feature
  * remove libmagic import from grid.py : to many trouble with this lib, we have to find another way to guess the content-type
  * fix #79 -- Tries to migrate non-saved document
@@ -181,12 +188,12 @@ v0.5.6
  * improve DotCollapsedDict by adding reference structure
 
 
-.. _`atomic update` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#updating-data
-.. _`init_type` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types
-.. _`lazy migration` : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html
-.. _`bulk migration` : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html#bulk-migration
-.. _`'check' option` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes
-.. _`untyped field support` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#untyped-field
+.. _`atomic update` : http://namlook.github.com/mongokit/tutorial.html#updating-data
+.. _`init_type` : http://namlook.github.com/mongokit/tutorial.html#custom-types
+.. _`lazy migration` : http://namlook.github.com/mongokit/migration.html
+.. _`bulk migration` : http://namlook.github.com/mongokit/migration.html#bulk-migration
+.. _`'check' option` : http://namlook.github.com/mongokit/tutorial.html#indexes
+.. _`untyped field support` : http://namlook.github.com/mongokit/tutorial.html#untyped-field
 
 
 v0.5.5
@@ -199,9 +206,9 @@ v0.5.5
  * fix #48 - Tuple assignment does not convert to list
  * fix 49 - KeyError when using deep nested autorefs
 
-.. _documentation : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#reload
-.. _`set type support` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#the-structure
-.. _CustomType : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#custom-types
+.. _documentation : http://namlook.github.com/mongokit/tutorial.html#reload
+.. _`set type support` : http://namlook.github.com/mongokit/tutorial.html#the-structure
+.. _CustomType : http://namlook.github.com/mongokit/tutorial.html#custom-types
 .. _benchmark : http://groups.google.com/group/mongodb-user/browse_thread/thread/77c91641858e1e20/ea71afc4de24f2e9
 
 v0.5.4
@@ -218,8 +225,8 @@ v0.5.4
  * fix bug spotted by Sebastien Estienne - error when using skip_validation with required_fields. Thanks 
  * fix issue while using {unicode:unicode} in structure and i18n at the same time 
 
-.. _`lot of features in GridFS` : http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html
-.. _`collect errors` : http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#quiet-validation-detection
+.. _`lot of features in GridFS` : http://namlook.github.com/mongokit/gridfs.html
+.. _`collect errors` : http://namlook.github.com/mongokit/tutorial.html#quiet-validation-detection
 
 v0.5.3
 ------
@@ -239,7 +246,7 @@ v0.5.2
  * bugs fix in default values and required values
  * `gridfs support`_
 
-.. _`gridfs support` : http://bytebucket.org/namlook/mongokit/wiki/html/gridfs.html
+.. _`gridfs support` : http://namlook.github.com/mongokit/gridfs.html
 
 v0.5.1
 ------
@@ -259,25 +266,18 @@ v0.5
  * add cross database reference support
  * `i18n support`_
 
-.. _migration : http://bytebucket.org/namlook/mongokit/wiki/html/migration.html
-.. _`i18n support` : http://bytebucket.org/namlook/mongokit/wiki/html/i18n.html
+.. _migration : http://namlook.github.com/mongokit/migration.html
+.. _`i18n support` : http://namlook.github.com/mongokit/i18n.html
 
 v0.4
 ----
     * add autoref support to belong_to (delete cascade)
-      (http://bytebucket.org/namlook/mongokit/wiki/html/cascade.html#delete-cascade)
     * changing collection dynamically 
-      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#changing-collection-dynamically)
     * add immutable field (python tuple support)
-      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#case-of-tuple-or-immutable-field)
     * add direction and ttl to index support
-      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#indexes)
     * add connection sharing support
-      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#sharing-connection)
     * add json import/export for MongoDocument
-      (http://bytebucket.org/namlook/mongokit/wiki/html/tutorial.html#json-support)
     * full relation support (related_to)
-      (http://bytebucket.org/namlook/mongokit/wiki/html/relations.html)
     * add long type support
 
 v0.3.3
