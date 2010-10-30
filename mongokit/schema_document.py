@@ -35,11 +35,31 @@ log = logging.getLogger(__name__)
 from operators import SchemaOperator, IS
 from helpers import *
 
-__all__ = ['CustomType', 'SchemaProperties', 'SchemaDocument', 'DotedDict', 'DotExpandedDict', 'DotCollapsedDict',
-  'RequireFieldError', 'StructureError', 'BadKeyError', 'AuthorizedTypeError', 'ValidationError',
-  'DuplicateRequiredError', 'DuplicateDefaultValueError', 'ModifierOperatorError', 'SchemaDocument',
-  'SchemaTypeError', 'DefaultFieldTypeError', 'totimestamp', 'fromtimestamp', 'i18n', 'i18nError', 'EvalException',
-  'Set']
+__all__ = [
+    'CustomType',
+    'SchemaProperties',
+    'SchemaDocument',
+    'DotedDict',
+    'DotExpandedDict',
+    'DotCollapsedDict',
+    'RequireFieldError',
+    'StructureError',
+    'BadKeyError',
+    'AuthorizedTypeError',
+    'ValidationError',
+    'DuplicateRequiredError',
+    'DuplicateDefaultValueError',
+    'ModifierOperatorError',
+    'SchemaDocument',
+    'SchemaTypeError',
+    'DefaultFieldTypeError',
+    'totimestamp',
+    'fromtimestamp',
+    'i18n',
+    'i18nError',
+    'EvalException',
+    'Set'
+]
 
 class CustomType(object): 
     init_type = None
@@ -48,9 +68,11 @@ class CustomType(object):
     
     def __init__(self):
         if self.mongo_type is None:
-            raise TypeError("`mongo_type` property must be specify in %s" % self.__class__.__name__)
+            raise TypeError("`mongo_type` property must be specify in %s" %
+              self.__class__.__name__)
         if self.python_type is None:
-            raise TypeError("`python_type` property must be specify in %s" % self.__class__.__name__)
+            raise TypeError("`python_type` property must be specify in %s" %
+              self.__class__.__name__)
 
     def to_bson(self, value):
         """convert type to a mongodb type"""
@@ -88,7 +110,8 @@ class i18nError(Exception):pass
 
 class SchemaProperties(type):
     def __new__(cls, name, bases, attrs):
-        attrs['_protected_field_names'] = set(['_protected_field_names', '_namespaces', '_required_namespace'])
+        attrs['_protected_field_names'] = set(
+            ['_protected_field_names', '_namespaces', '_required_namespace'])
         for base in bases:
             parent = base.__mro__[0]
             if hasattr(parent, 'structure'):
@@ -138,6 +161,9 @@ class SchemaProperties(type):
             attrs['_collapsed_struct'] = DotCollapsedDict(attrs['structure'], remove_under_type=True)
         elif attrs.get('structure') is not None and name not in ["SchemaDocument", "Document", "VersionedDocument", "RevisionDocument"]:
             attrs['_collapsed_struct'] = {}
+        attrs['_i18n_namespace'] = []
+        if attrs.get('i18n'):
+            attrs['_i18n_namespace'] = set(['.'.join(i.split('.')[:-1]) for i in attrs['i18n']])
         return type.__new__(cls, name, bases, attrs)        
 
     @classmethod
@@ -156,6 +182,14 @@ class SchemaProperties(type):
         if attrs.get('required_fields'):
             if len(attrs['required_fields']) != len(set(attrs['required_fields'])):
                 raise DuplicateRequiredError("duplicate required_fields : %s" % attrs['required_fields'])
+        # i18n
+        if attrs.get('i18n'):
+            if len(attrs['i18n']) != len(set(attrs['i18n'])):
+                raise DuplicateI18nError("duplicated i18n : %s" % attrs['i18n'])
+            for i18n in attrs['i18n']:
+                if i18n not in attrs['_namespaces']:
+                    raise ValueError("Error in i18n: can't find %s in structure" % i18n)
+
 
 
 class SchemaDocument(dict):
@@ -284,7 +318,7 @@ class SchemaDocument(dict):
                 self._set_default_fields(self, self.structure)
         else:
             self._process_custom_type('python', self, self.structure)
-        if self.i18n or (gen_doted_dict and self.use_dot_notation):
+        if self.i18n or (gen_doted_dict and  self.use_dot_notation):
             self.__generate_doted_dict(self, self.structure)
         if self.i18n:
             self._make_i18n()
@@ -743,13 +777,18 @@ class SchemaDocument(dict):
 
     def __generate_skeleton(self, doc, struct, path = ""):
         for key in struct:
+            if type(key) is type:
+                new_key = "$%s" % key.__name__
+            else:
+                new_key = key
+            new_path = ".".join([path, new_key]).strip('.')
             #
             # Automatique generate the skeleton with NoneType
             #
             if type(key) is not type and key not in doc:
                 if isinstance(struct[key], dict):
                     if type(struct[key]) is dict and self.use_dot_notation:
-                        if self.i18n:
+                        if new_path in self._i18n_namespace:
                             doc[key] = i18nDotedDict(doc.get(key, {}), self)
                         else:
                             doc[key] = DotedDict(doc.get(key, {}), warning=self.dot_notation_warning)
@@ -777,26 +816,30 @@ class SchemaDocument(dict):
             # if the value is a dict, we have a another structure to validate
             #
             if isinstance(struct[key], dict) and type(key) is not type:
-                self.__generate_skeleton(doc[key], struct[key], path)
+                self.__generate_skeleton(doc[key], struct[key], new_path)
 
-    def __generate_doted_dict(self, doc, struct):
+    def __generate_doted_dict(self, doc, struct, path=""):
         for key in struct:
             #
             # Automatique generate the skeleton with NoneType
             #
+            if type(key) is type:
+                new_key = "$%s" % key.__name__
+            else:
+                new_key = key
+            new_path = ".".join([path, new_key]).strip('.')
             if type(key) is not type:# and key not in doc:
                 if isinstance(struct[key], dict):
                     if type(struct[key]) is dict:
-                        if self.i18n:
+                        if new_path in self._i18n_namespace:
                             doc[key] = i18nDotedDict(doc.get(key, {}), self)
                         else:
-                            doc[key] = DotedDict(doc.get(key, {}),
-                              warning=self.dot_notation_warning)
+                            doc[key] = DotedDict(doc.get(key, {}), warning=self.dot_notation_warning)
             #
             # if the value is a dict, we have a another structure to validate
             #
             if isinstance(struct[key], dict) and type(key) is not type:
-                self.__generate_doted_dict(doc[key], struct[key])
+                self.__generate_doted_dict(doc[key], struct[key], new_path)
 
 
     def _make_i18n(self):

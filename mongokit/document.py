@@ -27,8 +27,18 @@
 
 from mongokit import SchemaDocument, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
-from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties, StructureError
-from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict, DotExpandedDict, DotedDict
+from mongokit.schema_document import (
+                        STRUCTURE_KEYWORDS,
+                        CustomType,
+                        SchemaTypeError,
+                        SchemaProperties,
+                        StructureError)
+from mongokit.helpers import (
+                        totimestamp,
+                        fromtimestamp,
+                        DotCollapsedDict,
+                        DotedDict,
+                        DotExpandedDict)
 from mongokit.grid import *
 import pymongo
 from bson import BSON
@@ -46,19 +56,13 @@ STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
 
-class DotDict(dict):
-    def __getattr__(self, attr):
-        return self.get(attr, None)
-    __setattr__= dict.__setitem__
-    __delattr__= dict.__delitem__
-
 class DocumentProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
         for base in bases:
             parent = base.__mro__[0]
             if hasattr(parent, 'structure'):
                 if parent.structure is not None:
-                    parent = parent()
+                    #parent = parent()
                     if parent.indexes:
                         if 'indexes' not in attrs:
                             attrs['indexes'] = []
@@ -274,7 +278,7 @@ class Document(SchemaDocument):
         """
         as_class = None
         if self.use_dot_notation:
-            as_class = DotDict
+            as_class = DotedDict
         return self.collection.find(wrap=self._obj_class, as_class=as_class, *args, **kwargs)
 
     def find_one(self, *args, **kwargs):
@@ -285,7 +289,7 @@ class Document(SchemaDocument):
         """
         as_class = None
         if self.use_dot_notation:
-            as_class = DotDict
+            as_class = DotedDict
         return self.collection.find_one(wrap=self._obj_class, as_class=as_class, *args, **kwargs)
 
     def one(self, *args, **kwargs):

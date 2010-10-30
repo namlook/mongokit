@@ -212,6 +212,32 @@ class StructureTestCase(unittest.TestCase):
         assert mydoc == {'foo':{'bar':'bar'}}
         mydoc.validate()
 
+    def test_document_dot_notation_nested(self):
+        class MyDoc(Document):
+            use_dot_notation = True
+            structure = {
+                "foo":{
+                    "bar":unicode
+                }
+            }
+        self.connection.register([MyDoc])
+
+        mydoc = self.col.MyDoc()
+        mydoc.foo.bar = u"bar"
+        self.assertEqual(mydoc.foo.bar, u'bar')
+        mydoc.foo.bla = 2
+        assert isinstance(mydoc.foo, DotedDict), type(mydoc.foo)
+        self.assertEqual(mydoc.foo.bla,  2)
+        self.assertEqual(mydoc['foo'], {"bar":"bar"})
+        self.assertEqual(mydoc['foo']['bar'], 'bar')
+        self.assertEqual(mydoc, {'foo':{'bar':'bar'}})
+        mydoc.save()
+
+        fetched_doc = self.col.MyDoc.find_one()
+        assert isinstance(fetched_doc.foo, DotedDict), type(fetched_doc.foo)
+        self.assertEqual(fetched_doc.foo.bar, "bar")
+
+
     def test_dot_notation_field_not_in_structure(self):
         class MyDoc(SchemaDocument):
             use_dot_notation = True

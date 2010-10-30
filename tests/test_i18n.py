@@ -29,6 +29,7 @@ import unittest
 
 from mongokit import *
 from pymongo.objectid import ObjectId
+from mongokit.helpers import i18nDotedDict
 
 
 class i18nTestCase(unittest.TestCase):
@@ -152,6 +153,7 @@ class i18nTestCase(unittest.TestCase):
         class Doc(Document):
             use_dot_notation = True
             structure = {
+                'toto':{'titi':{'tata':int}},
                 'title':{
                     'foo':unicode,
                     'bar':{'bla':int},
@@ -161,6 +163,11 @@ class i18nTestCase(unittest.TestCase):
             i18n = ['title.foo', 'title.bar.bla']
         self.connection.register([Doc])
         doc = self.col.Doc(lang='fr')
+        assert isinstance(doc.toto, DotedDict), type(doc.toto)
+        assert isinstance(doc.toto.titi, DotedDict), type(doc.toto.titi)
+        assert isinstance(doc.title, i18nDotedDict), type(doc.title)
+        assert isinstance(doc.title.bar, i18nDotedDict), type(doc.title.bar)
+        assert doc.title.foo is None, type(doc.title.foo)
         doc.get_lang() == 'fr'
         doc.title.foo = u'Salut'
         doc.title.bar.bla = 3
@@ -168,23 +175,37 @@ class i18nTestCase(unittest.TestCase):
         doc.set_lang('en')
         doc.title.foo = u"Hello"
         doc.title.bar.bla = 2
-        assert doc == {'title': {'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}, 'egg':4}}, doc
+        self.assertEqual(doc,
+          {'toto': {'titi': {'tata': None}}, 'title': {'egg': 4, 'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}}})
         doc.validate()
         doc.set_lang('fr')
-        assert doc == {'title': {'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}, 'egg':4}}, doc
+        self.assertEqual(doc,
+          {'toto': {'titi': {'tata': None}}, 'title': {'egg': 4, 'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}}})
         doc.save()
 
         raw_doc = self.col.find_one({'_id':doc['_id']})
-        assert raw_doc == {'_id':doc['_id'],
-          u'title': {u'foo': [{u'lang': u'fr', u'value': u'Salut'}, {u'lang': u'en', u'value': u'Hello'}],
-          u'bar': {u'bla': [{u'lang': u'fr', u'value': 3}, {u'lang': u'en', u'value': 2}]}, 'egg':4}
-        }, raw_doc
+        self.assertEqual(raw_doc, {'_id':doc['_id'],
+          u'toto': {u'titi': {u'tata': None}},
+          u'title': {
+              u'foo':[
+                  {u'lang': u'fr', u'value': u'Salut'},
+                  {u'lang': u'en', u'value': u'Hello'}
+                ],
+              u'bar': {u'bla': [
+                  {u'lang': u'fr', u'value': 3},
+                  {u'lang': u'en', u'value': 2}
+                ]},
+              'egg':4}
+        })
         fetched_doc = self.col.Doc.find_one({'_id':doc['_id']})
-        assert fetched_doc.get_lang() == 'en'
-        assert fetched_doc.title.foo == 'Hello'
+        assert isinstance(fetched_doc.toto, DotedDict), type(fetched_doc.toto)
+        assert isinstance(fetched_doc.toto.titi, DotedDict), type(fetched_doc.toto.titi)
+        assert isinstance(fetched_doc.title, i18nDotedDict), type(fetched_doc.title)
+        assert isinstance(fetched_doc.title.bar, i18nDotedDict), type(fetched_doc.title.bar)
+        self.assertEqual(fetched_doc.get_lang(), 'en')
+        self.assertEqual(fetched_doc.title.foo, 'Hello')
         fetched_doc.set_lang('fr')
         assert fetched_doc.title.foo == 'Salut'
-
 
     def test_i18n_fallback(self):
         class Doc(Document):
@@ -224,12 +245,18 @@ class i18nTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, doc.save)
 
     def test_bad_i18n(self):
-        class Doc(Document):
-            structure = {
-                'title':unicode,
-            }
-            i18n = ['title', 'bla']
-        self.assertRaises(ValidationError, self.connection.register, [Doc])
+        failed = False
+        try:
+            class Doc(Document):
+                structure = {
+                    'title':unicode,
+                }
+                i18n = ['title', 'bla']
+        except ValueError, e:
+            self.assertEqual(str(e), "Error in i18n: can't find bla in structure")
+            failed = True
+        self.assertEqual(failed, True)
+
         class Doc(Document):
             structure = {
                 'title':unicode,

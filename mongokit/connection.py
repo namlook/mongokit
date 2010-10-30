@@ -28,21 +28,19 @@
 from pymongo import Connection as PymongoConnection
 from database import Database
 
-class CursorMixin(object):
-    """
-    brings the callable method to a Document. usefull for the connection's
-    register method
-    """
-    def __call__(self, doc=None, gen_skel=False, lang='en', fallback_lang='en'):
-        return self._obj_class(doc=doc, gen_skel=gen_skel, collection=self.collection, lang=lang, fallback_lang=fallback_lang)
-
 class CallableMixin(object):
     """
     brings the callable method to a Document. usefull for the connection's
     register method
     """
     def __call__(self, doc=None, gen_skel=True, lang='en', fallback_lang='en'):
-        return self._obj_class(doc=doc, gen_skel=gen_skel, collection=self.collection, lang=lang, fallback_lang=fallback_lang)
+        return self._obj_class(
+          doc=doc,
+          gen_skel=gen_skel,
+          collection=self.collection,
+          lang=lang,
+          fallback_lang=fallback_lang
+        )
 
 
 class Connection(PymongoConnection):
@@ -63,10 +61,11 @@ class Connection(PymongoConnection):
                         del col._registered_documents[obj_name]
         # register
         for obj in obj_list:
-            CursorDocument = type("Cursor%s" % obj.__name__, (obj, CursorMixin), {"_obj_class":obj, "__repr__":object.__repr__})
             CallableDocument = type(
               "Callable%s" % obj.__name__,
-              (obj, CallableMixin), {'cursor': CursorDocument(), "_obj_class":obj, "__repr__":object.__repr__})
+              (obj, CallableMixin),
+              {"_obj_class":obj, "__repr__":object.__repr__}
+            )
             self._registered_documents[obj.__name__] = CallableDocument
 
     def __getattr__(self, key):

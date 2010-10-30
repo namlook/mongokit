@@ -242,7 +242,14 @@ class CustomTypesTestCase(unittest.TestCase):
                 "date": CustomDate(),
             }
             default_values = {'date':datetime.datetime(2008, 6, 7)}
-        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
+        #self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
+        self.connection.register([Foo])
+        failed = False
+        try:
+            self.col.Foo()
+        except DefaultFieldTypeError, e:
+            failed = True
+            self.assertEqual(str(e), 'date must be an instance of basestring not datetime')
  
     def test_custom_type_bad_python(self):
         import datetime
@@ -263,8 +270,14 @@ class CustomTypesTestCase(unittest.TestCase):
                 "date": CustomDate(),
             }
             default_values = {'date':datetime.datetime(2008, 6, 7)}
-        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
-
+        self.connection.register([Foo])
+        failed = False
+        try:
+            self.col.Foo()
+        except DefaultFieldTypeError, e:
+            failed = True
+            self.assertEqual(str(e),
+              'date must be an instance of str not datetime')
 
         class CustomDate(CustomType):
             mongo_type = unicode
@@ -282,14 +295,28 @@ class CustomTypesTestCase(unittest.TestCase):
                 "date": CustomDate(),
             }
             default_values = {'date':(2008, 6, 7)}
-        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
+        self.connection.register([Foo])
+        failed = False
+        try:
+            self.col.Foo()
+        except DefaultFieldTypeError, e:
+            failed = True
+            self.assertEqual(str(e),
+              'date must be an instance of datetime not tuple')
 
         class Foo(Document):
             structure = {
                 "date": [CustomDate()],
             }
             default_values = {'date':[(2008, 6, 7)]}
-        self.assertRaises(DefaultFieldTypeError, self.connection.register, [Foo])
+        self.connection.register([Foo])
+        failed = False
+        try:
+            self.col.Foo()
+        except DefaultFieldTypeError, e:
+            failed = True
+            self.assertEqual(str(e),
+              'date must be an instance of datetime not tuple')
 
         class CustomDate(CustomType):
             mongo_type = int

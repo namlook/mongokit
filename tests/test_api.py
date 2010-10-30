@@ -56,6 +56,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
         assert isinstance(mydoc['_id'], ObjectId)
 
+        d = self.col.MyDoc.find_one()
         saved_doc = self.col.find_one({"bla.bar":42})
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
@@ -161,7 +162,7 @@ class ApiTestCase(unittest.TestCase):
             mydoc["bar"]['bla'] = i
             mydoc.save()
         for i in self.col.MyDoc.find({"foo":{"$gt":4}}):
-            assert isinstance(i, MyDoc)
+            assert isinstance(i, MyDoc), (i, type(i))
         docs_list = [i["foo"] for i in self.col.MyDoc.find({"foo":{"$gt":4}})]
         assert docs_list == [5,6,7,8,9]
         # using limit/count
@@ -178,7 +179,8 @@ class ApiTestCase(unittest.TestCase):
         assert isinstance(next_doc, MyDoc)
         assert next_doc['foo'] == 0
         assert len(list(self.col.MyDoc.find().skip(3))) == 7, len(list(self.col.MyDoc.find().skip(3)))
-        assert isinstance(self.col.MyDoc.find().skip(3), MongoDocumentCursor)
+        from mongokit.cursor import Cursor
+        assert isinstance(self.col.MyDoc.find().skip(3), Cursor)
 
     def test_find_one(self):
         class MyDoc(Document):
@@ -646,17 +648,20 @@ class ApiTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "foo":int,
-                "bar":{"egg":unicode}
+                "bar":{"egg":unicode},
+                "toto":{"spam":{"bla":int}}
             }
 
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
         mydoc.foo = 3
         mydoc.bar.egg = u'bla'
+        mydoc.toto.spam.bla = 7
         mydoc.save()
         fetched_doc = self.col.MyDoc.find_one()
         assert fetched_doc.foo == 3, fetched_doc.foo
         assert fetched_doc.bar.egg == "bla", fetched_doc.bar.egg
+        self.assertEqual(fetched_doc.toto.spam.bla, 7)
 
        
     def test_validate_doc_with_field_added_after_save(self):
