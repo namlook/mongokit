@@ -57,3 +57,19 @@ class Database(PymongoDatabase):
 
         return getattr(self[dbref.collection], model.__name__).one({'_id': dbref.id})
 
+    def _fix_outgoing(self, son, collection, wrap=None):
+        """Apply manipulators to a SON object as it comes out of the database.
+
+        :Parameters:
+          - `son`: the son object coming out of the database
+          - `collection`: the collection the son object was saved in
+          - `wrap` : a class object which its __init__ take a SON object and a collection
+
+          If `wrap` is not None, return an instance of the wrap object. Return
+          a SON object otherwise.
+        """
+        son = super(Database, self)._fix_outgoing(son, collection)
+        if wrap is not None:
+            return wrap(son, collection=collection, from_son=True, generate_index=False)
+        return son
+

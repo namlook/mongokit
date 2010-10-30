@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongokit import SchemaDocument, MongoDocumentCursor, SchemaProperties, AutoReferenceError
+from mongokit import SchemaDocument, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import STRUCTURE_KEYWORDS, CustomType, SchemaTypeError, SchemaProperties, StructureError
 from mongokit.helpers import totimestamp, fromtimestamp, DotCollapsedDict, DotExpandedDict, DotedDict
@@ -45,6 +45,12 @@ import datetime
 STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
+
+class DotDict(dict):
+    def __getattr__(self, attr):
+        return self.get(attr, None)
+    __setattr__= dict.__setitem__
+    __delattr__= dict.__delitem__
 
 class DocumentProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
@@ -141,12 +147,19 @@ class Document(SchemaDocument):
       type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en', generate_index=True):
+    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en', generate_index=True, from_son=False):
         self._authorized_types = self.authorized_types[:]
         # If using autorefs, we need another authorized
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
-        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang, fallback_lang=fallback_lang)
+        if from_son:
+            gen_doted_dict = False
+        else:
+            gen_doted_dict = True
+        super(Document, self).__init__(
+          doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang,
+          fallback_lang=fallback_lang, gen_doted_dict=gen_doted_dict
+        )
         # collection
         self.collection = collection
         if collection:
@@ -259,8 +272,10 @@ class Document(SchemaDocument):
 
         See pymongo's documentation for more details on arguments.
         """
-        return MongoDocumentCursor(
-          self.collection.find(*args, **kwargs), cls=self._obj_class)
+        as_class = None
+        if self.use_dot_notation:
+            as_class = DotDict
+        return self.collection.find(wrap=self._obj_class, as_class=as_class, *args, **kwargs)
 
     def find_one(self, *args, **kwargs):
         """
@@ -268,9 +283,10 @@ class Document(SchemaDocument):
 
         See pymongo's documentation for more details on arguments.
         """
-        bson_obj = self.collection.find_one(*args, **kwargs)
-        if bson_obj:
-            return self._obj_class(doc=bson_obj, collection=self.collection, generate_index=False)
+        as_class = None
+        if self.use_dot_notation:
+            as_class = DotDict
+        return self.collection.find_one(wrap=self._obj_class, as_class=as_class, *args, **kwargs)
 
     def one(self, *args, **kwargs):
         """
@@ -280,7 +296,7 @@ class Document(SchemaDocument):
     
         If no document is found, `one()` returns `None`
         """
-        bson_obj = self.collection.find(*args, **kwargs)
+        bson_obj = self.find(*args, **kwargs)
         count = bson_obj.count()
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)
@@ -289,8 +305,7 @@ class Document(SchemaDocument):
                 doc = bson_obj.next()
             except StopIteration:
                 doc = None
-            if doc:
-                return self._obj_class(doc=doc, collection=self.collection, generate_index=False)
+            return doc
 
     def find_random(self):
         """
@@ -300,12 +315,7 @@ class Document(SchemaDocument):
         max = self.collection.count()
         if max:
             num = random.randint(0, max-1)
-            doc =  self._obj_class(
-              self.collection.find().skip(num).next(),
-              collection=self.collection,
-              generate_index=False,
-            )
-            return doc
+            return self.find().skip(num).next()
 
     def get_from_id(self, id):
         """
@@ -313,7 +323,7 @@ class Document(SchemaDocument):
         """
         return self.find_one({"_id":id})
 
-    def fetch(self, spec=None, fields=None, skip=0, limit=0, timeout=True, snapshot=False, tailable=False, _sock=None, _must_use_master=False, _is_command=False):
+    def fetch(self, spec=None, *args, **kwargs):
         """
         return all document wich match the structure of the object
         `fetch()` takes the same arguments than the the pymongo.collection.find method.
@@ -328,21 +338,9 @@ class Document(SchemaDocument):
                     spec[key].update({'$exists':True})
             else:
                 spec[key] = {'$exists':True}
-        return MongoDocumentCursor(
-          self.collection.find(
-            spec=spec,
-            fields=fields,
-            skip=skip, 
-            limit=limit,
-            timeout=timeout, 
-            snapshot=snapshot, 
-            tailable=tailable,
-            _sock=_sock,
-            _must_use_master=_must_use_master,
-            _is_command=_is_command),
-          cls=self._obj_class)
+        return self.find(spec, *args, **kwargs)
 
-    def fetch_one(self, spec=None, fields=None, skip=0, limit=0, timeout=True, snapshot=False, tailable=False, _sock=None, _must_use_master=False, _is_command=False):
+    def fetch_one(self, *args, **kwargs):
         """
         return one document wich match the structure of the object
         `fetch_one()` takes the same arguments than the the pymongo.collection.find method.
@@ -352,17 +350,7 @@ class Document(SchemaDocument):
 
         The query is launch against the db and collection of the object.
         """
-        bson_obj = self.fetch(
-            spec=spec,
-            fields=fields,
-            skip=skip, 
-            limit=limit,
-            timeout=timeout, 
-            snapshot=snapshot, 
-            tailable=tailable,
-            _sock=_sock,
-            _must_use_master=_must_use_master,
-            _is_command=_is_command)
+        bson_obj = self.fetch(*args, **kwargs)
         count = bson_obj.count()
         if count > 1:
             raise MultipleResultsFound("%s results found" % count)

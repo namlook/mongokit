@@ -27,6 +27,7 @@
 
 from pymongo.collection import Collection as PymongoCollection
 from mongo_exceptions import MultipleResultsFound
+from cursor import Cursor
 
 class Collection(PymongoCollection):
 
@@ -60,6 +61,14 @@ class Collection(PymongoCollection):
           "object it is failing because no such method exists.\n"
           "If '%s' is a Document then you may have forgotten to "
           "register it to the connection." % (name, name))
+
+    def find(self, *args, **kwargs):
+        return Cursor(self, *args, **kwargs)
+    find.__doc__ = PymongoCollection.find.__doc__ + """
+        mongokit::
+            - `wrap` (optional): a class object used to wrap
+            documents in the query result
+    """
 
     def get_from_id(self, id):
         """

@@ -257,7 +257,8 @@ class SchemaDocument(dict):
       CustomType,
     ]
 
-    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True, validate=True, lang='en', fallback_lang='en'):
+    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True,
+      validate=True, lang='en', fallback_lang='en', gen_doted_dict=True):
         """
         doc : a dictionnary
         gen_skel : if True, generate automaticly the skeleton of the doc
@@ -283,7 +284,7 @@ class SchemaDocument(dict):
                 self._set_default_fields(self, self.structure)
         else:
             self._process_custom_type('python', self, self.structure)
-        if self.i18n or self.use_dot_notation:
+        if self.i18n or (gen_doted_dict and self.use_dot_notation):
             self.__generate_doted_dict(self, self.structure)
         if self.i18n:
             self._make_i18n()
@@ -316,7 +317,8 @@ class SchemaDocument(dict):
             self._validate_required(self, self.structure)
 
     def __setattr__(self, key, value):
-        if key not in self._protected_field_names and self.use_dot_notation and key in self:
+        if key not in self._protected_field_names\
+          and self.use_dot_notation and key in self:
             if isinstance(self.structure[key], i18n):
                 self[key][self._current_lang] = value
             else:
@@ -788,7 +790,8 @@ class SchemaDocument(dict):
                         if self.i18n:
                             doc[key] = i18nDotedDict(doc.get(key, {}), self)
                         else:
-                            doc[key] = DotedDict(doc.get(key, {}), warning=self.dot_notation_warning)
+                            doc[key] = DotedDict(doc.get(key, {}),
+                              warning=self.dot_notation_warning)
             #
             # if the value is a dict, we have a another structure to validate
             #

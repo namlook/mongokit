@@ -28,6 +28,7 @@
 __version__ = "0.5.11"
 
 from pymongo.dbref import DBRef
+from cursor import Cursor
 from operators import *
 from schema_document import *
 from generators import MongoDocumentCursor
@@ -40,3 +41,4 @@ from connection import Connection
 from master_slave_connection import MasterSlaveConnection
 from pymongo import ASCENDING as INDEX_ASCENDING, DESCENDING as INDEX_DESCENDING
 from migration import DocumentMigration
+
