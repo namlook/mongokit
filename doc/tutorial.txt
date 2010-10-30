@@ -44,6 +44,14 @@ Now, fire a connection and register the ``BlogPost`` object:
 >>> con = Connection()
 >>> con.register([BlogPost])
 
+.. topic:: new in version 0.5.12
+
+    now the register method can be used as a decorator::
+
+        @con.register
+        class BlogPost(Document):
+            structure = {...}
+
 Let's do some cleanup before continue:
 
 >>> con.test.drop_collection('tutorial')
