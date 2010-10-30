@@ -113,6 +113,19 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v.0.5.12
+---------
+
+ * allow register method to be a decorator (thanks to Christopher Grebs for the inspiration)
+ * get ride of MongoDocumentCursor and use a subclass of pymongo's Cursor instead
+ * structure and descriptors validation is now done at object creation (not instantiation)
+
+   - *advantage* : mongokit is 40% faster
+   - *beware* : if you put a Document into a structure for reference, mongokit doesn't check anymore if use_autorefs is set
+
+ * add i18n descriptor validation + better i18n support
+ * code cleaning
+
 v0.5.11
 -------
 
