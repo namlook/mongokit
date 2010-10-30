@@ -8,7 +8,7 @@ from pymongo.master_slave_connection import MasterSlaveConnection
 from pymongo import Connection as PyMongoConnection
 
 from mongokit.database import Database
-from mongokit.connection import CallableMixin
+from mongokit.connection import CallableMixin, _iterables
 
 class MongokitMasterSlaveConnection(MasterSlaveConnection):
     """ Master-Slave support for MongoKit """
@@ -53,6 +53,13 @@ class MongokitMasterSlaveConnection(MasterSlaveConnection):
         super(MongokitMasterSlaveConnection, self).__init__(master_connection, slave_connections)
 
     def register(self, obj_list):
+        decorator = None
+        if not isinstance(obj_list, _iterables):
+            # we assume that the user used this as a decorator
+            # using @register syntax or using conn.register(SomeDoc)
+            # we stock the class object in order to return it later
+            decorator = obj_list
+            obj_list = [obj_list]
         # cleanup
         for dbname, db in self._databases.items():
             for colname, col in db._collections.items():
@@ -69,6 +76,10 @@ class MongokitMasterSlaveConnection(MasterSlaveConnection):
               {"_obj_class":obj, "__repr__":object.__repr__}
             )
             self._registered_documents[obj.__name__] = CallableDocument
+        # if the class object is stored, it means the user used a decorator and
+        # we must return the class object
+        if decorator is not None:
+            return decorator
  
     def __getattr__(self, key):
         if key not in self._databases:
