@@ -1,5 +1,0 @@
-include LICENSE
-include README
-include AUTHORS
-include ez_setup.py
-recursive-include tests *

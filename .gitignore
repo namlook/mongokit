@@ -1,9 +1,0 @@
-syntax: glob
-*.pyc
-.*.swp
-.coverage
-data
-old
-Ekeet.egg-info
-Masheet.egg-info
-
