@@ -151,7 +151,7 @@ class Document(SchemaDocument):
       type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en', generate_index=True, from_son=False):
+    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en', generate_index=True):
         self._authorized_types = self.authorized_types[:]
         # If using autorefs, we need another authorized
         if self.use_autorefs:
