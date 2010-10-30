@@ -1,6 +1,0 @@
-The :mod:`operators` Module
-----------------------------------
-
-.. automodule:: mongokit.operators
-    :members:
-
