@@ -137,6 +137,12 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v0.5.12.1
+---------
+
+ * fix #17 -- got an unexpected keyword argument 'from_son'
+ * fix #15 -- typo in the doc
+
 v.0.5.12
 ---------
 
