@@ -70,6 +70,6 @@ class Database(PymongoDatabase):
         """
         son = super(Database, self)._fix_outgoing(son, collection)
         if wrap is not None:
-            return wrap(son, collection=collection, from_son=True, generate_index=False)
+            return wrap(son, collection=collection, generate_index=False)
         return son
 
