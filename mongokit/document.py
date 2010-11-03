@@ -253,10 +253,10 @@ class Document(SchemaDocument):
         return the size of the underlying bson object
         """
         try:
-            size = len(BSON.from_dict(self))
+            size = len(BSON.encode(self))
         except:
             self._process_custom_type('bson', self, self.structure)
-            size = len(BSON.from_dict(self))
+            size = len(BSON.encode(self))
             self._process_custom_type('python', self, self.structure)
         return size
 
