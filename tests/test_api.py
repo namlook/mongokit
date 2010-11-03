@@ -818,3 +818,84 @@ class ApiTestCase(unittest.TestCase):
         assert isinstance(raw_doc, MyDoc)
 
 
+    def test_collection_name_filled(self):
+
+        @self.connection.register
+        class MyDoc(Document):
+            __collection__ = 'mydoc'
+            structure = {
+                'foo':int,
+            }
+
+        mydoc = self.connection.test.MyDoc()
+        mydoc['foo'] = 3
+        mydoc.save()
+        self.assertEqual(mydoc.collection.name, 'mydoc')
+
+        raw_doc = self.connection.test.MyDoc.find_one()
+        self.assertEqual(self.col.MyDoc.find_one(), None)
+        self.assertEqual(raw_doc['foo'], 3)
+        self.assertEqual(raw_doc, mydoc)
+        assert isinstance(raw_doc, MyDoc)
+
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = 3
+        mydoc.save()
+        self.assertEqual(mydoc.collection.name, 'mongokit')
+
+        raw_doc = self.col.MyDoc.find_one()
+        self.assertEqual(raw_doc['foo'], 3)
+        self.assertEqual(raw_doc, mydoc)
+        assert isinstance(raw_doc, MyDoc)
+
+
+
+    def test_database_name_filled(self):
+
+        failed = False
+        try:
+            class MyDoc(Document):
+                __database__ = 'mydoc'
+                structure = {
+                    'foo':int,
+                }
+        except AttributeError, e:
+            failed = True
+            self.assertEqual(str(e), 'MyDoc: __collection__ attribute not '
+              'found. You cannot specify the `__database__` attribute '
+              'without the `__collection__` attribute')
+        self.assertEqual(failed, True)
+
+        @self.connection.register
+        class MyDoc(Document):
+            __database__ = 'test'
+            __collection__ = 'mydoc'
+            structure = {
+                'foo':int,
+            }
+
+        mydoc = self.connection.MyDoc()
+        mydoc['foo'] = 3
+        mydoc.save()
+        self.assertEqual(mydoc.collection.name, 'mydoc')
+        self.assertEqual(mydoc.collection.database.name, 'test')
+        self.assertEqual(self.col.MyDoc.find_one(), None)
+
+        raw_doc = self.connection.MyDoc.find_one()
+        self.assertEqual(raw_doc['foo'], 3)
+        self.assertEqual(raw_doc, mydoc)
+        assert isinstance(raw_doc, MyDoc)
+
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = 3
+        mydoc.save()
+        self.assertEqual(mydoc.collection.name, 'mongokit')
+        self.assertEqual(mydoc.collection.database.name, 'test')
+
+        raw_doc = self.col.MyDoc.find_one()
+        self.assertEqual(raw_doc['foo'], 3)
+        self.assertEqual(raw_doc, mydoc)
+        assert isinstance(raw_doc, MyDoc)
+
+
+ 

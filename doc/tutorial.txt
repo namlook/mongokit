@@ -60,6 +60,26 @@ Now, let's create a blogpost we want to work on the collection "tutorial" on the
 
 >>> tutorial = con.test.tutorial
 
+.. topic:: new in version 0.5.13
+
+    now you can add the collection and the database name into a Document::
+
+        @con.register
+        class BlogPost(Document):
+            __collection__ = 'blog_posts'
+            __database__ = 'tutorial'
+            structure = {...}
+
+    so now, we can have access to our document directly from the connection::
+        
+        >>> bp = con.BlogPost()
+
+    Note that if you want to specify the `__database__` you *should* also specify the `__collection__` attribute.
+    
+    It is also possible to access the documents from the database::
+        
+        >>> bp = con.test.BlogPost() # this will use __collection__ as collection name
+
 >>> bp = tutorial.BlogPost()
 >>> bp
 {'body': None, 'title': None, 'date_creation': datetime.datetime(...), 'rank': 0, 'author': None} 

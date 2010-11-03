@@ -81,8 +81,12 @@ class Connection(PymongoConnection):
             return decorator
 
     def __getattr__(self, key):
-        if key not in self._databases:
-            self._databases[key] = Database(self, key)
-        return self._databases[key]
+        if key in self._registered_documents:
+            document = self._registered_documents[key]
+            return getattr(self[document.__database__][document.__collection__], key)
+        else:
+            if key not in self._databases:
+                self._databases[key] = Database(self, key)
+            return self._databases[key]
 
 

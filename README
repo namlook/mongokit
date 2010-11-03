@@ -137,6 +137,11 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v0.5.13
+-------
+
+ * fix #8 -- allow to access Document via the db
+
 v0.5.12.1
 ---------
 

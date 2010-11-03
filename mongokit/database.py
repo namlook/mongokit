@@ -37,9 +37,13 @@ class Database(PymongoDatabase):
         super(Database, self).__init__(*args, **kwargs)
 
     def __getattr__(self, key):
-        if not key in self._collections:
-            self._collections[key] = Collection(self, key) 
-        return self._collections[key]
+        if key in self.connection._registered_documents:
+            document = self.connection._registered_documents[key]
+            return getattr(self[document.__collection__], key)
+        else:
+            if not key in self._collections:
+                self._collections[key] = Collection(self, key) 
+            return self._collections[key]
 
 
     def dereference(self, dbref, model = None):
