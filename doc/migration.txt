@@ -16,7 +16,7 @@ Let's say we have created a blog post which look like this::
                 "body": unicode,
             }
         }
-        default_values = {'blog_post.created_at':datetime.utcnow()}
+        default_values = {'blog_post.created_at':datetime.utcnow}
 
 
 Let's create some blog posts:
@@ -35,7 +35,7 @@ Now, developpment goes on and we add a 'tags' field in our `BlogPost`::
                 "tags":  [unicode],
             }
         }
-        default_values = {'blog_post.created_at':datetime.utcnow()}
+        default_values = {'blog_post.created_at':datetime.utcnow}
 
 We're gonna be in trouble when we'll save a fetched document because the
 structure don't match::
@@ -101,7 +101,7 @@ the `migration_handler` in `BlogPost`::
                 "tags": [unicode],
             }
         }
-        default_values = {'blog_post.created_at':datetime.utcnow()}
+        default_values = {'blog_post.created_at':datetime.utcnow}
         migration_handler = BlogPostMigration
 
 Each time that an error is raised while validating a document, migration rules
@@ -132,7 +132,7 @@ the `tags` field from `BlogPost`::
                 "body": unicode,
             }
         }
-        default_values = {'blog_post.created_at':datetime.utcnow()}
+        default_values = {'blog_post.created_at':datetime.utcnow}
 
 Note that we don't need to add the `migration_hanlder`, it is required only for
 lazy migration.
