@@ -27,7 +27,7 @@
 
 __version__ = "0.5.13-dev"
 
-from pymongo.dbref import DBRef
+from bson.dbref import DBRef
 from cursor import Cursor
 from operators import *
 from schema_document import *
