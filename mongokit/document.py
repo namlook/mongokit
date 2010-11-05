@@ -158,7 +158,7 @@ class Document(SchemaDocument):
       type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en', generate_index=True):
+    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en'):
         self._authorized_types = self.authorized_types[:]
         # If using autorefs, we need another authorized
         if self.use_autorefs:
@@ -170,8 +170,6 @@ class Document(SchemaDocument):
         # collection
         self.collection = collection
         if collection:
-            if generate_index:
-                self.generate_index()
             self.db = collection.database
             self.connection = self.db.connection
             # indexing all embed doc if any (autorefs feature)
@@ -414,9 +412,10 @@ class Document(SchemaDocument):
         """
         self.collection.remove({'_id':self['_id']})
 
-    def generate_index(self):
+    @classmethod
+    def generate_index(cls, collection):
         # creating index if needed
-        for index in self.indexes:
+        for index in cls.indexes:
             unique = False
             if 'unique' in index.keys():
                 unique = index['unique']
@@ -434,7 +433,7 @@ class Document(SchemaDocument):
                         field = (field, 1)
                     fields.append(field)
             log.debug('Creating index for %s' % str(index['fields']))
-            self.collection.ensure_index(fields, unique=unique, ttl=ttl)
+            collection.ensure_index(fields, unique=unique, ttl=ttl)
 
     def to_json_type(self):
         """
@@ -580,7 +579,7 @@ class Document(SchemaDocument):
         if '_id' in obj:
             if '$oid' in obj['_id']:
                 obj['_id'] = ObjectId(obj['_id']['$oid'])
-        return self._obj_class(obj, collection=self.collection, generate_index=False)
+        return self._obj_class(obj, collection=self.collection)
  
 
     #

@@ -40,7 +40,8 @@ class Collection(PymongoCollection):
     def __getattr__(self, key):
         if key in self._registered_documents:
             if not key in self._documents:
-                self._documents[key] = self._registered_documents[key](collection=self, generate_index=False)
+                self._documents[key] = self._registered_documents[key](collection=self)
+                self._documents[key].generate_index(self)
             return self._documents[key]
         else:
             newkey = u"%s.%s" % (self.name, key)
