@@ -1175,7 +1175,7 @@ Indexes
 
 Sometimes, it's desirable to have indexes on your dataset - especially unique ones.
 In order to do that, you must fill the `indexes` attribute. The `indexes` attribute
-is a liste of dictionnary with the following structure:
+is a list of dictionnary with the following structure:
 
 :"fields":
     # take a list of fields or a field name (required)
