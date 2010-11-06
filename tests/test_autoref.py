@@ -942,3 +942,31 @@ class AutoRefTestCase(unittest.TestCase):
           ]
         })
         assert self.col.DocB.find_one({'_id':'docb'}) == {u'docs': [{u'doca': [{u'_id': u'doca', u'name': u'foo'}], u'inc': 2}], u'_id': u'docb'}
+
+    def test_autorefs_with_required(self):
+        import datetime
+        import uuid
+
+        @self.connection.register
+        class User(Document):
+           structure = {
+             'email': unicode,
+           }
+
+        @self.connection.register
+        class Event(Document):
+           structure = {
+             'user': User,
+             'title': unicode,
+           }
+           required_fields = ['user', 'title']
+           use_autorefs = True
+
+        user = self.connection.test.users.User()
+        user.save()
+        event = self.connection.test.events.Event()
+        event['user'] = user
+        event['title'] = u"Test"
+        event.validate()
+        event.save()
+

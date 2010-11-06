@@ -762,8 +762,8 @@ class SchemaDocument(dict):
                         doc[key] = new_value
 
     def _validate_required(self, doc, struct, path="", root_path=""):
-        doted_doc = DotCollapsedDict(doc)
         doted_struct = DotCollapsedDict(self.structure)
+        doted_doc = DotCollapsedDict(doc, reference=doted_struct)
         for req in self.required_fields:
             if doted_doc.get(req) is None and doted_struct.get(req) is not dict:
                 if not isinstance(doted_struct.get(req), CustomType):
