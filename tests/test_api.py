@@ -874,6 +874,7 @@ class ApiTestCase(unittest.TestCase):
                 'foo':int,
             }
 
+        # test directly from a connection
         mydoc = self.connection.MyDoc()
         mydoc['foo'] = 3
         mydoc.save()
@@ -886,6 +887,20 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(raw_doc, mydoc)
         assert isinstance(raw_doc, MyDoc)
 
+        # test directly from a database
+        mydoc = self.connection.othertest.MyDoc()
+        mydoc['foo'] = 3
+        mydoc.save()
+        self.assertEqual(mydoc.collection.name, 'mydoc')
+        self.assertEqual(mydoc.collection.database.name, 'othertest')
+        self.assertEqual(self.col.MyDoc.find_one(), None)
+
+        raw_doc = self.connection.othertest.MyDoc.find_one()
+        self.assertEqual(raw_doc['foo'], 3)
+        self.assertEqual(raw_doc, mydoc)
+        assert isinstance(raw_doc, MyDoc)
+
+        # and still can use it via a collection
         mydoc = self.col.MyDoc()
         mydoc['foo'] = 3
         mydoc.save()
