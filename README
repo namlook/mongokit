@@ -140,6 +140,12 @@ Change Log
 v0.5.13
 -------
 
+ * fix #21 -- required_fields weird behavior with autorefs
+ * fix #19 -- 'checked' field not listed in 'indexes' section
+ * fix #20 -- creating index on fields not in structure + optimize index generation
+ * fix #18 -- typo in the doc
+ * fix import. Dbref isn't in pymongo package anymore
+ * fix deprecation warning from pymongo's from_dict
  * fix #8 -- allow to access Document via the db
 
 v0.5.12.1
