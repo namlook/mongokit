@@ -48,6 +48,8 @@
 <li><a class="reference external" href="#features">Features</a></li>
 <li><a class="reference external" href="#a-quick-example">A quick example</a></li>
 <li><a class="reference external" href="#change-log">Change Log</a><ul>
+<li><a class="reference external" href="#v0-5-13">v0.5.13</a></li>
+<li><a class="reference external" href="#v0-5-12-1">v0.5.12.1</a></li>
 <li><a class="reference external" href="#v-0-5-12">v.0.5.12</a></li>
 <li><a class="reference external" href="#v0-5-11">v0.5.11</a></li>
 <li><a class="reference external" href="#v0-5-10">v0.5.10</a></li>
@@ -121,9 +123,9 @@ as possible with the KISS and DRY principles in mind.</p>
 <div class="topic">
 <p class="topic-title first"><strong>Your data is clean</strong>:</p>
 <p>&#8220;Tools change, not data&#8221;. In order to follow this &#8220;credo&#8221;, MongoKit won&#8217;t
-add any information into your data saved into the database.  So if you need
-to use another mongo tools or another ODM in another languages, your data
-won&#8217;t be pollued by MongoKit&#8217;s staff.</p>
+add any information into your data saved into the database.
+So if you need to use other mongo tools or ODMs in other languages, your
+data won’t be polluted by MongoKit’s stuff.</p>
 </div>
 </div>
 <div class="section" id="features">
@@ -225,6 +227,29 @@ TOTAL                          1310   1310   100%</pre>
 </div>
 <div class="section" id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="v0-5-13">
+<h3>v0.5.13<a class="headerlink" href="#v0-5-13" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<ul class="simple">
+<li>fix #21 &#8211; required_fields weird behavior with autorefs</li>
+<li>fix #19 &#8211; &#8216;checked&#8217; field not listed in &#8216;indexes&#8217; section</li>
+<li>fix #20 &#8211; creating index on fields not in structure + optimize index generation</li>
+<li>fix #18 &#8211; typo in the doc</li>
+<li>fix import. Dbref isn&#8217;t in pymongo package anymore</li>
+<li>fix deprecation warning from pymongo&#8217;s from_dict</li>
+<li>fix #8 &#8211; allow to access Document via the db</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="v0-5-12-1">
+<h3>v0.5.12.1<a class="headerlink" href="#v0-5-12-1" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<ul class="simple">
+<li>fix #17 &#8211; got an unexpected keyword argument &#8216;from_son&#8217;</li>
+<li>fix #15 &#8211; typo in the doc</li>
+</ul>
+</blockquote>
+</div>
 <div class="section" id="v-0-5-12">
 <h3>v.0.5.12<a class="headerlink" href="#v-0-5-12" title="Permalink to this headline">¶</a></h3>
 <blockquote>

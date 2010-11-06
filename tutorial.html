@@ -200,6 +200,25 @@ class BlogPost(Document):
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span>
 </pre></div>
 </div>
+<div class="topic">
+<p class="topic-title first">new in version 0.5.13</p>
+<p>now you can add the collection and the database name into a Document:</p>
+<div class="highlight-python"><pre>@con.register
+class BlogPost(Document):
+    __collection__ = 'blog_posts'
+    __database__ = 'tutorial'
+    structure = {...}</pre>
+</div>
+<p>so now, we can have access to our document directly from the connection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note that if you want to specify the <cite>__database__</cite> you <em>should</em> also specify the <cite>__collection__</cite> attribute.</p>
+<p>It is also possible to access the documents from the database:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span> <span class="c"># this will use __collection__ as collection name</span>
+</pre></div>
+</div>
+</div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span>
 <span class="go">{&#39;body&#39;: None, &#39;title&#39;: None, &#39;date_creation&#39;: datetime.datetime(...), &#39;rank&#39;: 0, &#39;author&#39;: None}</span>
@@ -1285,7 +1304,7 @@ to tell mongokit to what model it should dereferenced:</p>
 <h2>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes, it&#8217;s desirable to have indexes on your dataset - especially unique ones.
 In order to do that, you must fill the <cite>indexes</cite> attribute. The <cite>indexes</cite> attribute
-is a liste of dictionnary with the following structure:</p>
+is a list of dictionnary with the following structure:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1295,6 +1314,8 @@ is a liste of dictionnary with the following structure:</p>
 <tr class="field"><th class="field-name">&#8220;unique&#8221;:</th><td class="field-body">should this index guarantee uniqueness? (optional, False by default)</td>
 </tr>
 <tr class="field"><th class="field-name">&#8220;ttl&#8221;:</th><td class="field-body">(optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to <cite>ensure_index</cite> - see pymongo documentation for <cite>ensure_index</cite> for details.</td>
+</tr>
+<tr class="field"><th class="field-name">&#8220;check:</th><td class="field-body">(optional, True by default) don&#8217;t check if the field name is present into the structure. Usefull if you don&#8217;t know the field name.</td>
 </tr>
 </tbody>
 </table>
@@ -1362,14 +1383,18 @@ passing a list of tuple.  Direction must be one of <cite>INDEX_ASCENDING</cite> 
 <p>To prevent to add an index on the wrong field (mispelled for instance),
 Mongokit will check by default the <cite>indexes</cite> descriptor. There&#8217;s some case you
 may wan&#8217;t to disable this. To do so, add <tt class="docutils literal"><span class="pre">&quot;check&quot;:True</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">{</span>
-        <span class="c"># I know this field is not in the document structure, don&#39;t check it</span>
-        <span class="s">&#39;fields&#39;</span><span class="p">:[</span><span class="s">&#39;foo&#39;</span><span class="p">],</span> <span class="s">&#39;checked&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">,</span>
-    <span class="p">},</span>
-<span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<span class="gp">... </span>       <span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>       <span class="c"># I know this field is not in the document structure, don&#39;t check it</span>
+<span class="gp">... </span>       <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span><span class="s">&#39;foo.title&#39;</span><span class="p">],</span> <span class="s">&#39;check&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="p">]</span>
 </pre></div>
 </div>
+<p>In this example, we index the field <cite>foo.title</cite> which is not explicited into the structure.</p>
 </div>
 <div class="section" id="json-support">
 <h2>JSON support<a class="headerlink" href="#json-support" title="Permalink to this headline">¶</a></h2>

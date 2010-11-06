@@ -103,7 +103,7 @@
 <span class="go">            &quot;body&quot;: unicode,</span>
 <span class="go">        }</span>
 <span class="go">    }</span>
-<span class="go">    default_values = {&#39;blog_post.created_at&#39;:datetime.utcnow()}</span>
+<span class="go">    default_values = {&#39;blog_post.created_at&#39;:datetime.utcnow}</span>
 </pre></div>
 </div>
 <p>Let&#8217;s create some blog posts:</p>
@@ -121,7 +121,7 @@
             <span class="s">&quot;tags&quot;</span><span class="p">:</span>  <span class="p">[</span><span class="nb">unicode</span><span class="p">],</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()}</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>We&#8217;re gonna be in trouble when we&#8217;ll save a fetched document because the
@@ -180,7 +180,7 @@ the <cite>migration_handler</cite> in <cite>BlogPost</cite>:</p>
             <span class="s">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">unicode</span><span class="p">],</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()}</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">}</span>
     <span class="n">migration_handler</span> <span class="o">=</span> <span class="n">BlogPostMigration</span>
 </pre></div>
 </div>
@@ -208,7 +208,7 @@ the <cite>tags</cite> field from <cite>BlogPost</cite>:</p>
             <span class="s">&quot;body&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()}</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blog_post.created_at&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>Note that we don&#8217;t need to add the <cite>migration_hanlder</cite>, it is required only for
