@@ -35,11 +35,10 @@ except ImportError:
 import os
 import sys
 import codecs
-from mongokit import __version__
 
 setup(
     name = 'mongokit',
-    version = __version__, # TODO don't forget to change version
+    version = 'O.5.13', # TODO don't forget to change version
 
     description = 'Python mongodb kit',
     long_description = codecs.open('README', "r", "utf-8").read(),
