@@ -26,7 +26,7 @@ MongoKit is designed to be:
     "Tools change, not data". In order to follow this "credo", MongoKit won't
     add any information into your data saved into the database.
     So if you need to use other mongo tools or ODMs in other languages, your
-    data won’t be polluted by MongoKit’s stuff.
+    data won't be polluted by MongoKit's stuff.
 
 Features
 ========
