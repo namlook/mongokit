@@ -137,6 +137,12 @@ Mongokit is documented and well tested with 100% of code coverage::
 Change Log
 ==========
 
+v0.5.13.1
+---------
+
+ * fix #26 -- unable to install (debian lenny, py 2.5)
+ * fix #25 -- put the new url into the setup.py
+
 v0.5.13
 -------
 

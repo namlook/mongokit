@@ -38,13 +38,13 @@ import codecs
 
 setup(
     name = 'mongokit',
-    version = '0.5.13', # TODO don't forget to change version
+    version = '0.5.13.1', # TODO don't forget to change version
 
     description = 'Python mongodb kit',
     long_description = codecs.open('README', "r", "utf-8").read(),
     author = 'Namlook',
     license = 'New BSD License',
-    url = 'http://bitbucket.org/namlook/mongokit/',
+    url = 'http://namlook.github.com/mongokit/',
 
     classifiers = [
         'Development Status :: 4 - Beta',
