@@ -26,7 +26,7 @@ MongoKit is designed to be:
     "Tools change, not data". In order to follow this "credo", MongoKit won't
     add any information into your data saved into the database.
     So if you need to use other mongo tools or ODMs in other languages, your
-    data won’t be polluted by MongoKit’s stuff.
+    data won't be polluted by MongoKit's stuff.
 
 Features
 ========
@@ -136,6 +136,12 @@ Mongokit is documented and well tested with 100% of code coverage::
 
 Change Log
 ==========
+
+v0.5.13.1
+---------
+
+ * fix #26 -- unable to install (debian lenny, py 2.5)
+ * fix #25 -- put the new url into the setup.py
 
 v0.5.13
 -------
