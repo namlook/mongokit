@@ -18,7 +18,7 @@ Example of ``model/__init__.py``::
 Then go to the ``lib/app_globals.py`` and edit this file so it look like this::
 
     from pylons import config
-    from ekeet.models import register_models
+    from <appname>.models import register_models
     from mongokit import *
 
     class Globals(object):
