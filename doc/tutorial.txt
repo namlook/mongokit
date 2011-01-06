@@ -447,10 +447,10 @@ Example the following document:
 We want to be sure that before saving our object, foo is greater than bar and baz is
 unicode(foo). Do do that, we juste overload the validation method::
 
-    def validate(self):
+    def validate(self, *args, **kwargs):
         assert self['foo'] > self['bar']
         assert self['baz'] == unicode(self['foo'])
-        super(MyDoc, self).validate(self)
+        super(MyDoc, self).validate(*args, **kwargs)
 
 
 MongokitOperator
