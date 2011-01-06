@@ -25,7 +25,7 @@ MongoKit is designed to be:
 
 Browse the `source code`_
 
-.. _`source code` : http://bitbucket.org/namlook/mongokit/overview/
+.. _`source code` : http://github.com/namlook/mongokit
 
 
 Contents:
