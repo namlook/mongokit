@@ -1229,8 +1229,8 @@ or if you have more than one index:
 
 
 By default, the index direction is set to 1. You can change the direction by
-passing a list of tuple.  Direction must be one of `INDEX_ASCENDING` (or 1) or
-`INDEX_DESCENDING` (or -1):
+passing a list of tuple.  Direction must be one of `INDEX_ASCENDING` (or 1),
+`INDEX_DESCENDING` (or -1), `INDEX_OFF` (or 0), `INDEX_ALL` (or 2) or `INDEX_GEO2D` (or '2d'):
 
 >>> class MyDoc(Document):
 ...     structure = {

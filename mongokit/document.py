@@ -99,18 +99,18 @@ class DocumentProperties(SchemaProperties):
                                     raise BadIndexError(
                                       "Error in indexes: a tuple must contain "
                                       "only two value : the field name and the direction")
-                                if not isinstance(value[1], int):
+                                if not (isinstance(value[1], int) or isinstance(value[1], basestring)):
                                     raise BadIndexError(
-                                      "Error in %s, the direction must be int (got %s instead)" % (value[0], type(value[1])))
+                                      "Error in %s, the direction must be int or basestring (got %s instead)" % (value[0], type(value[1])))
                                 if not isinstance(value[0], basestring):
                                     raise BadIndexError(
                                       "Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
                                 if value[0] not in attrs['_namespaces'] and value[0] not in STRUCTURE_KEYWORDS:
                                     raise ValueError(
                                       "Error in indexes: can't find %s in structure" % value[0] )
-                                if not value[1] in [1, -1]:
+                                if not value[1] in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D]:
                                     raise BadIndexError(
-                                      "index direction must be 1 or -1. Got %s" % value[1])
+                                      "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL or INDEX_GEO2D. Got %s" % value[1])
                             elif isinstance(value, list):
                                 for val in value:
                                     if isinstance(val, tuple):
@@ -118,9 +118,9 @@ class DocumentProperties(SchemaProperties):
                                         if field not in attrs['_namespaces'] and field not in STRUCTURE_KEYWORDS:
                                             raise ValueError(
                                               "Error in indexes: can't find %s in structure" % field )
-                                        if not direction in [1, -1]:
+                                        if not direction in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D]:
                                             raise BadIndexError(
-                                              "index direction must be 1 or -1. Got %s" % direction)
+                                              "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL or INDEX_GEO2D. Got %s" % direction)
                                     else:
                                         if val not in attrs['_namespaces'] and val not in STRUCTURE_KEYWORDS:
                                             raise ValueError(

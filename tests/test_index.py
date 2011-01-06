@@ -204,6 +204,39 @@ class IndexTestCase(unittest.TestCase):
         assert index1 is not None, 'No Index Found'
         assert index2 is not None, 'Index not found'
 
+    def test_index_direction_GEO2D(self):
+        class Movie(Document):
+            structure = {
+                'standard':unicode,
+                'other':{
+                    'deep':unicode,
+                },
+                'notindexed':unicode,
+                'alsoindexed':unicode,
+            }
+
+            indexes = [
+                {
+                    'fields':('standard',INDEX_GEO2D),
+                    'unique':True,
+                },
+                {
+                    'fields':[('alsoindexed',INDEX_GEO2D), ('other.deep',INDEX_DESCENDING)],
+                    'unique':True,
+                },
+            ]
+        self.connection.register([Movie])
+        movie = self.col.Movie()
+        movie['standard'] = u'test'
+        movie.save()
+
+        db = self.connection.test
+        index1 = db['system.indexes'].find_one({'ns':'test.mongokit', 'name':'standard_2d', 'unique':True})
+        index2 = db['system.indexes'].find_one({'ns':'test.mongokit', 'name': 'alsoindexed_2d_other.deep_-1', 'unique':True})
+
+        assert index1 is not None, 'No Index Found'
+        assert index2 is not None, 'Index not found'
+
     def test_bad_index_descriptor(self):
         failed = False
         try:
@@ -272,22 +305,6 @@ class IndexTestCase(unittest.TestCase):
                 }
                 indexes = [
                     {
-                        'fields':('standard',2),
-                    },
-                ]
-        except BadIndexError, e:
-            self.assertEqual(str(e), "index direction must be 1 or -1. Got 2")
-            failed = True
-        self.assertEqual(failed, True)
-
-        failed = False
-        try:
-            class Movie(Document):
-                structure = {
-                    'standard':unicode,
-                }
-                indexes = [
-                    {
                         'fields':('standard',1, "blah"),
                     },
                 ]
@@ -308,7 +325,7 @@ class IndexTestCase(unittest.TestCase):
                     },
                 ]
         except BadIndexError, e:
-            self.assertEqual(str(e), "Error in standard, the direction must be int (got <type 'str'> instead)")
+            self.assertEqual(str(e), "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL or INDEX_GEO2D. Got 2")
             failed = True
         self.assertEqual(failed, True)
 
@@ -372,7 +389,7 @@ class IndexTestCase(unittest.TestCase):
                     },
                 ]
         except BadIndexError, e:
-            self.assertEqual(str(e), "index direction must be 1 or -1. Got 3")
+            self.assertEqual(str(e), "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL or INDEX_GEO2D. Got 3")
             failed = True
         self.assertEqual(failed, True)
 
