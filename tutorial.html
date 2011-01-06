@@ -568,10 +568,10 @@ to feet your needs.</p>
 </div>
 <p>We want to be sure that before saving our object, foo is greater than bar and baz is
 unicode(foo). Do do that, we juste overload the validation method:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">assert</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;bar&#39;</span><span class="p">]</span>
     <span class="k">assert</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;baz&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">])</span>
-    <span class="nb">super</span><span class="p">(</span><span class="n">MyDoc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MyDoc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1361,8 +1361,8 @@ is a list of dictionnary with the following structure:</p>
 </pre></div>
 </div>
 <p>By default, the index direction is set to 1. You can change the direction by
-passing a list of tuple.  Direction must be one of <cite>INDEX_ASCENDING</cite> (or 1) or
-<cite>INDEX_DESCENDING</cite> (or -1):</p>
+passing a list of tuple.  Direction must be one of <cite>INDEX_ASCENDING</cite> (or 1),
+<cite>INDEX_DESCENDING</cite> (or -1), <cite>INDEX_OFF</cite> (or 0), <cite>INDEX_ALL</cite> (or 2) or <cite>INDEX_GEO2D</cite> (or &#8216;2d&#8217;):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>        <span class="s">&#39;standard&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
