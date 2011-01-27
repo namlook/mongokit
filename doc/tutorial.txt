@@ -769,7 +769,7 @@ the pymongo documentation.
 one()
 -----
 
-`one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
+`one()` acts like `find_one()` but will raise a `mongokit.MultipleResultsFound` exception if
 there is more than one result.
 
 >>> tutorial.BlogPost.one()
@@ -1086,7 +1086,7 @@ SchemaTypeError: b.doc_a must be an instance of DocA not int
 >>> docb 
 {'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
 
-Note that the reference can be cross collection but also cross database. So, it doesn't matter
+Note that the reference can not only be cross collection but also cross database. So, it doesn't matter
 where you save the DocA object as long as it can be fetch with the same connection.
 
 Now the interesting part. If we change a field in an embedded doc, the change will be done
@@ -1133,7 +1133,7 @@ An example is better than thousand words. Let's create an ``EmbedDoc`` and a ``D
 >>> embed['foo'] = u'bar'
 >>> embed.save()
 
-Now let's insert a raw document with a DBRef but we do not specify the database:
+Now let's insert a raw document with a DBRef but without specifying the database:
 
 >>> raw_doc = {'embed':DBRef(collection='tutorial', id=embed['_id'])}
 >>> doc_id = tutorial.insert(raw_doc)
@@ -1262,7 +1262,7 @@ may want to disable this. To do so, add ``"check":True``::
     ...        {'fields':['foo.title'], 'check':False}
     ...    ]
 
-In this example, we index the field `foo.title` which is not explicited into the structure.
+In this example, we index the field `foo.title` which is not explicitly specified in the structure.
 
 JSON support
 ============
