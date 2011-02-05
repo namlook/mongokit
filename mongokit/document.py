@@ -86,7 +86,7 @@ class DocumentProperties(SchemaProperties):
                         raise BadIndexError(
                           "'fields' key must be specify in indexes")
                     for key, value in index.iteritems():
-                        if key not in ['fields', 'unique', 'ttl']:
+                        if key not in ['fields', 'unique', 'ttl', 'check']:
                             raise BadIndexError(
                               "%s is unknown key for indexes" % key)
                         if key == "fields":

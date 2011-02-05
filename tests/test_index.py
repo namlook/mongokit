@@ -648,3 +648,20 @@ class IndexTestCase(unittest.TestCase):
            doc.save()
         assert self.col.database.system.indexes.find_one({'name': 'foo.title_1'})
 
+    def test_index_with_check_is_true(self):
+        @self.connection.register
+        class MyDoc(Document):
+            structure = {
+                'foo': unicode,
+                'bar': int
+            }
+            indexes = [
+                    {'fields': ['foo'], 'check':True},
+            ]
+        for i in range(10):
+           doc = self.col.MyDoc()
+           doc['foo'] = unicode(i)
+           doc['bar'] = i
+           doc.save()
+        assert self.col.database.system.indexes.find_one({'name': 'foo_1'})
+
