@@ -30,10 +30,10 @@ Simple Example
 ...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
 ... 
 
-The structure is a simply dictionnary with python type. In this example, `title` must be unicode and `rank`
+The structure is simply a dictionary with python type. In this example, `title` must be unicode and `rank`
 must be an int.
 
-Optionaly, you can add some descriptors. In order to specify fields which are required, just add a `required_fields`
+Optionally, you can add some descriptors. In order to specify fields which are required, just add a `required_fields`
 attribute. This is a simple list which list all required_fields (ie, those field must not be None when validating).
 
 Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
@@ -84,7 +84,7 @@ Now, let's create a blogpost we want to work on the collection "tutorial" on the
 >>> bp
 {'body': None, 'title': None, 'date_creation': datetime.datetime(...), 'rank': 0, 'author': None} 
 
-Not that `date_creation` was automaticly filled by `utcnow()` and rank is 0.
+Note that `date_creation` was automatically filled by `utcnow()` and rank is 0.
 
 >>> bp['title'] = "my first blog post"
 >>> bp.validate() 
@@ -165,14 +165,14 @@ we use the "$<type>" descriptor :
 ...    required_fields = ["key1.$unicode.bla"]
 ...
 
-Not that if you use python type as key in structure, generate_skeleton
-won't be able to build the entired underline structure :
+Note that if you use a python type as a key in structure, generate_skeleton
+won't be able to build the entire underlying structure :
 
 >>> con.register([MyDoc])
 >>> tutorial.MyDoc() == {'key1': {}, 'bla': None}
 True
 
-So, default_values nor validators will work.
+So, neither default_values nor validators will work.
 
 
 Untyped field
@@ -193,10 +193,10 @@ Untyped field
 
     In this example, `bar` can be of any authorized types but not CustomTypes.
 
-Difference beetween [] and the type list
-----------------------------------------
+Difference between [] and the type list
+---------------------------------------
 
-This is pretty simple. if you want to define a list of heterogen types just do:
+This is pretty simple: if you want to define a list of heterogeneous types just do:
 
         tags : list
 
@@ -208,8 +208,8 @@ checking that the field is a list. If you want to define a list of unicode :
 When validating the document, this will iterate to the list and check if all value
 are unicode.
 
-Difference beetween {} and the type dict
-----------------------------------------
+Difference between {} and the type dict
+---------------------------------------
 
 {} is used for describing the structure like {"foo":unicode, "bar":int}
 
@@ -249,15 +249,15 @@ If you want to add new items to a dict if they're not defined, you must use the 
 >>> bob[u"biography"][u"foo"] = u"bla"
 >>> bob.validate()
 
-Using dict type is useful if you don't know what field will be added *and* what will be the type of the field.
-If you know the type of the field, it's better to do that :
+Using dict type is useful if you don't know what fields will be added *or* what types they will be.
+If you know the type of the field, it's better to explicitly specify them :
 
 >>> class Person(Document):
 ...    structure = {
 ...        "biography": {unicode:unicode}
 ...    }
 
-This will add another layer to validate the content. See "validate keys" section for more informations.
+This will add another layer to validate the content. See the "validate keys" section for more informations.
 
 Case of tuple or immutable field
 --------------------------------
@@ -322,13 +322,13 @@ It's possible to add more type in authorized_types:
 Descriptors
 ===========
 
-In the MongoKit philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are describes outside the structure.
+In the MongoKit philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are described outside of the structure.
 Descriptors can be combined and can apply the same field.
 
 required
 --------
 
-This descriptor describes the required fiels::
+This descriptor describes the required fields::
 
     class MyDoc(Document):
         structure = {
@@ -357,7 +357,7 @@ This descriptors allow to specify a default value at the creation of the documen
         }
         default_values = {'bar':u'hello', 'foo.eggs':4}
 
-Not that the default value must be a valid type (here unicode)
+Note that the default value must be a valid type (here unicode)
 
 validators
 ----------
@@ -388,9 +388,9 @@ You can add custom message in your validators::
        if not bool(email.match(value))
           raise ValidatorError("%s is not a valid email")
 
-Note that it is a good thing to add one more "%s" in message. This will be use to describes the failing field name.
+Note that it is a good thing to add one more "%s" in message. This will be used to describes the failing field name.
 
-You can also pass params in your validator. This is how you can dor::
+You can also pass params to your validator by wrapping it in a class:
 
         class MinLengthValidator(object):
             def __init__(self, min_length):
@@ -400,7 +400,7 @@ You can also pass params in your validator. This is how you can dor::
                 if len(value) >= self.min_length:
                     return True
                 else:
-                    raise Exception('%s must be atleast ' + str(self.min_length) + ' characters long.')
+                    raise Exception('%s must be at least ' + str(self.min_length) + ' characters long.')
 
         class Client(Document):
             structure = {
@@ -413,7 +413,7 @@ In this example, `first_name` must contain at least 2 characters.
 i18n
 ----
 
-This descriptor will tell MongoKIT that a field has multiple translation. Please see the `i18n section`_ for more details::
+This descriptor will tell MongoKit that a field has multiple translation. Please see the `i18n section`_ for more details::
 
    class MyDoc(Document):
         structure = {
@@ -431,8 +431,8 @@ This descriptor will tell MongoKIT that a field has multiple translation. Please
 Adding complex validation
 =========================
 
-If the use of a validator is not enougth, you can overload the validation method
-to feet your needs.
+If the use of a validator is not enough, you can overload the validation method
+to fit your needs.
 
 Example the following document:
 
@@ -445,7 +445,7 @@ Example the following document:
 ... 
 
 We want to be sure that before saving our object, foo is greater than bar and baz is
-unicode(foo). Do do that, we juste overload the validation method::
+unicode(foo). To do that, we just overload the validation method::
 
     def validate(self, *args, **kwargs):
         assert self['foo'] > self['bar']
@@ -522,7 +522,7 @@ SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> 
 IS operator
 -----------
 
-Sometime, you might want to force a fields to be in a specifique value. The IS operator
+Sometimes, you might want to force a fields to be in a specific value. The IS operator
 must be use for this purpose :
 
 >>> from mongokit import IS
@@ -549,13 +549,13 @@ SchemaTypeError: flag.foo must be in [u'spam', u'controversy', u'phishing'] not 
 Custom types
 ============
 
-Sometime, we need to work with complexe object while their
+Sometimes, we need to work with complex objects while their
 footprint in the database is fairly simple. Let's take a  
-datetime object. Datetime object can be usefull to compute
-complexe date but while mongodb can deal with datetime object,
+datetime object. A datetime object can be useful to compute
+complex date but while mongodb can deal with datetime object,
 let's say that we just want to store the unicode representation.
 
-MongoKit allow the use to work on a datetime object and store the unicode
+MongoKit allows you to work on a datetime object and store the unicode
 representation on the fly. In order to do this, we have to implement a CustomType
 and fill the custom_types attributes:
 
@@ -564,10 +564,10 @@ and fill the custom_types attributes:
 A CustomType object must implement two methods and one attribute:
 
  - `to_bson(self, value)`: this method will convert the value
-    to fit the correct authorized type before beeing saved in the db.
+    to fit the correct authorized type before being saved in the db.
  - `to_python(self, value)`: this method will convert the value
     taken from the db into a python object
- - `validate(self, value, path)`: this method is optionnal and will add a
+ - `validate(self, value, path)`: this method is optional and will add a
     validation layer. Please, see the `Set()` CustomType code for more example.
  -  You must specify a `mongo_type` property in the `CustomType` class. this
     will describes the type of the value stored in the mongodb.  
@@ -620,7 +620,7 @@ The saved object in db has the unicode footprint as expected:
 >>> tutorial.find_one({'_id':1})
 {u'_id': 1, u'foo': {u'date': u'03-02-01'}}
 
-Quering an object will convert automaticly the CustomType into the correct
+Querying an object will automatically convert the CustomType into the correct
 python object:
 
 >>> foo = tutorial.Foo.get_from_id(1)
@@ -630,11 +630,11 @@ datetime.datetime(2003, 2, 1, 0, 0)
 Skipping validation
 ===================
 
-Once your application is ready for production and you are sure that the data is consistant,
-you might want to skip the validation layer. This will make mongokit significant faster
+Once your application is ready for production and you are sure that the data is consistent,
+you might want to skip the validation layer. This will make MongoKit significantly faster
 (as fast as pymongo). In order to do that, just set the `skip_validation` attribute to `True`.
 
-TIP: this is a good idea to create a "RootDocument" and to inherite all you object from it.
+TIP: It is a good idea to create a "RootDocument" and to inherit all you object from it.
 This will allow you to control the behavior of all your objects by setting the RootDocument:
 
 >>> class RootDocument(Document):
@@ -650,7 +650,7 @@ This will allow you to control the behavior of all your objects by setting the R
 
 Note that you can always force the validation at any moment on saving even if `skip_validation` is `True`:
 
->>> con.register([MyDoc]) # No need to register RootDocument as we do not instanciate it
+>>> con.register([MyDoc]) # No need to register RootDocument as we do not instantiate it
 >>> mydoc = tutorial.MyDoc()
 >>> mydoc['foo'] = u'bar'
 >>> mydoc.save(validate=True)
@@ -679,7 +679,7 @@ Quiet validation detection
     >>> doc.validation_errors
     {'foo': [StructureError("<type 'set'> is not an authorized type",), RequireFieldError('foo is required',)]}
 
-    `validation_errors` is a dictionnary which take the field name as key and the python exception as value.
+    `validation_errors` is a dictionary which take the field name as key and the python exception as value.
     Here foo has two issues : a structure one (`set` is not an authorized type) and is required.
 
     >>> doc.validation_errors['foo'][0].message
@@ -693,7 +693,7 @@ There's two ways to query a collection : getting raw data or ``Document`` instan
 Getting raw data
 ----------------
 
-Getting raw data is usefull when you only want to have value from your data. This is fast
+Getting raw data is useful when you only want to have one value from your data. This is fast
 as there's no validation or wrapping. There is two methods to query raw data : `find()` and
 `find_one()`, `one()` and `find_random()`.
 
@@ -732,7 +732,7 @@ find_random()
 Getting Document instance
 -----------------------------
 
-There is 4 methods to query your data and get Document's instance :
+There are 4 methods to query your data which return ``Document`` instances:
 `find()`, `find_one()`, `fetch()`, `fetch_one` and `find_random()`.
 `find()` and `fetch()` return a cursor of collection.  A cursor is a container
 which lazy evaluate the results. A cursor is acting like an iterator.
@@ -747,7 +747,7 @@ find()
 `find()` without argument will return a cursor of all documents of the collection.
 If a query is passed, it will return a cursor all documents which match the query.
 
-`find()` takes the same arguments than the the `pymongo.collection.find` method.
+`find()` takes the same arguments as the `pymongo.collection.find` method.
 
 >>> for post in tutorial.BlogPost.find():
 ...     print post['title']
@@ -762,14 +762,14 @@ my first blog post
 find_one()
 ----------
 
-`find_one()` act like `find()` but return only the first document of result. This
-method takes the same arguments than the pymongo's `find_one()` method. Please, check
-the pymongo's documentation.
+`find_one()` acts like `find()` but will return only the first document found. This
+method takes the same arguments as pymongo's `find_one()` method. Please, check
+the pymongo documentation.
 
 one()
 -----
 
-`one()` act like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
+`one()` acts like `find_one()` but will raise a `mongokit.MultipleResultsFound` exception if
 there is more than one result.
 
 >>> tutorial.BlogPost.one()
@@ -797,7 +797,7 @@ This is an helper for :
 
 >>> all_blog_posts = tutorial.BlogPost.find({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': {'$exists': True}})
 
-Note, like `find()` and and `one()`, you can pass advanced queries:
+Note that like `find()` and `one()`, you can pass advanced queries:
 
 >>> my_blog_posts = tutorial.BlogPost.fetch({'author':'myself'})
 
@@ -808,7 +808,7 @@ which is equivalent to:
 fetch_one()
 -----------
 
-Juste like `fetch()` but raise a  `mongokit.MultipleResultsFound` exception if
+Just like `fetch()` but raise a  `mongokit.MultipleResultsFound` exception if
 there is more than one result.
 
 find_random()
@@ -841,8 +841,8 @@ Update a document
         ...    }
         ...    atomic_save = True # enable atomic saving
 
-        NOTE : as atomic saving required to modify documents by adding a new
-        field (`_version`), you have to explicitly tell mongokit that you wan't
+        NOTE : as atomic saving requires modifying documents by adding a new
+        field (`_version`), you have to explicitly tell MongoKit that you want
         to use this new feature by setting the attribute `atomic_save` as True.
 
         >>> self.connection.register([MyDoc])
@@ -913,7 +913,7 @@ For more information, please look at the `pymongo documentation`_.
 reload()
 --------
 
-If a document was update in another thread, it would be interresting to refresh the document to
+If a document was updated in another thread, it would be interesting to refresh the document to
 match changes from the database. To do that, use the `reload()` method.
 
 Two thing you should know before using this method :
@@ -958,7 +958,7 @@ say you want to store a User by database.
 
 >>> con.register([User])
 
-Like Pymongo, Mongokit allow you to change those parameters on the fly:
+Like pymongo, MongoKit allow you to change those parameters on the fly:
 
 >>> user_name = 'namlook'
 >>> user_col = con[user_name].profile
@@ -971,7 +971,7 @@ Now, we can query the database by passing our new collection :
 >>> user['login'] = 'namlook'
 >>> user['screen_name'] = 'Namlook'
 
-calling `user.save()` will save the objet into the database 'namlook' in the collection 'profile'
+Calling `user.save()` will save the object into the database 'namlook' in the collection 'profile'.
 
 Dot notation 
 ============
@@ -991,7 +991,7 @@ If you want to use the dot notation (ala json), you must set the
 >>> doc
 {'foo': {'bar': u'bla'}}
 
-Note that if a attribute is not in structure, the value will be added as attribute :
+Note that if an attribute is not in structure, the value will be added as attribute :
 
 >>> doc.arf = 3 # arf is not in structure
 >>> doc
@@ -1068,12 +1068,12 @@ set `use_autorefs` as `True`.
 >>> con.register([DocB])
 >>> docb = tutorial.DocB()
 
-The default value for an embeded doc is None:
+The default value for an embedded doc is None:
 
 >>> docb
 {'b': {'doc_a': None}}
 
-The validation act as expected:
+The validation acts as expected:
 
 >>> docb['b']['doc_a'] = 4
 >>> docb.validate()
@@ -1086,10 +1086,10 @@ SchemaTypeError: b.doc_a must be an instance of DocA not int
 >>> docb 
 {'b': {'doc_a': {'a': {'foo': 2}, 'abis': {'bar': 3}, '_id': 'doca'}}, '_id': 'docb'}
 
-Note that the reference can be cross collection but also cross database. So, it doesn't matter
+Note that the reference can not only be cross collection but also cross database. So, it doesn't matter
 where you save the DocA object as long as it can be fetch with the same connection.
 
-Now the interresting part. If we change a field in an embeded doc, the change will be done
+Now the interesting part. If we change a field in an embedded doc, the change will be done
 for all DocA which have the same '_id':
 
 >>> docb['b']['doc_a']['a']['foo'] = 4
@@ -1098,7 +1098,7 @@ for all DocA which have the same '_id':
 >>> doca['a']['foo']
 4
 
-Required fields are also supported in embeded documents.i
+Required fields are also supported in embedded documents.
 Remember DocA have the 'abis.bar' field required. If we set it to None
 via the docb document, the RequireFieldError is raised:
 
@@ -1111,7 +1111,7 @@ RequireFieldError: abis.bar is required
 About cross-database references
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-pymongo's DBRef doesn't take a database by default so Mongokit needs this
+pymongo's DBRef doesn't take a database by default so MongoKit needs this
 information to fetch the correct Document.
 
 An example is better than thousand words. Let's create an ``EmbedDoc`` and a ``Doc`` object::
@@ -1133,7 +1133,7 @@ An example is better than thousand words. Let's create an ``EmbedDoc`` and a ``D
 >>> embed['foo'] = u'bar'
 >>> embed.save()
 
-Now let's insert a raw document with a DBRef but we do not specify the database:
+Now let's insert a raw document with a DBRef but without specifying the database:
 
 >>> raw_doc = {'embed':DBRef(collection='tutorial', id=embed['_id'])}
 >>> doc_id = tutorial.insert(raw_doc)
@@ -1149,12 +1149,12 @@ RuntimeError: It appears that you try to use autorefs. I found a DBRef without d
 
 This mean that you may load data which could have been generated by map/reduce or raw data (like fixtures for instance)
 and the database information is not set into the DBRef. The error message tells you that you can add turn the
-`force_autorefs_current_db` as True to allow mongokit to use the current collection by default (here 'test')::
+`force_autorefs_current_db` as True to allow MongoKit to use the current collection by default (here 'test')::
 
 >>> tutorial.database.name
 u'test'
 
-NOTE: You have to be very carefull when you enable this option to be sure that you are using the correct database.
+NOTE: You have to be very careful when you enable this option to be sure that you are using the correct database.
 If you expect some strange behavior (like not document found), you may look at this first.
 
 Reference and dereference
@@ -1175,7 +1175,7 @@ Indexes
 
 Sometimes, it's desirable to have indexes on your dataset - especially unique ones.
 In order to do that, you must fill the `indexes` attribute. The `indexes` attribute
-is a list of dictionnary with the following structure:
+is a list of dictionary with the following structure:
 
 :"fields":
     # take a list of fields or a field name (required)
@@ -1184,7 +1184,7 @@ is a list of dictionnary with the following structure:
 :"ttl":
     (optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to `ensure_index` - see pymongo documentation for `ensure_index` for details.
 :"check:
-    (optional, True by default) don't check if the field name is present into the structure. Usefull if you don't know the field name.
+    (optional, True by default) don't check if the field name is present in the structure. Useful if you don't know the field name.
 
 Example:
 
@@ -1248,9 +1248,9 @@ passing a list of tuple.  Direction must be one of `INDEX_ASCENDING` (or 1),
 ...         },
 ...     ]
 
-To prevent to add an index on the wrong field (mispelled for instance),
-Mongokit will check by default the `indexes` descriptor. There's some case you
-may wan't to disable this. To do so, add ``"check":True``::
+To prevent adding an index on the wrong field (misspelled for instance),
+MongoKit will check by default the `indexes` descriptor. In some cases
+may want to disable this. To do so, add ``"check":True``::
 
     >>> class MyDoc(Document):
     ...    structure = {
@@ -1262,23 +1262,23 @@ may wan't to disable this. To do so, add ``"check":True``::
     ...        {'fields':['foo.title'], 'check':False}
     ...    ]
 
-In this example, we index the field `foo.title` which is not explicited into the structure.
+In this example, we index the field `foo.title` which is not explicitly specified in the structure.
 
 JSON support
 ============
 
-While building web application, you might want to create an rest api with json
-support. Then, you may need to convert all your Document into a json format
-in order to pass it via the rest api. Unfortunately (or fortunately), MongoDB
-support field format which is not supported by json. This is the case for `datetime`
-but also for all your `CustomTypes` you may have built and your embeded objects.
+While building web application, you might want to create a REST API with JSON
+support. Then, you may need to convert all your Document into a JSON format
+in order to pass it via the REST API. Unfortunately (or fortunately), MongoDB
+support field format which is not supported by JSON. This is the case for `datetime`
+but also for all your `CustomTypes` you may have built and your embedded objects.
 
-Document support the json import/export. Note that you'll need to install `anyjson`
+``Document`` supports the JSON import/export. Note that you'll need to install `anyjson`
 to enable this feature. (`sudo easy_install anyjson`)
 
 :`to_json`:
 
-`to_json` is a simply method which export you document into a json document:
+`to_json` is a simply method which export you document into a JSON document:
 
 >>> class MyDoc(Document):
 ...         structure = {
@@ -1301,7 +1301,7 @@ u'{"_id": "mydoc", "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 
 
 :`from_json`:
 
-To load a json string into a Document, use the `from_json` class method:
+To load a JSON string into a ``Document``, use the `from_json` class method:
 
 >>> class MyDoc(Document):
 ...     structure = {
@@ -1316,9 +1316,9 @@ To load a json string into a Document, use the `from_json` class method:
 >>> mydoc
 {'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
-Note that `from_json` will take care of all your embeded Docs if you used the `to_json()` method to
-generated the json. Indeed, some extra value has to be set : the datatabase and the collection where
-the embed document lives. This is added by the `to_json()` method:
+Note that `from_json` will take care of all your embedded ``Document``s if you used the `to_json()` method to
+generated the JSON. Indeed, some extra value has to be set : the database and the collection where
+the embedded document lives. This is added by the `to_json()` method:
 
 >>> class EmbedDoc(Document):
 ...     db_name = "test"
@@ -1359,8 +1359,8 @@ u'{"doc": {"embed": {"_collection": "tutorial", "_database": "test", "_id": "emb
 
 As you can see, two new fields have been added : `_collection` and `_database`
 which represent respectively the collection and the database where the embed
-doc has been saved. Thoses informations are needed to generate the embed
-document. There are removed when calling the `from_json()` method:
+doc has been saved. That information is needed to generate the embed
+document. These are removed when calling the `from_json()` method:
 
 >>> mydoc = tutorial.MyDoc.from_json(json)
 >>> mydoc
