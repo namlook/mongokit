@@ -5,13 +5,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>MongoKit &mdash; MongoKit v0.5 documentation</title>
+    <title>MongoKit &mdash; MongoKit v0.6 documentation</title>
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -19,7 +19,7 @@
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.5 documentation" href="index.html" />
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
     <link rel="next" title="MongoKit Tutorial" href="tutorial.html" />
     <link rel="prev" title="MongoKit Documentation" href="index.html" /> 
   </head>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="index.html" title="MongoKit Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -47,25 +47,12 @@
 <li><a class="reference external" href="#philosophy">Philosophy</a></li>
 <li><a class="reference external" href="#features">Features</a></li>
 <li><a class="reference external" href="#a-quick-example">A quick example</a></li>
-<li><a class="reference external" href="#change-log">Change Log</a><ul>
+<li><a class="reference external" href="#recent-change-log">Recent Change Log</a><ul>
 <li><a class="reference external" href="#v0-5-13-1">v0.5.13.1</a></li>
 <li><a class="reference external" href="#v0-5-13">v0.5.13</a></li>
 <li><a class="reference external" href="#v0-5-12-1">v0.5.12.1</a></li>
 <li><a class="reference external" href="#v-0-5-12">v.0.5.12</a></li>
 <li><a class="reference external" href="#v0-5-11">v0.5.11</a></li>
-<li><a class="reference external" href="#v0-5-10">v0.5.10</a></li>
-<li><a class="reference external" href="#v0-5-9">v0.5.9</a></li>
-<li><a class="reference external" href="#v0-5-8">v0.5.8</a></li>
-<li><a class="reference external" href="#v0-5-7">v0.5.7</a></li>
-<li><a class="reference external" href="#v0-5-6">v0.5.6</a></li>
-<li><a class="reference external" href="#v0-5-5">v0.5.5</a></li>
-<li><a class="reference external" href="#v0-5-4">v0.5.4</a></li>
-<li><a class="reference external" href="#v0-5-3">v0.5.3</a></li>
-<li><a class="reference external" href="#v0-5-2">v0.5.2</a></li>
-<li><a class="reference external" href="#v0-5-1">v0.5.1</a></li>
-<li><a class="reference external" href="#v0-5">v0.5</a></li>
-<li><a class="reference external" href="#v0-4">v0.4</a></li>
-<li><a class="reference external" href="#v0-3-3">v0.3.3</a></li>
 </ul>
 </li>
 </ul>
@@ -153,7 +140,7 @@ data won&#8217;t be polluted by MongoKit&#8217;s stuff.</p>
 <li>document migration support</li>
 </ul>
 </blockquote>
-<p>Go to the full <a href="#id2"><span class="problematic" id="id3">documentation_</span></a> .</p>
+<p>Go to the full <a class="reference external" href="http://namlook.github.com/mongokit/">documentation</a> .</p>
 </div>
 <div class="section" id="a-quick-example">
 <h2>A quick example<a class="headerlink" href="#a-quick-example" title="Permalink to this headline">¶</a></h2>
@@ -179,9 +166,7 @@ A Document declaration look like that:</p>
 </pre></div>
 </div>
 <p>We fire a connection and register our objects.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">BlogPost</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span> <span class="c"># this use the db &quot;test&quot; and the collection &quot;example&quot;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span> <span class="c"># this use the db &quot;test&quot; and the collection &quot;example&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;my title&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;a body&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">blogpost</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;me&#39;</span>
@@ -192,7 +177,10 @@ A Document declaration look like that:</p>
 </div>
 <p>Saving the object will call the <cite>validate()</cite> method.</p>
 <p>And you can use more complex structure:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">ComplexDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span> <span class="nd">@connection.register</span>
+<span class="gp">... </span> <span class="k">class</span> <span class="nc">ComplexDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">__database__</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="gp">... </span>    <span class="n">__collection__</span> <span class="o">=</span> <span class="s">&#39;example&#39;</span>
 <span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>        <span class="s">&quot;foo&quot;</span> <span class="p">:</span> <span class="p">{</span><span class="s">&quot;content&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
 <span class="gp">... </span>        <span class="s">&quot;bar&quot;</span> <span class="p">:</span> <span class="p">{</span>
@@ -206,28 +194,9 @@ A Document declaration look like that:</p>
 <p>Suggestion and patches are really welcome. If you find mistakes in the documentation
 (english is not my primary langage) feel free to contact me. You can find me (namlook)
 on the freenode #mongodb irc channel or on <a class="reference external" href="http://twitter.com/namlook">twitter</a>.</p>
-<p>Mongokit is documented and well tested with 100% of code coverage:</p>
-<div class="highlight-python"><pre>Name                          Stmts   Exec  Cover   Missing
------------------------------------------------------------
-mongokit                         11     11   100%
-mongokit.auth                    43     43   100%
-mongokit.collection              32     32   100%
-mongokit.connection              15     15   100%
-mongokit.database                 7      7   100%
-mongokit.document               381    381   100%
-mongokit.generators              32     32   100%
-mongokit.grid                   114    114   100%
-mongokit.helpers                 96     96   100%
-mongokit.mongo_exceptions         8      8   100%
-mongokit.operators               47     47   100%
-mongokit.schema_document        479    479   100%
-mongokit.versioned_document      45     45   100%
------------------------------------------------------------
-TOTAL                          1310   1310   100%</pre>
 </div>
-</div>
-<div class="section" id="change-log">
-<h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="recent-change-log">
+<h2>Recent Change Log<a class="headerlink" href="#recent-change-log" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="v0-5-13-1">
 <h3>v0.5.13.1<a class="headerlink" href="#v0-5-13-1" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -293,177 +262,6 @@ TOTAL                          1310   1310   100%</pre>
 </ul>
 </blockquote>
 </div>
-<div class="section" id="v0-5-10">
-<h3>v0.5.10<a class="headerlink" href="#v0-5-10" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>fix bug in autorefs when reference in double list</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-9">
-<h3>v0.5.9<a class="headerlink" href="#v0-5-9" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>minors fixes</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-8">
-<h3>v0.5.8<a class="headerlink" href="#v0-5-8" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>add rewind to cursor</li>
-<li>killed many bug in <cite>from_json()</cite></li>
-<li>fix #66 - local variable &#8216;l_objs&#8217; referenced before assignment</li>
-<li>fix #61 - Issue with indexing on multi-columns with directions</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-7">
-<h3>v0.5.7<a class="headerlink" href="#v0-5-7" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>fix #63 - Creating index for each document instance operation. Brings speed improvements</li>
-<li>fix #60 - autorefs doesn&#8217;t work with complex structures</li>
-<li>fix #62 - Dereference to model. Thanks to Christian Joudrey for the patch</li>
-<li>fix #64 - error with atomic_save when using embed document</li>
-<li>fix #65 - Lazy migrations with dict in list and documentation fix</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-6">
-<h3>v0.5.6<a class="headerlink" href="#v0-5-6" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#updating-data">atomic update</a> (just save the document again)</li>
-<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#custom-types">init_type</a> to CustomType. This allow to fill an empty skeletton at instanciation</li>
-<li>add debian package build rules. Thanks to Sebastien Estienne</li>
-<li>add <a class="reference external" href="http://namlook.github.com/mongokit/migration.html">lazy migration</a> and <a class="reference external" href="http://namlook.github.com/mongokit/migration.html#bulk-migration">bulk migration</a> support</li>
-<li>fix a bug in CustomType</li>
-<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#indexes">&#8216;check&#8217; option</a> in indexes descriptor</li>
-<li>add <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#untyped-field">untyped field support</a></li>
-<li>fix #58 - Document Validators not working for CustomType</li>
-<li>improve DotCollapsedDict by adding reference structure</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-5">
-<h3>v0.5.5<a class="headerlink" href="#v0-5-5" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>fix 54 - Add reload method. Please read the <a href="#id4"><span class="problematic" id="id5">documentation_</span></a></li>
-<li>put generate_index into Document.__init__. This is usefull for instanciating Document like this : MyDoc(collection=mycol)</li>
-<li>fix #44 - add  <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#the-structure">set type support</a> + add validate() method to <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#custom-types">CustomType</a></li>
-<li>fix #52 - Custom validation error messages (thanks to &#64;cjoudrey for the patch)</li>
-<li>fix #50 - need optimizations in connection (won 20s on the <a class="reference external" href="http://groups.google.com/group/mongodb-user/browse_thread/thread/77c91641858e1e20/ea71afc4de24f2e9">benchmark</a>)</li>
-<li>fix #48 - Tuple assignment does not convert to list</li>
-<li>fix 49 - KeyError when using deep nested autorefs</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-4">
-<h3>v0.5.4<a class="headerlink" href="#v0-5-4" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>A <a class="reference external" href="http://namlook.github.com/mongokit/gridfs.html">lot of features in GridFS</a> with api change</li>
-<li>fix bug in autorefs</li>
-<li>fix #37 - find_random crash if no collection is empty</li>
-<li>fix #38 - OverflowError in doc.to_json_type() when used over the datetime 2038</li>
-<li>fix #41 - Warnings when setting attributes before enabling use_dot_notation</li>
-<li>fix #40 - Better exception on bad structure. Thanks to peterbe for the patch</li>
-<li>fix #43 - Add ability to <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html#quiet-validation-detection">collect errors</a> in one place instead of throwing exceptions while validating</li>
-<li>add <cite>_dot_notation_warning</cite> attribute. If false, disable all dot notation related warning</li>
-<li>add patch to enable data load from map/reduce. See <a class="reference external" href="http://groups.google.com/group/mongokit/msg/34efea4c178573d7">http://groups.google.com/group/mongokit/msg/34efea4c178573d7</a></li>
-<li>fix bug spotted by Sebastien Estienne - error when using skip_validation with required_fields. Thanks</li>
-<li>fix issue while using {unicode:unicode} in structure and i18n at the same time</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-3">
-<h3>v0.5.3<a class="headerlink" href="#v0-5-3" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>fix default_value issue when using with dict and list (see #35)</li>
-<li>fix bug reported by Andrew Degtiariov : <a class="reference external" href="http://bit.ly/c1vcUv">http://bit.ly/c1vcUv</a></li>
-<li>add clone and explain method to MongoDocumentCursor</li>
-<li>add distinct to cursor (thanks to Flaper87)</li>
-<li>fix index test</li>
-<li>fix : when a field is added to a saved document and not specified in the structure, the validation wasn&#8217;t work properly</li>
-<li>use current database if DBRef has no database information. Please, see the doc</li>
-<li>support of pymongo 1.4</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-2">
-<h3>v0.5.2<a class="headerlink" href="#v0-5-2" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>bugs fix in json import/export</li>
-<li>bugs fix in default values and required values</li>
-<li><a class="reference external" href="http://namlook.github.com/mongokit/gridfs.html">gridfs support</a></li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-1">
-<h3>v0.5.1<a class="headerlink" href="#v0-5-1" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li><cite>save()</cite> doesn&#8217;t return <tt class="docutils literal"><span class="pre">self</span></tt> anymore (was an API monster)</li>
-<li>fix bug in <cite>find_one()</cite> method. Now returns None if no Document is found</li>
-<li>fix bug when using default values</li>
-<li>adding i18n list support</li>
-<li>add i18n inheritance support</li>
-<li>adding index inheritance support</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5">
-<h3>v0.5<a class="headerlink" href="#v0-5" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>refactoring API which is getting much much more cleaner. Please see the <a class="reference external" href="http://namlook.github.com/mongokit/migration.html">migration</a> page to keep your code up to date</li>
-<li>100% code coverage by 162 unit tests</li>
-<li>lot of bug fix (too many to list them here)</li>
-<li>add document size validation</li>
-<li>add cross database reference support</li>
-<li><a class="reference external" href="http://namlook.github.com/mongokit/i18n.html">i18n support</a></li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-4">
-<h3>v0.4<a class="headerlink" href="#v0-4" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>add autoref support to belong_to (delete cascade)</li>
-<li>changing collection dynamically</li>
-<li>add immutable field (python tuple support)</li>
-<li>add direction and ttl to index support</li>
-<li>add connection sharing support</li>
-<li>add json import/export for MongoDocument</li>
-<li>full relation support (related_to)</li>
-<li>add long type support</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v0-3-3">
-<h3>v0.3.3<a class="headerlink" href="#v0-3-3" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>add autoref support (thanks to &#64;bwmcadams)</li>
-<li>add mongodb index support (thanks to &#64;marcammann)</li>
-<li>adding CustomType (original idea from Phillip Oldham)</li>
-<li>support now all type of subclassed supported type</li>
-<li>add &#8220;delete cascade&#8221; feature</li>
-<li>add the possibility to skip the validation layer for more performances</li>
-<li>fix issue while passing queries to fetch() and update tutorial</li>
-<li>self._collection must not be None in __init__</li>
-<li>fix #11 - pylons_env extension documentation typo</li>
-<li>add more complete test + docstring</li>
-<li>fix issue #9 - bug with custom_types and nested dict in list</li>
-</ul>
-</blockquote>
-</div>
 </div>
 </div>
 
@@ -485,7 +283,7 @@ TOTAL                          1310   1310   100%</pre>
         <li class="right" >
           <a href="index.html" title="MongoKit Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

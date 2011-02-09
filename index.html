@@ -5,13 +5,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>MongoKit Documentation &mdash; MongoKit v0.5 documentation</title>
+    <title>MongoKit Documentation &mdash; MongoKit v0.6 documentation</title>
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -19,7 +19,7 @@
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.5 documentation" href="#" />
+    <link rel="top" title="MongoKit v0.6 documentation" href="#" />
     <link rel="next" title="MongoKit" href="introduction.html" /> 
   </head>
   <body>
@@ -32,7 +32,7 @@
         <li class="right" >
           <a href="introduction.html" title="MongoKit"
              accesskey="N">next</a> |</li>
-        <li><a href="#">MongoKit v0.5 documentation</a> &raquo;</li> 
+        <li><a href="#">MongoKit v0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -105,88 +105,84 @@ data won’t be polluted by MongoKit’s stuff.</p>
 <li class="toctree-l2"><a class="reference external" href="introduction.html#philosophy">Philosophy</a></li>
 <li class="toctree-l2"><a class="reference external" href="introduction.html#features">Features</a></li>
 <li class="toctree-l2"><a class="reference external" href="introduction.html#a-quick-example">A quick example</a></li>
-<li class="toctree-l2"><a class="reference external" href="introduction.html#change-log">Change Log</a><ul>
+<li class="toctree-l2"><a class="reference external" href="introduction.html#recent-change-log">Recent Change Log</a><ul>
 <li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-13-1">v0.5.13.1</a></li>
 <li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-13">v0.5.13</a></li>
 <li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-12-1">v0.5.12.1</a></li>
 <li class="toctree-l3"><a class="reference external" href="introduction.html#v-0-5-12">v.0.5.12</a></li>
 <li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-11">v0.5.11</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-10">v0.5.10</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-9">v0.5.9</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-8">v0.5.8</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-7">v0.5.7</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-6">v0.5.6</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-5">v0.5.5</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-4">v0.5.4</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-3">v0.5.3</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-2">v0.5.2</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-1">v0.5.1</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5">v0.5</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-4">v0.4</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-3-3">v0.3.3</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="tutorial.html">MongoKit Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference external" href="tutorial.html#simple-example">Simple Example</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#the-structure">The structure</a><ul>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#validate-keys">validate keys</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#untyped-field">Untyped field</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#difference-between-and-the-type-list">Difference between [] and the type list</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#difference-between-and-the-type-dict">Difference between {} and the type dict</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#case-of-tuple-or-immutable-field">Case of tuple or immutable field</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#adding-more-authorized-types">Adding more authorized types</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#descriptors">Descriptors</a><ul>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#required">required</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#default-values">default_values</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#validators">validators</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#i18n">i18n</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#adding-complex-validation">Adding complex validation</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#mongokitoperator">MongokitOperator</a><ul>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#or-operator">OR operator</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#not-operator">NOT operator</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#is-operator">IS operator</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#custom-types">Custom types</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#skipping-validation">Skipping validation</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#quiet-validation-detection">Quiet validation detection</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#query">Query</a><ul>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#getting-raw-data">Getting raw data</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#getting-document-instance">Getting Document instance</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#find">find()</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#find-one">find_one()</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#id1">one()</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#fetch">fetch()</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#fetch-one">fetch_one()</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#id2">find_random()</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#updating-data">Updating data</a><ul>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#update-a-document">Update a document</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#bulk-update">Bulk update</a></li>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#reload">reload()</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#changing-collection-dynamically">Changing collection dynamically</a></li>
 <li class="toctree-l2"><a class="reference external" href="tutorial.html#dot-notation">Dot notation</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#embedding-documents-as-values">Embedding Documents as values</a><ul>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#a-detailed-example">A detailed example</a></li>
+<li class="toctree-l2"><a class="reference external" href="tutorial.html#changing-collection-dynamically">Changing collection dynamically</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#indexes">Indexes</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#json-support">JSON support</a><ul>
-<li class="toctree-l3"><a class="reference external" href="tutorial.html#objectid-support">ObjectId support</a></li>
+<li class="toctree-l1"><a class="reference external" href="structure.html">The structure</a><ul>
+<li class="toctree-l2"><a class="reference external" href="structure.html#validate-keys">validate keys</a></li>
+<li class="toctree-l2"><a class="reference external" href="structure.html#untyped-field">Untyped field</a></li>
+<li class="toctree-l2"><a class="reference external" href="structure.html#difference-between-and-the-type-list">Difference between [] and the type list</a></li>
+<li class="toctree-l2"><a class="reference external" href="structure.html#difference-between-and-the-type-dict">Difference between {} and the type dict</a></li>
+<li class="toctree-l2"><a class="reference external" href="structure.html#case-of-tuple-or-immutable-field">Case of tuple or immutable field</a></li>
+<li class="toctree-l2"><a class="reference external" href="structure.html#adding-more-authorized-types">Adding more authorized types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="descriptors.html">Descriptors</a><ul>
+<li class="toctree-l2"><a class="reference external" href="descriptors.html#required">required</a></li>
+<li class="toctree-l2"><a class="reference external" href="descriptors.html#default-values">default_values</a></li>
+<li class="toctree-l2"><a class="reference external" href="descriptors.html#validators">validators</a></li>
+<li class="toctree-l2"><a class="reference external" href="descriptors.html#i18n">i18n</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="descriptors.html#adding-complex-validation">Adding complex validation</a></li>
+<li class="toctree-l1"><a class="reference external" href="operators.html">MongokitOperator</a><ul>
+<li class="toctree-l2"><a class="reference external" href="operators.html#or-operator">OR operator</a></li>
+<li class="toctree-l2"><a class="reference external" href="operators.html#not-operator">NOT operator</a></li>
+<li class="toctree-l2"><a class="reference external" href="operators.html#is-operator">IS operator</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="custom_types.html">Custom types</a></li>
+<li class="toctree-l1"><a class="reference external" href="query.html">Query</a><ul>
+<li class="toctree-l2"><a class="reference external" href="query.html#getting-raw-data">Getting raw data</a><ul>
+<li class="toctree-l3"><a class="reference external" href="query.html#find-and-find-one">find() and find_one()</a></li>
+<li class="toctree-l3"><a class="reference external" href="query.html#one">one()</a></li>
+<li class="toctree-l3"><a class="reference external" href="query.html#find-random">find_random()</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="query.html#getting-document-instance">Getting Document instance</a></li>
+<li class="toctree-l2"><a class="reference external" href="query.html#find">find()</a></li>
+<li class="toctree-l2"><a class="reference external" href="query.html#find-one">find_one()</a></li>
+<li class="toctree-l2"><a class="reference external" href="query.html#id1">one()</a></li>
+<li class="toctree-l2"><a class="reference external" href="query.html#fetch">fetch()</a></li>
+<li class="toctree-l2"><a class="reference external" href="query.html#fetch-one">fetch_one()</a></li>
+<li class="toctree-l2"><a class="reference external" href="query.html#id2">find_random()</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="update.html">Updating data</a><ul>
+<li class="toctree-l2"><a class="reference external" href="update.html#update-a-document">Update a document</a></li>
+<li class="toctree-l2"><a class="reference external" href="update.html#bulk-update">Bulk update</a></li>
+<li class="toctree-l2"><a class="reference external" href="update.html#reload">reload()</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="dbref.html">Using DBRef</a><ul>
+<li class="toctree-l2"><a class="reference external" href="dbref.html#a-detailed-example">A detailed example</a><ul>
+<li class="toctree-l3"><a class="reference external" href="dbref.html#about-cross-database-references">About cross-database references</a></li>
+<li class="toctree-l3"><a class="reference external" href="dbref.html#reference-and-dereference">Reference and dereference</a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference external" href="validation_and_optimisation.html">Skipping validation</a></li>
+<li class="toctree-l1"><a class="reference external" href="validation_and_optimisation.html#quiet-validation-detection">Quiet validation detection</a></li>
+<li class="toctree-l1"><a class="reference external" href="indexes.html">Indexes</a></li>
 <li class="toctree-l1"><a class="reference external" href="inheritance.html">Polymorphism with MongoKit</a></li>
+<li class="toctree-l1"><a class="reference external" href="json.html">JSON support</a><ul>
+<li class="toctree-l2"><a class="reference external" href="json.html#objectid-support">ObjectId support</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference external" href="i18n.html">Internationalization and Localization</a><ul>
 <li class="toctree-l2"><a class="reference external" href="i18n.html#i18n-with-dot-notation">i18n with dot_notation</a></li>
 <li class="toctree-l2"><a class="reference external" href="i18n.html#default-language">Default language</a></li>
@@ -211,11 +207,6 @@ data won’t be polluted by MongoKit’s stuff.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="pylons.html">Pylons support</a></li>
-<li class="toctree-l1"><a class="reference external" href="version_migration.html">Migration from 0.4 to 0.5</a><ul>
-<li class="toctree-l2"><a class="reference external" href="version_migration.html#presentation">Presentation</a></li>
-<li class="toctree-l2"><a class="reference external" href="version_migration.html#so-what-changed">So, what changed ?</a></li>
-</ul>
-</li>
 </ul>
 </div>
 
@@ -234,7 +225,7 @@ data won’t be polluted by MongoKit’s stuff.</p>
         <li class="right" >
           <a href="introduction.html" title="MongoKit"
              >next</a> |</li>
-        <li><a href="#">MongoKit v0.5 documentation</a> &raquo;</li> 
+        <li><a href="#">MongoKit v0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
