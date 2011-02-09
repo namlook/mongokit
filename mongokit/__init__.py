@@ -31,7 +31,6 @@ from bson.dbref import DBRef
 from cursor import Cursor
 from operators import *
 from schema_document import *
-from generators import MongoDocumentCursor
 from mongo_exceptions import *
 from document import Document, ObjectId
 from versioned_document import VersionedDocument
