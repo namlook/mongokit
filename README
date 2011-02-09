@@ -118,6 +118,14 @@ on the freenode #mongodb irc channel or on twitter_.
 Recent Change Log
 =================
 
+v0.6
+----
+
+ * fix error when check is True. Thanks to @dasmith for the patch
+ * Many english corrections in the documentation thanks to @allancaffee
+ * spliting doc and refactoring documentation
+ * remove unused MongoDocumentCursor
+
 v0.5.13.1
 ---------
 
