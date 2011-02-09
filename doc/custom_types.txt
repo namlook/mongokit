@@ -1,0 +1,82 @@
+Custom types
+============
+
+Sometimes, we need to work with complex objects while their
+footprint in the database is fairly simple. Let's take a  
+datetime object. A datetime object can be useful to compute
+complex date but while mongodb can deal with datetime object,
+let's say that we just want to store the unicode representation.
+
+MongoKit allows you to work on a datetime object and store the unicode
+representation on the fly. In order to do this, we have to implement a CustomType
+and fill the custom_types attributes:
+
+>>> import datetime
+
+A CustomType object must implement two methods and one attribute:
+
+ - `to_bson(self, value)`: this method will convert the value
+    to fit the correct authorized type before being saved in the db.
+ - `to_python(self, value)`: this method will convert the value
+    taken from the db into a python object
+ - `validate(self, value, path)`: this method is optional and will add a
+    validation layer. Please, see the `Set()` CustomType code for more example.
+ -  You must specify a `mongo_type` property in the `CustomType` class. this
+    will describes the type of the value stored in the mongodb.  
+ -  If you want more validation, you can specify a `python_type` property which is
+    the python type the value will be converted. This is a good thing to specify it
+    as it make a good documentation.
+ - `init_type` attribute will allow to describes an empty value. For example,
+   if you implement the python set as CustomType, you'll set `init_type` to
+   `set`. Note that `init_type` must be a type or a callable instance.
+ 
+>>> class CustomDate(CustomType):
+...     mongo_type = unicode
+...     python_type = datetime.datetime # optional, just for more validation
+...     init_type = None # optional, fill the first empty value
+...
+...     def to_bson(self, value):
+...         """convert type to a mongodb type"""
+...         return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+...
+...     def to_python(self, value):
+...         """convert type to a python object"""
+...         if value is not None:
+...            return datetime.datetime.strptime(value, '%y-%m-%d')
+...
+...     def validate(self, value, path):
+...         """OPTIONAL : useful to add a validation layer"""
+...         if value is not None:
+...             pass # ... do something here
+...             
+
+Now, let's create a Document:
+
+>>> class Foo(Document):
+...     structure = {
+...         'foo':{
+...             'date': CustomDate(),
+...         },
+...     }
+
+Now, we can create Foo's objects and working with python datetime objects
+
+>>> con.register([Foo])
+>>> foo = tutorial.Foo()
+>>> foo['_id'] = 1
+>>> foo['foo']['date'] = datetime.datetime(2003,2,1)
+>>> foo.save()
+
+The saved object in db has the unicode footprint as expected:
+
+>>> tutorial.find_one({'_id':1})
+{u'_id': 1, u'foo': {u'date': u'03-02-01'}}
+
+Querying an object will automatically convert the CustomType into the correct
+python object:
+
+>>> foo = tutorial.Foo.get_from_id(1)
+>>> foo['foo']['date']
+datetime.datetime(2003, 2, 1, 0, 0)
+
+

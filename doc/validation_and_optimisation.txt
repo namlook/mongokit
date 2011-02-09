@@ -1,0 +1,59 @@
+Skipping validation
+===================
+
+Once your application is ready for production and you are sure that the data is consistent,
+you might want to skip the validation layer. This will make MongoKit significantly faster
+(as fast as pymongo). In order to do that, just set the `skip_validation` attribute to `True`.
+
+TIP: It is a good idea to create a "RootDocument" and to inherit all you object from it.
+This will allow you to control the behavior of all your objects by setting the RootDocument:
+
+>>> class RootDocument(Document):
+...     structure = {}
+...     skip_validation = True
+...     use_autorefs = True
+
+>>> class MyDoc(RootDocument):
+...     structure={
+...             "foo":int,
+...     }
+
+
+Note that you can always force the validation at any moment on saving even if `skip_validation` is `True`:
+
+>>> con.register([MyDoc]) # No need to register RootDocument as we do not instantiate it
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo'] = u'bar'
+>>> mydoc.save(validate=True)
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
+
+
+Quiet validation detection
+==========================
+
+.. topic:: new in version 0.5.4
+
+    By default, when validation is on each error raises an Exception. Sometime, you just want to
+    collect errors in one place. This is possible by setting the `raise_validation_errors` to False.
+    At this moment, all errors are store in the `validation_errors` attribute:
+
+    >>> class MyDoc(Document):
+    ...     raise_validation_errors = False
+    ...     structure={
+    ...        "foo":set,
+    ...     }
+    >>> con.register([MyDoc])
+    >>> doc = tutorial.MyDoc()
+    >>> doc.validate()
+    >>> doc.validation_errors
+    {'foo': [StructureError("<type 'set'> is not an authorized type",), RequireFieldError('foo is required',)]}
+
+    `validation_errors` is a dictionary which take the field name as key and the python exception as value.
+    Here foo has two issues : a structure one (`set` is not an authorized type) and is required.
+
+    >>> doc.validation_errors['foo'][0].message
+    "<type 'set'> is not an authorized type"
+
+

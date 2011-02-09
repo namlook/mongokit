@@ -1,0 +1,205 @@
+The structure
+=============
+
+The ``structure`` is a simple dict which define how document fields will be validated.
+Field types are simple python type.  By default, MongoKit allow the following types::
+
+    authorized_types = [type(None),
+      bool, 
+      int, 
+      float,
+      long,
+      unicode,
+      list,
+      dict,
+      datetime.datetime, 
+      pymongo.binary.Binary,
+      pymongo.objectid.ObjectId,
+      pymongo.dbref.DBRef,
+      pymongo.code.Code,
+      type(re.compile("")),
+      CustomType,
+    ]
+
+The `set()` python type is not supported in pymongo. If you want to use it anyway please use the `Set()` custom type::
+
+    class MyDoc(Document):
+        structure = {
+            "tags": Set(unicode),
+        }
+
+
+validate keys
+-------------
+
+If the value of key is not known but we want to validate some deeper structure, 
+we use the "$<type>" descriptor :
+
+>>> class MyDoc(Document):
+...    structure = {
+...        "key1":{
+...            unicode:{
+...                "bla":int,
+...                "bar":{unicode:int}
+...            },
+...        },
+...        "bla":float,
+...    }
+...    required_fields = ["key1.$unicode.bla"]
+...
+
+Note that if you use a python type as a key in structure, generate_skeleton
+won't be able to build the entire underlying structure :
+
+>>> con.register([MyDoc])
+>>> tutorial.MyDoc() == {'key1': {}, 'bla': None}
+True
+
+So, neither default_values nor validators will work.
+
+
+Untyped field
+-------------
+
+.. topic:: new in version 0.5.6
+
+    Sometime you don't want to specify a type for a field. In order to allow a
+    field to have any authorized types, just set the field to None into the
+    structure::
+
+        >>> class MyDoc(Document):
+        ...     structure = {
+        ...         'foo':unicode,
+        ...         'bar':None
+        ...     }
+        ...
+
+    In this example, `bar` can be of any authorized types but not CustomTypes.
+
+Difference between [] and the type list
+---------------------------------------
+
+This is pretty simple: if you want to define a list of heterogeneous types just do:
+
+        tags : list
+
+If you use the type `list`, no validation will be done on this field other than
+checking that the field is a list. If you want to define a list of unicode :
+
+        tag : [unicode]
+
+When validating the document, this will iterate to the list and check if all value
+are unicode.
+
+Difference between {} and the type dict
+---------------------------------------
+
+{} is used for describing the structure like {"foo":unicode, "bar":int}
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {"foo":unicode, "bar":int}
+...    }
+
+
+If you don't specify the structure :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {}
+...    }
+
+You won't be able to do that because "foo" is not defined into the structure.
+
+>>> con.register([Person])
+>>> bob = tutorial.Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+>>> bob.validate()
+Traceback (most recent call last):
+...
+StructureError: unknown fields : [u'foo']
+
+
+If you want to add new items to a dict if they're not defined, you must use the dict type instead :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": dict
+...    }
+
+>>> con.register([Person])
+>>> bob = tutorial.Person()
+>>> bob[u"biography"][u"foo"] = u"bla"
+>>> bob.validate()
+
+Using dict type is useful if you don't know what fields will be added *or* what types they will be.
+If you know the type of the field, it's better to explicitly specify them :
+
+>>> class Person(Document):
+...    structure = {
+...        "biography": {unicode:unicode}
+...    }
+
+This will add another layer to validate the content. See the "validate keys" section for more informations.
+
+Case of tuple or immutable field
+--------------------------------
+
+If you need a structured list with a limited
+number of field, you can use tuple to describe
+your object :
+
+>>> class MyDoc(Document):
+...     structure = {
+...         "foo":(int, unicode, float)
+...     }
+>>> con.register([MyDoc])
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo']
+[None, None, None]
+
+Tuple are converted into a simple list.
+They add another validation layer. Field must
+follow the right type:
+
+>>> mydoc['foo'] = [u"bla", 1, 4.0]
+>>> mydoc.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must be an instance of int not unicode
+
+and they must have the right number of items:
+
+>>> mydoc['foo'] = [1, u"bla"]
+>>> mydoc.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: foo must have 3 items not 2
+
+As tuples are converted to list internally, you
+can make all list operations:
+
+>>> mydoc['foo'] = [1,u'bar',3.2]
+>>> mydoc.validate()
+>>> mydoc['foo'] = [None, u"bla", 3.1]
+>>> mydoc.validate()
+>>> mydoc['foo'][0] = 50
+>>> mydoc.validate()
+
+
+Adding more authorized types
+----------------------------
+
+It's possible to add more type in authorized_types: 
+
+>>> class MyDoc(Document):
+...     structure = {
+...         "foo":str,
+...     }
+...     authorized_types = Document.authorized_types + [str]
+>>> con.register([MyDoc])
+>>> mydoc = tutorial.MyDoc()
+>>> mydoc['foo'] = 'bla'
+>>> mydoc.validate()
+
+

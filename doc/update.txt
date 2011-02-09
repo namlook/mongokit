@@ -1,0 +1,131 @@
+Updating data
+=============
+
+Update a document
+-----------------
+
+.. topic:: new in version 0.5.6
+
+    Mongokit now support atomic update out of the box !
+
+    Update in Mongokit is as easy than saving an object. Just modify your
+    document, save it and that's it ! Your document is updated using atomic
+    update. To do that, your document must contain the field `_version`. Here's an
+    complete example of how updating work with Mongokit::
+
+        >>> class MyDoc(Document):
+        ...    structure = {
+        ...        'foo':{
+        ...            'bar':[unicode],
+        ...            'eggs':{'spam':int},
+        ...        },
+        ...        'bla':unicode
+        ...    }
+        ...    atomic_save = True # enable atomic saving
+
+        NOTE : as atomic saving requires modifying documents by adding a new
+        field (`_version`), you have to explicitly tell MongoKit that you want
+        to use this new feature by setting the attribute `atomic_save` as True.
+
+        >>> self.connection.register([MyDoc])
+
+        >>> doc = self.col.MyDoc()
+        >>> doc['_id'] = 3
+        >>> doc['foo']['bar'] = [u'mybar', u'yourbar']
+        >>> doc['foo']['eggs']['spam'] = 4
+        >>> doc['bla'] = u'ble'
+        >>> doc.save() 
+
+        Here, the field `_version` is automatically added :
+
+        >>> doc['_version']
+        1
+
+        Let's modify our doc :
+
+        >>> doc['foo']['eggs']['spam'] = 2
+        >>> doc['bla']= u'bli'
+
+        But now, someone is getting our doc and update it before we could save it:
+
+        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
+        >>> new_doc['bla'] = u'blo'
+        >>> new_doc.save()
+        
+        The doc `_version` is incremented :
+
+        >>> new_doc['_version']
+        2
+
+        So, if we try to save our doc, this would raise a ConflictError as the
+        data has changed. What we have to do is reload the document and try to
+        save it again :
+
+        >>> try:
+        ...    doc.save()
+        ... except ConflictError,e:
+        ...    doc.reload()
+        ...    doc['foo']['eggs']['spam'] = 2
+        ...    doc['bla']= u'bli'
+        ...    doc.save()
+
+        our doc version is now 3:
+
+        >>> doc['_version']
+        3
+
+        If we get a fresh instance of your doc, we can check that all is correct :
+
+        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
+        >>> new_doc
+        {'foo': {'eggs': {'spam': 2}, 'bar': [u'mybar', u'yourbar']}, 'bla': u'bli', '_version': 3, '_id': 3}
+
+
+Bulk update
+-----------
+
+Bulk update is not yet supported (but will be soon). For now, as Mongokit expose all the pymongo API, you can use the pymongo's update on collection:
+
+    >>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
+
+For more information, please look at the `pymongo documentation`_.
+
+.. _`pymongo documentation` : http://api.mongodb.org/python/
+
+reload()
+--------
+
+If a document was updated in another thread, it would be interesting to refresh the document to
+match changes from the database. To do that, use the `reload()` method.
+
+Two thing you should know before using this method :
+
+ * If no _id is set in the document, a KeyError is raised.
+ * If a document is not saved into the database, the OperationFailure exception is raised.
+ * using `reload()` will erase all unsaved values !
+
+Example::
+
+    >>> class MyDoc(Document):
+    ...    structure = {
+    ...        'foo':{
+    ...            'eggs':{'spam':int},
+    ...        },
+    ...        'bla':unicode
+    ...    }
+    >>> self.connection.register([MyDoc])
+
+    >>> doc = self.col.MyDoc()
+    # calling reload() here will raise a KeyError
+    >>> doc['_id'] = 3
+    >>> doc['foo']['eggs']['spam'] = 4
+    >>> doc['bla'] = u'ble'
+    # calling reload() here will raise an OperationFailure
+    >>> doc.save()
+    >>> doc['bla'] = u'bli' # we don't save this change this will be erased
+    >>> self.col.update({'_id':doc['_id']}, {'$set':{'foo.eggs.spam':2}})
+    >>> doc.reload()
+    >>> doc
+    {'_id': 3, 'foo': {u'eggs': {u'spam': 2}}, 'bla': u'ble'}
+
+

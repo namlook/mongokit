@@ -35,10 +35,20 @@ Contents:
 
     introduction
     tutorial
+    structure
+    descriptors
+    operators
+    custom_types
+    query
+    update
+    dbref
+    validation_and_optimisation
+    indexes
     inheritance
+    json
     i18n
     gridfs
     migration
     pylons
-    version_migration
+..    version_migration
 
