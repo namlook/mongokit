@@ -48,8 +48,8 @@
 <li><a class="reference external" href="#the-structure">The structure</a><ul>
 <li><a class="reference external" href="#validate-keys">validate keys</a></li>
 <li><a class="reference external" href="#untyped-field">Untyped field</a></li>
-<li><a class="reference external" href="#difference-beetween-and-the-type-list">Difference beetween [] and the type list</a></li>
-<li><a class="reference external" href="#difference-beetween-and-the-type-dict">Difference beetween {} and the type dict</a></li>
+<li><a class="reference external" href="#difference-between-and-the-type-list">Difference between [] and the type list</a></li>
+<li><a class="reference external" href="#difference-between-and-the-type-dict">Difference between {} and the type dict</a></li>
 <li><a class="reference external" href="#case-of-tuple-or-immutable-field">Case of tuple or immutable field</a></li>
 <li><a class="reference external" href="#adding-more-authorized-types">Adding more authorized types</a></li>
 </ul>
@@ -173,9 +173,9 @@ around pymongo objects.</p>
 <span class="gp">...</span>
 </pre></div>
 </div>
-<p>The structure is a simply dictionnary with python type. In this example, <cite>title</cite> must be unicode and <cite>rank</cite>
+<p>The structure is simply a dictionary with python type. In this example, <cite>title</cite> must be unicode and <cite>rank</cite>
 must be an int.</p>
-<p>Optionaly, you can add some descriptors. In order to specify fields which are required, just add a <cite>required_fields</cite>
+<p>Optionally, you can add some descriptors. In order to specify fields which are required, just add a <cite>required_fields</cite>
 attribute. This is a simple list which list all required_fields (ie, those field must not be None when validating).</p>
 <p>Same thing with the <cite>default_values</cite> attribute. This is a dict where you can specify default values. Note that
 you can pass callable object (like a datetime).</p>
@@ -224,7 +224,7 @@ class BlogPost(Document):
 <span class="go">{&#39;body&#39;: None, &#39;title&#39;: None, &#39;date_creation&#39;: datetime.datetime(...), &#39;rank&#39;: 0, &#39;author&#39;: None}</span>
 </pre></div>
 </div>
-<p>Not that <cite>date_creation</cite> was automaticly filled by <cite>utcnow()</cite> and rank is 0.</p>
+<p>Note that <cite>date_creation</cite> was automatically filled by <cite>utcnow()</cite> and rank is 0.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;my first blog post&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
@@ -304,14 +304,14 @@ we use the &#8220;$&lt;type&gt;&#8221; descriptor :</p>
 <span class="gp">...</span>
 </pre></div>
 </div>
-<p>Not that if you use python type as key in structure, generate_skeleton
-won&#8217;t be able to build the entired underline structure :</p>
+<p>Note that if you use a python type as a key in structure, generate_skeleton
+won&#8217;t be able to build the entire underlying structure :</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;key1&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s">&#39;bla&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>So, default_values nor validators will work.</p>
+<p>So, neither default_values nor validators will work.</p>
 </div>
 <div class="section" id="untyped-field">
 <h3>Untyped field<a class="headerlink" href="#untyped-field" title="Permalink to this headline">¶</a></h3>
@@ -331,9 +331,9 @@ structure:</p>
 <p>In this example, <cite>bar</cite> can be of any authorized types but not CustomTypes.</p>
 </div>
 </div>
-<div class="section" id="difference-beetween-and-the-type-list">
-<h3>Difference beetween [] and the type list<a class="headerlink" href="#difference-beetween-and-the-type-list" title="Permalink to this headline">¶</a></h3>
-<p>This is pretty simple. if you want to define a list of heterogen types just do:</p>
+<div class="section" id="difference-between-and-the-type-list">
+<h3>Difference between [] and the type list<a class="headerlink" href="#difference-between-and-the-type-list" title="Permalink to this headline">¶</a></h3>
+<p>This is pretty simple: if you want to define a list of heterogeneous types just do:</p>
 <blockquote>
 tags : list</blockquote>
 <p>If you use the type <cite>list</cite>, no validation will be done on this field other than
@@ -343,8 +343,8 @@ tag : [unicode]</blockquote>
 <p>When validating the document, this will iterate to the list and check if all value
 are unicode.</p>
 </div>
-<div class="section" id="difference-beetween-and-the-type-dict">
-<h3>Difference beetween {} and the type dict<a class="headerlink" href="#difference-beetween-and-the-type-dict" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="difference-between-and-the-type-dict">
+<h3>Difference between {} and the type dict<a class="headerlink" href="#difference-between-and-the-type-dict" title="Permalink to this headline">¶</a></h3>
 <p>{} is used for describing the structure like {&#8220;foo&#8221;:unicode, &#8220;bar&#8221;:int}</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
@@ -382,15 +382,15 @@ are unicode.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Using dict type is useful if you don&#8217;t know what field will be added <em>and</em> what will be the type of the field.
-If you know the type of the field, it&#8217;s better to do that :</p>
+<p>Using dict type is useful if you don&#8217;t know what fields will be added <em>or</em> what types they will be.
+If you know the type of the field, it&#8217;s better to explicitly specify them :</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nb">unicode</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
 <span class="gp">... </span>   <span class="p">}</span>
 </pre></div>
 </div>
-<p>This will add another layer to validate the content. See &#8220;validate keys&#8221; section for more informations.</p>
+<p>This will add another layer to validate the content. See the &#8220;validate keys&#8221; section for more informations.</p>
 </div>
 <div class="section" id="case-of-tuple-or-immutable-field">
 <h3>Case of tuple or immutable field<a class="headerlink" href="#case-of-tuple-or-immutable-field" title="Permalink to this headline">¶</a></h3>
@@ -454,11 +454,11 @@ can make all list operations:</p>
 </div>
 <div class="section" id="descriptors">
 <h2>Descriptors<a class="headerlink" href="#descriptors" title="Permalink to this headline">¶</a></h2>
-<p>In the MongoKit philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are describes outside the structure.
+<p>In the MongoKit philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are described outside of the structure.
 Descriptors can be combined and can apply the same field.</p>
 <div class="section" id="required">
 <h3>required<a class="headerlink" href="#required" title="Permalink to this headline">¶</a></h3>
-<p>This descriptor describes the required fiels:</p>
+<p>This descriptor describes the required fields:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
     <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
@@ -486,7 +486,7 @@ Descriptors can be combined and can apply the same field.</p>
      <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span><span class="s">u&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;foo.eggs&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">}</span>
 </pre></div>
 </div>
-<p>Not that the default value must be a valid type (here unicode)</p>
+<p>Note that the default value must be a valid type (here unicode)</p>
 </div>
 <div class="section" id="validators">
 <h3>validators<a class="headerlink" href="#validators" title="Permalink to this headline">¶</a></h3>
@@ -515,30 +515,39 @@ Descriptors can be combined and can apply the same field.</p>
    if not bool(email.match(value))
       raise ValidatorError("%s is not a valid email")</pre>
 </div>
-<p>Note that it is a good thing to add one more &#8220;%s&#8221; in message. This will be use to describes the failing field name.</p>
-<p>You can also pass params in your validator. This is how you can dor:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MinLengthValidator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_length</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">min_length</span> <span class="o">=</span> <span class="n">min_length</span>
-
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_length</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> must be atleast &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_length</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; characters long.&#39;</span><span class="p">)</span>
-
-<span class="k">class</span> <span class="nc">Client</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
-    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="s">&#39;first_name&#39;</span><span class="p">:</span> <span class="nb">unicode</span>
-    <span class="p">}</span>
-    <span class="n">validators</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;first_name&#39;</span><span class="p">:</span> <span class="n">MinLengthValidator</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">}</span>
-</pre></div>
-</div>
+<p>Note that it is a good thing to add one more &#8220;%s&#8221; in message. This will be used to describes the failing field name.</p>
+<p>You can also pass params to your validator by wrapping it in a class:</p>
+<blockquote>
+<dl class="docutils">
+<dt>class MinLengthValidator(object):</dt>
+<dd><dl class="first last docutils">
+<dt>def __init__(self, min_length):</dt>
+<dd>self.min_length = min_length</dd>
+<dt>def __call__(self, value):</dt>
+<dd><dl class="first last docutils">
+<dt>if len(value) &gt;= self.min_length:</dt>
+<dd>return True</dd>
+<dt>else:</dt>
+<dd>raise Exception(&#8216;%s must be at least &#8216; + str(self.min_length) + &#8216; characters long.&#8217;)</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt>class Client(Document):</dt>
+<dd><dl class="first docutils">
+<dt>structure = {</dt>
+<dd>&#8216;first_name&#8217;: unicode</dd>
+</dl>
+<p class="last">}
+validators = { &#8216;first_name&#8217;: MinLengthValidator(2) }</p>
+</dd>
+</dl>
+</blockquote>
 <p>In this example, <cite>first_name</cite> must contain at least 2 characters.</p>
 </div>
 <div class="section" id="i18n">
 <h3>i18n<a class="headerlink" href="#i18n" title="Permalink to this headline">¶</a></h3>
-<p>This descriptor will tell MongoKIT that a field has multiple translation. Please see the <a class="reference external" href="i18n.html">i18n section</a> for more details:</p>
+<p>This descriptor will tell MongoKit that a field has multiple translation. Please see the <a class="reference external" href="i18n.html">i18n section</a> for more details:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
      <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
          <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
@@ -554,8 +563,8 @@ Descriptors can be combined and can apply the same field.</p>
 </div>
 <div class="section" id="adding-complex-validation">
 <h2>Adding complex validation<a class="headerlink" href="#adding-complex-validation" title="Permalink to this headline">¶</a></h2>
-<p>If the use of a validator is not enougth, you can overload the validation method
-to feet your needs.</p>
+<p>If the use of a validator is not enough, you can overload the validation method
+to fit your needs.</p>
 <p>Example the following document:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">structure</span><span class="o">=</span><span class="p">{</span>
@@ -567,7 +576,7 @@ to feet your needs.</p>
 </pre></div>
 </div>
 <p>We want to be sure that before saving our object, foo is greater than bar and baz is
-unicode(foo). Do do that, we juste overload the validation method:</p>
+unicode(foo). To do that, we just overload the validation method:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">assert</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;bar&#39;</span><span class="p">]</span>
     <span class="k">assert</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;baz&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">])</span>
@@ -644,7 +653,7 @@ for a field :</p>
 </div>
 <div class="section" id="is-operator">
 <h3>IS operator<a class="headerlink" href="#is-operator" title="Permalink to this headline">¶</a></h3>
-<p>Sometime, you might want to force a fields to be in a specifique value. The IS operator
+<p>Sometimes, you might want to force a fields to be in a specific value. The IS operator
 must be use for this purpose :</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">IS</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Account</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
@@ -673,12 +682,12 @@ must be use for this purpose :</p>
 </div>
 <div class="section" id="custom-types">
 <h2>Custom types<a class="headerlink" href="#custom-types" title="Permalink to this headline">¶</a></h2>
-<p>Sometime, we need to work with complexe object while their
+<p>Sometimes, we need to work with complex objects while their
 footprint in the database is fairly simple. Let&#8217;s take a
-datetime object. Datetime object can be usefull to compute
-complexe date but while mongodb can deal with datetime object,
+datetime object. A datetime object can be useful to compute
+complex date but while mongodb can deal with datetime object,
 let&#8217;s say that we just want to store the unicode representation.</p>
-<p>MongoKit allow the use to work on a datetime object and store the unicode
+<p>MongoKit allows you to work on a datetime object and store the unicode
 representation on the fly. In order to do this, we have to implement a CustomType
 and fill the custom_types attributes:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
@@ -689,7 +698,7 @@ and fill the custom_types attributes:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>to_bson(self, value)</cite>: this method will convert the value</dt>
-<dd><p class="first last">to fit the correct authorized type before beeing saved in the db.</p>
+<dd><p class="first last">to fit the correct authorized type before being saved in the db.</p>
 </dd>
 </dl>
 </li>
@@ -700,7 +709,7 @@ and fill the custom_types attributes:</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><cite>validate(self, value, path)</cite>: this method is optionnal and will add a</dt>
+<dt><cite>validate(self, value, path)</cite>: this method is optional and will add a</dt>
 <dd><p class="first last">validation layer. Please, see the <cite>Set()</cite> CustomType code for more example.</p>
 </dd>
 </dl>
@@ -761,7 +770,7 @@ if you implement the python set as CustomType, you&#8217;ll set <cite>init_type<
 <span class="go">{u&#39;_id&#39;: 1, u&#39;foo&#39;: {u&#39;date&#39;: u&#39;03-02-01&#39;}}</span>
 </pre></div>
 </div>
-<p>Quering an object will convert automaticly the CustomType into the correct
+<p>Querying an object will automatically convert the CustomType into the correct
 python object:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">Foo</span><span class="o">.</span><span class="n">get_from_id</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;date&#39;</span><span class="p">]</span>
@@ -771,10 +780,10 @@ python object:</p>
 </div>
 <div class="section" id="skipping-validation">
 <h2>Skipping validation<a class="headerlink" href="#skipping-validation" title="Permalink to this headline">¶</a></h2>
-<p>Once your application is ready for production and you are sure that the data is consistant,
-you might want to skip the validation layer. This will make mongokit significant faster
+<p>Once your application is ready for production and you are sure that the data is consistent,
+you might want to skip the validation layer. This will make MongoKit significantly faster
 (as fast as pymongo). In order to do that, just set the <cite>skip_validation</cite> attribute to <cite>True</cite>.</p>
-<p>TIP: this is a good idea to create a &#8220;RootDocument&#8221; and to inherite all you object from it.
+<p>TIP: It is a good idea to create a &#8220;RootDocument&#8221; and to inherit all you object from it.
 This will allow you to control the behavior of all your objects by setting the RootDocument:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">RootDocument</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
@@ -789,7 +798,7 @@ This will allow you to control the behavior of all your objects by setting the R
 </pre></div>
 </div>
 <p>Note that you can always force the validation at any moment on saving even if <cite>skip_validation</cite> is <cite>True</cite>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span> <span class="c"># No need to register RootDocument as we do not instanciate it</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span> <span class="c"># No need to register RootDocument as we do not instantiate it</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;bar&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">validate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -818,7 +827,7 @@ At this moment, all errors are store in the <cite>validation_errors</cite> attri
 <span class="go">{&#39;foo&#39;: [StructureError(&quot;&lt;type &#39;set&#39;&gt; is not an authorized type&quot;,), RequireFieldError(&#39;foo is required&#39;,)]}</span>
 </pre></div>
 </div>
-<p><cite>validation_errors</cite> is a dictionnary which take the field name as key and the python exception as value.
+<p><cite>validation_errors</cite> is a dictionary which take the field name as key and the python exception as value.
 Here foo has two issues : a structure one (<cite>set</cite> is not an authorized type) and is required.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">validation_errors</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span>
 <span class="go">&quot;&lt;type &#39;set&#39;&gt; is not an authorized type&quot;</span>
@@ -831,7 +840,7 @@ Here foo has two issues : a structure one (<cite>set</cite> is not an authorized
 <p>There&#8217;s two ways to query a collection : getting raw data or <tt class="docutils literal"><span class="pre">Document</span></tt> instance.</p>
 <div class="section" id="getting-raw-data">
 <h3>Getting raw data<a class="headerlink" href="#getting-raw-data" title="Permalink to this headline">¶</a></h3>
-<p>Getting raw data is usefull when you only want to have value from your data. This is fast
+<p>Getting raw data is useful when you only want to have one value from your data. This is fast
 as there&#8217;s no validation or wrapping. There is two methods to query raw data : <cite>find()</cite> and
 <cite>find_one()</cite>, <cite>one()</cite> and <cite>find_random()</cite>.</p>
 <div class="section" id="find-and-find-one">
@@ -868,7 +877,7 @@ there is more than one result.</p>
 </div>
 <div class="section" id="getting-document-instance">
 <h3>Getting Document instance<a class="headerlink" href="#getting-document-instance" title="Permalink to this headline">¶</a></h3>
-<p>There is 4 methods to query your data and get Document&#8217;s instance :
+<p>There are 4 methods to query your data which return <tt class="docutils literal"><span class="pre">Document</span></tt> instances:
 <cite>find()</cite>, <cite>find_one()</cite>, <cite>fetch()</cite>, <cite>fetch_one</cite> and <cite>find_random()</cite>.
 <cite>find()</cite> and <cite>fetch()</cite> return a cursor of collection.  A cursor is a container
 which lazy evaluate the results. A cursor is acting like an iterator.
@@ -880,7 +889,7 @@ see the mongodb and the pymongo documentation for further details.</p>
 <h3>find()<a class="headerlink" href="#find" title="Permalink to this headline">¶</a></h3>
 <p><cite>find()</cite> without argument will return a cursor of all documents of the collection.
 If a query is passed, it will return a cursor all documents which match the query.</p>
-<p><cite>find()</cite> takes the same arguments than the the <cite>pymongo.collection.find</cite> method.</p>
+<p><cite>find()</cite> takes the same arguments as the <cite>pymongo.collection.find</cite> method.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">():</span>
 <span class="gp">... </span>    <span class="k">print</span> <span class="n">post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span>
 <span class="go">my first blog post</span>
@@ -895,13 +904,13 @@ If a query is passed, it will return a cursor all documents which match the quer
 </div>
 <div class="section" id="find-one">
 <h3>find_one()<a class="headerlink" href="#find-one" title="Permalink to this headline">¶</a></h3>
-<p><cite>find_one()</cite> act like <cite>find()</cite> but return only the first document of result. This
-method takes the same arguments than the pymongo&#8217;s <cite>find_one()</cite> method. Please, check
-the pymongo&#8217;s documentation.</p>
+<p><cite>find_one()</cite> acts like <cite>find()</cite> but will return only the first document found. This
+method takes the same arguments as pymongo&#8217;s <cite>find_one()</cite> method. Please, check
+the pymongo documentation.</p>
 </div>
 <div class="section" id="id1">
 <h3>one()<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p><cite>one()</cite> act like <cite>find()</cite> but will raise a <cite>mongokit.MultipleResultsFound</cite> exception if
+<p><cite>one()</cite> acts like <cite>find_one()</cite> but will raise a <cite>mongokit.MultipleResultsFound</cite> exception if
 there is more than one result.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
@@ -929,7 +938,7 @@ This is an helper for :</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">all_blog_posts</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;body&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;date_creation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;author&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}})</span>
 </pre></div>
 </div>
-<p>Note, like <cite>find()</cite> and and <cite>one()</cite>, you can pass advanced queries:</p>
+<p>Note that like <cite>find()</cite> and <cite>one()</cite>, you can pass advanced queries:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">my_blog_posts</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">fetch</span><span class="p">({</span><span class="s">&#39;author&#39;</span><span class="p">:</span><span class="s">&#39;myself&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
@@ -940,7 +949,7 @@ This is an helper for :</p>
 </div>
 <div class="section" id="fetch-one">
 <h3>fetch_one()<a class="headerlink" href="#fetch-one" title="Permalink to this headline">¶</a></h3>
-<p>Juste like <cite>fetch()</cite> but raise a  <cite>mongokit.MultipleResultsFound</cite> exception if
+<p>Just like <cite>fetch()</cite> but raise a  <cite>mongokit.MultipleResultsFound</cite> exception if
 there is more than one result.</p>
 </div>
 <div class="section" id="id2">
@@ -969,8 +978,8 @@ complete example of how updating work with Mongokit:</p>
 <span class="gp">... </span>   <span class="p">}</span>
 <span class="gp">... </span>   <span class="n">atomic_save</span> <span class="o">=</span> <span class="bp">True</span> <span class="c"># enable atomic saving</span>
 
-<span class="go">NOTE : as atomic saving required to modify documents by adding a new</span>
-<span class="go">field (`_version`), you have to explicitly tell mongokit that you wan&#39;t</span>
+<span class="go">NOTE : as atomic saving requires modifying documents by adding a new</span>
+<span class="go">field (`_version`), you have to explicitly tell MongoKit that you want</span>
 <span class="go">to use this new feature by setting the attribute `atomic_save` as True.</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
@@ -1039,7 +1048,7 @@ complete example of how updating work with Mongokit:</p>
 </div>
 <div class="section" id="reload">
 <h3>reload()<a class="headerlink" href="#reload" title="Permalink to this headline">¶</a></h3>
-<p>If a document was update in another thread, it would be interresting to refresh the document to
+<p>If a document was updated in another thread, it would be interesting to refresh the document to
 match changes from the database. To do that, use the <cite>reload()</cite> method.</p>
 <p>Two thing you should know before using this method :</p>
 <blockquote>
@@ -1086,7 +1095,7 @@ say you want to store a User by database.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">User</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Like Pymongo, Mongokit allow you to change those parameters on the fly:</p>
+<p>Like pymongo, MongoKit allow you to change those parameters on the fly:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user_name</span> <span class="o">=</span> <span class="s">&#39;namlook&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">user_col</span> <span class="o">=</span> <span class="n">con</span><span class="p">[</span><span class="n">user_name</span><span class="p">]</span><span class="o">.</span><span class="n">profile</span>
 </pre></div>
@@ -1100,7 +1109,7 @@ say you want to store a User by database.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="p">[</span><span class="s">&#39;screen_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Namlook&#39;</span>
 </pre></div>
 </div>
-<p>calling <cite>user.save()</cite> will save the objet into the database &#8216;namlook&#8217; in the collection &#8216;profile&#8217;</p>
+<p>Calling <cite>user.save()</cite> will save the object into the database &#8216;namlook&#8217; in the collection &#8216;profile&#8217;.</p>
 </div>
 <div class="section" id="dot-notation">
 <h2>Dot notation<a class="headerlink" href="#dot-notation" title="Permalink to this headline">¶</a></h2>
@@ -1120,7 +1129,7 @@ say you want to store a User by database.</p>
 <span class="go">{&#39;foo&#39;: {&#39;bar&#39;: u&#39;bla&#39;}}</span>
 </pre></div>
 </div>
-<p>Note that if a attribute is not in structure, the value will be added as attribute :</p>
+<p>Note that if an attribute is not in structure, the value will be added as attribute :</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">arf</span> <span class="o">=</span> <span class="mi">3</span> <span class="c"># arf is not in structure</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
 <span class="go">{&#39;foo&#39;: {&#39;bar&#39;: u&#39;bla&#39;}}</span>
@@ -1194,12 +1203,12 @@ set <cite>use_autorefs</cite> as <cite>True</cite>.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">DocB</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The default value for an embeded doc is None:</p>
+<p>The default value for an embedded doc is None:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span>
 <span class="go">{&#39;b&#39;: {&#39;doc_a&#39;: None}}</span>
 </pre></div>
 </div>
-<p>The validation act as expected:</p>
+<p>The validation acts as expected:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
@@ -1213,9 +1222,9 @@ set <cite>use_autorefs</cite> as <cite>True</cite>.</p>
 <span class="go">{&#39;b&#39;: {&#39;doc_a&#39;: {&#39;a&#39;: {&#39;foo&#39;: 2}, &#39;abis&#39;: {&#39;bar&#39;: 3}, &#39;_id&#39;: &#39;doca&#39;}}, &#39;_id&#39;: &#39;docb&#39;}</span>
 </pre></div>
 </div>
-<p>Note that the reference can be cross collection but also cross database. So, it doesn&#8217;t matter
+<p>Note that the reference can not only be cross collection but also cross database. So, it doesn&#8217;t matter
 where you save the DocA object as long as it can be fetch with the same connection.</p>
-<p>Now the interresting part. If we change a field in an embeded doc, the change will be done
+<p>Now the interesting part. If we change a field in an embedded doc, the change will be done
 for all DocA which have the same &#8216;_id&#8217;:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">][</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -1225,7 +1234,7 @@ for all DocA which have the same &#8216;_id&#8217;:</p>
 <span class="go">4</span>
 </pre></div>
 </div>
-<p>Required fields are also supported in embeded documents.i
+<p>Required fields are also supported in embedded documents.
 Remember DocA have the &#8216;abis.bar&#8217; field required. If we set it to None
 via the docb document, the RequireFieldError is raised:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">][</span><span class="s">&#39;abis&#39;</span><span class="p">][</span><span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
@@ -1237,7 +1246,7 @@ via the docb document, the RequireFieldError is raised:</p>
 </div>
 <div class="section" id="about-cross-database-references">
 <h4>About cross-database references<a class="headerlink" href="#about-cross-database-references" title="Permalink to this headline">¶</a></h4>
-<p>pymongo&#8217;s DBRef doesn&#8217;t take a database by default so Mongokit needs this
+<p>pymongo&#8217;s DBRef doesn&#8217;t take a database by default so MongoKit needs this
 information to fetch the correct Document.</p>
 <p>An example is better than thousand words. Let&#8217;s create an <tt class="docutils literal"><span class="pre">EmbedDoc</span></tt> and a <tt class="docutils literal"><span class="pre">Doc</span></tt> object:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">EmbedDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
@@ -1260,7 +1269,7 @@ information to fetch the correct Document.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Now let&#8217;s insert a raw document with a DBRef but we do not specify the database:</p>
+<p>Now let&#8217;s insert a raw document with a DBRef but without specifying the database:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">raw_doc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;embed&#39;</span><span class="p">:</span><span class="n">DBRef</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s">&#39;tutorial&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">embed</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">])}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc_id</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">raw_doc</span><span class="p">)</span>
 </pre></div>
@@ -1276,12 +1285,12 @@ information to fetch the correct Document.</p>
 </div>
 <p>This mean that you may load data which could have been generated by map/reduce or raw data (like fixtures for instance)
 and the database information is not set into the DBRef. The error message tells you that you can add turn the
-<cite>force_autorefs_current_db</cite> as True to allow mongokit to use the current collection by default (here &#8216;test&#8217;):</p>
+<cite>force_autorefs_current_db</cite> as True to allow MongoKit to use the current collection by default (here &#8216;test&#8217;):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">name</span>
 </pre></div>
 </div>
 <p>u&#8217;test&#8217;</p>
-<p>NOTE: You have to be very carefull when you enable this option to be sure that you are using the correct database.
+<p>NOTE: You have to be very careful when you enable this option to be sure that you are using the correct database.
 If you expect some strange behavior (like not document found), you may look at this first.</p>
 </div>
 <div class="section" id="reference-and-dereference">
@@ -1304,7 +1313,7 @@ to tell mongokit to what model it should dereferenced:</p>
 <h2>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes, it&#8217;s desirable to have indexes on your dataset - especially unique ones.
 In order to do that, you must fill the <cite>indexes</cite> attribute. The <cite>indexes</cite> attribute
-is a list of dictionnary with the following structure:</p>
+is a list of dictionary with the following structure:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1315,7 +1324,7 @@ is a list of dictionnary with the following structure:</p>
 </tr>
 <tr class="field"><th class="field-name">&#8220;ttl&#8221;:</th><td class="field-body">(optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to <cite>ensure_index</cite> - see pymongo documentation for <cite>ensure_index</cite> for details.</td>
 </tr>
-<tr class="field"><th class="field-name">&#8220;check:</th><td class="field-body">(optional, True by default) don&#8217;t check if the field name is present into the structure. Usefull if you don&#8217;t know the field name.</td>
+<tr class="field"><th class="field-name">&#8220;check:</th><td class="field-body">(optional, True by default) don&#8217;t check if the field name is present in the structure. Useful if you don&#8217;t know the field name.</td>
 </tr>
 </tbody>
 </table>
@@ -1380,9 +1389,9 @@ passing a list of tuple.  Direction must be one of <cite>INDEX_ASCENDING</cite> 
 <span class="gp">... </span>    <span class="p">]</span>
 </pre></div>
 </div>
-<p>To prevent to add an index on the wrong field (mispelled for instance),
-Mongokit will check by default the <cite>indexes</cite> descriptor. There&#8217;s some case you
-may wan&#8217;t to disable this. To do so, add <tt class="docutils literal"><span class="pre">&quot;check&quot;:True</span></tt>:</p>
+<p>To prevent adding an index on the wrong field (misspelled for instance),
+MongoKit will check by default the <cite>indexes</cite> descriptor. In some cases
+may want to disable this. To do so, add <tt class="docutils literal"><span class="pre">&quot;check&quot;:True</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>       <span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -1394,16 +1403,16 @@ may wan&#8217;t to disable this. To do so, add <tt class="docutils literal"><spa
 <span class="gp">... </span>   <span class="p">]</span>
 </pre></div>
 </div>
-<p>In this example, we index the field <cite>foo.title</cite> which is not explicited into the structure.</p>
+<p>In this example, we index the field <cite>foo.title</cite> which is not explicitly specified in the structure.</p>
 </div>
 <div class="section" id="json-support">
 <h2>JSON support<a class="headerlink" href="#json-support" title="Permalink to this headline">¶</a></h2>
-<p>While building web application, you might want to create an rest api with json
-support. Then, you may need to convert all your Document into a json format
-in order to pass it via the rest api. Unfortunately (or fortunately), MongoDB
-support field format which is not supported by json. This is the case for <cite>datetime</cite>
-but also for all your <cite>CustomTypes</cite> you may have built and your embeded objects.</p>
-<p>Document support the json import/export. Note that you&#8217;ll need to install <cite>anyjson</cite>
+<p>While building web application, you might want to create a REST API with JSON
+support. Then, you may need to convert all your Document into a JSON format
+in order to pass it via the REST API. Unfortunately (or fortunately), MongoDB
+support field format which is not supported by JSON. This is the case for <cite>datetime</cite>
+but also for all your <cite>CustomTypes</cite> you may have built and your embedded objects.</p>
+<p><tt class="docutils literal"><span class="pre">Document</span></tt> supports the JSON import/export. Note that you&#8217;ll need to install <cite>anyjson</cite>
 to enable this feature. (<cite>sudo easy_install anyjson</cite>)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1413,7 +1422,7 @@ to enable this feature. (<cite>sudo easy_install anyjson</cite>)</p>
 </tr>
 </tbody>
 </table>
-<p><cite>to_json</cite> is a simply method which export you document into a json document:</p>
+<p><cite>to_json</cite> is a simply method which export you document into a JSON document:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>            <span class="s">&quot;bla&quot;</span><span class="p">:{</span>
@@ -1442,7 +1451,7 @@ to enable this feature. (<cite>sudo easy_install anyjson</cite>)</p>
 </tr>
 </tbody>
 </table>
-<p>To load a json string into a Document, use the <cite>from_json</cite> class method:</p>
+<p>To load a JSON string into a <tt class="docutils literal"><span class="pre">Document</span></tt>, use the <cite>from_json</cite> class method:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>        <span class="s">&quot;bla&quot;</span><span class="p">:{</span>
@@ -1457,9 +1466,9 @@ to enable this feature. (<cite>sudo easy_install anyjson</cite>)</p>
 <span class="go">{&#39;_id&#39;: &#39;mydoc&#39;, &#39;bla&#39;: {&#39;foo&#39;: &#39;bar&#39;, &#39;bar&#39;: 42}, &#39;spam&#39;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}</span>
 </pre></div>
 </div>
-<p>Note that <cite>from_json</cite> will take care of all your embeded Docs if you used the <cite>to_json()</cite> method to
-generated the json. Indeed, some extra value has to be set : the datatabase and the collection where
-the embed document lives. This is added by the <cite>to_json()</cite> method:</p>
+<p>Note that <cite>from_json</cite> will take care of all your embedded <a href="#id3"><span class="problematic" id="id4">``</span></a>Document``s if you used the <cite>to_json()</cite> method to
+generated the JSON. Indeed, some extra value has to be set : the database and the collection where
+the embedded document lives. This is added by the <cite>to_json()</cite> method:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">EmbedDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">db_name</span> <span class="o">=</span> <span class="s">&quot;test&quot;</span>
 <span class="gp">... </span>    <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&quot;mongokit&quot;</span>
@@ -1500,8 +1509,8 @@ the embed document lives. This is added by the <cite>to_json()</cite> method:</p
 </div>
 <p>As you can see, two new fields have been added : <cite>_collection</cite> and <cite>_database</cite>
 which represent respectively the collection and the database where the embed
-doc has been saved. Thoses informations are needed to generate the embed
-document. There are removed when calling the <cite>from_json()</cite> method:</p>
+doc has been saved. That information is needed to generate the embed
+document. These are removed when calling the <cite>from_json()</cite> method:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span>
 <span class="go">{u&#39;doc&#39;: {u&#39;embed&#39;: {u&#39;_id&#39;: u&#39;embed&#39;, u&#39;foo&#39;: u&#39;bar&#39;}}, u&#39;_id&#39;: u&#39;mydoc&#39;}</span>
