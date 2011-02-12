@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Query &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="Updating data" href="update.html" />
+    <link rel="prev" title="Custom types" href="custom_types.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="update.html" title="Updating data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="custom_types.html" title="Custom types"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Query</a><ul>
+<li><a class="reference external" href="#getting-raw-data">Getting raw data</a><ul>
+<li><a class="reference external" href="#find-and-find-one">find() and find_one()</a></li>
+<li><a class="reference external" href="#one">one()</a></li>
+<li><a class="reference external" href="#find-random">find_random()</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#getting-document-instance">Getting Document instance</a></li>
+<li><a class="reference external" href="#find">find()</a></li>
+<li><a class="reference external" href="#find-one">find_one()</a></li>
+<li><a class="reference external" href="#id1">one()</a></li>
+<li><a class="reference external" href="#fetch">fetch()</a></li>
+<li><a class="reference external" href="#fetch-one">fetch_one()</a></li>
+<li><a class="reference external" href="#id2">find_random()</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="custom_types.html"
+                                  title="previous chapter">Custom types</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="update.html"
+                                  title="next chapter">Updating data</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/query.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="query">
+<h1>Query<a class="headerlink" href="#query" title="Permalink to this headline">¶</a></h1>
+<p>There&#8217;s two ways to query a collection : getting raw data or <tt class="docutils literal"><span class="pre">Document</span></tt> instance.</p>
+<div class="section" id="getting-raw-data">
+<h2>Getting raw data<a class="headerlink" href="#getting-raw-data" title="Permalink to this headline">¶</a></h2>
+<p>Getting raw data is useful when you only want to have one value from your data. This is fast
+as there&#8217;s no validation or wrapping. There is two methods to query raw data : <cite>find()</cite> and
+<cite>find_one()</cite>, <cite>one()</cite> and <cite>find_random()</cite>.</p>
+<div class="section" id="find-and-find-one">
+<h3>find() and find_one()<a class="headerlink" href="#find-and-find-one" title="Permalink to this headline">¶</a></h3>
+<p><cite>find()</cite>, and <cite>find_one()</cite> act like the similar pymongo&#8217;s methods.
+Please, see the pymongo documentation</p>
+</div>
+<div class="section" id="one">
+<h3>one()<a class="headerlink" href="#one" title="Permalink to this headline">¶</a></h3>
+<p><cite>one()</cite> act like <cite>find()</cite> but will raise a <cite>mongokit.MultipleResultsFound</cite> exception if
+there is more than one result.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp2</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp2</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;my second blog post&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp2</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;you&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp2</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">MultipleResultsFound</span>: <span class="n-Identifier">2 results found</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">one</span><span class="p">({</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="s">&#39;my first blog post&#39;</span><span class="p">})</span>
+<span class="go">{u&#39;body&#39;: None, u&#39;author&#39;: u&#39;myself&#39;, u&#39;title&#39;: u&#39;my first blog post&#39;, u&#39;rank&#39;: 0, u&#39;_id&#39;: ObjectId(&#39;4b5ec4b690bce73814000000&#39;), u&#39;date_creation&#39;: datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}</span>
+</pre></div>
+</div>
+<p>If no document is found, <cite>one()</cite> returns <cite>None</cite></p>
+</div>
+<div class="section" id="find-random">
+<h3>find_random()<a class="headerlink" href="#find-random" title="Permalink to this headline">¶</a></h3>
+<p><cite>find_random()</cite> will return a random document from the database. This method doesn&#8217;t take other arguments.</p>
+</div>
+</div>
+<div class="section" id="getting-document-instance">
+<h2>Getting Document instance<a class="headerlink" href="#getting-document-instance" title="Permalink to this headline">¶</a></h2>
+<p>There are 4 methods to query your data which return <tt class="docutils literal"><span class="pre">Document</span></tt> instances:
+<cite>find()</cite>, <cite>find_one()</cite>, <cite>fetch()</cite>, <cite>fetch_one</cite> and <cite>find_random()</cite>.
+<cite>find()</cite> and <cite>fetch()</cite> return a cursor of collection.  A cursor is a container
+which lazy evaluate the results. A cursor is acting like an iterator.
+<cite>find_one()</cite> and <cite>fetch_one()</cite> return the document itself.</p>
+<p>All theses method can take a query as argument. A query is a simple dict. Please,
+see the mongodb and the pymongo documentation for further details.</p>
+</div>
+<div class="section" id="find">
+<h2>find()<a class="headerlink" href="#find" title="Permalink to this headline">¶</a></h2>
+<p><cite>find()</cite> without argument will return a cursor of all documents of the collection.
+If a query is passed, it will return a cursor all documents which match the query.</p>
+<p><cite>find()</cite> takes the same arguments as the <cite>pymongo.collection.find</cite> method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span>
+<span class="go">my first blog post</span>
+<span class="go">my second blog post</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="s">&#39;my first blog post&#39;</span><span class="p">}):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span>
+<span class="go">my first blog post</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="find-one">
+<h2>find_one()<a class="headerlink" href="#find-one" title="Permalink to this headline">¶</a></h2>
+<p><cite>find_one()</cite> acts like <cite>find()</cite> but will return only the first document found. This
+method takes the same arguments as pymongo&#8217;s <cite>find_one()</cite> method. Please, check
+the pymongo documentation.</p>
+</div>
+<div class="section" id="id1">
+<h2>one()<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p><cite>one()</cite> acts like <cite>find_one()</cite> but will raise a <cite>mongokit.MultipleResultsFound</cite> exception if
+there is more than one result.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">MultipleResultsFound</span>: <span class="n-Identifier">2 results found</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">one</span><span class="p">({</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="s">&#39;my first blog post&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
+<span class="go">{u&#39;body&#39;: None, u&#39;title&#39;: u&#39;my first blog post&#39;, u&#39;author&#39;: u&#39;myself&#39;, u&#39;rank&#39;: 0, u&#39;_id&#39;: ObjectId(&#39;4b5ec4b690bce73814000000&#39;), u&#39;date_creation&#39;: datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">BlogPost</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If no document is found, <cite>one()</cite> returns None</p>
+</div>
+<div class="section" id="fetch">
+<h2>fetch()<a class="headerlink" href="#fetch" title="Permalink to this headline">¶</a></h2>
+<p>Unlike <cite>find()</cite>, <cite>fetch()</cite> will return only documents which match the structure of the Document.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">all_blog_posts</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will return only all blog post (which have &#8216;title&#8217;, &#8216;body&#8217;, &#8216;author&#8217;, &#8216;date_creation&#8217;, &#8216;rank&#8217; as fields).
+This is an helper for :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">all_blog_posts</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;body&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;date_creation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;author&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}})</span>
+</pre></div>
+</div>
+<p>Note that like <cite>find()</cite> and <cite>one()</cite>, you can pass advanced queries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">my_blog_posts</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">fetch</span><span class="p">({</span><span class="s">&#39;author&#39;</span><span class="p">:</span><span class="s">&#39;myself&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>which is equivalent to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">all_blog_posts</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;body&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;date_creation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;$exists&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span> <span class="s">&#39;author&#39;</span><span class="p">:</span> <span class="s">&#39;myself&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fetch-one">
+<h2>fetch_one()<a class="headerlink" href="#fetch-one" title="Permalink to this headline">¶</a></h2>
+<p>Just like <cite>fetch()</cite> but raise a  <cite>mongokit.MultipleResultsFound</cite> exception if
+there is more than one result.</p>
+</div>
+<div class="section" id="id2">
+<h2>find_random()<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p><cite>find_random()</cite> will return a random document from the database. This method doesn&#8217;t take other arguments.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="update.html" title="Updating data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="custom_types.html" title="Custom types"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

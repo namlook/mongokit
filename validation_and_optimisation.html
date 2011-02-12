@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Skipping validation &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="Indexes" href="indexes.html" />
+    <link rel="prev" title="Embedding Documents as values" href="dbref.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="indexes.html" title="Indexes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dbref.html" title="Embedding Documents as values"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Skipping validation</a></li>
+<li><a class="reference external" href="#quiet-validation-detection">Quiet validation detection</a></li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="dbref.html"
+                                  title="previous chapter">Embedding Documents as values</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="indexes.html"
+                                  title="next chapter">Indexes</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/validation_and_optimisation.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="skipping-validation">
+<h1>Skipping validation<a class="headerlink" href="#skipping-validation" title="Permalink to this headline">¶</a></h1>
+<p>Once your application is ready for production and you are sure that the data is consistent,
+you might want to skip the validation layer. This will make MongoKit significantly faster
+(as fast as pymongo). In order to do that, just set the <cite>skip_validation</cite> attribute to <cite>True</cite>.</p>
+<p>TIP: It is a good idea to create a &#8220;RootDocument&#8221; and to inherit all you object from it.
+This will allow you to control the behavior of all your objects by setting the RootDocument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">RootDocument</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">... </span>    <span class="n">skip_validation</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">... </span>    <span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">RootDocument</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that you can always force the validation at any moment on saving even if <cite>skip_validation</cite> is <cite>True</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span> <span class="c"># No need to register RootDocument as we do not instantiate it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;bar&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">validate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">SchemaTypeError</span>: <span class="n-Identifier">foo must be an instance of int not unicode</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="quiet-validation-detection">
+<h1>Quiet validation detection<a class="headerlink" href="#quiet-validation-detection" title="Permalink to this headline">¶</a></h1>
+<div class="topic">
+<p class="topic-title first">new in version 0.5.4</p>
+<p>By default, when validation is on each error raises an Exception. Sometime, you just want to
+collect errors in one place. This is possible by setting the <cite>raise_validation_errors</cite> to False.
+At this moment, all errors are store in the <cite>validation_errors</cite> attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">raise_validation_errors</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">... </span>    <span class="n">structure</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">set</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">validation_errors</span>
+<span class="go">{&#39;foo&#39;: [StructureError(&quot;&lt;type &#39;set&#39;&gt; is not an authorized type&quot;,), RequireFieldError(&#39;foo is required&#39;,)]}</span>
+</pre></div>
+</div>
+<p><cite>validation_errors</cite> is a dictionary which take the field name as key and the python exception as value.
+Here foo has two issues : a structure one (<cite>set</cite> is not an authorized type) and is required.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">validation_errors</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span>
+<span class="go">&quot;&lt;type &#39;set&#39;&gt; is not an authorized type&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="indexes.html" title="Indexes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dbref.html" title="Embedding Documents as values"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

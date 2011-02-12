@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The structure &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="Descriptors" href="descriptors.html" />
+    <link rel="prev" title="MongoKit Tutorial" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="descriptors.html" title="Descriptors"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="MongoKit Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">The structure</a><ul>
+<li><a class="reference external" href="#validate-keys">validate keys</a></li>
+<li><a class="reference external" href="#untyped-field">Untyped field</a></li>
+<li><a class="reference external" href="#difference-between-and-the-type-list">Difference between [] and the type list</a></li>
+<li><a class="reference external" href="#difference-between-and-the-type-dict">Difference between {} and the type dict</a></li>
+<li><a class="reference external" href="#case-of-tuple-or-immutable-field">Case of tuple or immutable field</a></li>
+<li><a class="reference external" href="#adding-more-authorized-types">Adding more authorized types</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="tutorial.html"
+                                  title="previous chapter">MongoKit Tutorial</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="descriptors.html"
+                                  title="next chapter">Descriptors</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/structure.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-structure">
+<h1>The structure<a class="headerlink" href="#the-structure" title="Permalink to this headline">¶</a></h1>
+<p>The <tt class="docutils literal"><span class="pre">structure</span></tt> is a simple dict which define how document fields will be validated.
+Field types are simple python type.  By default, MongoKit allow the following types:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">authorized_types</span> <span class="o">=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="bp">None</span><span class="p">),</span>
+  <span class="nb">bool</span><span class="p">,</span>
+  <span class="nb">int</span><span class="p">,</span>
+  <span class="nb">float</span><span class="p">,</span>
+  <span class="nb">long</span><span class="p">,</span>
+  <span class="nb">unicode</span><span class="p">,</span>
+  <span class="nb">list</span><span class="p">,</span>
+  <span class="nb">dict</span><span class="p">,</span>
+  <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">binary</span><span class="o">.</span><span class="n">Binary</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">objectid</span><span class="o">.</span><span class="n">ObjectId</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">dbref</span><span class="o">.</span><span class="n">DBRef</span><span class="p">,</span>
+  <span class="n">pymongo</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">Code</span><span class="p">,</span>
+  <span class="nb">type</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)),</span>
+  <span class="n">CustomType</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>The <cite>set()</cite> python type is not supported in pymongo. If you want to use it anyway please use the <cite>Set()</cite> custom type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;tags&quot;</span><span class="p">:</span> <span class="n">Set</span><span class="p">(</span><span class="nb">unicode</span><span class="p">),</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="validate-keys">
+<h2>validate keys<a class="headerlink" href="#validate-keys" title="Permalink to this headline">¶</a></h2>
+<p>If the value of key is not known but we want to validate some deeper structure,
+we use the &#8220;$&lt;type&gt;&#8221; descriptor :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;key1&quot;</span><span class="p">:{</span>
+<span class="gp">... </span>           <span class="nb">unicode</span><span class="p">:{</span>
+<span class="gp">... </span>               <span class="s">&quot;bla&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>               <span class="s">&quot;bar&quot;</span><span class="p">:{</span><span class="nb">unicode</span><span class="p">:</span><span class="nb">int</span><span class="p">}</span>
+<span class="gp">... </span>           <span class="p">},</span>
+<span class="gp">... </span>       <span class="p">},</span>
+<span class="gp">... </span>       <span class="s">&quot;bla&quot;</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;key1.$unicode.bla&quot;</span><span class="p">]</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>Note that if you use a python type as a key in structure, generate_skeleton
+won&#8217;t be able to build the entire underlying structure :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;key1&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s">&#39;bla&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>So, neither default_values nor validators will work.</p>
+</div>
+<div class="section" id="untyped-field">
+<h2>Untyped field<a class="headerlink" href="#untyped-field" title="Permalink to this headline">¶</a></h2>
+<div class="topic">
+<p class="topic-title first">new in version 0.5.6</p>
+<p>Sometime you don&#8217;t want to specify a type for a field. In order to allow a
+field to have any authorized types, just set the field to None into the
+structure:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;foo&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s">&#39;bar&#39;</span><span class="p">:</span><span class="bp">None</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>In this example, <cite>bar</cite> can be of any authorized types but not CustomTypes.</p>
+</div>
+</div>
+<div class="section" id="difference-between-and-the-type-list">
+<h2>Difference between [] and the type list<a class="headerlink" href="#difference-between-and-the-type-list" title="Permalink to this headline">¶</a></h2>
+<p>This is pretty simple: if you want to define a list of heterogeneous types just do:</p>
+<blockquote>
+tags : list</blockquote>
+<p>If you use the type <cite>list</cite>, no validation will be done on this field other than
+checking that the field is a list. If you want to define a list of unicode :</p>
+<blockquote>
+tag : [unicode]</blockquote>
+<p>When validating the document, this will iterate to the list and check if all value
+are unicode.</p>
+</div>
+<div class="section" id="difference-between-and-the-type-dict">
+<h2>Difference between {} and the type dict<a class="headerlink" href="#difference-between-and-the-type-dict" title="Permalink to this headline">¶</a></h2>
+<p>{} is used for describing the structure like {&#8220;foo&#8221;:unicode, &#8220;bar&#8221;:int}</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span> <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<p>If you don&#8217;t specify the structure :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="p">{}</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<p>You won&#8217;t be able to do that because &#8220;foo&#8221; is not defined into the structure.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Person</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">Person</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="p">[</span><span class="s">u&quot;biography&quot;</span><span class="p">][</span><span class="s">u&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bla&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">StructureError: unknown fields </span>: <span class="n-Identifier">[u&#39;foo&#39;]</span>
+</pre></div>
+</div>
+<p>If you want to add new items to a dict if they&#8217;re not defined, you must use the dict type instead :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Person</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">Person</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="p">[</span><span class="s">u&quot;biography&quot;</span><span class="p">][</span><span class="s">u&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bla&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Using dict type is useful if you don&#8217;t know what fields will be added <em>or</em> what types they will be.
+If you know the type of the field, it&#8217;s better to explicitly specify them :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;biography&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nb">unicode</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="p">}</span>
+</pre></div>
+</div>
+<p>This will add another layer to validate the content. See the &#8220;validate keys&#8221; section for more informations.</p>
+</div>
+<div class="section" id="case-of-tuple-or-immutable-field">
+<h2>Case of tuple or immutable field<a class="headerlink" href="#case-of-tuple-or-immutable-field" title="Permalink to this headline">¶</a></h2>
+<p>If you need a structured list with a limited
+number of field, you can use tuple to describe
+your object :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;foo&quot;</span><span class="p">:(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span>
+<span class="go">[None, None, None]</span>
+</pre></div>
+</div>
+<p>Tuple are converted into a simple list.
+They add another validation layer. Field must
+follow the right type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">u&quot;bla&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">SchemaTypeError</span>: <span class="n-Identifier">foo must be an instance of int not unicode</span>
+</pre></div>
+</div>
+<p>and they must have the right number of items:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s">u&quot;bla&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">SchemaTypeError</span>: <span class="n-Identifier">foo must have 3 items not 2</span>
+</pre></div>
+</div>
+<p>As tuples are converted to list internally, you
+can make all list operations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="s">u&#39;bar&#39;</span><span class="p">,</span><span class="mf">3.2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="s">u&quot;bla&quot;</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-more-authorized-types">
+<h2>Adding more authorized types<a class="headerlink" href="#adding-more-authorized-types" title="Permalink to this headline">¶</a></h2>
+<p>It&#8217;s possible to add more type in authorized_types:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="n">authorized_types</span> <span class="o">=</span> <span class="n">Document</span><span class="o">.</span><span class="n">authorized_types</span> <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;bla&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="descriptors.html" title="Descriptors"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="MongoKit Tutorial"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

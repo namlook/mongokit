@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Descriptors &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="MongokitOperator" href="operators.html" />
+    <link rel="prev" title="The structure" href="structure.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="operators.html" title="MongokitOperator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="structure.html" title="The structure"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Descriptors</a><ul>
+<li><a class="reference external" href="#required">required</a></li>
+<li><a class="reference external" href="#default-values">default_values</a></li>
+<li><a class="reference external" href="#validators">validators</a></li>
+<li><a class="reference external" href="#i18n">i18n</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#adding-complex-validation">Adding complex validation</a></li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="structure.html"
+                                  title="previous chapter">The structure</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="operators.html"
+                                  title="next chapter">MongokitOperator</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/descriptors.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="descriptors">
+<h1>Descriptors<a class="headerlink" href="#descriptors" title="Permalink to this headline">¶</a></h1>
+<p>In the MongoKit philosophy, the structure must be simple, clear and readable. So all descriptors (like validation, requirement, default values etc...) are described outside of the structure.
+Descriptors can be combined and can apply the same field.</p>
+<div class="section" id="required">
+<h2>required<a class="headerlink" href="#required" title="Permalink to this headline">¶</a></h2>
+<p>This descriptor describes the required fields:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+        <span class="s">&quot;foo&quot;</span><span class="p">:{</span>
+            <span class="s">&quot;spam&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+            <span class="s">&quot;eggs&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;bar&#39;</span><span class="p">,</span> <span class="s">&#39;foo.spam&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>If you want to reach nested fields, just use the dot notation.</p>
+</div>
+<div class="section" id="default-values">
+<h2>default_values<a class="headerlink" href="#default-values" title="Permalink to this headline">¶</a></h2>
+<p>This descriptors allow to specify a default value at the creation of the document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+     <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+         <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+         <span class="s">&quot;foo&quot;</span><span class="p">:{</span>
+             <span class="s">&quot;spam&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+             <span class="s">&quot;eggs&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+         <span class="p">}</span>
+     <span class="p">}</span>
+     <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span><span class="s">u&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;foo.eggs&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that the default value must be a valid type (here unicode)</p>
+</div>
+<div class="section" id="validators">
+<h2>validators<a class="headerlink" href="#validators" title="Permalink to this headline">¶</a></h2>
+<p>This descriptor bring a validation layer to a field. It take a function which returns a <cite>False</cite> if the validation fails, <cite>True</cite> otherwise:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">re</span>
+<span class="k">def</span> <span class="nf">email_validator</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+   <span class="n">email</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)&quot;</span><span class="p">,</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+   <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">email</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s">&quot;email&quot;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">,</span>
+      <span class="s">&quot;foo&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;eggs&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+      <span class="p">}</span>
+   <span class="p">}</span>
+   <span class="n">validators</span> <span class="o">=</span> <span class="p">{</span>
+       <span class="s">&quot;email&quot;</span><span class="p">:</span> <span class="n">email_validator</span><span class="p">,</span>
+       <span class="s">&quot;foo.eggs&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">10</span>
+   <span class="p">}</span>
+</pre></div>
+</div>
+<p>You can add custom message in your validators:</p>
+<div class="highlight-python"><pre>def email_validator(value):
+   email = re.compile(r"(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)",re.IGNORECASE)
+   if not bool(email.match(value))
+      raise ValidatorError("%s is not a valid email")</pre>
+</div>
+<p>Note that it is a good thing to add one more &#8220;%s&#8221; in message. This will be used to describes the failing field name.</p>
+<p>You can also pass params to your validator by wrapping it in a class:</p>
+<blockquote>
+<dl class="docutils">
+<dt>class MinLengthValidator(object):</dt>
+<dd><dl class="first last docutils">
+<dt>def __init__(self, min_length):</dt>
+<dd>self.min_length = min_length</dd>
+<dt>def __call__(self, value):</dt>
+<dd><dl class="first last docutils">
+<dt>if len(value) &gt;= self.min_length:</dt>
+<dd>return True</dd>
+<dt>else:</dt>
+<dd>raise Exception(&#8216;%s must be at least &#8216; + str(self.min_length) + &#8216; characters long.&#8217;)</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt>class Client(Document):</dt>
+<dd><dl class="first docutils">
+<dt>structure = {</dt>
+<dd>&#8216;first_name&#8217;: unicode</dd>
+</dl>
+<p class="last">}
+validators = { &#8216;first_name&#8217;: MinLengthValidator(2) }</p>
+</dd>
+</dl>
+</blockquote>
+<p>In this example, <cite>first_name</cite> must contain at least 2 characters.</p>
+</div>
+<div class="section" id="i18n">
+<h2>i18n<a class="headerlink" href="#i18n" title="Permalink to this headline">¶</a></h2>
+<p>This descriptor will tell MongoKit that a field has multiple translation. Please see the <a class="reference external" href="i18n.html">i18n section</a> for more details:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+     <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+         <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+         <span class="s">&quot;foo&quot;</span><span class="p">:{</span>
+             <span class="s">&quot;spam&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+             <span class="s">&quot;eggs&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+         <span class="p">}</span>
+     <span class="p">}</span>
+     <span class="n">i18n</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;bar&#39;</span><span class="p">,</span> <span class="s">&#39;foo.eggs&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="adding-complex-validation">
+<h1>Adding complex validation<a class="headerlink" href="#adding-complex-validation" title="Permalink to this headline">¶</a></h1>
+<p>If the use of a validator is not enough, you can overload the validation method
+to fit your needs.</p>
+<p>Example the following document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&quot;baz&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>We want to be sure that before saving our object, foo is greater than bar and baz is
+unicode(foo). To do that, we just overload the validation method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;bar&#39;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;baz&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">])</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MyDoc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="operators.html" title="MongokitOperator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="structure.html" title="The structure"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

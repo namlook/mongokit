@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>JSON support &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="Internationalization and Localization" href="i18n.html" />
+    <link rel="prev" title="Polymorphism with MongoKit" href="inheritance.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="i18n.html" title="Internationalization and Localization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">JSON support</a><ul>
+<li><a class="reference external" href="#objectid-support">ObjectId support</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="inheritance.html"
+                                  title="previous chapter">Polymorphism with MongoKit</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="i18n.html"
+                                  title="next chapter">Internationalization and Localization</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/json.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="json-support">
+<h1>JSON support<a class="headerlink" href="#json-support" title="Permalink to this headline">¶</a></h1>
+<p>While building web application, you might want to create a REST API with JSON
+support. Then, you may need to convert all your Document into a JSON format
+in order to pass it via the REST API. Unfortunately (or fortunately), MongoDB
+support field format which is not supported by JSON. This is the case for <cite>datetime</cite>
+but also for all your <cite>CustomTypes</cite> you may have built and your embedded objects.</p>
+<p><tt class="docutils literal"><span class="pre">Document</span></tt> supports the JSON import/export. Note that you&#8217;ll need to install <cite>anyjson</cite>
+to enable this feature. (<cite>sudo easy_install anyjson</cite>)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name"><cite>to_json</cite>:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p><cite>to_json</cite> is a simply method which export you document into a JSON document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&quot;bla&quot;</span><span class="p">:{</span>
+<span class="gp">... </span>                <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>                <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="p">},</span>
+<span class="gp">... </span>            <span class="s">&quot;spam&quot;</span><span class="p">:[],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;mydoc&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&quot;bla&quot;</span><span class="p">][</span><span class="s">&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bar&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&quot;bla&quot;</span><span class="p">][</span><span class="s">&quot;bar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;spam&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span> <span class="o">=</span> <span class="n">mydoc</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span>
+<span class="go">u&#39;{&quot;_id&quot;: &quot;mydoc&quot;, &quot;bla&quot;: {&quot;foo&quot;: &quot;bar&quot;, &quot;bar&quot;: 42}, &quot;spam&quot;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name"><cite>from_json</cite>:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>To load a JSON string into a <tt class="docutils literal"><span class="pre">Document</span></tt>, use the <cite>from_json</cite> class method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;bla&quot;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&quot;spam&quot;</span><span class="p">:[],</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span> <span class="o">=</span> <span class="s">&#39;{&quot;_id&quot;: &quot;mydoc&quot;, &quot;bla&quot;: {&quot;foo&quot;: &quot;bar&quot;, &quot;bar&quot;: 42}, &quot;spam&quot;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span>
+<span class="go">{&#39;_id&#39;: &#39;mydoc&#39;, &#39;bla&#39;: {&#39;foo&#39;: &#39;bar&#39;, &#39;bar&#39;: 42}, &#39;spam&#39;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}</span>
+</pre></div>
+</div>
+<p>Note that <cite>from_json</cite> will take care of all your embedded <a href="#id1"><span class="problematic" id="id2">``</span></a>Document``s if you used the <cite>to_json()</cite> method to
+generated the JSON. Indeed, some extra value has to be set : the database and the collection where
+the embedded document lives. This is added by the <cite>to_json()</cite> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">EmbedDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">db_name</span> <span class="o">=</span> <span class="s">&quot;test&quot;</span>
+<span class="gp">... </span>    <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&quot;mongokit&quot;</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&quot;foo&quot;</span><span class="p">:</span><span class="nb">unicode</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">db_name</span> <span class="o">=</span> <span class="s">&quot;test&quot;</span>
+<span class="gp">... </span>   <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&quot;mongokit&quot;</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;doc&quot;</span><span class="p">:{</span>
+<span class="gp">... </span>           <span class="s">&quot;embed&quot;</span><span class="p">:</span><span class="n">EmbedDoc</span><span class="p">,</span>
+<span class="gp">... </span>       <span class="p">},</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">EmbedDoc</span><span class="p">,</span> <span class="n">MyDoc</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Let&#8217;s create an embed doc:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">EmbedDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;embed&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bar&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and embed this doc to another doc</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;mydoc&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;doc&#39;</span><span class="p">][</span><span class="s">&#39;embed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">embed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s see how look the generated json:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">json</span> <span class="o">=</span> <span class="n">mydoc</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span>
+<span class="go">u&#39;{&quot;doc&quot;: {&quot;embed&quot;: {&quot;_collection&quot;: &quot;tutorial&quot;, &quot;_database&quot;: &quot;test&quot;, &quot;_id&quot;: &quot;embed&quot;, &quot;foo&quot;: &quot;bar&quot;}}, &quot;_id&quot;: &quot;mydoc&quot;}&#39;</span>
+</pre></div>
+</div>
+<p>As you can see, two new fields have been added : <cite>_collection</cite> and <cite>_database</cite>
+which represent respectively the collection and the database where the embed
+doc has been saved. That information is needed to generate the embed
+document. These are removed when calling the <cite>from_json()</cite> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span>
+<span class="go">{u&#39;doc&#39;: {u&#39;embed&#39;: {u&#39;_id&#39;: u&#39;embed&#39;, u&#39;foo&#39;: u&#39;bar&#39;}}, u&#39;_id&#39;: u&#39;mydoc&#39;}</span>
+</pre></div>
+</div>
+<p>An the embed document is an instance of EmbedDoc:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;doc&#39;</span><span class="p">][</span><span class="s">&#39;embed&#39;</span><span class="p">],</span> <span class="n">EmbedDoc</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="section" id="objectid-support">
+<h2>ObjectId support<a class="headerlink" href="#objectid-support" title="Permalink to this headline">¶</a></h2>
+<p><cite>from_json()</cite> can detect if the <cite>_id</cite> is an <tt class="docutils literal"><span class="pre">ObjectId</span></tt> instance or a simple string. When you serialize an object
+with <tt class="docutils literal"><span class="pre">ObjectId</span></tt> instance to json, the generated json object look like this:</p>
+<blockquote>
+&#8216;{&#8220;_id&#8221;: {&#8220;$oid&#8221;: &#8220;...&#8221;}, ...}&#8217;</blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">EmbedDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bar&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="go">u&#39;{&quot;foo&quot;: &quot;bar&quot;, &quot;_id&quot;: {&quot;$oid&quot;: &quot;4b5ec47390bce737e5000002&quot;}}&#39;</span>
+</pre></div>
+</div>
+<p>the &#8220;$oid&#8221; field is added to tell <cite>from_json()</cite> that &#8216;_id&#8217; is an <tt class="docutils literal"><span class="pre">ObjectId</span></tt> instance.
+The same append with embed doc:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="p">[</span><span class="s">&#39;doc&#39;</span><span class="p">][</span><span class="s">&#39;embed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">embed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydoc</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="go">{&#39;doc&#39;: {&#39;embed&#39;: {u&#39;_id&#39;: ObjectId(&#39;4b5ec45090bce737cb000002&#39;), u&#39;foo&#39;: u&#39;bar&#39;}}, &#39;_id&#39;: ObjectId(&#39;4b5ec45090bce737cb000003&#39;)}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="i18n.html" title="Internationalization and Localization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Using DBRef &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="Skipping validation" href="validation_and_optimisation.html" />
+    <link rel="prev" title="Updating data" href="update.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="validation_and_optimisation.html" title="Skipping validation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="update.html" title="Updating data"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Using DBRef</a><ul>
+<li><a class="reference external" href="#a-detailed-example">A detailed example</a><ul>
+<li><a class="reference external" href="#about-cross-database-references">About cross-database references</a></li>
+<li><a class="reference external" href="#reference-and-dereference">Reference and dereference</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="update.html"
+                                  title="previous chapter">Updating data</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="validation_and_optimisation.html"
+                                  title="next chapter">Skipping validation</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/dbref.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="using-dbref">
+<h1>Using DBRef<a class="headerlink" href="#using-dbref" title="Permalink to this headline">¶</a></h1>
+<p>MongoKit has optional support for MongoDB&#8217;s autoreferencing/dbref
+features. Autoreferencing allows you to embed MongoKit objects/instances
+inside another MongoKit object.  With autoreferencing enabled, MongoKit and
+the pymongo driver will translate the embedded MongoKit object
+values into internal MongoDB DBRefs.  The (de)serialization is
+handled automatically by the pymongo driver.</p>
+<p>Autoreferences allow you to pass other Documents as values.
+<a href="#id1"><span class="problematic" id="id2">pymongo_</span></a>.  (with help from MongoKit) automatically
+translates these object values into DBRefs before persisting to
+Mongo.  When fetching, it translates them back, so that you have
+the data values for your referenced object. See the <a class="reference external" href="http://github.com/mongodb/mongo-python-driver/blob/cd47b2475c5fe567e98696e6bc5af3c402891d12/examples/auto_reference.py">autoref_sample</a>. for
+further details/internals  on this driver-level functionality. As for
+enabling it in your own MongoKit code, simply define the following class
+attribute upon your Document subclass:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>With autoref enabled, MongoKit&#8217;s connection management will attach the
+appropriate BSON manipulators to your document&#8217;s connection handles.  We
+require you to explicitly enable autoref for two reasons:</p>
+<blockquote>
+<ul class="simple">
+<li>Using autoref and it&#8217;s BSON manipulators (As well as DBRefs) can carry a performance penalty.  We opt for performance and simplicity first, so you must explicitly enable autoreferencing.</li>
+<li>You may not wish to use auto-referencing in some cases where you&#8217;re using DBRefs.</li>
+</ul>
+</blockquote>
+<p>Once you have autoref enabled, MongoKit will allow you to define
+any valid subclass of Document as part of your document
+structure.  <strong>If your class does not define `use_autorefs` as
+True, MongoKit&#8217;s structure validation code will REJECT your
+structure.</strong></p>
+<div class="section" id="a-detailed-example">
+<h2>A detailed example<a class="headerlink" href="#a-detailed-example" title="Permalink to this headline">¶</a></h2>
+<p>First let&#8217;s create a simple doc:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">DocA</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;a&quot;</span><span class="p">:{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
+<span class="gp">... </span>       <span class="s">&quot;abis&quot;</span><span class="p">:{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;a.foo&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;abis.bar&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">DocA</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">DocA</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;doca&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="p">[</span><span class="s">&#39;abis&#39;</span><span class="p">][</span><span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s create a DocB which have a reference to DocA:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">DocB</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&quot;b&quot;</span><span class="p">:{</span><span class="s">&quot;doc_a&quot;</span><span class="p">:</span><span class="n">DocA</span><span class="p">},</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>Note that to be able to specify a Document into the structure, we must
+set <cite>use_autorefs</cite> as <cite>True</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">DocB</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">DocB</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The default value for an embedded doc is None:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span>
+<span class="go">{&#39;b&#39;: {&#39;doc_a&#39;: None}}</span>
+</pre></div>
+</div>
+<p>The validation acts as expected:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">SchemaTypeError</span>: <span class="n-Identifier">b.doc_a must be an instance of DocA not int</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;docb&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">doca</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span>
+<span class="go">{&#39;b&#39;: {&#39;doc_a&#39;: {&#39;a&#39;: {&#39;foo&#39;: 2}, &#39;abis&#39;: {&#39;bar&#39;: 3}, &#39;_id&#39;: &#39;doca&#39;}}, &#39;_id&#39;: &#39;docb&#39;}</span>
+</pre></div>
+</div>
+<p>Note that the reference can not only be cross collection but also cross database. So, it doesn&#8217;t matter
+where you save the DocA object as long as it can be fetch with the same connection.</p>
+<p>Now the interesting part. If we change a field in an embedded doc, the change will be done
+for all DocA which have the same &#8216;_id&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">][</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doca</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="s">&#39;foo&#39;</span><span class="p">]</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+<p>Required fields are also supported in embedded documents.
+Remember DocA have the &#8216;abis.bar&#8217; field required. If we set it to None
+via the docb document, the RequireFieldError is raised:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">][</span><span class="s">&#39;doc_a&#39;</span><span class="p">][</span><span class="s">&#39;abis&#39;</span><span class="p">][</span><span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">RequireFieldError</span>: <span class="n-Identifier">abis.bar is required</span>
+</pre></div>
+</div>
+<div class="section" id="about-cross-database-references">
+<h3>About cross-database references<a class="headerlink" href="#about-cross-database-references" title="Permalink to this headline">¶</a></h3>
+<p>pymongo&#8217;s DBRef doesn&#8217;t take a database by default so MongoKit needs this
+information to fetch the correct Document.</p>
+<p>An example is better than thousand words. Let&#8217;s create an <tt class="docutils literal"><span class="pre">EmbedDoc</span></tt> and a <tt class="docutils literal"><span class="pre">Doc</span></tt> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">EmbedDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>...   structure = {
+...       &#8220;foo&#8221;: unicode,
+...   }</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Doc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">use_dot_notation</span><span class="o">=</span><span class="bp">True</span>
+<span class="gp">... </span>  <span class="n">use_autorefs</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">... </span>  <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>      <span class="s">&quot;embed&quot;</span><span class="p">:</span> <span class="n">EmbedDoc</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">EmbedDoc</span><span class="p">,</span> <span class="n">Doc</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">EmbedDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;bar&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s insert a raw document with a DBRef but without specifying the database:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">raw_doc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;embed&#39;</span><span class="p">:</span><span class="n">DBRef</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s">&#39;tutorial&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">embed</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">])}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc_id</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">raw_doc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now what append when we want to load the data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">Doc</span><span class="o">.</span><span class="n">get_from_id</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">RuntimeError</span>: <span class="n-Identifier">It appears that you try to use autorefs. I found a DBRef without database specified.</span>
+<span class="go"> If you do want to use the current database, you have to add the attribute `force_autorefs_current_db` as True. Please see the doc for more details.</span>
+<span class="go"> The DBRef without database is : DBRef(u&#39;tutorial&#39;, ObjectId(&#39;4b6a949890bce72958000002&#39;))</span>
+</pre></div>
+</div>
+<p>This mean that you may load data which could have been generated by map/reduce or raw data (like fixtures for instance)
+and the database information is not set into the DBRef. The error message tells you that you can add turn the
+<cite>force_autorefs_current_db</cite> as True to allow MongoKit to use the current collection by default (here &#8216;test&#8217;):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+<p>u&#8217;test&#8217;</p>
+<p>NOTE: You have to be very careful when you enable this option to be sure that you are using the correct database.
+If you expect some strange behavior (like not document found), you may look at this first.</p>
+</div>
+<div class="section" id="reference-and-dereference">
+<h3>Reference and dereference<a class="headerlink" href="#reference-and-dereference" title="Permalink to this headline">¶</a></h3>
+<div class="topic">
+<p class="topic-title first">new in development version</p>
+<p>You can get the dbref of a document with the <cite>get_dbref()</cite> method. The
+<cite>dereference()</cite> allow to get a Document from a dbref. You can pass a Document
+to tell mongokit to what model it should dereferenced:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dbref</span> <span class="o">=</span> <span class="n">mydoc</span><span class="o">.</span><span class="n">get_dbref</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raw_doc</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mydb</span><span class="o">.</span><span class="n">dereference</span><span class="p">(</span><span class="n">dbref</span><span class="p">)</span> <span class="c"># the result is a regular dict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mydb</span><span class="o">.</span><span class="n">dereference</span><span class="p">(</span><span class="n">dbref</span><span class="p">,</span> <span class="n">MyDoc</span><span class="p">)</span> <span class="c"># the result is a MyDoc instance</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="validation_and_optimisation.html" title="Skipping validation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="update.html" title="Updating data"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

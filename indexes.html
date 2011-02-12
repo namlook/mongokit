@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Indexes &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="Polymorphism with MongoKit" href="inheritance.html" />
+    <link rel="prev" title="Skipping validation" href="validation_and_optimisation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="validation_and_optimisation.html" title="Skipping validation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="validation_and_optimisation.html"
+                                  title="previous chapter">Skipping validation</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="inheritance.html"
+                                  title="next chapter">Polymorphism with MongoKit</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/indexes.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="indexes">
+<h1>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h1>
+<p>Sometimes, it&#8217;s desirable to have indexes on your dataset - especially unique ones.
+In order to do that, you must fill the <cite>indexes</cite> attribute. The <cite>indexes</cite> attribute
+is a list of dictionary with the following structure:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">&#8220;fields&#8221;:</th><td class="field-body"># take a list of fields or a field name (required)</td>
+</tr>
+<tr class="field"><th class="field-name">&#8220;unique&#8221;:</th><td class="field-body">should this index guarantee uniqueness? (optional, False by default)</td>
+</tr>
+<tr class="field"><th class="field-name">&#8220;ttl&#8221;:</th><td class="field-body">(optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to <cite>ensure_index</cite> - see pymongo documentation for <cite>ensure_index</cite> for details.</td>
+</tr>
+<tr class="field"><th class="field-name">&#8220;check:</th><td class="field-body">(optional, True by default) don&#8217;t check if the field name is present in the structure. Useful if you don&#8217;t know the field name.</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;standard&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s">&#39;other&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;deep&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;notindexed&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;fields&#39;</span><span class="p">:[</span><span class="s">&#39;standard&#39;</span><span class="p">,</span> <span class="s">&#39;other.deep&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s">&#39;unique&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">]</span>
+</pre></div>
+</div>
+<p>or if you have more than one index:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Movie</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">db_name</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="gp">... </span>    <span class="n">collection_name</span> <span class="o">=</span> <span class="s">&#39;mongokit&#39;</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;standard&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s">&#39;other&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;deep&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;alsoindexed&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;fields&#39;</span><span class="p">:</span><span class="s">&#39;standard&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s">&#39;unique&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;fields&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;alsoindexed&#39;</span><span class="p">,</span> <span class="s">&#39;other.deep&#39;</span><span class="p">]</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">]</span>
+</pre></div>
+</div>
+<p>By default, the index direction is set to 1. You can change the direction by
+passing a list of tuple.  Direction must be one of <cite>INDEX_ASCENDING</cite> (or 1),
+<cite>INDEX_DESCENDING</cite> (or -1), <cite>INDEX_OFF</cite> (or 0), <cite>INDEX_ALL</cite> (or 2) or <cite>INDEX_GEO2D</cite> (or &#8216;2d&#8217;):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;standard&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s">&#39;other&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;deep&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="s">&#39;notindexed&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s">&#39;fields&#39;</span><span class="p">:[(</span><span class="s">&#39;standard&#39;</span><span class="p">,</span><span class="n">INDEX_ASCENDING</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;other.deep&#39;</span><span class="p">,</span><span class="n">INDEX_DESCENDING</span><span class="p">)],</span>
+<span class="gp">... </span>            <span class="s">&#39;unique&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">]</span>
+</pre></div>
+</div>
+<p>To prevent adding an index on the wrong field (misspelled for instance),
+MongoKit will check by default the <cite>indexes</cite> descriptor. In some cases
+may want to disable this. To do so, add <tt class="docutils literal"><span class="pre">&quot;check&quot;:True</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<span class="gp">... </span>       <span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span>   <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>       <span class="c"># I know this field is not in the document structure, don&#39;t check it</span>
+<span class="gp">... </span>       <span class="p">{</span><span class="s">&#39;fields&#39;</span><span class="p">:[</span><span class="s">&#39;foo.title&#39;</span><span class="p">],</span> <span class="s">&#39;check&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">}</span>
+<span class="gp">... </span>   <span class="p">]</span>
+</pre></div>
+</div>
+<p>In this example, we index the field <cite>foo.title</cite> which is not explicitly specified in the structure.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="inheritance.html" title="Polymorphism with MongoKit"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="validation_and_optimisation.html" title="Skipping validation"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

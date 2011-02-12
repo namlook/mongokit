@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Custom types &mdash; MongoKit v0.6 documentation</title>
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="next" title="Query" href="query.html" />
+    <link rel="prev" title="MongokitOperator" href="operators.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="query.html" title="Query"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="operators.html" title="MongokitOperator"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="operators.html"
+                                  title="previous chapter">MongokitOperator</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="query.html"
+                                  title="next chapter">Query</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="sources/custom_types.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="custom-types">
+<h1>Custom types<a class="headerlink" href="#custom-types" title="Permalink to this headline">¶</a></h1>
+<p>Sometimes, we need to work with complex objects while their
+footprint in the database is fairly simple. Let&#8217;s take a
+datetime object. A datetime object can be useful to compute
+complex date but while mongodb can deal with datetime object,
+let&#8217;s say that we just want to store the unicode representation.</p>
+<p>MongoKit allows you to work on a datetime object and store the unicode
+representation on the fly. In order to do this, we have to implement a CustomType
+and fill the custom_types attributes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+</pre></div>
+</div>
+<p>A CustomType object must implement two methods and one attribute:</p>
+<blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt><cite>to_bson(self, value)</cite>: this method will convert the value</dt>
+<dd><p class="first last">to fit the correct authorized type before being saved in the db.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>to_python(self, value)</cite>: this method will convert the value</dt>
+<dd><p class="first last">taken from the db into a python object</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>validate(self, value, path)</cite>: this method is optional and will add a</dt>
+<dd><p class="first last">validation layer. Please, see the <cite>Set()</cite> CustomType code for more example.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">You must specify a <cite>mongo_type</cite> property in the <cite>CustomType</cite> class. this
+will describes the type of the value stored in the mongodb.</p>
+</li>
+<li><p class="first">If you want more validation, you can specify a <cite>python_type</cite> property which is
+the python type the value will be converted. This is a good thing to specify it
+as it make a good documentation.</p>
+</li>
+<li><p class="first"><cite>init_type</cite> attribute will allow to describes an empty value. For example,
+if you implement the python set as CustomType, you&#8217;ll set <cite>init_type</cite> to
+<cite>set</cite>. Note that <cite>init_type</cite> must be a type or a callable instance.</p>
+</li>
+</ul>
+</blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomDate</span><span class="p">(</span><span class="n">CustomType</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">mongo_type</span> <span class="o">=</span> <span class="nb">unicode</span>
+<span class="gp">... </span>    <span class="n">python_type</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span> <span class="c"># optional, just for more validation</span>
+<span class="gp">... </span>    <span class="n">init_type</span> <span class="o">=</span> <span class="bp">None</span> <span class="c"># optional, fill the first empty value</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">to_bson</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="sd">&quot;&quot;&quot;convert type to a mongodb type&quot;&quot;&quot;</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="s">&#39;%y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="sd">&quot;&quot;&quot;convert type to a python object&quot;&quot;&quot;</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+<span class="gp">... </span>           <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;%y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="sd">&quot;&quot;&quot;OPTIONAL : useful to add a validation layer&quot;&quot;&quot;</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">pass</span> <span class="c"># ... do something here</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s create a Document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;foo&#39;</span><span class="p">:{</span>
+<span class="gp">... </span>            <span class="s">&#39;date&#39;</span><span class="p">:</span> <span class="n">CustomDate</span><span class="p">(),</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">}</span>
+</pre></div>
+</div>
+<p>Now, we can create Foo&#8217;s objects and working with python datetime objects</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Foo</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">Foo</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2003</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The saved object in db has the unicode footprint as expected:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s">&#39;_id&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<span class="go">{u&#39;_id&#39;: 1, u&#39;foo&#39;: {u&#39;date&#39;: u&#39;03-02-01&#39;}}</span>
+</pre></div>
+</div>
+<p>Querying an object will automatically convert the CustomType into the correct
+python object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">Foo</span><span class="o">.</span><span class="n">get_from_id</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;date&#39;</span><span class="p">]</span>
+<span class="go">datetime.datetime(2003, 2, 1, 0, 0)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="query.html" title="Query"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="operators.html" title="MongokitOperator"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009-2010, Namlook.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>
