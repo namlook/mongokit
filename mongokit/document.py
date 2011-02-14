@@ -69,10 +69,6 @@ class DocumentProperties(SchemaProperties):
                         for index in attrs['indexes']+parent.indexes:
                             if index not in attrs['indexes']:
                                 attrs['indexes'].append(index)
-        if '__database__' in attrs and not '__collection__' in attrs:
-            raise AttributeError("%s: __collection__ attribute not found. "
-              "You cannot specify the `__database__` attribute without "
-              "the `__collection__` attribute" % name)
         return SchemaProperties.__new__(cls, name, bases, attrs)        
 
     @classmethod
@@ -146,9 +142,6 @@ class Document(SchemaDocument):
     indexes = []
     gridfs = []
     migration_handler = None
-
-    #__database__ = None
-    #__collection__  = None
 
     authorized_types = SchemaDocument.authorized_types + [
       Binary,

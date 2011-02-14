@@ -83,7 +83,12 @@ class Connection(PymongoConnection):
     def __getattr__(self, key):
         if key in self._registered_documents:
             document = self._registered_documents[key]
-            return getattr(self[document.__database__][document.__collection__], key)
+            try:
+                return getattr(self[document.__database__][document.__collection__], key)
+            except AttributeError:
+                raise AttributeError("%s: __collection__ attribute not found. "
+                  "You cannot specify the `__database__` attribute without "
+                  "the `__collection__` attribute" % key)
         else:
             if key not in self._databases:
                 self._databases[key] = Database(self, key)

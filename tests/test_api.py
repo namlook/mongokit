@@ -848,17 +848,17 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(raw_doc, mydoc)
         assert isinstance(raw_doc, MyDoc)
 
-
-
     def test_database_name_filled(self):
 
         failed = False
+        @self.connection.register
+        class MyDoc(Document):
+            __database__ = 'mydoc'
+            structure = {
+                'foo':int,
+            }
         try:
-            class MyDoc(Document):
-                __database__ = 'mydoc'
-                structure = {
-                    'foo':int,
-                }
+            doc = self.connection.MyDoc()
         except AttributeError, e:
             failed = True
             self.assertEqual(str(e), 'MyDoc: __collection__ attribute not '
@@ -912,5 +912,21 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(raw_doc, mydoc)
         assert isinstance(raw_doc, MyDoc)
 
+
+    def test_no_collection_in_virtual_document(self):
+        @self.connection.register
+        class Root(Document):
+            __database__ = "test"
+
+        @self.connection.register
+        class DocA(Root):
+           __collection__ = "doca"
+           structure = {'title':unicode}
+
+        doc = self.connection.DocA()
+        doc['title'] = u'foo'
+        doc.save()
+
+        self.assertEqual(self.connection.test.doca.find_one(), doc)
 
  
