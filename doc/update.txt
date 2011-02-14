@@ -106,16 +106,18 @@ Two thing you should know before using this method :
 
 Example::
 
-    >>> class MyDoc(Document):
+    >>> @connection.register
+    ... class MyDoc(Document):
+    ...    __database__ = 'test'
+    ...    __collection__ = 'tutorial'
     ...    structure = {
     ...        'foo':{
     ...            'eggs':{'spam':int},
     ...        },
     ...        'bla':unicode
     ...    }
-    >>> self.connection.register([MyDoc])
 
-    >>> doc = self.col.MyDoc()
+    >>> doc = connection.MyDoc()
     # calling reload() here will raise a KeyError
     >>> doc['_id'] = 3
     >>> doc['foo']['eggs']['spam'] = 4
@@ -123,9 +125,28 @@ Example::
     # calling reload() here will raise an OperationFailure
     >>> doc.save()
     >>> doc['bla'] = u'bli' # we don't save this change this will be erased
-    >>> self.col.update({'_id':doc['_id']}, {'$set':{'foo.eggs.spam':2}})
+    >>> connection.test.tutorial.update({'_id':doc['_id']}, {'$set':{'foo.eggs.spam':2}})
     >>> doc.reload()
     >>> doc
     {'_id': 3, 'foo': {u'eggs': {u'spam': 2}}, 'bla': u'ble'}
 
+find_and_modify()
+-----------------
 
+This method allow to return a Document object after or before making an update.
+
+If you call `find_and_modify` on a Collection object, it will return a dict object::
+
+    >>> d = connection.test.tutorial.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+    >>> isinstance(d, MyDoc)
+    False
+    >>> isinstance(d, dict)
+    True
+
+If you call `find_and_modify` on a Document object, it will return a Document object::
+
+    >>> d = connection.MyDoc.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+    >>> isinstance(d, MyDoc)
+    True
+
+Please, read the mongodb documentation to lern how to use the `find_and_modify` method.

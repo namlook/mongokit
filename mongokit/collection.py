@@ -66,7 +66,19 @@ class Collection(PymongoCollection):
     def find(self, *args, **kwargs):
         return Cursor(self, *args, **kwargs)
     find.__doc__ = PymongoCollection.find.__doc__ + """
-        mongokit::
+        added by mongokit::
+            - `wrap` (optional): a class object used to wrap
+            documents in the query result
+    """
+
+    def find_and_modify(self, *args, **kwargs):
+        obj_class = kwargs.pop('wrap', None)
+        doc = super(Collection, self).find_and_modify(*args, **kwargs)
+        if obj_class:
+            return self.collection[obj_class.__name__](doc)
+        return doc
+    find_and_modify.__doc__ = PymongoCollection.find_and_modify.__doc__ + """
+        added by mongokit::
             - `wrap` (optional): a class object used to wrap
             documents in the query result
     """
