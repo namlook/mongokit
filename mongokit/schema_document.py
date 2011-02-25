@@ -285,6 +285,7 @@ class SchemaDocument(dict):
       long,
       float,
       unicode,
+      basestring,
       list, 
       dict,
       datetime.datetime, 
