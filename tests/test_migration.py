@@ -313,5 +313,35 @@ class MigrationTestCase(unittest.TestCase):
         self.connection.register([BlogPost])
 
         doc = self.col.BlogPost.find_one({'blog_post.title':'hello 0'})
-        assert doc == {u'blog_post': {u'body': u'I the post number 0', u'title': {u'lang': u'fr', u'value': u'hello 0'}, u'tags': [{u'foo': {u'lang': u'fr', u'value': u'hello 0'}}], u'creation_date': datetime(2010, 1, 1, 0, 0)}, u'author': None, u'_id': doc['_id']},  doc
+        self.assertEqual(doc, {u'blog_post': {u'body': u'I the post number 0',
+          u'title': {u'lang': u'fr', u'value': u'hello 0'},
+          u'tags': [{u'foo': {u'lang': u'fr', u'value': u'hello 0'}}],
+          u'creation_date': datetime(2010, 1, 1, 0, 0)}, u'author': None,
+          u'_id': doc['_id']})
 
+    def test_migration_with_schemaless(self):
+        # creating blog post migration
+        class BlogPostMigration(DocumentMigration):
+            def migration01__add_tags(self):
+                self.target = {'blog_post':{'$exists':True}}
+                self.update = {'$set':{'blog_post.tags':[]}}
+
+        # update blog post class
+        failed = False
+        try:
+            class BlogPost(Document):
+                structure = {
+                    "author":unicode,
+                    "blog_post":{
+                        "title": unicode,
+                        "creation_date": datetime,
+                        "body": unicode,
+                        "tags": [unicode],
+                    }
+                }
+                use_schemaless = True
+                migration_handler = BlogPostMigration
+        except OptionConflictError, e:
+            self.assertEqual('You cannot set a migration_handler with use_schemaless set to True', str(e))
+            failed = True
+        self.assertEqual(failed, True)

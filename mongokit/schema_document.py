@@ -274,6 +274,10 @@ class SchemaDocument(dict):
 
     skip_validation = False
 
+    # if you want to have all schemaless benefits (default False but should change)
+    # warning, if use_schemaless is True, Migration features can not be used.
+    use_schemaless = False
+
     # If you want to use the dot notation, set this to True:
     use_dot_notation = False
     dot_notation_warning = False
@@ -566,7 +570,7 @@ class SchemaDocument(dict):
                 else:
                     struct_struct_diff = list(set(doc).difference(set(struct)))
                     bad_fields = [s for s in struct_struct_diff if s not in STRUCTURE_KEYWORDS]
-                    if bad_fields:
+                    if bad_fields and not self.use_schemaless:
                         self._raise_exception(StructureError, None,
                           "unknown fields : %s" % bad_fields)
             for key in struct:
@@ -583,7 +587,8 @@ class SchemaDocument(dict):
                                 path, key.__name__, type(doc_key).__name__))
                         self._validate_doc(doc[doc_key], struct[key], new_path)
                 else:
-                    self._validate_doc(doc[key], struct[key],  new_path)
+                    if doc.get(key) and self.use_schemaless:
+                        self._validate_doc(doc[key], struct[key],  new_path)
         elif isinstance(struct, list):
             if not isinstance(doc, list) and not isinstance(doc, tuple):
                 self._raise_exception(SchemaTypeError, path,

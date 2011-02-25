@@ -75,6 +75,8 @@ class DocumentProperties(SchemaProperties):
     def _validate_descriptors(cls, attrs):
         SchemaProperties._validate_descriptors(attrs)
         # validate index descriptor
+        if attrs.get('migration_handler') and attrs.get('use_schemaless'):
+            raise OptionConflictError('You cannot set a migration_handler with use_schemaless set to True')
         if attrs.get('indexes'):
             for index in attrs['indexes']:
                 if index.get('check', True):

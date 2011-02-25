@@ -39,6 +39,7 @@ Contents:
     descriptors
     operators
     custom_types
+    schemaless
     query
     update
     dbref
