@@ -243,8 +243,6 @@ If you expect some strange behavior (like not document found), you may look at t
 </div>
 <div class="section" id="reference-and-dereference">
 <h3>Reference and dereference<a class="headerlink" href="#reference-and-dereference" title="Permalink to this headline">¶</a></h3>
-<div class="topic">
-<p class="topic-title first">new in development version</p>
 <p>You can get the dbref of a document with the <cite>get_dbref()</cite> method. The
 <cite>dereference()</cite> allow to get a Document from a dbref. You can pass a Document
 to tell mongokit to what model it should dereferenced:</p>
@@ -252,7 +250,6 @@ to tell mongokit to what model it should dereferenced:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">raw_doc</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mydb</span><span class="o">.</span><span class="n">dereference</span><span class="p">(</span><span class="n">dbref</span><span class="p">)</span> <span class="c"># the result is a regular dict</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mydb</span><span class="o">.</span><span class="n">dereference</span><span class="p">(</span><span class="n">dbref</span><span class="p">,</span> <span class="n">MyDoc</span><span class="p">)</span> <span class="c"># the result is a MyDoc instance</span>
 </pre></div>
-</div>
 </div>
 </div>
 </div>
@@ -280,7 +277,7 @@ to tell mongokit to what model it should dereferenced:</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2010, Namlook.
+      &copy; Copyright 2009-2011, Nicolas Clairon.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
     </div>
   </body>

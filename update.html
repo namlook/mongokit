@@ -20,7 +20,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
-    <link rel="next" title="Embedding Documents as values" href="dbref.html" />
+    <link rel="next" title="Using DBRef" href="dbref.html" />
     <link rel="prev" title="Query" href="query.html" /> 
   </head>
   <body>
@@ -31,7 +31,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="dbref.html" title="Embedding Documents as values"
+          <a href="dbref.html" title="Using DBRef"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="query.html" title="Query"
@@ -44,9 +44,9 @@
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="#">Updating data</a><ul>
-<li><a class="reference external" href="#update-a-document">Update a document</a></li>
-<li><a class="reference external" href="#bulk-update">Bulk update</a></li>
+<li><a class="reference external" href="#bulk-and-atomic-updates">Bulk and atomic updates</a></li>
 <li><a class="reference external" href="#reload">reload()</a></li>
+<li><a class="reference external" href="#find-and-modify">find_and_modify()</a></li>
 </ul>
 </li>
 </ul>
@@ -56,7 +56,7 @@
                                   title="previous chapter">Query</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="dbref.html"
-                                  title="next chapter">Embedding Documents as values</a></p>
+                                  title="next chapter">Using DBRef</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="sources/update.txt"
@@ -85,88 +85,39 @@
             
   <div class="section" id="updating-data">
 <h1>Updating data<a class="headerlink" href="#updating-data" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="update-a-document">
-<h2>Update a document<a class="headerlink" href="#update-a-document" title="Permalink to this headline">¶</a></h2>
-<div class="topic">
-<p class="topic-title first">new in version 0.5.6</p>
-<p>Mongokit now support atomic update out of the box !</p>
 <p>Update in Mongokit is as easy than saving an object. Just modify your
-document, save it and that&#8217;s it ! Your document is updated using atomic
-update. To do that, your document must contain the field <cite>_version</cite>. Here&#8217;s an
-complete example of how updating work with Mongokit:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
-<span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>       <span class="s">&#39;foo&#39;</span><span class="p">:{</span>
-<span class="gp">... </span>           <span class="s">&#39;bar&#39;</span><span class="p">:[</span><span class="nb">unicode</span><span class="p">],</span>
-<span class="gp">... </span>           <span class="s">&#39;eggs&#39;</span><span class="p">:{</span><span class="s">&#39;spam&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
-<span class="gp">... </span>       <span class="p">},</span>
-<span class="gp">... </span>       <span class="s">&#39;bla&#39;</span><span class="p">:</span><span class="nb">unicode</span>
-<span class="gp">... </span>   <span class="p">}</span>
-<span class="gp">... </span>   <span class="n">atomic_save</span> <span class="o">=</span> <span class="bp">True</span> <span class="c"># enable atomic saving</span>
+document and save it:</p>
+<div class="highlight-python"><pre>@connection.register
+... class MyDoc(Document):
+...    structure = {
+...        'foo':{
+...            'bar':[unicode],
+...            'eggs':{'spam':int},
+...        },
+...        'bla':unicode
+...    }
 
-<span class="go">NOTE : as atomic saving requires modifying documents by adding a new</span>
-<span class="go">field (`_version`), you have to explicitly tell MongoKit that you want</span>
-<span class="go">to use this new feature by setting the attribute `atomic_save` as True.</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
+&gt;&gt;&gt; doc = self.col.MyDoc()
+&gt;&gt;&gt; doc['_id'] = 3
+&gt;&gt;&gt; doc['foo']['bar'] = [u'mybar', u'yourbar']
+&gt;&gt;&gt; doc['foo']['eggs']['spam'] = 4
+&gt;&gt;&gt; doc['bla'] = u'ble'
+&gt;&gt;&gt; doc.save()
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">col</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">u&#39;mybar&#39;</span><span class="p">,</span> <span class="s">u&#39;yourbar&#39;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;eggs&#39;</span><span class="p">][</span><span class="s">&#39;spam&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;bla&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;ble&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+Let's modify our doc :
 
-<span class="go">Here, the field `_version` is automatically added :</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_version&#39;</span><span class="p">]</span>
-<span class="go">1</span>
-
-<span class="go">Let&#39;s modify our doc :</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;eggs&#39;</span><span class="p">][</span><span class="s">&#39;spam&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;bla&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s">u&#39;bli&#39;</span>
-
-<span class="go">But now, someone is getting our doc and update it before we could save it:</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">col</span><span class="o">.</span><span class="n">MyDoc</span><span class="o">.</span><span class="n">get_from_id</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span><span class="p">[</span><span class="s">&#39;bla&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;blo&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-
-<span class="go">The doc `_version` is incremented :</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span><span class="p">[</span><span class="s">&#39;_version&#39;</span><span class="p">]</span>
-<span class="go">2</span>
-
-<span class="go">So, if we try to save our doc, this would raise a ConflictError as the</span>
-<span class="go">data has changed. What we have to do is reload the document and try to</span>
-<span class="go">save it again :</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
-<span class="gp">... </span>   <span class="n">doc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="gp">... </span><span class="k">except</span> <span class="n">ConflictError</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
-<span class="gp">... </span>   <span class="n">doc</span><span class="o">.</span><span class="n">reload</span><span class="p">()</span>
-<span class="gp">... </span>   <span class="n">doc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;eggs&#39;</span><span class="p">][</span><span class="s">&#39;spam&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="gp">... </span>   <span class="n">doc</span><span class="p">[</span><span class="s">&#39;bla&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s">u&#39;bli&#39;</span>
-<span class="gp">... </span>   <span class="n">doc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-
-<span class="go">our doc version is now 3:</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_version&#39;</span><span class="p">]</span>
-<span class="go">3</span>
-
-<span class="go">If we get a fresh instance of your doc, we can check that all is correct :</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">col</span><span class="o">.</span><span class="n">MyDoc</span><span class="o">.</span><span class="n">get_from_id</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span>
-<span class="go">{&#39;foo&#39;: {&#39;eggs&#39;: {&#39;spam&#39;: 2}, &#39;bar&#39;: [u&#39;mybar&#39;, u&#39;yourbar&#39;]}, &#39;bla&#39;: u&#39;bli&#39;, &#39;_version&#39;: 3, &#39;_id&#39;: 3}</span>
-</pre></div>
+&gt;&gt;&gt; doc['foo']['eggs']['spam'] = 2
+&gt;&gt;&gt; doc['bla']= u'bli'
+&gt;&gt;&gt; doc.save()</pre>
 </div>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">You have to be conscient that updating a document like that is not atomic. To do so, please read the next section.</p>
 </div>
-</div>
-<div class="section" id="bulk-update">
-<h2>Bulk update<a class="headerlink" href="#bulk-update" title="Permalink to this headline">¶</a></h2>
-<p>Bulk update is not yet supported (but will be soon). For now, as Mongokit expose all the pymongo API, you can use the pymongo&#8217;s update on collection:</p>
+<div class="section" id="bulk-and-atomic-updates">
+<h2>Bulk and atomic updates<a class="headerlink" href="#bulk-and-atomic-updates" title="Permalink to this headline">¶</a></h2>
+<p>As Mongokit expose all the pymongo API, you can use the pymongo&#8217;s update on collection:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="s">&#39;my first blog post&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="s">u&#39;my very first blog post&#39;</span><span class="p">}})</span>
 </pre></div>
 </div>
@@ -185,16 +136,18 @@ match changes from the database. To do that, use the <cite>reload()</cite> metho
 </ul>
 </blockquote>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@connection.register</span>
+<span class="gp">... </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">__database__</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="gp">... </span>   <span class="n">__collection__</span> <span class="o">=</span> <span class="s">&#39;tutorial&#39;</span>
 <span class="gp">... </span>   <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>       <span class="s">&#39;foo&#39;</span><span class="p">:{</span>
 <span class="gp">... </span>           <span class="s">&#39;eggs&#39;</span><span class="p">:{</span><span class="s">&#39;spam&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
 <span class="gp">... </span>       <span class="p">},</span>
 <span class="gp">... </span>       <span class="s">&#39;bla&#39;</span><span class="p">:</span><span class="nb">unicode</span>
 <span class="gp">... </span>   <span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDoc</span><span class="p">])</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">col</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">MyDoc</span><span class="p">()</span>
 <span class="go"># calling reload() here will raise a KeyError</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">][</span><span class="s">&#39;eggs&#39;</span><span class="p">][</span><span class="s">&#39;spam&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
@@ -202,11 +155,33 @@ match changes from the database. To do that, use the <cite>reload()</cite> metho
 <span class="go"># calling reload() here will raise an OperationFailure</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;bla&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;bli&#39;</span> <span class="c"># we don&#39;t save this change this will be erased</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">col</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;_id&#39;</span><span class="p">:</span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]},</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;foo.eggs.spam&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;_id&#39;</span><span class="p">:</span><span class="n">doc</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]},</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;foo.eggs.spam&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">reload</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
 <span class="go">{&#39;_id&#39;: 3, &#39;foo&#39;: {u&#39;eggs&#39;: {u&#39;spam&#39;: 2}}, &#39;bla&#39;: u&#39;ble&#39;}</span>
 </pre></div>
+</div>
+</div>
+<div class="section" id="find-and-modify">
+<h2>find_and_modify()<a class="headerlink" href="#find-and-modify" title="Permalink to this headline">¶</a></h2>
+<div class="topic">
+<p class="topic-title first">new in development version</p>
+<p>This method allow to return a Document object after or before making an update.</p>
+<p>If you call <cite>find_and_modify</cite> on a Collection object, it will return a dict object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">find_and_modify</span><span class="p">({</span><span class="s">&#39;bla&#39;</span><span class="p">:</span><span class="s">&#39;ble&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;foo.eggs.spam&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">MyDoc</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If you call <cite>find_and_modify</cite> on a Document object, it will return a Document object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">MyDoc</span><span class="o">.</span><span class="n">find_and_modify</span><span class="p">({</span><span class="s">&#39;bla&#39;</span><span class="p">:</span><span class="s">&#39;ble&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;foo.eggs.spam&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">MyDoc</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Please, read the mongodb documentation to lern how to use the <cite>find_and_modify</cite> method.</p>
 </div>
 </div>
 </div>
@@ -224,7 +199,7 @@ match changes from the database. To do that, use the <cite>reload()</cite> metho
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="dbref.html" title="Embedding Documents as values"
+          <a href="dbref.html" title="Using DBRef"
              >next</a> |</li>
         <li class="right" >
           <a href="query.html" title="Query"
@@ -233,7 +208,7 @@ match changes from the database. To do that, use the <cite>reload()</cite> metho
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2010, Namlook.
+      &copy; Copyright 2009-2011, Nicolas Clairon.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
     </div>
   </body>

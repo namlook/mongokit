@@ -90,7 +90,6 @@
             
   <div class="section" id="migration">
 <h1>Migration<a class="headerlink" href="#migration" title="Permalink to this headline">¶</a></h1>
-<p><strong>new in version 0.5.6</strong></p>
 <p>Let&#8217;s say we have created a blog post which look like this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
@@ -148,6 +147,10 @@ structure don&#8217;t match:</p>
 </div>
 <div class="section" id="lazy-migration">
 <h2>Lazy migration<a class="headerlink" href="#lazy-migration" title="Permalink to this headline">¶</a></h2>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">You cannot use this feature if <cite>use_schemaless</cite> is set to True</p>
+</div>
 <p>Mongokit provides a convenient way to set migration rules an apply them lazily.
 Here&#8217;s how to do, we use the previous example.</p>
 <p>Let&#8217;s create a <cite>BlogPostMigration</cite> which inherit from <cite>DocumentMigration</cite>:</p>
@@ -186,8 +189,11 @@ the <cite>migration_handler</cite> in <cite>BlogPost</cite>:</p>
 </div>
 <p>Each time that an error is raised while validating a document, migration rules
 are applied to the object and the document is reloaded.</p>
-<p>CAUTION: if <cite>migration_handler</cite> is set then <cite>skip_validation</cite> is desactivated.
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">if <cite>migration_handler</cite> is set then <cite>skip_validation</cite> is desactivated.
 Validation must be on to allow lazy migration.</p>
+</div>
 </div>
 <div class="section" id="bulk-migration">
 <h2>Bulk migration<a class="headerlink" href="#bulk-migration" title="Permalink to this headline">¶</a></h2>
@@ -226,8 +232,11 @@ lazy migration.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">migration</span><span class="o">.</span><span class="n">migrate_all</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>NOTE: because <cite>migration_*</cite> methods are not called with <cite>migrate_all()</cite>, you
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">because <cite>migration_*</cite> methods are not called with <cite>migrate_all()</cite>, you
 can mix <cite>migration_*</cite> and <cite>allmigration_*</cite> methods.</p>
+</div>
 </div>
 <div class="section" id="migration-status">
 <h2>Migration status<a class="headerlink" href="#migration-status" title="Permalink to this headline">¶</a></h2>
@@ -298,7 +307,7 @@ second line.</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2010, Namlook.
+      &copy; Copyright 2009-2011, Nicolas Clairon.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
     </div>
   </body>

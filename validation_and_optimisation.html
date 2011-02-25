@@ -21,7 +21,7 @@
     <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
     <link rel="next" title="Indexes" href="indexes.html" />
-    <link rel="prev" title="Embedding Documents as values" href="dbref.html" /> 
+    <link rel="prev" title="Using DBRef" href="dbref.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,7 +34,7 @@
           <a href="indexes.html" title="Indexes"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="dbref.html" title="Embedding Documents as values"
+          <a href="dbref.html" title="Using DBRef"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
       </ul>
@@ -49,7 +49,7 @@
 
             <h4>Previous topic</h4>
             <p class="topless"><a href="dbref.html"
-                                  title="previous chapter">Embedding Documents as values</a></p>
+                                  title="previous chapter">Using DBRef</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="indexes.html"
                                   title="next chapter">Indexes</a></p>
@@ -111,8 +111,6 @@ This will allow you to control the behavior of all your objects by setting the R
 </div>
 <div class="section" id="quiet-validation-detection">
 <h1>Quiet validation detection<a class="headerlink" href="#quiet-validation-detection" title="Permalink to this headline">¶</a></h1>
-<div class="topic">
-<p class="topic-title first">new in version 0.5.4</p>
 <p>By default, when validation is on each error raises an Exception. Sometime, you just want to
 collect errors in one place. This is possible by setting the <cite>raise_validation_errors</cite> to False.
 At this moment, all errors are store in the <cite>validation_errors</cite> attribute:</p>
@@ -135,7 +133,6 @@ Here foo has two issues : a structure one (<cite>set</cite> is not an authorized
 </pre></div>
 </div>
 </div>
-</div>
 
 
           </div>
@@ -153,13 +150,13 @@ Here foo has two issues : a structure one (<cite>set</cite> is not an authorized
           <a href="indexes.html" title="Indexes"
              >next</a> |</li>
         <li class="right" >
-          <a href="dbref.html" title="Embedding Documents as values"
+          <a href="dbref.html" title="Using DBRef"
              >previous</a> |</li>
         <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2010, Namlook.
+      &copy; Copyright 2009-2011, Nicolas Clairon.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
     </div>
   </body>
