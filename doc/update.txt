@@ -1,90 +1,41 @@
 Updating data
 =============
 
-Update a document
------------------
+Update in Mongokit is as easy than saving an object. Just modify your
+document and save it::
 
-.. topic:: new in version 0.5.6
-
-    Mongokit now support atomic update out of the box !
-
-    Update in Mongokit is as easy than saving an object. Just modify your
-    document, save it and that's it ! Your document is updated using atomic
-    update. To do that, your document must contain the field `_version`. Here's an
-    complete example of how updating work with Mongokit::
-
-        >>> class MyDoc(Document):
-        ...    structure = {
-        ...        'foo':{
-        ...            'bar':[unicode],
-        ...            'eggs':{'spam':int},
-        ...        },
-        ...        'bla':unicode
-        ...    }
-        ...    atomic_save = True # enable atomic saving
-
-        NOTE : as atomic saving requires modifying documents by adding a new
-        field (`_version`), you have to explicitly tell MongoKit that you want
-        to use this new feature by setting the attribute `atomic_save` as True.
-
-        >>> self.connection.register([MyDoc])
-
-        >>> doc = self.col.MyDoc()
-        >>> doc['_id'] = 3
-        >>> doc['foo']['bar'] = [u'mybar', u'yourbar']
-        >>> doc['foo']['eggs']['spam'] = 4
-        >>> doc['bla'] = u'ble'
-        >>> doc.save() 
-
-        Here, the field `_version` is automatically added :
-
-        >>> doc['_version']
-        1
-
-        Let's modify our doc :
-
-        >>> doc['foo']['eggs']['spam'] = 2
-        >>> doc['bla']= u'bli'
-
-        But now, someone is getting our doc and update it before we could save it:
-
-        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
-        >>> new_doc['bla'] = u'blo'
-        >>> new_doc.save()
-        
-        The doc `_version` is incremented :
-
-        >>> new_doc['_version']
-        2
-
-        So, if we try to save our doc, this would raise a ConflictError as the
-        data has changed. What we have to do is reload the document and try to
-        save it again :
-
-        >>> try:
-        ...    doc.save()
-        ... except ConflictError,e:
-        ...    doc.reload()
-        ...    doc['foo']['eggs']['spam'] = 2
-        ...    doc['bla']= u'bli'
-        ...    doc.save()
-
-        our doc version is now 3:
-
-        >>> doc['_version']
-        3
-
-        If we get a fresh instance of your doc, we can check that all is correct :
-
-        >>> new_doc = self.col.MyDoc.get_from_id(doc['_id'])
-        >>> new_doc
-        {'foo': {'eggs': {'spam': 2}, 'bar': [u'mybar', u'yourbar']}, 'bla': u'bli', '_version': 3, '_id': 3}
+    @connection.register
+    ... class MyDoc(Document):
+    ...    structure = {
+    ...        'foo':{
+    ...            'bar':[unicode],
+    ...            'eggs':{'spam':int},
+    ...        },
+    ...        'bla':unicode
+    ...    }
 
 
-Bulk update
------------
+    >>> doc = self.col.MyDoc()
+    >>> doc['_id'] = 3
+    >>> doc['foo']['bar'] = [u'mybar', u'yourbar']
+    >>> doc['foo']['eggs']['spam'] = 4
+    >>> doc['bla'] = u'ble'
+    >>> doc.save() 
 
-Bulk update is not yet supported (but will be soon). For now, as Mongokit expose all the pymongo API, you can use the pymongo's update on collection:
+    Let's modify our doc :
+
+    >>> doc['foo']['eggs']['spam'] = 2
+    >>> doc['bla']= u'bli'
+    >>> doc.save()
+
+.. IMPORTANT::
+    You have to be conscient that updating a document like that is not atomic. To do so, please read the next section.
+
+
+Bulk and atomic updates
+-----------------------
+
+As Mongokit expose all the pymongo API, you can use the pymongo's update on collection:
 
     >>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
 
@@ -133,20 +84,22 @@ Example::
 find_and_modify()
 -----------------
 
-This method allow to return a Document object after or before making an update.
+.. topic:: new in development version
 
-If you call `find_and_modify` on a Collection object, it will return a dict object::
+    This method allow to return a Document object after or before making an update.
 
-    >>> d = connection.test.tutorial.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
-    >>> isinstance(d, MyDoc)
-    False
-    >>> isinstance(d, dict)
-    True
+    If you call `find_and_modify` on a Collection object, it will return a dict object::
 
-If you call `find_and_modify` on a Document object, it will return a Document object::
+        >>> d = connection.test.tutorial.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+        >>> isinstance(d, MyDoc)
+        False
+        >>> isinstance(d, dict)
+        True
 
-    >>> d = connection.MyDoc.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
-    >>> isinstance(d, MyDoc)
-    True
+    If you call `find_and_modify` on a Document object, it will return a Document object::
 
-Please, read the mongodb documentation to lern how to use the `find_and_modify` method.
+        >>> d = connection.MyDoc.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+        >>> isinstance(d, MyDoc)
+        True
+
+    Please, read the mongodb documentation to lern how to use the `find_and_modify` method.
