@@ -280,12 +280,6 @@ class Document(SchemaDocument):
         """
         return self.collection.find_one(wrap=self._obj_class, *args, **kwargs)
 
-    def find_and_modify(self, *args, **kwargs):
-        """
-        Update and return an object.
-        """
-        return self.collection.find_and_modify(wrap=self._obj_class, *args, **kwargs)
-
     def one(self, *args, **kwargs):
         """
         `one()` act like `find()` but will raise a

@@ -133,20 +133,21 @@ Example::
 find_and_modify()
 -----------------
 
-This method allow to return a Document object after or before making an update.
+.. topic:: new in development version
+    This method allow to return a Document object after or before making an update.
 
-If you call `find_and_modify` on a Collection object, it will return a dict object::
+    If you call `find_and_modify` on a Collection object, it will return a dict object::
 
-    >>> d = connection.test.tutorial.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
-    >>> isinstance(d, MyDoc)
-    False
-    >>> isinstance(d, dict)
-    True
+        >>> d = connection.test.tutorial.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+        >>> isinstance(d, MyDoc)
+        False
+        >>> isinstance(d, dict)
+        True
 
-If you call `find_and_modify` on a Document object, it will return a Document object::
+    If you call `find_and_modify` on a Document object, it will return a Document object::
 
-    >>> d = connection.MyDoc.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
-    >>> isinstance(d, MyDoc)
-    True
+        >>> d = connection.MyDoc.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+        >>> isinstance(d, MyDoc)
+        True
 
-Please, read the mongodb documentation to lern how to use the `find_and_modify` method.
+    Please, read the mongodb documentation to lern how to use the `find_and_modify` method.
