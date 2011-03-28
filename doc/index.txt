@@ -1,7 +1,7 @@
 MongoKit Documentation
 ======================
 
-.. image:: http://bitbucket.org/namlook/mongokit/raw/1979336ca1eb/doc/mongokit_logo.png
+.. image:: https://github.com/namlook/mongokit/raw/devel/doc/mongokit_logo.png
 
 MongoKit is a python module that brings structured schema and validation layer
 on top of the great pymongo driver. It has be written to be simpler and lighter
