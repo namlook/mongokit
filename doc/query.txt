@@ -1,7 +1,7 @@
 Query
 =====
 
-There's two ways to query a collection : getting raw data or ``Document`` instance.
+There are two ways to query a collection : getting raw data or ``Document`` instance.
 
 Getting raw data
 ----------------

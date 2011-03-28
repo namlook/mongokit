@@ -319,7 +319,7 @@ class Document(SchemaDocument):
 
     def get_from_id(self, id):
         """
-        return the document wich has the id
+        return the document which has the id
         """
         return self.find_one({"_id":id})
 

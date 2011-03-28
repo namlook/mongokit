@@ -194,7 +194,7 @@ class SchemaProperties(type):
 
 class SchemaDocument(dict):
     """
-    A SchemaDocument is dictionnary with a building structured schema
+    A SchemaDocument is dictionary with a building structured schema
     The validate method will check that the document match the underling
     structure. A structure must be specify in each SchemaDocument.
 
@@ -529,7 +529,7 @@ class SchemaDocument(dict):
                     
     def _validate_doc(self, doc, struct, path = ""):
         """
-        check it doc field types match the doc field structure
+        check if doc field types match the doc field structure
         """
         if type(struct) is type or struct is None:
             if struct is None:
