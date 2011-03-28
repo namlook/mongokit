@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2009-2011, Nicolas Clairon
+# Copyright (c) 2009-2010, Nicolas Clairon
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -38,7 +38,10 @@ class SchemaOperator(object):
     def __iter__(self):
         for operand in self._operands:
             yield operand 
-    
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self._operands == other._operands
+
     def validate(self, value):
         raise NotImplementedError
 
