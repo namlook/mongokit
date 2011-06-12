@@ -8,7 +8,7 @@ driver for many langages (python, ruby, perl, java, php...).
 .. _MongoDB : http://www.mongodb.org/display/DOCS/Home
 
 MongoKit is a python module that brings structured schema and validation layer
-on top of the great pymongo driver. It has be written to be simpler and lighter
+on top of the great pymongo driver. It has be written to be as simple and light
 as possible with the KISS and DRY principles in mind.
 
 Philosophy
