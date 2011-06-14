@@ -115,6 +115,42 @@ class MigrationTestCase(unittest.TestCase):
         bp =  self.col.BlogPost.find_one()
         bp.validate()
 
+    def test_simple_all_migration_with_unset(self):
+        class BlogPost(Document):
+            structure = {
+                "author":unicode,
+                "blog_post":{
+                    "title": unicode,
+                    "created_at": datetime,
+                    "body": unicode,
+                    "tags":  [unicode],
+                }
+            }
+        self.connection.register([BlogPost])
+        bp =  self.col.BlogPost.find_one()
+
+        # creating blog post migration
+        class BlogPostMigration(DocumentMigration):
+            def allmigration01_remove_tags(self):
+                self.target = {'blog_post.tags':{'$exists':True}}
+                self.update = {'$unset':{'blog_post.tags':[]}}
+ 		
+        # redfine class to drop the tags field
+        class BlogPost(Document):
+            structure = {
+                "author":unicode,
+                "blog_post":{
+                    "title": unicode,
+                    "created_at": datetime,
+                    "body": unicode,
+                }
+            }
+        self.connection.register([BlogPost])
+        migration = BlogPostMigration(BlogPost)
+
+        # migration should pass as we're unsetting from structure
+        migration.migrate_all(self.col)
+
     def test_simple_all_migration_with_bad_update(self):
         class BlogPost(Document):
             structure = {

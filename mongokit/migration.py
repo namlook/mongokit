@@ -48,9 +48,10 @@ class DocumentMigration(object):
         structure = DotCollapsedDict(self.doc_class.structure)
         for op, fields in update_query.iteritems():
             for field in fields:
-                if field not in structure:
-                    raise UpdateQueryError("'%s' not found in %s's structure" % (
-                      field, self.doc_class.__name__))
+                if op != '$unset':
+                    if field not in structure:
+                        raise UpdateQueryError("'%s' not found in %s's structure" % (
+                          field, self.doc_class.__name__))
         
     def migrate(self, doc, safe=True):
         """migrate the doc throught all migration process"""
