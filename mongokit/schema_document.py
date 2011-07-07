@@ -404,25 +404,25 @@ class SchemaDocument(dict):
                     yield '%s.%s' % (new_key, new_child_key)
             elif type(key) is type:
                 yield '$%s' % key.__name__
-            elif isinstance(value, list) and len(value):
-                if isinstance(value[0], dict):
-                    for child_key in cls.__walk_dict(value[0]):
-                        #if type(key) is type:
-                        #    new_key = "$%s" % key.__name__
-                        #else:
-                        if type(key) is not type:
-                            new_key = key
-                        #if type(child_key) is type:
-                        #    new_child_key = "$%s" % child_key.__name__
-                        #else:
-                        if type(child_key) is not type:
-                            new_child_key = child_key
-                        yield '%s.%s' % (new_key, new_child_key)
-                else:
-                    if type(key) is not type:
-                        yield key
-                    #else:
-                    #    yield ""
+#            elif isinstance(value, list) and len(value):
+#                if isinstance(value[0], dict):
+#                    for child_key in cls.__walk_dict(value[0]):
+#                        #if type(key) is type:
+#                        #    new_key = "$%s" % key.__name__
+#                        #else:
+#                        if type(key) is not type:
+#                            new_key = key
+#                        #if type(child_key) is type:
+#                        #    new_child_key = "$%s" % child_key.__name__
+#                        #else:
+#                        if type(child_key) is not type:
+#                            new_child_key = child_key
+#                        yield '%s.%s' % (new_key, new_child_key)
+#                else:
+#                    if type(key) is not type:
+#                        yield key
+#                    #else:
+#                    #    yield ""
             else:
                 if type(key) is not type:
                     yield key

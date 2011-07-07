@@ -355,7 +355,19 @@ class DescriptorsTestCase(unittest.TestCase):
             default_values = {"foo":{u"bar":{"bla":42, "ble":u"arf"}}}
         mydoc = MyDoc()
         assert mydoc["foo"] == {u"bar":{"bla":42, "ble":u"arf"}}, mydoc
-           
+
+    def test_default_values_with_dict_in_list(self):
+        @self.connection.register
+        class MyDoc(Document):
+            structure = {
+                'bar': [{'foo':unicode}]
+            }
+            default_values = {
+                'bar': [{'foo': u'bla'}]
+            }
+        doc = self.col.MyDoc()
+        assert doc['bar'] == [{'foo': u'bla'}]
+
     def test_validators(self):
         class MyDoc(Document):
             structure = {
