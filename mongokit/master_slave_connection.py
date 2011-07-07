@@ -4,13 +4,13 @@ Andreas Jung, info@zopyx.com
 (same license as Mongokit)
 """
 
-from pymongo.master_slave_connection import MasterSlaveConnection
+from pymongo.master_slave_connection import MasterSlaveConnection as PymongoMasterSlaveConnection
 from pymongo import Connection as PyMongoConnection
 
 from mongokit.database import Database
 from mongokit.connection import CallableMixin, _iterables
 
-class MongokitMasterSlaveConnection(MasterSlaveConnection):
+class MasterSlaveConnection(PymongoMasterSlaveConnection):
     """ Master-Slave support for MongoKit """
 
     def __init__(self, master, slaves=[]):
@@ -50,7 +50,7 @@ class MongokitMasterSlaveConnection(MasterSlaveConnection):
             slave['slave_okay'] = True
             slave_connections.append(PyMongoConnection(**slave))
 
-        super(MongokitMasterSlaveConnection, self).__init__(master_connection, slave_connections)
+        super(MasterSlaveConnection, self).__init__(master_connection, slave_connections)
 
     def register(self, obj_list):
         decorator = None
