@@ -587,7 +587,7 @@ class SchemaDocument(dict):
                                 path, key.__name__, type(doc_key).__name__))
                         self._validate_doc(doc[doc_key], struct[key], new_path)
                 else:
-                    if doc.get(key) and self.use_schemaless:
+                    if doc.get(key):
                         self._validate_doc(doc[key], struct[key],  new_path)
         elif isinstance(struct, list):
             if not isinstance(doc, list) and not isinstance(doc, tuple):
