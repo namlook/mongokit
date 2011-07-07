@@ -198,7 +198,7 @@ If you want to do the same thing with bulk migration, things are a little differ
             self.target = {'blog_post.update_date':{'$exists':False}, 'blog_post':{'$exists':True}}
             if not self.status:
                 for doc in self.collection.find(self.target):
-                    self.update = {'$set':{'blog_post.update_date': self.doc['blog_post']['creation_date']}}
+                    self.update = {'$set':{'blog_post.update_date': doc['blog_post']['creation_date']}}
                     self.collection.update(self.target, self.update, multi=True, safe=True)
 
 In this example, the method `allmigration01__add_update_field_and_fill_it` will
