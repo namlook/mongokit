@@ -82,7 +82,7 @@ class VersionedDocument(Document):
         if versioning:
             id_lists = [i['_id'] for i in self.collection.find(query, fields=['_id'])]
             self.versioning_collection.remove({'id':{'$in':id_lists}})
-        self.collection.remove(spec_or_object_id=query, *args, **kwargs)
+        self.collection.remove(spec_or_id=query, *args, **kwargs)
                 
     def get_revision(self, revision_number):
         doc = self.versioning_collection.RevisionDocument.find_one(
