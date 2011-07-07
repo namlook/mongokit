@@ -54,7 +54,7 @@ class TypesTestCase(unittest.TestCase):
                 assert MyDoc() == {"foo":None}, auth_type
  
     def test_not_authorized_type(self):
-        for unauth_type in [set, str]:
+        for unauth_type in [set]:
             failed = False
             try:
                 class MyDoc(SchemaDocument):
@@ -531,3 +531,17 @@ class TypesTestCase(unittest.TestCase):
         assert isinstance(doc['category'], set)
         doc['title']=u'hello'
         doc.validate()
+
+    def test_uuid_type(self):
+        import uuid
+        @self.connection.register
+        class MyDoc(Document):
+            structure = {
+                'uuid': uuid.UUID,
+            }
+        uid = uuid.uuid4()
+        obj = self.col.MyDoc()
+        obj['uuid'] = uid
+        obj.save()
+
+        assert isinstance(self.col.MyDoc.find_one()['uuid'], uuid.UUID)

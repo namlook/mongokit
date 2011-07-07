@@ -48,7 +48,7 @@ from bson.dbref import DBRef
 from pymongo.objectid import ObjectId
 import re
 from copy import deepcopy
-from uuid import uuid4
+from uuid import UUID, uuid4
 import logging
 import datetime
 
@@ -150,6 +150,7 @@ class Document(SchemaDocument):
       ObjectId,
       DBRef,
       Code,
+      UUID,
       type(re.compile("")),
     ]
 
