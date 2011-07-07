@@ -1,8 +1,6 @@
 Migration
 =========
 
-**new in version 0.5.6**
-
 Let's say we have created a blog post which look like this::
 
     >>> from mongokit import *
@@ -62,6 +60,9 @@ and now we can save our blog_post::
 Lazy migration
 --------------
 
+.. IMPORTANT::
+    You cannot use this feature if `use_schemaless` is set to True
+
 Mongokit provides a convenient way to set migration rules an apply them lazily.
 Here's how to do, we use the previous example.
 
@@ -107,8 +108,9 @@ the `migration_handler` in `BlogPost`::
 Each time that an error is raised while validating a document, migration rules
 are applied to the object and the document is reloaded.
 
-CAUTION: if `migration_handler` is set then `skip_validation` is desactivated.
-Validation must be on to allow lazy migration.
+.. CAUTION::
+    if `migration_handler` is set then `skip_validation` is desactivated.
+    Validation must be on to allow lazy migration.
 
 Bulk migration
 --------------
@@ -152,8 +154,9 @@ To apply the migration, instanciate the `BlogPostMigration` and call the
     >>> migration.migrate_all(collection=con.test.tutorial)
 
 
-NOTE: because `migration_*` methods are not called with `migrate_all()`, you
-can mix `migration_*` and `allmigration_*` methods.
+.. NOTE::
+    because `migration_*` methods are not called with `migrate_all()`, you
+    can mix `migration_*` and `allmigration_*` methods.
 
 Migration status
 ----------------

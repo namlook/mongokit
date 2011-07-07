@@ -33,5 +33,5 @@ class MultipleResultsFound(Exception):pass
 class BadIndexError(Exception):pass
 class AutoReferenceError(Exception):pass
 class MaxDocumentSizeError(Exception):pass
-class ConflictError(Exception):pass
+class OptionConflictError(Exception):pass
 class UpdateQueryError(Exception):pass

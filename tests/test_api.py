@@ -929,4 +929,101 @@ class ApiTestCase(unittest.TestCase):
 
         self.assertEqual(self.connection.test.doca.find_one(), doc)
 
- 
+
+    def test_basestring_type(self):
+        @self.connection.register
+        class DocA(Document):
+           __database__ = 'test'
+           __collection__ = "doca"
+           structure = {'title':unicode}
+
+        doc = self.connection.DocA()
+        doc['title'] = 'foo'
+        failed = False
+        try:
+            doc.save()
+        except SchemaTypeError, e:
+            self.assertEqual(str(e), "title must be an instance of unicode not str")
+            failed = True
+        self.assertEqual(failed, True)
+
+        @self.connection.register
+        class DocA(Document):
+           __database__ = 'test'
+           __collection__ = "doca"
+           authorized_types = Document.authorized_types+[str]
+           structure = {'title':str}
+
+        doc = self.connection.DocA()
+        doc['title'] = u'foo'
+        failed = False
+        try:
+            doc.save()
+        except SchemaTypeError, e:
+            self.assertEqual(str(e), "title must be an instance of str not unicode")
+            failed = True
+        self.assertEqual(failed, True)
+
+
+        @self.connection.register
+        class DocA(Document):
+           __database__ = 'test'
+           __collection__ = "doca"
+           structure = {'title':basestring}
+
+        doc = self.connection.DocA()
+        doc['title'] = u'foo'
+        doc.save()
+        doc['title'] = 'foo'
+        doc.save()
+
+        self.assertEqual(self.connection.test.doca.find_one(), doc)
+
+    def test_float_and_int_types(self):
+        @self.connection.register
+        class DocA(Document):
+           __database__ = 'test'
+           __collection__ = "doca"
+           structure = {'foo':int}
+
+        doc = self.connection.DocA()
+        doc['foo'] = 3.0
+        failed = False
+        try:
+            doc.save()
+        except SchemaTypeError, e:
+            self.assertEqual(str(e), "foo must be an instance of int not float")
+            failed = True
+        self.assertEqual(failed, True)
+
+        @self.connection.register
+        class DocA(Document):
+           __database__ = 'test'
+           __collection__ = "doca"
+           authorized_types = Document.authorized_types+[str]
+           structure = {'foo':float}
+
+        doc = self.connection.DocA()
+        doc['foo'] = 2
+        failed = False
+        try:
+            doc.save()
+        except SchemaTypeError, e:
+            self.assertEqual(str(e), "foo must be an instance of float not int")
+            failed = True
+        self.assertEqual(failed, True)
+
+
+        @self.connection.register
+        class DocA(Document):
+           __database__ = 'test'
+           __collection__ = "doca"
+           structure = {'foo':OR(int, float)}
+
+        doc = self.connection.DocA()
+        doc['foo'] = 3
+        doc.save()
+        doc['foo'] = 2.0
+        doc.save()
+
+        self.assertEqual(self.connection.test.doca.find_one(), doc)

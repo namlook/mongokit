@@ -75,6 +75,8 @@ class DocumentProperties(SchemaProperties):
     def _validate_descriptors(cls, attrs):
         SchemaProperties._validate_descriptors(attrs)
         # validate index descriptor
+        if attrs.get('migration_handler') and attrs.get('use_schemaless'):
+            raise OptionConflictError('You cannot set a migration_handler with use_schemaless set to True')
         if attrs.get('indexes'):
             for index in attrs['indexes']:
                 if index.get('check', True):
@@ -311,7 +313,7 @@ class Document(SchemaDocument):
 
     def get_from_id(self, id):
         """
-        return the document wich has the id
+        return the document which has the id
         """
         return self.find_one({"_id":id})
 
