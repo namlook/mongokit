@@ -44,7 +44,7 @@ import pymongo
 from bson import BSON
 from bson.binary import Binary
 from bson.code import Code
-from pymongo.dbref import DBRef
+from bson.dbref import DBRef
 from pymongo.objectid import ObjectId
 import re
 from copy import deepcopy

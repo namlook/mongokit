@@ -26,7 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymongo.database import Database as PymongoDatabase
-from pymongo.dbref import DBRef
+from bson.dbref import DBRef
 from mongokit.document import Document
 from collection import Collection
 
