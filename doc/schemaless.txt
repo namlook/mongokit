@@ -1,7 +1,7 @@
 Schemaless structure
 ====================
 
-.. topic:: new in development version
+.. topic:: new in version 0.7
 
     One of the main advantage of MongoDB is the ability to insert schemaless documents into the database.
 

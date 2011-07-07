@@ -1,6 +1,28 @@
 Change Log
 ==========
 
+v0.7
+----
+
+ * add `use_schemaless` feature ! please see the documentation for more informations
+ * Add equality test for mongokit operators (thanks to @allancaffee)
+    This allows developers to write unit tests on the structure
+    of their document classes when operators are used
+ * roll back find_and_modify for master branch (need pymongo 1.10 for that)
+ * many documentation fixes
+ * fix #55 -- Bug in VersionedDocument remove() method
+ * fix #53 -- Fixed a few spelling errors in README
+ * fix #52 -- Advanced bulk migration docs example is broken
+ * fix #51 -- pymongo.dbref is deprecated, use bson.dbref instead
+ * fix #49 -- Can't specify default values for lists of embedded objects
+ * fix #48 -- uuid.UUID support
+ * fix #41 -- add basestring to authorized types
+ * fix #40 -- Made some enhancements
+ * fix #39 -- KeyError when saving partially loaded documents
+ * fix #34 -- add find_and_modify method to Document
+ * fix #32 -- allow the structure to be empty (was: document.to_json())
+ * fix #24 -- Don't handle __database__/__collection__ attribute for virtual documents
+
 v0.6
 ----
 

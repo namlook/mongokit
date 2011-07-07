@@ -19,6 +19,7 @@ Field types are simple python type.  By default, MongoKit allow the following ty
       bson.dbref.DBRef,
       bson.code.Code,
       type(re.compile("")),
+      uuid.UUID,
       CustomType,
     ]
 
