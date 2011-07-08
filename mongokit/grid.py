@@ -26,7 +26,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from gridfs import GridFS, NoFile, GridOut
-from pymongo.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 
 #try:
@@ -103,13 +102,18 @@ class FS(GridFS):
     def put(self, data, **kwargs):
         return super(FS, self).put(data, **self._get_spec(**kwargs))
 
-    def get_version(self, filename, version=-1):
-        """Get a file from GridFS by ``"filename"``.
+    def get_version(self, filename, version=-1, **kwargs):
+        """Get a file from GridFS by ``"filename"`` or metadata fields.
 
-        Returns a version of the file in GridFS with the name
-        `filename` as an instance of
-        :class:`~gridfs.grid_file.GridOut`. Version ``-1`` will be the
-        most recently uploaded, ``-2`` the second most recently
+        Returns a version of the file in GridFS whose filename matches
+        `filename` and whose metadata fields match the supplied keyword
+        arguments, as an instance of :class:`~gridfs.grid_file.GridOut`.
+
+        Version numbering is a convenience atop the GridFS API provided
+        by MongoDB. If more than one file matches the query (either by
+        `filename` alone, by metadata fields, or by a combination of
+        both), then version ``-1`` will be the most recently uploaded
+        matching file, ``-2`` the second most recently
         uploaded, etc. Version ``0`` will be the first version
         uploaded, ``1`` the second version, etc. So if three versions
         have been uploaded, then version ``0`` is the same as version
@@ -124,17 +128,22 @@ class FS(GridFS):
         time.
 
         :Parameters:
-          - `filename`: ``"filename"`` of the file to get
+          - `filename`: ``"filename"`` of the file to get, or `None`
           - `version` (optional): version of the file to get (defualts
             to -1, the most recent version uploaded)
+          - `**kwargs` (optional): find files by custom metadata.
 
+        .. versionchanged:: 1.11
+           `filename` defaults to None;
+        .. versionadded:: 1.11
+           Accept keyword arguments to find files by custom metadata.
         .. versionadded:: 1.9
         """
         # This is took from pymongo source. We need to go a little deeper here
         self._GridFS__files.ensure_index([("filename", ASCENDING),
                                    ("uploadDate", DESCENDING)])
         ########## Begin of MongoKit hack ##########
-        cursor = self._GridFS__files.find(self._get_spec(filename=filename))
+        cursor = self._GridFS__files.find(self._get_spec(filename=filename, **kwargs))
         ########## end of MongoKit hack ############
         if version < 0:
             skip = abs(version) - 1
