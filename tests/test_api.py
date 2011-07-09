@@ -1027,3 +1027,17 @@ class ApiTestCase(unittest.TestCase):
         doc.save()
 
         self.assertEqual(self.connection.test.doca.find_one(), doc)
+
+    def test_cursor_slicing(self):
+        @self.connection.register
+        class DocA(Document):
+            structure = {'foo':int}
+
+        for i in range(10):
+            doc = self.col.DocA()
+            doc['foo'] = i
+            doc.save()
+
+        self.assertEqual(isinstance(self.col.DocA.find()[0], DocA), True)
+        self.assertEqual(isinstance(self.col.DocA.find()[3], DocA), True)
+        self.assertEqual(isinstance(self.col.DocA.find()[3:], self.col.DocA.find().__class__), True)

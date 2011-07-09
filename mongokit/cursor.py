@@ -44,4 +44,8 @@ class Cursor(PymongoCursor):
             raise StopIteration
         return next
 
-
+    def __getitem__(self, index):
+        obj = super(Cursor, self).__getitem__(index)
+        if isinstance(obj, dict):
+            return self.__wrap(obj)
+        return obj
