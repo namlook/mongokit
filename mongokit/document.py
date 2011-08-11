@@ -440,23 +440,24 @@ class Document(SchemaDocument):
             """
             convert all datetime to a timestamp from epoch
             """
-            for key in struct:
-                if isinstance(struct[key], datetime.datetime):
-                    struct[key] = totimestamp(struct[key])
-                elif isinstance(struct[key], ObjectId):
-                    #struct[key] = str(struct[key])
-                    struct[key] = {'$oid': str(struct[key])} 
-                elif isinstance(struct[key], dict):
-                    _convert_to_json(struct[key], doc)
-                elif isinstance(struct[key], list) and len(struct[key]):
-                    if isinstance(struct[key][0], dict):
-                        for obj in struct[key]:
-                            _convert_to_json(obj, doc)
-                    elif isinstance(struct[key][0], datetime.datetime):
-                        struct[key] = [totimestamp(obj) for obj in struct[key]]
-                    elif isinstance(struct[key][0], ObjectId):
-                        #struct[key] = [str(obj) for obj in struct[key]]
-                        struct[key] = [{'$oid': str(obj)} for obj in struct[key]]
+            if struct != None:
+                for key in struct:
+                    if isinstance(struct[key], datetime.datetime):
+                        struct[key] = totimestamp(struct[key])
+                    elif isinstance(struct[key], ObjectId):
+                        #struct[key] = str(struct[key])
+                        struct[key] = {'$oid': str(struct[key])} 
+                    elif isinstance(struct[key], dict):
+                        _convert_to_json(struct[key], doc)
+                    elif isinstance(struct[key], list) and len(struct[key]):
+                        if isinstance(struct[key][0], dict):
+                            for obj in struct[key]:
+                                _convert_to_json(obj, doc)
+                        elif isinstance(struct[key][0], datetime.datetime):
+                            struct[key] = [totimestamp(obj) for obj in struct[key]]
+                        elif isinstance(struct[key][0], ObjectId):
+                            #struct[key] = [str(obj) for obj in struct[key]]
+                            struct[key] = [{'$oid': str(obj)} for obj in struct[key]]
         # we don't want to touch our document so we create another object
         self._process_custom_type('bson', self, self.structure)
         obj = deepcopy(self)
