@@ -119,6 +119,16 @@ on the freenode #mongodb irc channel or on twitter_.
 Recent Change Log
 =================
 
+v0.7.1
+------
+
+ * change MongokitMasterSlaveConnection to MasterSlaveConnection for consistency
+ * fix #57 -- support pymongo > 1.9 in grid.py
+ * fix #45 -- remove automatique index creation
+ * fix #43 -- slicing a cursor should return a mongokit document, not dict
+ * Dont try to convert None struct to json (patch from @mLewisLogic thanks !)
+ * fix schemaless issue (thanks to Mihai Pocorschi for reporting it)
+
 v0.7
 ----
 
@@ -141,61 +151,4 @@ v0.7
  * fix #32 -- allow the structure to be empty (was: document.to_json())
  * fix #24 -- Don't handle __database__/__collection__ attribute for virtual documents
 
-v0.6
-----
-
- * fix error when check is True. Thanks to @dasmith for the patch
- * Many english corrections in the documentation thanks to @allancaffee
- * spliting doc and refactoring documentation
- * remove unused MongoDocumentCursor
-
-v0.5.13.1
----------
-
- * fix #26 -- unable to install (debian lenny, py 2.5)
- * fix #25 -- put the new url into the setup.py
-
-v0.5.13
--------
-
- * fix #21 -- required_fields weird behavior with autorefs
- * fix #19 -- 'checked' field not listed in 'indexes' section
- * fix #20 -- creating index on fields not in structure + optimize index generation
- * fix #18 -- typo in the doc
- * fix import. Dbref isn't in pymongo package anymore
- * fix deprecation warning from pymongo's from_dict
- * fix #8 -- allow to access Document via the db
-
-v0.5.12.1
----------
-
- * fix #17 -- got an unexpected keyword argument 'from_son'
- * fix #15 -- typo in the doc
-
-v.0.5.12
----------
-
- * allow register method to be a decorator (thanks to Christopher Grebs for the inspiration)
- * get ride of MongoDocumentCursor and use a subclass of pymongo's Cursor instead
- * structure and descriptors validation is now done at object creation (not instantiation)
-
-   - *advantage* : mongokit is 40% faster
-   - *beware* : if you put a Document into a structure for reference, mongokit doesn't check anymore if use_autorefs is set
-
- * add i18n descriptor validation + better i18n support
- * code cleaning
-
-v0.5.11
--------
-
- * support latest pymongo version
- * some changes in GridFS support (please read http://namlook.github.com/mongokit/gridfs.html)
- * Deprecate atomic_save feature
- * remove libmagic import from grid.py : to many trouble with this lib, we have to find another way to guess the content-type
- * fix #79 -- Tries to migrate non-saved document
- * fix #70 -- Set changes from set to list when a validation error occurs
- * add contributor + fix email address to prevent spam
- * fix deprecation warning of Python 2.6
- * fix issue with validation and migration
- * fix #75 -- add "version" attribute to module
 

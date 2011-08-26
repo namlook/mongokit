@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+v0.7.1
+------
+
+ * change MongokitMasterSlaveConnection to MasterSlaveConnection for consistency
+ * fix #57 -- support pymongo > 1.9 in grid.py
+ * fix #45 -- remove automatique index creation
+ * fix #43 -- slicing a cursor should return a mongokit document, not dict
+ * Dont try to convert None struct to json (patch from @mLewisLogic thanks !)
+ * fix schemaless issue (thanks to Mihai Pocorschi for reporting it)
+
 v0.7
 ----
 
