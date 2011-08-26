@@ -564,7 +564,7 @@ class SchemaDocument(dict):
                 struct_doc_diff = list(set(struct).difference(set(doc)))
                 if struct_doc_diff:
                     for field in struct_doc_diff:
-                        if type(field) is not type:
+                        if (type(field) is not type) and (not self.use_schemaless):
                             self._raise_exception(StructureError, None,
                               "missed fields : %s" % struct_doc_diff )
                 else:

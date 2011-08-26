@@ -28,7 +28,7 @@
 import unittest
 
 from mongokit import *
-from pymongo.objectid import ObjectId
+import datetime
 
 
 class SchemaLessTestCase(unittest.TestCase):
@@ -114,7 +114,7 @@ class SchemaLessTestCase(unittest.TestCase):
         self.assertEqual('bar' in doc, True)
         self.assertEqual('egg' in doc, True)
         doc['bar'] = 2
-        self.assertRaises(StructureError, doc.save)
+        self.assertRaises(RequireFieldError, doc.save)
         doc['foo'] = u'arf'
         doc.save()
 
@@ -139,3 +139,25 @@ class SchemaLessTestCase(unittest.TestCase):
         self.assertEqual('foo' in doc, True)
         self.assertEqual('bar' in doc, True)
         self.assertEqual(doc, {'_id': 'foo', 'foo':'bla', 'bar':3})
+
+    def test_schemaless_senario2(self):
+        @self.connection.register
+        class User(Document):
+            __collection__ = 'mongokit'
+            __database__ = 'test'
+            use_schemaless = True
+            structure = {
+                'name': unicode,
+                'password': unicode,
+                'last_name': unicode,
+                'first_name': unicode,
+                'email': unicode,
+                'last_login': datetime.datetime,
+            }
+            use_dot_notation = True
+
+        self.connection.User.collection.save({'name': u'namlook', 'password': u'test', 'email': u'n@c.com'})
+
+        found_attribute = self.connection.User.find_one({'name':'namlook'})
+        found_attribute.last_login = datetime.datetime.utcnow()
+        found_attribute.save()
