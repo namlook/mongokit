@@ -74,6 +74,8 @@ class Database(PymongoDatabase):
         """
         son = super(Database, self)._fix_outgoing(son, collection)
         if wrap is not None:
+            if wrap.type_field in son:
+                return getattr(collection, son[wrap.type_field])(son)
             return wrap(son, collection=collection)
         return son
 

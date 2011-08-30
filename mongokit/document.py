@@ -137,6 +137,8 @@ class Document(SchemaDocument):
 
     __metaclass__ = DocumentProperties
 
+    type_field = '_type'
+
     atomic_save = False # XXX Deprecated
     skip_validation = False
     use_autorefs = False
@@ -163,6 +165,8 @@ class Document(SchemaDocument):
           doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang,
           fallback_lang=fallback_lang
         )
+        if self.type_field in self:
+            self[self.type_field] = unicode(self.__class__.__name__)
         # collection
         self.collection = collection
         if collection:
