@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+v0.7.2
+------
+
+ * add inherited queries support (please see http://github.com/namlook/mongokit/wiki/Inherited-queries for more details)
+
 v0.7.1
 ------
 
