@@ -100,4 +100,4 @@ find_and_modify()
         >>> isinstance(d, MyDoc)
         True
 
-    Please, read the mongodb documentation to lern how to use the `find_and_modify` method.
+    Please, read the mongodb documentation to learn how to use the `find_and_modify` method.
