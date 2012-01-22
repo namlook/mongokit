@@ -215,6 +215,15 @@ class Document(SchemaDocument):
         #self.update(DotExpandedDict(old_value))
         self._process_custom_type('python', self, self.structure)
 
+    def _get_size_limit(self):
+        server_version = tuple(self.connection.server_info()['version'].split("."))
+        mongo_1_8 = tuple("1.8.0".split("."))
+
+        if server_version < mongo_1_8:
+            return (3999999, '4MB')
+        else:
+            return (15999999, '16MB')
+
     def validate(self, auto_migrate=False):
         if self.use_autorefs:
             if not auto_migrate:
@@ -223,9 +232,11 @@ class Document(SchemaDocument):
                 # found when validating at __init__ with autorefs
                 self._make_reference(self, self.structure)
         size = self.get_size()
-        if size > 15999999:
+        (size_limit, size_limit_str) = self._get_size_limit()
+
+        if size > size_limit:
             raise MaxDocumentSizeError("The document size is too big, documents "
-              "lower than 16Mb is allowed (got %s bytes)" % size)
+              "lower than %s is allowed (got %s bytes)" % size_limit_str, size)
         if auto_migrate:
             error = None
             try:
