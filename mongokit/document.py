@@ -223,9 +223,9 @@ class Document(SchemaDocument):
                 # found when validating at __init__ with autorefs
                 self._make_reference(self, self.structure)
         size = self.get_size()
-        if size > 3999999:
+        if size > 15999999:
             raise MaxDocumentSizeError("The document size is too big, documents "
-              "lower than 4Mb is allowed (got %s bytes)" % size)
+              "lower than 16Mb is allowed (got %s bytes)" % size)
         if auto_migrate:
             error = None
             try:
