@@ -59,7 +59,7 @@ class InheritanceTestCase(unittest.TestCase):
             pass    # no structure defined for B
 
         b = B()
-        b.structure['secret'] = 42
+        b.structure['secret'] = int
         assert 'secret' in b.structure
         assert 'secret' not in A.structure
  
