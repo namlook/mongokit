@@ -119,7 +119,7 @@ class SchemaProperties(type):
                     #parent = parent()
                     if parent.structure:
                         if 'structure' not in attrs and parent.structure:
-                            attrs['structure'] = parent.structure
+                            attrs['structure'] = parent.structure.copy()
                         else:
                             obj_structure = attrs.get('structure', {}).copy()
                             attrs['structure'] = parent.structure.copy()

@@ -48,6 +48,20 @@ class InheritanceTestCase(unittest.TestCase):
             }
 
         assert B() == {"a":{"foo":None}, "b":{"bar":None}}, B()
+
+    def test_simple_inheritance_without_child_structure(self):
+        class A(SchemaDocument):
+            structure = {
+                "a":{"foo":int}
+            }
+
+        class B(A):
+            pass    # no structure defined for B
+
+        b = B()
+        b.structure['secret'] = int
+        assert 'secret' in b.structure
+        assert 'secret' not in A.structure
  
     def test_required_inheritance(self):
         class A(SchemaDocument):
