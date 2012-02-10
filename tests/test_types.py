@@ -531,6 +531,19 @@ class TypesTestCase(unittest.TestCase):
         assert isinstance(doc['category'], set)
         doc['title']=u'hello'
         doc.validate()
+        
+    def test_int_type(self):
+        @self.connection.register
+        class MyDoc(Document):
+            structure = {
+                "foo":int,
+            }
+
+        mydoc = self.col.MyDoc()
+        mydoc['foo'] = ''
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foo'] = 10
+        mydoc.save()
 
     def test_uuid_type(self):
         import uuid
