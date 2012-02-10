@@ -470,3 +470,30 @@ class CustomTypesTestCase(unittest.TestCase):
             failed = True
         self.assertEqual(failed, True)
 
+    def test_missing_custom_types(self):
+        import datetime
+        class CustomDate(CustomType):
+            mongo_type = unicode
+            python_type = datetime.datetime
+            def to_bson(self, value):
+                """convert type to a mongodb type"""
+                return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
+            def to_python(self, value):
+                """convert type to a python object"""
+                if value is not None:
+                    return datetime.datetime.strptime(value, '%y-%m-%d')
+                
+        class Foo(Document):
+            structure = {
+                "date": CustomDate(),
+            }
+            default_values = {'date':datetime.datetime(2008, 6, 7)}
+        self.connection.register([Foo])
+            
+        # insert a foo document without this field
+        self.col.insert({'_id': 1})
+
+        foo = self.col.Foo.get_from_id(1)
+        foo['_id'] = 1
+        foo['date'] = datetime.datetime(2003,2,1)
+        foo.save()

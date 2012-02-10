@@ -644,14 +644,16 @@ class SchemaDocument(dict):
             #
             if isinstance(struct[key], CustomType):
                 if target == 'bson':
-                    if struct[key].python_type is not None:
-                        if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
-                            self._raise_exception(SchemaTypeError, new_path,
-                              "%s must be an instance of %s not %s" % (
-                                new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
-                    doc[key] = struct[key].to_bson(doc[key])
+                    if key in doc:
+                        if struct[key].python_type is not None:
+                            if not isinstance(doc[key], struct[key].python_type) and doc[key] is not None:
+                                self._raise_exception(SchemaTypeError, new_path,
+                                                      "%s must be an instance of %s not %s" % (
+                                        new_path, struct[key].python_type.__name__, type(doc[key]).__name__))
+                        doc[key] = struct[key].to_bson(doc[key])
                 else:
-                    doc[key] = struct[key].to_python(doc[key])
+                    if key in doc:
+                        doc[key] = struct[key].to_python(doc[key])
             elif isinstance(struct[key], dict):
                 if doc: # we don't need to process an empty doc
                     if type(key) is type:
