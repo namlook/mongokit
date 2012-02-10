@@ -28,7 +28,6 @@
 import unittest
 
 from mongokit import *
-from pymongo.objectid import ObjectId
 
 class VersionedTestCase(unittest.TestCase):
     def setUp(self):
@@ -314,3 +313,75 @@ class VersionedTestCase(unittest.TestCase):
         except:
             test_passed = True
         assert test_passed
+
+    def test_resave_versioned_doc_with_objectId(self):
+        """
+        1. Create a simple VersionedDocument using the defaults, thus using the
+        built-in objectID.
+        2. save to the database
+        3. change the VersionedDocument contents (leave _id unchanged)
+        4. resave to the database
+            4a. the save action will search for the get_last_revision_id
+            4b. add +1 to the _revision attribute
+            4c. save the revised document, save the old document in the
+                versioned_* collection
+
+        4a BREAKS!
+
+            self['_revision'] = self.get_last_revision_id()
+        File "...\mongokit\versioned_document.py", line 100, in get_last_revision_id
+            {'id':self['_id']}).sort('revision', -1).next()
+        File "...\mongokit\cursor.py", line 44, in next
+            raise StopIteration
+        """
+        class MyVersionedDoc(VersionedDocument):
+            structure = {
+                "foo" : unicode,
+                }
+
+        self.connection.register([MyVersionedDoc])
+
+        versioned_doc = self.col.MyVersionedDoc()
+        versioned_doc['foo'] = u'bla'
+        versioned_doc.save()
+
+        docs = list(self.col.find())
+        assert len(docs) == 1
+
+        versioned_doc['foo'] = u'Some Other bla'
+        versioned_doc.save()
+
+        print(versioned_doc)
+
+    def test_resave_versioned_doc_with_UUID(self):
+        """
+        Simple versioning test, a bit different than the test_save_versionning
+
+        """
+        class MyVersionedUUIDDoc(VersionedDocument):
+            structure = {
+                "foo" : unicode,
+                }
+            def save(self, versioning=True, uuid=True, *args, **kwargs):
+                """ Ensure that the save is performed using uuid=True """
+                return super(MyVersionedUUIDDoc, self).save(versioning, uuid, *args, **kwargs)
+
+        self.connection.register([MyVersionedUUIDDoc])
+
+        versioned_doc = self.col.MyVersionedUUIDDoc()
+        versioned_doc['foo'] = u'bla'
+        versioned_doc.save()
+
+        docs = list(self.col.find())
+        assert len(docs) == 1
+
+        versioned_doc['foo'] = u'Some Other bla'
+        versioned_doc.save()
+
+        # search for the versioned_doc in the database and compare id's
+        ver_doc = list(self.connection.test.mongokit.find())
+        assert len(ver_doc) == 1
+        assert ver_doc[0]['_revision'] == 2
+        assert ver_doc[0]['foo'] == u'Some Other bla'
+        assert ver_doc[0]['_id'][:18] == u'MyVersionedUUIDDoc'
+        assert ver_doc[0]['_id'] == versioned_doc['_id']

@@ -97,7 +97,7 @@ class VersionedDocument(Document):
 
     def get_last_revision_id(self):
         last_doc = self.versioning_collection.find(
-          {'id':self['_id']}).sort('revision', -1).next()
+          {'id':unicode(self['_id'])}).sort('revision', -1).next()
         if last_doc:
             return last_doc['revision']
 
