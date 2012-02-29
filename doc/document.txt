@@ -22,7 +22,18 @@ Document Class
             ...
         }
 
-You can read more about :doc:`structure`, and the ``required_fields`` and ``default_values``  :doc:`descriptors`. They are the primary definition of a document.
+You can read more about the `structure`_ attribute, and the ``required_fields`` and ``default_values``  `descriptors`_. They are the primary definition of a document. MongoKit also supports
+`handling i18n`_, `indexes`_, and `migration`_.
+
+    .. _`structure`: structure.html
+
+    .. _`descriptors`: descriptors.html
+
+    .. _`handling i18n`: i18n.html
+    
+    .. _`indexes`: indexes.html
+    
+    .. _`migration`: migration.html
 
 Registering
 -----------

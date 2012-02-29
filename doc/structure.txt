@@ -257,6 +257,100 @@ python object:
 >>> foo['foo']['date']
 datetime.datetime(2003, 2, 1, 0, 0)
 
+OR, NOT, and IS types
+----------------------
+
+You can also use boolean logic to do field type validation.
+
+OR operator
+^^^^^^^^^^^
+
+Let's say that we have a field which can be unicode or int or a float.
+We can use the OR operator to tell MongoKit to validate the field :
+
+>>> from mongokit import OR
+>>> from datetime import datetime
+>>> class Account(Document): 
+...     structure = { 
+...         "balance": {'foo': OR(unicode, int, float)} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['balance']['foo'] = u'3.0'
+>>> account.validate()
+>>> account['balance']['foo'] = 3.0
+>>> account.validate()
+
+but :
+
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <unicode or int or float> not datetime
+
+NOT operator
+^^^^^^^^^^^^
+
+You can also use the NOT operator to tell MongoKit that you don't want a such type
+for a field :
+
+>>> from mongokit import NOT
+>>> class Account(Document): 
+...     structure = { 
+...         "balance": {'foo': NOT(unicode, datetime)} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['balance']['foo'] = 3
+>>> account.validate()
+>>> account['balance']['foo'] = 3.0
+>>> account.validate()
+
+and :
+
+>>> account['balance']['foo'] = datetime.now()
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not datetime
+
+>>> account['balance']['foo'] = u'3.0'
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: balance.foo must be an instance of <not unicode, not datetime> not unicode
+
+IS operator
+^^^^^^^^^^^
+
+Sometimes, you might want to force a fields to be in a specific value. The IS operator
+must be use for this purpose :
+
+>>> from mongokit import IS
+>>> class Account(Document): 
+...     structure = { 
+...         "flag": {'foo': IS(u'spam', u'controversy', u'phishing')} 
+...     } 
+
+>>> con.register([Account])
+>>> account = tutorial.Account()
+>>> account['flag']['foo'] = u'spam'
+>>> account.validate()
+>>> account['flag']['foo'] = u'phishing'
+>>> account.validate()
+
+and :
+
+>>> account['flag']['foo'] = u'foo'
+>>> account.validate()
+Traceback (most recent call last):
+...
+SchemaTypeError: flag.foo must be in [u'spam', u'controversy', u'phishing'] not foo
+
+
 Schemaless Structure
 --------------------
 
@@ -291,43 +385,3 @@ MongoKit will raise an exception only if required fields are missing::
     StructureError: missed fields : ['title']
     >>> doc = MyDoc({'age': 21, 'title': 'Hello World !'})
     >>> doc.save()
-
-
-.. _validate-keys:
-
-Validate Keys
--------------
-
-*Move this section to Validation? -Ed*
-
-If the value of key is not known but we want to validate some deeper structure, 
-we use the "$<type>" descriptor::
-
-    class MyDoc(Document):
-      structure = {
-        'key': {
-          unicode: {
-            'first': int,
-            'secondpart: {
-              unicode: int
-            }
-          }
-        }
-      }
-
-      required_fields = ["key1.$unicode.bla"]
-
-Note that if you use a python type as a key in structure, generate_skeleton
-won't be able to build the entire underlying structure :
-
->>> con.register([MyDoc])
->>> tutorial.MyDoc() == {'key1': {}, 'bla': None}
-True
-
-So, neither default_values nor validators will work.
-
-
-    
-
-
-

@@ -38,11 +38,9 @@ Contents:
     document
     structure
     descriptors
-    operators
     query
     update
     dbref
-    validation_and_optimisation
     indexes
     json
     i18n
