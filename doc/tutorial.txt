@@ -1,169 +1,143 @@
-=================
-MongoKit Tutorial
-=================
-
-First of all, Mongokit relied heavily on pymongo. As such, all pymongo API is
-exposed. If you don't find what you want in the Mongokit document, please take
-a look at pymongo_ 's one.  All the pymongo API is exposed via connection,
-database and collection so Connection, Database and Collection are wrapper
-around pymongo objects.
-
 .. _pymongo : http://api.mongodb.org/python/
+.. _Connection : http://api.mongodb.org/python/current/tutorial.html#making-a-connection
 
-Simple Example
-==============
+=============================
+Getting Started with MongoKit
+=============================
 
->>> from mongokit import *
+MongoKit is based on pymongo_. As such, all of the pymongo API is exposed
+through MongoKit. If you don't find what you want in the MongoKit API,
+please take a look at pymongo's documenation. All the pymongo API is
+exposed via connection, database and collection so Connection, Database and
+Collection are wrappers around pymongo objects.
 
->>> import datetime
+In this example, we will create a simple MongoKit document definition and use
+it to create new instances of that document.
 
->>> class BlogPost(Document):
-...     structure = {
-...             'title':unicode,
-...             'body':unicode,
-...             'author':unicode,
-...             'date_creation':datetime.datetime,
-...             'rank':int,
-...             'tags': [unicode],
-...     }
-...     required_fields = ['title','author', 'date_creation']
-...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
-... 
+Defining a Document
+-------------------
 
+Start by defining the Document::
 
-The structure is simply a dictionary with python type. In this example, `title` must be unicode and `rank`
-must be an int.
+    from mongokit import Document, Connection
+    import datetime
 
-Optionally, you can add some descriptors. In order to specify fields which are required, just add a `required_fields`
-attribute. This is a simple list which list all required_fields (ie, those field must not be None when validating).
+    class BlogPost(Document):
+        structure = {
+            'title': basestring,
+            'body': basestring,
+            'author': basestring,
+            'date_creation': datetime.datetime,
+            'rank': int,
+            'tags': [basestring],
+        }
+        required_fields = ['title', 'author', 'date_creation']
+        default_values = {
+            'rank': 0,
+            'date_creation': datetime.datetime.utcnow
+        }
 
-Same thing with the `default_values` attribute. This is a dict where you can specify default values. Note that
-you can pass callable object (like a datetime).
+The ``structure`` is simply a dictionary with python type. In this example,
+``title`` must be a string and ``rank`` must be an int. For more information,
+see :doc:`structure`.
 
-Now, fire a connection and register the ``BlogPost`` object:
+Optionally, you can add some descriptors. In order to specify fields which are
+required, just add a ``required_fields`` attribute. This is a simple list which
+list all required_fields (ie, those field must not be None when validating).
+You can also specify the ``default_values`` attribute which can indicates the
+default values of a Documents structure. Note that you can pass callable object (like a 
+``datetime.utcnow``). For more information, see :doc:`descriptors`.
 
->>> con = Connection()
->>> con.register([BlogPost])
+Connecting to MongoDB
+---------------------
 
-Optionally, the register method can be used as a decorator::
+Now, to open a connection to MongoDB::
 
-        @con.register
-        class BlogPost(Document):
-            structure = {...}
+    connection = Connection()
 
-Let's do some cleanup before continue:
+This a wrapped version of pymongo's Connection_ and will attempt to connect to
+a MongoDB instance running locally. For more information on how to configure
+the Connection, see pymongo_'s documentation.
 
->>> con.test.drop_collection('tutorial')
+Once you have an active connection, you need to register your the ``BlogPost``
+object::
 
-Now, let's create a blogpost we want to work on the collection "tutorial" on the database "test":
+    connection.register([BlogPost])
 
->>> tutorial = con.test.tutorial
+Alternatively, the register method can be used as a decorator::
 
-.. topic:: new in version 0.5.13
+    @connection.register
+    class BlogPost(Document):
+        structure = {...}
 
-    now you can add the collection and the database name into a Document::
+Now, let's create a new blogpost in the "blog_posts" collection in the database
+"blog". In pymongo's syntax, you would use 
+``connection.<database>.<collection>`` to access the collection. Once you have
+the collection, you can create a new document::
 
-        @con.register
-        class BlogPost(Document):
-            __collection__ = 'blog_posts'
-            __database__ = 'tutorial'
-            structure = {...}
+    >>> connection.test.blogpost.BlogPost()
+    {'body': None, 'title': None, 'author': None, 'rank': 0, 'date_creation': datetime.datetime(...), 'tags': []}
 
-    so now, we can have access to our document directly from the connection::
-        
-        >>> bp = con.BlogPost()
+Note that ``date_creation`` was automatically filled by ``utcnow()`` and rank is ``0``.
 
-    Note that if you want to specify the `__database__` you *should* also specify the `__collection__` attribute.
-    
-    It is also possible to access the documents from the database::
-        
-        >>> bp = con.test.BlogPost() # this will use __collection__ as collection name
+To avoid repeating ourselves though, let's specify the database and collection
+name in the Document definition::
 
->>> bp = tutorial.BlogPost()
->>> bp
-{'body': None, 'title': None, 'date_creation': datetime.datetime(...), 'rank': 0, 'author': None} 
+    @connection.register
+    class BlogPost(Document):
+        __collection__ = 'blog_posts'
+        __database__ = 'blog'
+        structure = {...}
 
-Note that `date_creation` was automatically filled by `utcnow()` and rank is 0.
+Now, we can have access to our document directly from the connection::
 
->>> bp['title'] = "my first blog post"
->>> bp.validate() 
-Traceback (most recent call last):
-...
-SchemaTypeError: title must be an instance of unicode not str
+    >>> bp = connection.BlogPost()
+    >>> bp
+    {'body': None, 'title': None, 'author': None, 'rank': 0, 'date_creation': datetime.datetime(...), 'tags': []}
 
-`str` type is not authorized, you must use unicode : 
+Modifying the Document
+----------------------
 
->>> bp['title'] = u"my first blog post"
+Now let's modify our BlogPost and try the validation::
 
-`validate` method will check if required fields are set :
+    >>> bp['title'] = 1
+    >>> bp.validate() 
+    Traceback (most recent call last):
+    ...
+    SchemaTypeError: title must be an instance of basestring not int
 
->>> bp.validate()
-Traceback (most recent call last):
-...
-RequireFieldError: author is required
+Alright, type validation works. :
 
->>> bp['author'] = u'myself'
->>> bp.validate()
+    >>> bp['title'] = 'my first blog post'
 
-Note that `save` will call the `validate` method, so you don't have to validate
+``validate`` method will also check if all the required fields are set::
+
+    >>> bp.validate()
+    Traceback (most recent call last):
+    ...
+    RequireFieldError: author is required
+
+    >>> bp['author'] = u'myself'
+    >>> bp.validate()
+    >>> 
+
+Now let's save our new blogpost to the database::
+
+    >>> bp.save()
+
+Note that ``save`` will call the ``validate`` method, so you don't have to validate
 each time.
 
->>> bp.save()
+Querying the Database
+---------------------
 
-You can disable or force the validation with the `validate` argument in the `save` method:
+Once you've got data in the database, you can quickly retrieve your blog posts
+as well::
 
->>> bp.save(validate=False)
+    >>> for post in connection.BlogPost.find():
+    ...     print post['title']
+    ... 
+    my first blog post
 
-Dot notation 
-============
-
-If you want to use the dot notation (ala json), you must set the
-`use_dot_notation` attribute to True:
-
->>> class TestDotNotation(Document):
-...     structure = {
-...         "foo":{ "bar":unicode}
-...     }
-...     use_dot_notation=True
-
->>> con.register([TestDotNotation])
->>> doc = tutorial.TestDotNotation()
->>> doc.foo.bar = u"bla"
->>> doc
-{'foo': {'bar': u'bla'}}
-
-Note that if an attribute is not in structure, the value will be added as attribute :
-
->>> doc.arf = 3 # arf is not in structure
->>> doc
-{'foo': {'bar': u'bla'}}
-
-If you want to be warned when a value is set as attribute, you can set the `dot_notation_warning` attribute as True.
-
-Changing collection dynamically
-===============================
-
-But you might need to specify a different db or collection dynamically. For instance,
-say you want to store a User by database. 
-
->>> class User(Document):
-...     structure = {'login':unicode, 'screen_name':unicode}
-
->>> con.register([User])
-
-Like pymongo, MongoKit allow you to change those parameters on the fly:
-
->>> user_name = 'namlook'
->>> user_col = con[user_name].profile
-
-Now, we can query the database by passing our new collection :
-
->>> profiles = user_col.User.find()
-
->>> user = user_col.User()
->>> user['login'] = 'namlook'
->>> user['screen_name'] = 'Namlook'
-
-Calling `user.save()` will save the object into the database 'namlook' in the collection 'profile'.
-
-
+pymongo_ makes it very easy to perform complex queries on your data so for more
+information, see the :doc:`query` documentation.

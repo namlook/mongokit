@@ -1,0 +1,183 @@
+=========
+Documents
+=========
+
+Documents are the basic building blocks of MongoKit. They define the schema
+of each document and how that document should be accessed
+
+Document Class
+--------------
+::
+
+    from mongokit import Document, Connection
+
+    class MyDocument(Document):
+        structure = {
+            ...
+        }
+        required_fields = [
+            ...
+        ]
+        default_values = {
+            ...
+        }
+
+You can read more about the `structure`_ attribute, and the ``required_fields`` and ``default_values``  `descriptors`_. They are the primary definition of a document. MongoKit also supports
+`handling i18n`_, `indexes`_, and `migration`_.
+
+    .. _`structure`: structure.html
+
+    .. _`descriptors`: descriptors.html
+
+    .. _`handling i18n`: i18n.html
+    
+    .. _`indexes`: indexes.html
+    
+    .. _`migration`: migration.html
+
+Registering
+-----------
+
+Once a document has been defined, it must be registered with a Connection::
+
+    connection = Connection()
+    connection.register([MyDocument])
+
+Optionally, the register method can be used as a decorator::
+
+        @connection.register
+        class MyDocument(Document):
+            structure = {...}
+
+
+Database and Collection
+-----------------------
+
+To use a Document, you must call it from a collection. In pymongo's syntax, you would use 
+``connection.<database>.<collection>`` to access the collection. Once you have
+the collection, you can create a new document::
+
+    >>> connection.database.collection.MyDocument()
+    {... new Document's default values ...}
+
+As a short cut, you can define the database and colleciton names in the 
+Document definition::
+
+    @connection.register
+    class MyDocument(Document):
+        __collection__ = 'collection_name'
+        __database__ = 'database_name'
+        structure = {...}
+
+Now, we can have access to our document directly from the connection::
+
+    >>> connection.MyDocument()
+    {... new Document's default values ...}
+
+Note that if you want to specify the ``__database__``, you should also specify the
+``__collection__`` attribute.
+
+It is also possible to access the Document from the database:
+
+    >>> connection.database.MyDocument() # this will use __collection__ as collection name
+
+This matches the typical pattern of creating and passing around a ``db`` object:
+
+    >>> connection = Connection()
+    >>> db = connection[MONGODB_DATABASE_NAME]
+    >>> db.MyDocument()
+
+Changing Collection Dynamically
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You might need to specify a different db or collection dynamically. For instance,
+say you want to store a User by database. 
+
+    >>> class User(Document):
+    ...     structure = {'login':unicode, 'screen_name':unicode}
+
+    >>> con.register([User])
+
+Like pymongo, MongoKit allow you to change those parameters on the fly :
+
+    >>> user_name = 'namlook'
+    >>> user_collection = connection[user_name].profile #returns a reference to the database 'namlook' in the collection 'profile'.
+
+Now, we can query the database by passing our new collection :
+
+    >>> profiles = user_col.User.find()
+
+    >>> user = user_col.User()
+    >>> user['login'] = 'namlook@namlook.com'
+    >>> user['screen_name'] = 'Namlook'
+
+Calling ``user.save()`` will save the object into the database ``namlook``
+in the collection ``profile``.
+
+Dot Notation 
+------------
+
+If you want to use the dot notation (ala json), you must set the
+``use_dot_notation`` attribute to True::
+
+    class TestDotNotation(Document):
+        use_dot_notation = True
+
+        structure = {
+            'foo':{ 
+                'bar': basestring
+            }
+        }
+
+>>> connection.register([TestDotNotation])
+>>> doc = connection.database.TestDotNotation()
+>>> doc.foo.bar = 'blah'
+>>> doc
+{'foo': {'bar': 'blah'}}
+
+Note that if an attribute is not in structure, the value will be added as attribute :
+
+    >>> doc.arf = 3 # arf is not in structure
+    >>> doc
+    {'foo': {'bar': u'bla'}}
+
+If you want to be warned when a value is set as attribute, you can set the `dot_notation_warning` attribute as True.
+
+Polymorphism
+------------
+
+In the following example, we have to object A and B wich herite from Root.
+And we want to build an object C from A and B. Let's build Root, A and B
+first::
+
+    from mongokit import *
+    class Root(Document):
+        structure = {
+            'root': int
+        }
+        required_fields = ['root']
+
+    class A(Root):
+        structure = {
+            'a_field': basestring,
+        }
+        required_fields = ['a_field']
+
+
+    class B(Root):
+        structure = {
+            'b_field': basestring,
+        }
+
+
+Polymorphism just work as expected::
+
+    class C(A,B):
+        structure = {'c_field': float}
+
+>>> c = C()
+>>> c == {'b_field': None, 'root': None, 'c_field': None, 'a_field': None}
+True
+>>> C.required_fields
+['root', 'a_field']
+
