@@ -48,7 +48,7 @@ class DocumentMigration(object):
         structure = DotCollapsedDict(self.doc_class.structure)
         for op, fields in update_query.iteritems():
             for field in fields:
-                if op != '$unset':
+                if op != '$unset' and op != '$rename':
                     if field not in structure:
                         raise UpdateQueryError("'%s' not found in %s's structure" % (
                           field, self.doc_class.__name__))
