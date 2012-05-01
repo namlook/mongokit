@@ -28,7 +28,7 @@
 import unittest
 
 from mongokit import *
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 from mongokit.helpers import i18nDotedDict
 
 

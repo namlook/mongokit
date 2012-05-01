@@ -106,8 +106,8 @@ class CustomTypesTestCase(unittest.TestCase):
 
 
     def test_instance_type(self):
-        from pymongo.objectid import ObjectId
         from bson.dbref import DBRef
+        from bson.objectid import ObjectId
         class Bla(ObjectId):pass
         class Ble(DBRef):pass
         class MyDoc(Document):
