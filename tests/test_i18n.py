@@ -175,6 +175,7 @@ class i18nTestCase(unittest.TestCase):
         doc.set_lang('en')
         doc.title.foo = u"Hello"
         doc.title.bar.bla = 2
+        doc.save()
         self.assertEqual(doc,
           {'toto': {'titi': {'tata': None}}, 'title': {'egg': 4, 'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}}})
         doc.validate()

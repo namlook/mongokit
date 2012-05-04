@@ -58,7 +58,7 @@ class MapReduceTestCase(unittest.TestCase):
 
         m = 'function() { emit(this.user_id, 1); }'
         r = 'function(k,vals) { return 1; }'
-        mapcol = self.col.map_reduce(m,r)
+        mapcol = self.col.map_reduce(m,r,"testresults")
         mapdoc = mapcol.MapDoc.find_one()
         assert mapdoc == {u'_id': 0.0, u'value': 1.0}, mapdoc
         assert isinstance(mapdoc, MapDoc)
@@ -86,7 +86,7 @@ class MapReduceTestCase(unittest.TestCase):
             }
         self.connection.register([MapDoc])   
 
-        mapcol = self.col.map_reduce(m,r)
+        mapcol = self.col.map_reduce(m,r,"testresults")
         mapdoc = mapcol.MapDoc.find_one()
         assert mapdoc == {u'_id': 0.0, u'value': {u'embed': {u'_id': u'bla0', u'user_id': 0}}}
         assert isinstance(mapdoc, MapDoc)
@@ -114,7 +114,7 @@ class MapReduceTestCase(unittest.TestCase):
             }
         self.connection.register([MapDoc])   
 
-        mapcol = self.col.map_reduce(m,r)
+        mapcol = self.col.map_reduce(m,r,"testresults")
         mapdoc = mapcol.MapDoc.find_one()
         assert mapdoc == {u'_id': 0.0, u'value': {u'embed': {u'_id': u'bla0', u'user_id': 0}}}
         assert isinstance(mapdoc, MapDoc)
