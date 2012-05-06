@@ -692,8 +692,7 @@ class ApiTestCase(unittest.TestCase):
                 foo = u"bla"
             doc = self.col.Doc(doc={'foo':foo, 'bla':i})
             doc.save()
- 
-        assert self.col.find().distinct('foo') == ['bla', 'blo']
+        assert self.col.find().distinct('foo') == ['blo', 'bla']
         assert self.col.find().distinct('bla') == range(15)
 
     def test_explain(self):

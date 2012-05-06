@@ -1,4 +1,8 @@
-import unittest
+try:
+     import unittest2 as unittest
+except ImportError:
+     import unittest
+
 from mongokit import Document, Connection
 
 class DescriptorsTestCase(unittest.TestCase):

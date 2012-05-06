@@ -532,11 +532,8 @@ class JsonTestCase(unittest.TestCase):
 
     def test_anyjson_import_error(self):
         import sys
-        for i in sys.path:
-            if 'anyjson' in i:
-                index = sys.path.index(i)
-                del sys.path[index]
-                break
+        newpathlist = sys.path
+        sys.path = []
         class MyDoc(Document):
             structure = {
                 "foo":int,
@@ -548,7 +545,8 @@ class JsonTestCase(unittest.TestCase):
         mydoc.save()
         self.assertRaises(ImportError, mydoc.to_json)
         self.assertRaises(ImportError, self.col.MyDoc.from_json, '{"_id":"mydoc", "foo":4}')
-        sys.path.insert(index, i)
+        sys.path = newpathlist
+        del newpathlist
 
     def test_to_json_with_dot_notation(self):
         class MyDoc(Document):
