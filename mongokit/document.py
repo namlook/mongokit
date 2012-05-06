@@ -515,12 +515,14 @@ class Document(SchemaDocument):
                         doc[key]['_collection'] = self.collection.name
                         doc[key]['_database'] = self.db.name
         try:
-            import anyjson
+            from json import dumps
+        except ImportError:
+            from anyjson import serialize as dumps
         except ImportError:
             raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = self.to_json_type()
         _convert_to_python(obj, self.structure)
-        return unicode(anyjson.serialize(obj))
+        return unicode(dumps(obj))
 
     def from_json(self, json):
         """
@@ -585,10 +587,12 @@ class Document(SchemaDocument):
                     _id = doc[key][id_ref]
                     doc[key] = getattr(self.connection[db][col], obj_class.__name__).one({'_id': _id})
         try:
-            import anyjson
+            from json import loads
+        except ImportError:
+            from anyjson import deserialize as loads
         except ImportError:
             raise ImportError("can't import anyjson. Please install it before continuing.")
-        obj = anyjson.deserialize(json)
+        obj = loads(json)
         _convert_to_python(obj, self.structure)
         if '_id' in obj:
             if '$oid' in obj['_id']:

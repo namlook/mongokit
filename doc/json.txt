@@ -7,8 +7,7 @@ in order to pass it via the REST API. Unfortunately (or fortunately), MongoDB
 support field format which is not supported by JSON. This is the case for `datetime`
 but also for all your `CustomTypes` you may have built and your embedded objects.
 
-``Document`` supports the JSON import/export. Note that you'll need to install `anyjson`
-to enable this feature. (`sudo easy_install anyjson`)
+``Document`` supports the JSON import/export.
 
 :`to_json`:
 
