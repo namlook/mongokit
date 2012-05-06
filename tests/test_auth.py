@@ -29,7 +29,7 @@ import unittest
 
 from mongokit import *
 from mongokit.auth import User
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 
 import logging
 logging.basicConfig()
