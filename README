@@ -100,10 +100,10 @@ And you can use more complex structure::
     ...     structure = {
     ...         "foo" : {"content":int},
     ...         "bar" : {
-    ...             int:{unicode:int}
+    ...             'bla':{'spam':int}
     ...         }
     ...     }
-    ...     required_fields = ['foo.content', 'bar.$int']
+    ...     required_fields = ['foo.content', 'bar.bla.spam']
      
 Please, see the tutorial_ for more examples.
 
@@ -118,6 +118,22 @@ on the freenode #mongodb irc channel or on twitter_.
 
 Recent Change Log
 =================
+
+v0.8.0
+------
+
+ * Add spec file for rpm-based distributions (Merge pull request #63 from linuxnow/master)
+ * change document size limitation for mongodb 1.8 or later. Thanks to Aleksey Sivokon (Merge pull request #74 from key/master)
+ * validation of "" for an int (Merge pull request #79 from barnybug/master)
+ * Fix exception when loading documents with a custom type field missing (Merge pull request #80 from barnybug/master)
+ * Big documentation restructuration made by Sean Lynch (Merge pull request #82 from sean-lynch/master)
+ * Using rename no longer causes migrations throw an exception (Merge pull request #86 from matthewh/master)
+ * Some test is modified and added tox (Merge pull request #91 from aircastle/modifiytest)
+ * Replace pymongo.objectid with bson.objectid (Merge pull request #88 from behackett/master)
+ * Added Support for additional keyword-arguments for index-creation (Merge pull request #85 from mfelsche/master)
+ * Remove anyjson dependency and use builtin json instead
+
+Thank you all for all your patches !
 
 v0.7.2
 ------
