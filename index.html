@@ -1,25 +1,31 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>MongoKit Documentation &mdash; MongoKit v0.6 documentation</title>
+    <title>MongoKit Documentation &mdash; MongoKit 0.8.0 documentation</title>
+    
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.6',
-        COLLAPSE_MODINDEX: false,
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.6 documentation" href="#" />
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="#" />
     <link rel="next" title="MongoKit" href="introduction.html" /> 
   </head>
   <body>
@@ -32,40 +38,35 @@
         <li class="right" >
           <a href="introduction.html" title="MongoKit"
              accesskey="N">next</a> |</li>
-        <li><a href="#">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="#">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="#">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">MongoKit Documentation</a></li>
-<li><a class="reference external" href="#philosophy">Philosophy</a><ul>
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">MongoKit Documentation</a></li>
+<li><a class="reference internal" href="#philosophy">Philosophy</a><ul>
 </ul>
 </li>
 </ul>
 
-            <h4>Next topic</h4>
-            <p class="topless"><a href="introduction.html"
-                                  title="next chapter">MongoKit</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="sources/index.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="next chapter">MongoKit</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -85,12 +86,12 @@ as possible with the KISS and DRY principles in mind.</p>
 <h1>Philosophy<a class="headerlink" href="#philosophy" title="Permalink to this headline">¶</a></h1>
 <p>MongoKit is designed to be:</p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li><strong>simple</strong>: MongoKit use plain python type to describe document structure</li>
 <li><strong>fast</strong>: MongoKit is fast but if you <em>really</em> need to be fast you have access to the raw pymongo layer without changing the API</li>
 <li><strong>powerfull</strong>: MongoKit brings many feature like document auto-reference, custom types or i18n support.</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <div class="topic">
 <p class="topic-title first"><strong>Your data is clean</strong>:</p>
 <p>&#8220;Tools change, not data&#8221;. In order to follow this &#8220;credo&#8221;, MongoKit won&#8217;t
@@ -100,116 +101,132 @@ data won’t be polluted by MongoKit’s stuff.</p>
 </div>
 <p>Browse the <a class="reference external" href="http://github.com/namlook/mongokit">source code</a></p>
 <p>Contents:</p>
+<div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference external" href="introduction.html">MongoKit</a><ul>
-<li class="toctree-l2"><a class="reference external" href="introduction.html#philosophy">Philosophy</a></li>
-<li class="toctree-l2"><a class="reference external" href="introduction.html#features">Features</a></li>
-<li class="toctree-l2"><a class="reference external" href="introduction.html#a-quick-example">A quick example</a></li>
-<li class="toctree-l2"><a class="reference external" href="introduction.html#recent-change-log">Recent Change Log</a><ul>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-6">v0.6</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-13-1">v0.5.13.1</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-13">v0.5.13</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-12-1">v0.5.12.1</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v-0-5-12">v.0.5.12</a></li>
-<li class="toctree-l3"><a class="reference external" href="introduction.html#v0-5-11">v0.5.11</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">MongoKit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#philosophy">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#a-quick-example">A quick example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#recent-change-log">Recent Change Log</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="introduction.html#v0-8-0">v0.8.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="introduction.html#v0-7-2">v0.7.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="introduction.html#v0-7-1">v0.7.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="introduction.html#v0-7">v0.7</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="tutorial.html">MongoKit Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#simple-example">Simple Example</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#dot-notation">Dot notation</a></li>
-<li class="toctree-l2"><a class="reference external" href="tutorial.html#changing-collection-dynamically">Changing collection dynamically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Getting Started with MongoKit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#defining-a-document">Defining a Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#connecting-to-mongodb">Connecting to MongoDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#modifying-the-document">Modifying the Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#querying-the-database">Querying the Database</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="structure.html">The structure</a><ul>
-<li class="toctree-l2"><a class="reference external" href="structure.html#validate-keys">validate keys</a></li>
-<li class="toctree-l2"><a class="reference external" href="structure.html#untyped-field">Untyped field</a></li>
-<li class="toctree-l2"><a class="reference external" href="structure.html#difference-between-and-the-type-list">Difference between [] and the type list</a></li>
-<li class="toctree-l2"><a class="reference external" href="structure.html#difference-between-and-the-type-dict">Difference between {} and the type dict</a></li>
-<li class="toctree-l2"><a class="reference external" href="structure.html#case-of-tuple-or-immutable-field">Case of tuple or immutable field</a></li>
-<li class="toctree-l2"><a class="reference external" href="structure.html#adding-more-authorized-types">Adding more authorized types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="document.html">Documents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="document.html#document-class">Document Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="document.html#registering">Registering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="document.html#database-and-collection">Database and Collection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="document.html#changing-collection-dynamically">Changing Collection Dynamically</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="descriptors.html">Descriptors</a><ul>
-<li class="toctree-l2"><a class="reference external" href="descriptors.html#required">required</a></li>
-<li class="toctree-l2"><a class="reference external" href="descriptors.html#default-values">default_values</a></li>
-<li class="toctree-l2"><a class="reference external" href="descriptors.html#validators">validators</a></li>
-<li class="toctree-l2"><a class="reference external" href="descriptors.html#i18n">i18n</a></li>
+<li class="toctree-l2"><a class="reference internal" href="document.html#dot-notation">Dot Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="document.html#polymorphism">Polymorphism</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="descriptors.html#adding-complex-validation">Adding complex validation</a></li>
-<li class="toctree-l1"><a class="reference external" href="operators.html">MongokitOperator</a><ul>
-<li class="toctree-l2"><a class="reference external" href="operators.html#or-operator">OR operator</a></li>
-<li class="toctree-l2"><a class="reference external" href="operators.html#not-operator">NOT operator</a></li>
-<li class="toctree-l2"><a class="reference external" href="operators.html#is-operator">IS operator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">The Structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="structure.html#field-types">Field Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html#untyped-field">Untyped field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html#nested-structure">Nested Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#dicts">Dicts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#lists">Lists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#tuples">Tuples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#sets">Sets</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="custom_types.html">Custom types</a></li>
-<li class="toctree-l1"><a class="reference external" href="schemaless.html">Schemaless structure</a></li>
-<li class="toctree-l1"><a class="reference external" href="query.html">Query</a><ul>
-<li class="toctree-l2"><a class="reference external" href="query.html#getting-raw-data">Getting raw data</a><ul>
-<li class="toctree-l3"><a class="reference external" href="query.html#find-and-find-one">find() and find_one()</a></li>
-<li class="toctree-l3"><a class="reference external" href="query.html#one">one()</a></li>
-<li class="toctree-l3"><a class="reference external" href="query.html#find-random">find_random()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html#using-custom-types">Using Custom Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html#or-not-and-is-types">OR, NOT, and IS types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#or-operator">OR operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#not-operator">NOT operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#is-operator">IS operator</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference external" href="query.html#getting-document-instance">Getting Document instance</a></li>
-<li class="toctree-l2"><a class="reference external" href="query.html#find">find()</a></li>
-<li class="toctree-l2"><a class="reference external" href="query.html#find-one">find_one()</a></li>
-<li class="toctree-l2"><a class="reference external" href="query.html#id1">one()</a></li>
-<li class="toctree-l2"><a class="reference external" href="query.html#fetch">fetch()</a></li>
-<li class="toctree-l2"><a class="reference external" href="query.html#fetch-one">fetch_one()</a></li>
-<li class="toctree-l2"><a class="reference external" href="query.html#id2">find_random()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html#schemaless-structure">Schemaless Structure</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="update.html">Updating data</a><ul>
-<li class="toctree-l2"><a class="reference external" href="update.html#bulk-and-atomic-updates">Bulk and atomic updates</a></li>
-<li class="toctree-l2"><a class="reference external" href="update.html#reload">reload()</a></li>
-<li class="toctree-l2"><a class="reference external" href="update.html#find-and-modify">find_and_modify()</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference external" href="dbref.html">Using DBRef</a><ul>
-<li class="toctree-l2"><a class="reference external" href="dbref.html#a-detailed-example">A detailed example</a><ul>
-<li class="toctree-l3"><a class="reference external" href="dbref.html#about-cross-database-references">About cross-database references</a></li>
-<li class="toctree-l3"><a class="reference external" href="dbref.html#reference-and-dereference">Reference and dereference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="descriptors.html">Descriptors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="descriptors.html#required">required</a></li>
+<li class="toctree-l2"><a class="reference internal" href="descriptors.html#default-values">default_values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="descriptors.html#validators">validators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="descriptors.html#adding-complex-validation">Adding Complex Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="descriptors.html#skipping-validation">Skipping Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="descriptors.html#quiet-validation-detection">Quiet Validation Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="descriptors.html#validate-keys">Validate Keys</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="validation_and_optimisation.html">Skipping validation</a></li>
-<li class="toctree-l1"><a class="reference external" href="validation_and_optimisation.html#quiet-validation-detection">Quiet validation detection</a></li>
-<li class="toctree-l1"><a class="reference external" href="indexes.html">Indexes</a></li>
-<li class="toctree-l1"><a class="reference external" href="inheritance.html">Polymorphism with MongoKit</a></li>
-<li class="toctree-l1"><a class="reference external" href="json.html">JSON support</a><ul>
-<li class="toctree-l2"><a class="reference external" href="json.html#objectid-support">ObjectId support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query.html">Query</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="query.html#getting-raw-data">Getting raw data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="query.html#find-and-find-one">find() and find_one()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="query.html#one">one()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="query.html#find-random">find_random()</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="i18n.html">Internationalization and Localization</a><ul>
-<li class="toctree-l2"><a class="reference external" href="i18n.html#i18n-with-dot-notation">i18n with dot_notation</a></li>
-<li class="toctree-l2"><a class="reference external" href="i18n.html#default-language">Default language</a></li>
-<li class="toctree-l2"><a class="reference external" href="i18n.html#i18n-without-dot-notation-the-fast-way">i18n without dot notation (the fast way)</a></li>
-<li class="toctree-l2"><a class="reference external" href="i18n.html#i18n-with-different-type">i18n with different type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html#getting-document-instance">Getting Document instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html#find">find()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html#find-one">find_one()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html#id1">one()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html#fetch">fetch()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html#fetch-one">fetch_one()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html#id2">find_random()</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="gridfs.html">GridFS</a><ul>
-<li class="toctree-l2"><a class="reference external" href="gridfs.html#the-simple-way">The simple way</a></li>
-<li class="toctree-l2"><a class="reference external" href="gridfs.html#the-full-way">The full way</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update.html">Updating data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="update.html#bulk-and-atomic-updates">Bulk and atomic updates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#reload">reload()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html#find-and-modify">find_and_modify()</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="migration.html">Migration</a><ul>
-<li class="toctree-l2"><a class="reference external" href="migration.html#lazy-migration">Lazy migration</a></li>
-<li class="toctree-l2"><a class="reference external" href="migration.html#bulk-migration">Bulk migration</a></li>
-<li class="toctree-l2"><a class="reference external" href="migration.html#migration-status">Migration status</a></li>
-<li class="toctree-l2"><a class="reference external" href="migration.html#advanced-migration">Advanced migration</a><ul>
-<li class="toctree-l3"><a class="reference external" href="migration.html#id1">Lazy migration</a></li>
-<li class="toctree-l3"><a class="reference external" href="migration.html#advanced-and-bulk-migration">Advanced and bulk migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dbref.html">Using DBRef</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dbref.html#a-detailed-example">A detailed example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dbref.html#about-cross-database-references">About cross-database references</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dbref.html#reference-and-dereference">Reference and dereference</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="pylons.html">Pylons support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="indexes.html">Indexes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="json.html">JSON support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="json.html#objectid-support">ObjectId support</a></li>
 </ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="i18n.html">Internationalization and Localization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="i18n.html#i18n-with-dot-notation">i18n with dot_notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="i18n.html#default-language">Default language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="i18n.html#i18n-without-dot-notation-the-fast-way">i18n without dot notation (the fast way)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="i18n.html#i18n-with-different-type">i18n with different type</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gridfs.html">GridFS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gridfs.html#the-simple-way">The simple way</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gridfs.html#the-full-way">The full way</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#lazy-migration">Lazy migration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#bulk-migration">Bulk migration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#migration-status">Migration status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#advanced-migration">Advanced migration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#id1">Lazy migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#advanced-and-bulk-migration">Advanced and bulk migration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pylons.html">Pylons support</a></li>
+</ul>
+</div>
 </div>
 
 
@@ -227,12 +244,12 @@ data won’t be polluted by MongoKit’s stuff.</p>
         <li class="right" >
           <a href="introduction.html" title="MongoKit"
              >next</a> |</li>
-        <li><a href="#">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="#">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2011, Nicolas Clairon.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

@@ -1,27 +1,33 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>JSON support &mdash; MongoKit v0.6 documentation</title>
+    <title>JSON support &mdash; MongoKit 0.8.0 documentation</title>
+    
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.6',
-        COLLAPSE_MODINDEX: false,
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="index.html" />
     <link rel="next" title="Internationalization and Localization" href="i18n.html" />
-    <link rel="prev" title="Polymorphism with MongoKit" href="inheritance.html" /> 
+    <link rel="prev" title="Indexes" href="indexes.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,45 +40,40 @@
           <a href="i18n.html" title="Internationalization and Localization"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="inheritance.html" title="Polymorphism with MongoKit"
+          <a href="indexes.html" title="Indexes"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">JSON support</a><ul>
-<li><a class="reference external" href="#objectid-support">ObjectId support</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">JSON support</a><ul>
+<li><a class="reference internal" href="#objectid-support">ObjectId support</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="inheritance.html"
-                                  title="previous chapter">Polymorphism with MongoKit</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="i18n.html"
-                                  title="next chapter">Internationalization and Localization</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="sources/json.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="indexes.html"
+                        title="previous chapter">Indexes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="i18n.html"
+                        title="next chapter">Internationalization and Localization</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -88,13 +89,12 @@ support. Then, you may need to convert all your Document into a JSON format
 in order to pass it via the REST API. Unfortunately (or fortunately), MongoDB
 support field format which is not supported by JSON. This is the case for <cite>datetime</cite>
 but also for all your <cite>CustomTypes</cite> you may have built and your embedded objects.</p>
-<p><tt class="docutils literal"><span class="pre">Document</span></tt> supports the JSON import/export. Note that you&#8217;ll need to install <cite>anyjson</cite>
-to enable this feature. (<cite>sudo easy_install anyjson</cite>)</p>
+<p><tt class="docutils literal"><span class="pre">Document</span></tt> supports the JSON import/export.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name"><cite>to_json</cite>:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name"><cite>to_json</cite>:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -123,7 +123,7 @@ to enable this feature. (<cite>sudo easy_install anyjson</cite>)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name"><cite>from_json</cite>:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name"><cite>from_json</cite>:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -202,7 +202,7 @@ document. These are removed when calling the <cite>from_json()</cite> method:</p
 <p><cite>from_json()</cite> can detect if the <cite>_id</cite> is an <tt class="docutils literal"><span class="pre">ObjectId</span></tt> instance or a simple string. When you serialize an object
 with <tt class="docutils literal"><span class="pre">ObjectId</span></tt> instance to json, the generated json object look like this:</p>
 <blockquote>
-&#8216;{&#8220;_id&#8221;: {&#8220;$oid&#8221;: &#8220;...&#8221;}, ...}&#8217;</blockquote>
+<div>&#8216;{&#8220;_id&#8221;: {&#8220;$oid&#8221;: &#8221;...&#8221;}, ...}&#8217;</div></blockquote>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">EmbedDoc</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;bar&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">embed</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -238,14 +238,14 @@ The same append with embed doc:</p>
           <a href="i18n.html" title="Internationalization and Localization"
              >next</a> |</li>
         <li class="right" >
-          <a href="inheritance.html" title="Polymorphism with MongoKit"
+          <a href="indexes.html" title="Indexes"
              >previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2011, Nicolas Clairon.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

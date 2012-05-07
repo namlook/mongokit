@@ -1,26 +1,32 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>MongoKit Tutorial &mdash; MongoKit v0.6 documentation</title>
+    <title>Getting Started with MongoKit &mdash; MongoKit 0.8.0 documentation</title>
+    
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.6',
-        COLLAPSE_MODINDEX: false,
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
-    <link rel="next" title="The structure" href="structure.html" />
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="index.html" />
+    <link rel="next" title="Documents" href="document.html" />
     <link rel="prev" title="MongoKit" href="introduction.html" /> 
   </head>
   <body>
@@ -31,50 +37,46 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="structure.html" title="The structure"
+          <a href="document.html" title="Documents"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="introduction.html" title="MongoKit"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">MongoKit Tutorial</a><ul>
-<li><a class="reference external" href="#simple-example">Simple Example</a></li>
-<li><a class="reference external" href="#dot-notation">Dot notation</a></li>
-<li><a class="reference external" href="#changing-collection-dynamically">Changing collection dynamically</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting Started with MongoKit</a><ul>
+<li><a class="reference internal" href="#defining-a-document">Defining a Document</a></li>
+<li><a class="reference internal" href="#connecting-to-mongodb">Connecting to MongoDB</a></li>
+<li><a class="reference internal" href="#modifying-the-document">Modifying the Document</a></li>
+<li><a class="reference internal" href="#querying-the-database">Querying the Database</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="introduction.html"
-                                  title="previous chapter">MongoKit</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="structure.html"
-                                  title="next chapter">The structure</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="sources/tutorial.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="previous chapter">MongoKit</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="document.html"
+                        title="next chapter">Documents</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -83,168 +85,134 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="mongokit-tutorial">
-<h1>MongoKit Tutorial<a class="headerlink" href="#mongokit-tutorial" title="Permalink to this headline">¶</a></h1>
-<p>First of all, Mongokit relied heavily on pymongo. As such, all pymongo API is
-exposed. If you don&#8217;t find what you want in the Mongokit document, please take
-a look at <a class="reference external" href="http://api.mongodb.org/python/">pymongo</a> &#8216;s one.  All the pymongo API is exposed via connection,
-database and collection so Connection, Database and Collection are wrapper
-around pymongo objects.</p>
-<div class="section" id="simple-example">
-<h2>Simple Example<a class="headerlink" href="#simple-example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+  <div class="section" id="getting-started-with-mongokit">
+<h1>Getting Started with MongoKit<a class="headerlink" href="#getting-started-with-mongokit" title="Permalink to this headline">¶</a></h1>
+<p>MongoKit is based on <a class="reference external" href="http://api.mongodb.org/python/">pymongo</a>. As such, all of the pymongo API is exposed
+through MongoKit. If you don&#8217;t find what you want in the MongoKit API,
+please take a look at pymongo&#8217;s documenation. All the pymongo API is
+exposed via connection, database and collection so Connection, Database and
+Collection are wrappers around pymongo objects.</p>
+<p>In this example, we will create a simple MongoKit document definition and use
+it to create new instances of that document.</p>
+<div class="section" id="defining-a-document">
+<h2>Defining a Document<a class="headerlink" href="#defining-a-document" title="Permalink to this headline">¶</a></h2>
+<p>Start by defining the Document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="n">Document</span><span class="p">,</span> <span class="n">Connection</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="nb">basestring</span><span class="p">,</span>
+        <span class="s">&#39;body&#39;</span><span class="p">:</span> <span class="nb">basestring</span><span class="p">,</span>
+        <span class="s">&#39;author&#39;</span><span class="p">:</span> <span class="nb">basestring</span><span class="p">,</span>
+        <span class="s">&#39;date_creation&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
+        <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="s">&#39;tags&#39;</span><span class="p">:</span> <span class="p">[</span><span class="nb">basestring</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="s">&#39;author&#39;</span><span class="p">,</span> <span class="s">&#39;date_creation&#39;</span><span class="p">]</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s">&#39;date_creation&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span>
+    <span class="p">}</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+<p>The <tt class="docutils literal"><span class="pre">structure</span></tt> is simply a dictionary with python type. In this example,
+<tt class="docutils literal"><span class="pre">title</span></tt> must be a string and <tt class="docutils literal"><span class="pre">rank</span></tt> must be an int. For more information,
+see <a class="reference internal" href="structure.html"><em>The Structure</em></a>.</p>
+<p>Optionally, you can add some descriptors. In order to specify fields which are
+required, just add a <tt class="docutils literal"><span class="pre">required_fields</span></tt> attribute. This is a simple list which
+list all required_fields (ie, those field must not be None when validating).
+You can also specify the <tt class="docutils literal"><span class="pre">default_values</span></tt> attribute which can indicates the
+default values of a Documents structure. Note that you can pass callable object (like a
+<tt class="docutils literal"><span class="pre">datetime.utcnow</span></tt>). For more information, see <a class="reference internal" href="descriptors.html"><em>Descriptors</em></a>.</p>
+</div>
+<div class="section" id="connecting-to-mongodb">
+<h2>Connecting to MongoDB<a class="headerlink" href="#connecting-to-mongodb" title="Permalink to this headline">¶</a></h2>
+<p>Now, to open a connection to MongoDB:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">BlogPost</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>            <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
-<span class="gp">... </span>            <span class="s">&#39;body&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
-<span class="gp">... </span>            <span class="s">&#39;author&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span>
-<span class="gp">... </span>            <span class="s">&#39;date_creation&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
-<span class="gp">... </span>            <span class="s">&#39;rank&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
-<span class="gp">... </span>            <span class="s">&#39;tags&#39;</span><span class="p">:</span> <span class="p">[</span><span class="nb">unicode</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="p">}</span>
-<span class="gp">... </span>    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">,</span><span class="s">&#39;author&#39;</span><span class="p">,</span> <span class="s">&#39;date_creation&#39;</span><span class="p">]</span>
-<span class="gp">... </span>    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;rank&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;date_creation&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">}</span>
-<span class="gp">...</span>
+<p>This a wrapped version of pymongo&#8217;s <a class="reference external" href="http://api.mongodb.org/python/current/tutorial.html#making-a-connection">Connection</a> and will attempt to connect to
+a MongoDB instance running locally. For more information on how to configure
+the Connection, see <a class="reference external" href="http://api.mongodb.org/python/">pymongo</a>&#8216;s documentation.</p>
+<p>Once you have an active connection, you need to register your the <tt class="docutils literal"><span class="pre">BlogPost</span></tt>
+object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">BlogPost</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>The structure is simply a dictionary with python type. In this example, <cite>title</cite> must be unicode and <cite>rank</cite>
-must be an int.</p>
-<p>Optionally, you can add some descriptors. In order to specify fields which are required, just add a <cite>required_fields</cite>
-attribute. This is a simple list which list all required_fields (ie, those field must not be None when validating).</p>
-<p>Same thing with the <cite>default_values</cite> attribute. This is a dict where you can specify default values. Note that
-you can pass callable object (like a datetime).</p>
-<p>Now, fire a connection and register the <tt class="docutils literal"><span class="pre">BlogPost</span></tt> object:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">BlogPost</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Optionally, the register method can be used as a decorator:</p>
-<div class="highlight-python"><pre>@con.register
+<p>Alternatively, the register method can be used as a decorator:</p>
+<div class="highlight-python"><pre>@connection.register
 class BlogPost(Document):
     structure = {...}</pre>
 </div>
-<p>Let&#8217;s do some cleanup before continue:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">drop_collection</span><span class="p">(</span><span class="s">&#39;tutorial&#39;</span><span class="p">)</span>
+<p>Now, let&#8217;s create a new blogpost in the &#8220;blog_posts&#8221; collection in the database
+&#8220;blog&#8221;. In pymongo&#8217;s syntax, you would use
+<tt class="docutils literal"><span class="pre">connection.&lt;database&gt;.&lt;collection&gt;</span></tt> to access the collection. Once you have
+the collection, you can create a new document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">blogpost</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<span class="go">{&#39;body&#39;: None, &#39;title&#39;: None, &#39;author&#39;: None, &#39;rank&#39;: 0, &#39;date_creation&#39;: datetime.datetime(...), &#39;tags&#39;: []}</span>
 </pre></div>
 </div>
-<p>Now, let&#8217;s create a blogpost we want to work on the collection &#8220;tutorial&#8221; on the database &#8220;test&#8221;:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tutorial</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span>
-</pre></div>
-</div>
-<div class="topic">
-<p class="topic-title first">new in version 0.5.13</p>
-<p>now you can add the collection and the database name into a Document:</p>
-<div class="highlight-python"><pre>@con.register
+<p>Note that <tt class="docutils literal"><span class="pre">date_creation</span></tt> was automatically filled by <tt class="docutils literal"><span class="pre">utcnow()</span></tt> and rank is <tt class="docutils literal"><span class="pre">0</span></tt>.</p>
+<p>To avoid repeating ourselves though, let&#8217;s specify the database and collection
+name in the Document definition:</p>
+<div class="highlight-python"><pre>@connection.register
 class BlogPost(Document):
     __collection__ = 'blog_posts'
-    __database__ = 'tutorial'
+    __database__ = 'blog'
     structure = {...}</pre>
 </div>
-<p>so now, we can have access to our document directly from the connection:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Note that if you want to specify the <cite>__database__</cite> you <em>should</em> also specify the <cite>__collection__</cite> attribute.</p>
-<p>It is also possible to access the documents from the database:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span> <span class="c"># this will use __collection__ as collection name</span>
-</pre></div>
-</div>
-</div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
+<p>Now, we can have access to our document directly from the connection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">BlogPost</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span>
-<span class="go">{&#39;body&#39;: None, &#39;title&#39;: None, &#39;date_creation&#39;: datetime.datetime(...), &#39;rank&#39;: 0, &#39;author&#39;: None}</span>
+<span class="go">{&#39;body&#39;: None, &#39;title&#39;: None, &#39;author&#39;: None, &#39;rank&#39;: 0, &#39;date_creation&#39;: datetime.datetime(...), &#39;tags&#39;: []}</span>
 </pre></div>
 </div>
-<p>Note that <cite>date_creation</cite> was automatically filled by <cite>utcnow()</cite> and rank is 0.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;my first blog post&quot;</span>
+</div>
+<div class="section" id="modifying-the-document">
+<h2>Modifying the Document<a class="headerlink" href="#modifying-the-document" title="Permalink to this headline">¶</a></h2>
+<p>Now let&#8217;s modify our BlogPost and try the validation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="nc">SchemaTypeError</span>: <span class="n-Identifier">title must be an instance of unicode not str</span>
+<span class="gr">SchemaTypeError</span>: <span class="n">title must be an instance of basestring not int</span>
 </pre></div>
 </div>
-<p><cite>str</cite> type is not authorized, you must use unicode :</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&quot;my first blog post&quot;</span>
+<p>Alright, type validation works. :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;my first blog post&#39;</span>
 </pre></div>
 </div>
-<p><cite>validate</cite> method will check if required fields are set :</p>
+<p><tt class="docutils literal"><span class="pre">validate</span></tt> method will also check if all the required fields are set:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="nc">RequireFieldError</span>: <span class="n-Identifier">author is required</span>
-</pre></div>
-</div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;myself&#39;</span>
+<span class="gr">RequireFieldError</span>: <span class="n">author is required</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="p">[</span><span class="s">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;myself&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<span class="go">&gt;&gt;&gt;</span>
 </pre></div>
 </div>
-<p>Note that <cite>save</cite> will call the <cite>validate</cite> method, so you don&#8217;t have to validate
-each time.</p>
+<p>Now let&#8217;s save our new blogpost to the database:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>You can disable or force the validation with the <cite>validate</cite> argument in the <cite>save</cite> method:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">validate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<p>Note that <tt class="docutils literal"><span class="pre">save</span></tt> will call the <tt class="docutils literal"><span class="pre">validate</span></tt> method, so you don&#8217;t have to validate
+each time.</p>
+</div>
+<div class="section" id="querying-the-database">
+<h2>Querying the Database<a class="headerlink" href="#querying-the-database" title="Permalink to this headline">¶</a></h2>
+<p>Once you&#8217;ve got data in the database, you can quickly retrieve your blog posts
+as well:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">connection</span><span class="o">.</span><span class="n">BlogPost</span><span class="o">.</span><span class="n">find</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">post</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span>
+<span class="gp">...</span>
+<span class="go">my first blog post</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="dot-notation">
-<h2>Dot notation<a class="headerlink" href="#dot-notation" title="Permalink to this headline">¶</a></h2>
-<p>If you want to use the dot notation (ala json), you must set the
-<cite>use_dot_notation</cite> attribute to True:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">TestDotNotation</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>        <span class="s">&quot;foo&quot;</span><span class="p">:{</span> <span class="s">&quot;bar&quot;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
-<span class="gp">... </span>    <span class="p">}</span>
-<span class="gp">... </span>    <span class="n">use_dot_notation</span><span class="o">=</span><span class="bp">True</span>
-</pre></div>
-</div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">TestDotNotation</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">TestDotNotation</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">bar</span> <span class="o">=</span> <span class="s">u&quot;bla&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
-<span class="go">{&#39;foo&#39;: {&#39;bar&#39;: u&#39;bla&#39;}}</span>
-</pre></div>
-</div>
-<p>Note that if an attribute is not in structure, the value will be added as attribute :</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">arf</span> <span class="o">=</span> <span class="mi">3</span> <span class="c"># arf is not in structure</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
-<span class="go">{&#39;foo&#39;: {&#39;bar&#39;: u&#39;bla&#39;}}</span>
-</pre></div>
-</div>
-<p>If you want to be warned when a value is set as attribute, you can set the <cite>dot_notation_warning</cite> attribute as True.</p>
-</div>
-<div class="section" id="changing-collection-dynamically">
-<h2>Changing collection dynamically<a class="headerlink" href="#changing-collection-dynamically" title="Permalink to this headline">¶</a></h2>
-<p>But you might need to specify a different db or collection dynamically. For instance,
-say you want to store a User by database.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;login&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span> <span class="s">&#39;screen_name&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
-</pre></div>
-</div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">User</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Like pymongo, MongoKit allow you to change those parameters on the fly:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user_name</span> <span class="o">=</span> <span class="s">&#39;namlook&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">user_col</span> <span class="o">=</span> <span class="n">con</span><span class="p">[</span><span class="n">user_name</span><span class="p">]</span><span class="o">.</span><span class="n">profile</span>
-</pre></div>
-</div>
-<p>Now, we can query the database by passing our new collection :</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">profiles</span> <span class="o">=</span> <span class="n">user_col</span><span class="o">.</span><span class="n">User</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">user_col</span><span class="o">.</span><span class="n">User</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="p">[</span><span class="s">&#39;login&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;namlook&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="p">[</span><span class="s">&#39;screen_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Namlook&#39;</span>
-</pre></div>
-</div>
-<p>Calling <cite>user.save()</cite> will save the object into the database &#8216;namlook&#8217; in the collection &#8216;profile&#8217;.</p>
+<p><a class="reference external" href="http://api.mongodb.org/python/">pymongo</a> makes it very easy to perform complex queries on your data so for more
+information, see the <a class="reference internal" href="query.html"><em>Query</em></a> documentation.</p>
 </div>
 </div>
 
@@ -261,17 +229,17 @@ say you want to store a User by database.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="structure.html" title="The structure"
+          <a href="document.html" title="Documents"
              >next</a> |</li>
         <li class="right" >
           <a href="introduction.html" title="MongoKit"
              >previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2011, Nicolas Clairon.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

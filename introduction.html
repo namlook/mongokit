@@ -1,26 +1,32 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>MongoKit &mdash; MongoKit v0.6 documentation</title>
+    <title>MongoKit &mdash; MongoKit 0.8.0 documentation</title>
+    
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.6',
-        COLLAPSE_MODINDEX: false,
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
-    <link rel="next" title="MongoKit Tutorial" href="tutorial.html" />
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="index.html" />
+    <link rel="next" title="Getting Started with MongoKit" href="tutorial.html" />
     <link rel="prev" title="MongoKit Documentation" href="index.html" /> 
   </head>
   <body>
@@ -31,59 +37,52 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="tutorial.html" title="MongoKit Tutorial"
+          <a href="tutorial.html" title="Getting Started with MongoKit"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="MongoKit Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">MongoKit</a><ul>
-<li><a class="reference external" href="#philosophy">Philosophy</a></li>
-<li><a class="reference external" href="#features">Features</a></li>
-<li><a class="reference external" href="#a-quick-example">A quick example</a></li>
-<li><a class="reference external" href="#recent-change-log">Recent Change Log</a><ul>
-<li><a class="reference external" href="#v0-6">v0.6</a></li>
-<li><a class="reference external" href="#v0-5-13-1">v0.5.13.1</a></li>
-<li><a class="reference external" href="#v0-5-13">v0.5.13</a></li>
-<li><a class="reference external" href="#v0-5-12-1">v0.5.12.1</a></li>
-<li><a class="reference external" href="#v-0-5-12">v.0.5.12</a></li>
-<li><a class="reference external" href="#v0-5-11">v0.5.11</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">MongoKit</a><ul>
+<li><a class="reference internal" href="#philosophy">Philosophy</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#a-quick-example">A quick example</a></li>
+<li><a class="reference internal" href="#recent-change-log">Recent Change Log</a><ul>
+<li><a class="reference internal" href="#v0-8-0">v0.8.0</a></li>
+<li><a class="reference internal" href="#v0-7-2">v0.7.2</a></li>
+<li><a class="reference internal" href="#v0-7-1">v0.7.1</a></li>
+<li><a class="reference internal" href="#v0-7">v0.7</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="index.html"
-                                  title="previous chapter">MongoKit Documentation</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="tutorial.html"
-                                  title="next chapter">MongoKit Tutorial</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="sources/introduction.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">MongoKit Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="next chapter">Getting Started with MongoKit</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -97,18 +96,18 @@
 <p><a class="reference external" href="http://www.mongodb.org/display/DOCS/Home">MongoDB</a> is a great schema-less document oriented database. It have a lot of
 driver for many langages (python, ruby, perl, java, php...).</p>
 <p>MongoKit is a python module that brings structured schema and validation layer
-on top of the great pymongo driver. It has be written to be simpler and lighter
+on top of the great pymongo driver. It has be written to be as simple and light
 as possible with the KISS and DRY principles in mind.</p>
 <div class="section" id="philosophy">
 <h2>Philosophy<a class="headerlink" href="#philosophy" title="Permalink to this headline">¶</a></h2>
 <p>MongoKit is designed to be:</p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li><strong>simple</strong>: MongoKit use plain python type to describe document structure</li>
 <li><strong>fast</strong>: MongoKit is fast but if you <em>really</em> need to be fast you have access to the raw pymongo layer without changing the API</li>
-<li><strong>powerfull</strong>: MongoKit brings many feature like document auto-reference, custom types or i18n support.</li>
+<li><strong>powerful</strong>: MongoKit brings many feature like document auto-reference, custom types or i18n support.</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <div class="topic">
 <p class="topic-title first"><strong>Your data is clean</strong>:</p>
 <p>&#8220;Tools change, not data&#8221;. In order to follow this &#8220;credo&#8221;, MongoKit won&#8217;t
@@ -120,8 +119,9 @@ data won&#8217;t be polluted by MongoKit&#8217;s stuff.</p>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>schema validation (wich use simple python type for the declaration)</li>
+<li>schema less feature</li>
 <li>doted notation</li>
 <li>nested and complex schema declaration</li>
 <li>untyped field support</li>
@@ -140,12 +140,12 @@ data won&#8217;t be polluted by MongoKit&#8217;s stuff.</p>
 <li>GridFS support</li>
 <li>document migration support</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <p>Go to the full <a class="reference external" href="http://namlook.github.com/mongokit/">documentation</a> .</p>
 </div>
 <div class="section" id="a-quick-example">
 <h2>A quick example<a class="headerlink" href="#a-quick-example" title="Permalink to this headline">¶</a></h2>
-<p>Document are enhanced python dictionnary with a <tt class="docutils literal"><span class="pre">validate()</span></tt> method.
+<p>Document are enhanced python dictionary with a <tt class="docutils literal"><span class="pre">validate()</span></tt> method.
 A Document declaration look like that:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
@@ -185,10 +185,10 @@ A Document declaration look like that:</p>
 <span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>        <span class="s">&quot;foo&quot;</span> <span class="p">:</span> <span class="p">{</span><span class="s">&quot;content&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
 <span class="gp">... </span>        <span class="s">&quot;bar&quot;</span> <span class="p">:</span> <span class="p">{</span>
-<span class="gp">... </span>            <span class="nb">int</span><span class="p">:{</span><span class="nb">unicode</span><span class="p">:</span><span class="nb">int</span><span class="p">}</span>
+<span class="gp">... </span>            <span class="s">&#39;bla&#39;</span><span class="p">:{</span><span class="s">&#39;spam&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">}</span>
 <span class="gp">... </span>        <span class="p">}</span>
 <span class="gp">... </span>    <span class="p">}</span>
-<span class="gp">... </span>    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;foo.content&#39;</span><span class="p">,</span> <span class="s">&#39;bar.$int&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;foo.content&#39;</span><span class="p">,</span> <span class="s">&#39;bar.bla.spam&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>Please, see the <a class="reference external" href="http://namlook.github.com/mongokit/tutorial.html">tutorial</a> for more examples.</p>
@@ -198,81 +198,88 @@ on the freenode #mongodb irc channel or on <a class="reference external" href="h
 </div>
 <div class="section" id="recent-change-log">
 <h2>Recent Change Log<a class="headerlink" href="#recent-change-log" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="v0-6">
-<h3>v0.6<a class="headerlink" href="#v0-6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="v0-8-0">
+<h3>v0.8.0<a class="headerlink" href="#v0-8-0" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<ul class="simple">
-<li>fix error when check is True. Thanks to &#64;dasmith for the patch</li>
-<li>Many english corrections in the documentation thanks to &#64;allancaffee</li>
-<li>spliting doc and refactoring documentation</li>
-<li>remove unused MongoDocumentCursor</li>
+<div><ul class="simple">
+<li>Add spec file for rpm-based distributions (Merge pull request #63 from linuxnow/master)</li>
+<li>change document size limitation for mongodb 1.8 or later. Thanks to Aleksey Sivokon (Merge pull request #74 from key/master)</li>
+<li>validation of &#8220;&#8221; for an int (Merge pull request #79 from barnybug/master)</li>
+<li>Fix exception when loading documents with a custom type field missing (Merge pull request #80 from barnybug/master)</li>
+<li>Big documentation restructuration made by Sean Lynch (Merge pull request #82 from sean-lynch/master)</li>
+<li>Using rename no longer causes migrations throw an exception (Merge pull request #86 from matthewh/master)</li>
+<li>Some test is modified and added tox (Merge pull request #91 from aircastle/modifiytest)</li>
+<li>Replace pymongo.objectid with bson.objectid (Merge pull request #88 from behackett/master)</li>
+<li>Added Support for additional keyword-arguments for index-creation (Merge pull request #85 from mfelsche/master)</li>
+<li>Remove anyjson dependency and use builtin json instead</li>
 </ul>
-</blockquote>
+</div></blockquote>
+<p>Thank you all for all your patches !</p>
 </div>
-<div class="section" id="v0-5-13-1">
-<h3>v0.5.13.1<a class="headerlink" href="#v0-5-13-1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="v0-7-2">
+<h3>v0.7.2<a class="headerlink" href="#v0-7-2" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<ul class="simple">
-<li>fix #26 &#8211; unable to install (debian lenny, py 2.5)</li>
-<li>fix #25 &#8211; put the new url into the setup.py</li>
+<div><ul class="simple">
+<li>add inherited queries support (please see <a class="reference external" href="http://github.com/namlook/mongokit/wiki/Inherited-queries">http://github.com/namlook/mongokit/wiki/Inherited-queries</a> for more details)</li>
 </ul>
-</blockquote>
+</div></blockquote>
 </div>
-<div class="section" id="v0-5-13">
-<h3>v0.5.13<a class="headerlink" href="#v0-5-13" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="v0-7-1">
+<h3>v0.7.1<a class="headerlink" href="#v0-7-1" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<ul class="simple">
-<li>fix #21 &#8211; required_fields weird behavior with autorefs</li>
-<li>fix #19 &#8211; &#8216;checked&#8217; field not listed in &#8216;indexes&#8217; section</li>
-<li>fix #20 &#8211; creating index on fields not in structure + optimize index generation</li>
-<li>fix #18 &#8211; typo in the doc</li>
-<li>fix import. Dbref isn&#8217;t in pymongo package anymore</li>
-<li>fix deprecation warning from pymongo&#8217;s from_dict</li>
-<li>fix #8 &#8211; allow to access Document via the db</li>
+<div><ul class="simple">
+<li>change MongokitMasterSlaveConnection to MasterSlaveConnection for consistency</li>
+<li>fix #57 &#8211; support pymongo &gt; 1.9 in grid.py</li>
+<li>fix #45 &#8211; remove automatique index creation</li>
+<li>fix #43 &#8211; slicing a cursor should return a mongokit document, not dict</li>
+<li>Dont try to convert None struct to json (patch from &#64;mLewisLogic thanks !)</li>
+<li>fix schemaless issue (thanks to Mihai Pocorschi for reporting it)</li>
 </ul>
-</blockquote>
+</div></blockquote>
 </div>
-<div class="section" id="v0-5-12-1">
-<h3>v0.5.12.1<a class="headerlink" href="#v0-5-12-1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="v0-7">
+<h3>v0.7<a class="headerlink" href="#v0-7" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<ul class="simple">
-<li>fix #17 &#8211; got an unexpected keyword argument &#8216;from_son&#8217;</li>
-<li>fix #15 &#8211; typo in the doc</li>
-</ul>
-</blockquote>
-</div>
-<div class="section" id="v-0-5-12">
-<h3>v.0.5.12<a class="headerlink" href="#v-0-5-12" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>allow register method to be a decorator (thanks to Christopher Grebs for the inspiration)</li>
-<li>get ride of MongoDocumentCursor and use a subclass of pymongo&#8217;s Cursor instead</li>
-<li>structure and descriptors validation is now done at object creation (not instantiation)<ul>
-<li><em>advantage</em> : mongokit is 40% faster</li>
-<li><em>beware</em> : if you put a Document into a structure for reference, mongokit doesn&#8217;t check anymore if use_autorefs is set</li>
-</ul>
+<div><ul>
+<li><p class="first">add <cite>use_schemaless</cite> feature ! please see the documentation for more informations</p>
 </li>
-<li>add i18n descriptor validation + better i18n support</li>
-<li>code cleaning</li>
+<li><dl class="first docutils">
+<dt>Add equality test for mongokit operators (thanks to &#64;allancaffee)</dt>
+<dd><p class="first last">This allows developers to write unit tests on the structure
+of their document classes when operators are used</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">roll back find_and_modify for master branch (need pymongo 1.10 for that)</p>
+</li>
+<li><p class="first">many documentation fixes</p>
+</li>
+<li><p class="first">fix #55 &#8211; Bug in VersionedDocument remove() method</p>
+</li>
+<li><p class="first">fix #53 &#8211; Fixed a few spelling errors in README</p>
+</li>
+<li><p class="first">fix #52 &#8211; Advanced bulk migration docs example is broken</p>
+</li>
+<li><p class="first">fix #51 &#8211; pymongo.dbref is deprecated, use bson.dbref instead</p>
+</li>
+<li><p class="first">fix #49 &#8211; Can&#8217;t specify default values for lists of embedded objects</p>
+</li>
+<li><p class="first">fix #48 &#8211; uuid.UUID support</p>
+</li>
+<li><p class="first">fix #41 &#8211; add basestring to authorized types</p>
+</li>
+<li><p class="first">fix #40 &#8211; Made some enhancements</p>
+</li>
+<li><p class="first">fix #39 &#8211; KeyError when saving partially loaded documents</p>
+</li>
+<li><p class="first">fix #34 &#8211; add find_and_modify method to Document</p>
+</li>
+<li><p class="first">fix #32 &#8211; allow the structure to be empty (was: document.to_json())</p>
+</li>
+<li><p class="first">fix #24 &#8211; Don&#8217;t handle __database__/__collection__ attribute for virtual documents</p>
+</li>
 </ul>
-</blockquote>
-</div>
-<div class="section" id="v0-5-11">
-<h3>v0.5.11<a class="headerlink" href="#v0-5-11" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<ul class="simple">
-<li>support latest pymongo version</li>
-<li>some changes in GridFS support (please read <a class="reference external" href="http://namlook.github.com/mongokit/gridfs.html">http://namlook.github.com/mongokit/gridfs.html</a>)</li>
-<li>Deprecate atomic_save feature</li>
-<li>remove libmagic import from grid.py : to many trouble with this lib, we have to find another way to guess the content-type</li>
-<li>fix #79 &#8211; Tries to migrate non-saved document</li>
-<li>fix #70 &#8211; Set changes from set to list when a validation error occurs</li>
-<li>add contributor + fix email address to prevent spam</li>
-<li>fix deprecation warning of Python 2.6</li>
-<li>fix issue with validation and migration</li>
-<li>fix #75 &#8211; add &#8220;version&#8221; attribute to module</li>
-</ul>
-</blockquote>
+</div></blockquote>
 </div>
 </div>
 </div>
@@ -290,17 +297,17 @@ on the freenode #mongodb irc channel or on <a class="reference external" href="h
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="tutorial.html" title="MongoKit Tutorial"
+          <a href="tutorial.html" title="Getting Started with MongoKit"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="MongoKit Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2011, Nicolas Clairon.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

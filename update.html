@@ -1,25 +1,31 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Updating data &mdash; MongoKit v0.6 documentation</title>
+    <title>Updating data &mdash; MongoKit 0.8.0 documentation</title>
+    
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.6',
-        COLLAPSE_MODINDEX: false,
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="index.html" />
     <link rel="next" title="Using DBRef" href="dbref.html" />
     <link rel="prev" title="Query" href="query.html" /> 
   </head>
@@ -36,45 +42,40 @@
         <li class="right" >
           <a href="query.html" title="Query"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Updating data</a><ul>
-<li><a class="reference external" href="#bulk-and-atomic-updates">Bulk and atomic updates</a></li>
-<li><a class="reference external" href="#reload">reload()</a></li>
-<li><a class="reference external" href="#find-and-modify">find_and_modify()</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Updating data</a><ul>
+<li><a class="reference internal" href="#bulk-and-atomic-updates">Bulk and atomic updates</a></li>
+<li><a class="reference internal" href="#reload">reload()</a></li>
+<li><a class="reference internal" href="#find-and-modify">find_and_modify()</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="query.html"
-                                  title="previous chapter">Query</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="dbref.html"
-                                  title="next chapter">Using DBRef</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="sources/update.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="query.html"
+                        title="previous chapter">Query</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dbref.html"
+                        title="next chapter">Using DBRef</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -129,12 +130,12 @@ Let's modify our doc :
 match changes from the database. To do that, use the <cite>reload()</cite> method.</p>
 <p>Two thing you should know before using this method :</p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>If no _id is set in the document, a KeyError is raised.</li>
 <li>If a document is not saved into the database, the OperationFailure exception is raised.</li>
 <li>using <cite>reload()</cite> will erase all unsaved values !</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@connection.register</span>
 <span class="gp">... </span><span class="k">class</span> <span class="nc">MyDoc</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
@@ -164,9 +165,8 @@ match changes from the database. To do that, use the <cite>reload()</cite> metho
 </div>
 <div class="section" id="find-and-modify">
 <h2>find_and_modify()<a class="headerlink" href="#find-and-modify" title="Permalink to this headline">¶</a></h2>
-<div class="topic">
-<p class="topic-title first">new in development version</p>
-<p>This method allow to return a Document object after or before making an update.</p>
+<blockquote>
+<div><p>This method allow to return a Document object after or before making an update.</p>
 <p>If you call <cite>find_and_modify</cite> on a Collection object, it will return a dict object:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">tutorial</span><span class="o">.</span><span class="n">find_and_modify</span><span class="p">({</span><span class="s">&#39;bla&#39;</span><span class="p">:</span><span class="s">&#39;ble&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:{</span><span class="s">&#39;foo.eggs.spam&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">MyDoc</span><span class="p">)</span>
@@ -181,8 +181,8 @@ match changes from the database. To do that, use the <cite>reload()</cite> metho
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Please, read the mongodb documentation to lern how to use the <cite>find_and_modify</cite> method.</p>
-</div>
+<p>Please, read the mongodb documentation to learn how to use the <cite>find_and_modify</cite> method.</p>
+</div></blockquote>
 </div>
 </div>
 
@@ -204,12 +204,12 @@ match changes from the database. To do that, use the <cite>reload()</cite> metho
         <li class="right" >
           <a href="query.html" title="Query"
              >previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2011, Nicolas Clairon.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

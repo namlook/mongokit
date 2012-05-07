@@ -1,27 +1,33 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Indexes &mdash; MongoKit v0.6 documentation</title>
+    <title>Indexes &mdash; MongoKit 0.8.0 documentation</title>
+    
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.6',
-        COLLAPSE_MODINDEX: false,
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
-    <link rel="next" title="Polymorphism with MongoKit" href="inheritance.html" />
-    <link rel="prev" title="Skipping validation" href="validation_and_optimisation.html" /> 
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="index.html" />
+    <link rel="next" title="JSON support" href="json.html" />
+    <link rel="prev" title="Using DBRef" href="dbref.html" /> 
   </head>
   <body>
     <div class="related">
@@ -31,40 +37,35 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="inheritance.html" title="Polymorphism with MongoKit"
+          <a href="json.html" title="JSON support"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="validation_and_optimisation.html" title="Skipping validation"
+          <a href="dbref.html" title="Using DBRef"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="validation_and_optimisation.html"
-                                  title="previous chapter">Skipping validation</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="inheritance.html"
-                                  title="next chapter">Polymorphism with MongoKit</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="sources/indexes.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dbref.html"
+                        title="previous chapter">Using DBRef</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="json.html"
+                        title="next chapter">JSON support</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -82,13 +83,13 @@ is a list of dictionary with the following structure:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">&#8220;fields&#8221;:</th><td class="field-body"># take a list of fields or a field name (required)</td>
+<tr class="field-odd field"><th class="field-name">&#8220;fields&#8221;:</th><td class="field-body"># take a list of fields or a field name (required)</td>
 </tr>
-<tr class="field"><th class="field-name">&#8220;unique&#8221;:</th><td class="field-body">should this index guarantee uniqueness? (optional, False by default)</td>
+<tr class="field-even field"><th class="field-name">&#8220;unique&#8221;:</th><td class="field-body">should this index guarantee uniqueness? (optional, False by default)</td>
 </tr>
-<tr class="field"><th class="field-name">&#8220;ttl&#8221;:</th><td class="field-body">(optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to <cite>ensure_index</cite> - see pymongo documentation for <cite>ensure_index</cite> for details.</td>
+<tr class="field-odd field"><th class="field-name">&#8220;ttl&#8221;:</th><td class="field-body">(optional, 300 by default) time window (in seconds) during which this index will be recognized by subsequent calls to <cite>ensure_index</cite> - see pymongo documentation for <cite>ensure_index</cite> for details.</td>
 </tr>
-<tr class="field"><th class="field-name">&#8220;check:</th><td class="field-body">(optional, True by default) don&#8217;t check if the field name is present in the structure. Useful if you don&#8217;t know the field name.</td>
+<tr class="field-even field"><th class="field-name">&#8220;check:</th><td class="field-body">(optional, True by default) don&#8217;t check if the field name is present in the structure. Useful if you don&#8217;t know the field name.</td>
 </tr>
 </tbody>
 </table>
@@ -183,17 +184,17 @@ may want to disable this. To do so, add <tt class="docutils literal"><span class
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="inheritance.html" title="Polymorphism with MongoKit"
+          <a href="json.html" title="JSON support"
              >next</a> |</li>
         <li class="right" >
-          <a href="validation_and_optimisation.html" title="Skipping validation"
+          <a href="dbref.html" title="Using DBRef"
              >previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2011, Nicolas Clairon.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

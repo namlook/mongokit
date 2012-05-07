@@ -35,17 +35,13 @@ Contents:
 
     introduction
     tutorial
+    document
     structure
     descriptors
-    operators
-    custom_types
-    schemaless
     query
     update
     dbref
-    validation_and_optimisation
     indexes
-    inheritance
     json
     i18n
     gridfs

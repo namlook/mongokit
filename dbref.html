@@ -1,26 +1,32 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using DBRef &mdash; MongoKit v0.6 documentation</title>
+    <title>Using DBRef &mdash; MongoKit 0.8.0 documentation</title>
+    
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.6',
-        COLLAPSE_MODINDEX: false,
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="MongoKit v0.6 documentation" href="index.html" />
-    <link rel="next" title="Skipping validation" href="validation_and_optimisation.html" />
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="index.html" />
+    <link rel="next" title="Indexes" href="indexes.html" />
     <link rel="prev" title="Updating data" href="update.html" /> 
   </head>
   <body>
@@ -31,52 +37,47 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="validation_and_optimisation.html" title="Skipping validation"
+          <a href="indexes.html" title="Indexes"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="update.html" title="Updating data"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Using DBRef</a><ul>
-<li><a class="reference external" href="#a-detailed-example">A detailed example</a><ul>
-<li><a class="reference external" href="#about-cross-database-references">About cross-database references</a></li>
-<li><a class="reference external" href="#reference-and-dereference">Reference and dereference</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Using DBRef</a><ul>
+<li><a class="reference internal" href="#a-detailed-example">A detailed example</a><ul>
+<li><a class="reference internal" href="#about-cross-database-references">About cross-database references</a></li>
+<li><a class="reference internal" href="#reference-and-dereference">Reference and dereference</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="update.html"
-                                  title="previous chapter">Updating data</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="validation_and_optimisation.html"
-                                  title="next chapter">Skipping validation</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="sources/dbref.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="update.html"
+                        title="previous chapter">Updating data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="indexes.html"
+                        title="next chapter">Indexes</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -108,11 +109,11 @@ attribute upon your Document subclass:</p>
 appropriate BSON manipulators to your document&#8217;s connection handles.  We
 require you to explicitly enable autoref for two reasons:</p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>Using autoref and it&#8217;s BSON manipulators (As well as DBRefs) can carry a performance penalty.  We opt for performance and simplicity first, so you must explicitly enable autoreferencing.</li>
 <li>You may not wish to use auto-referencing in some cases where you&#8217;re using DBRefs.</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <p>Once you have autoref enabled, MongoKit will allow you to define
 any valid subclass of Document as part of your document
 structure.  <strong>If your class does not define `use_autorefs` as
@@ -161,7 +162,7 @@ set <cite>use_autorefs</cite> as <cite>True</cite>.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="nc">SchemaTypeError</span>: <span class="n-Identifier">b.doc_a must be an instance of DocA not int</span>
+<span class="gr">SchemaTypeError</span>: <span class="n">b.doc_a must be an instance of DocA not int</span>
 </pre></div>
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;docb&#39;</span>
@@ -189,7 +190,7 @@ via the docb document, the RequireFieldError is raised:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">docb</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="nc">RequireFieldError</span>: <span class="n-Identifier">abis.bar is required</span>
+<span class="gr">RequireFieldError</span>: <span class="n">abis.bar is required</span>
 </pre></div>
 </div>
 <div class="section" id="about-cross-database-references">
@@ -226,7 +227,7 @@ information to fetch the correct Document.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">tutorial</span><span class="o">.</span><span class="n">Doc</span><span class="o">.</span><span class="n">get_from_id</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="nc">RuntimeError</span>: <span class="n-Identifier">It appears that you try to use autorefs. I found a DBRef without database specified.</span>
+<span class="gr">RuntimeError</span>: <span class="n">It appears that you try to use autorefs. I found a DBRef without database specified.</span>
 <span class="go"> If you do want to use the current database, you have to add the attribute `force_autorefs_current_db` as True. Please see the doc for more details.</span>
 <span class="go"> The DBRef without database is : DBRef(u&#39;tutorial&#39;, ObjectId(&#39;4b6a949890bce72958000002&#39;))</span>
 </pre></div>
@@ -268,17 +269,17 @@ to tell mongokit to what model it should dereferenced:</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="validation_and_optimisation.html" title="Skipping validation"
+          <a href="indexes.html" title="Indexes"
              >next</a> |</li>
         <li class="right" >
           <a href="update.html" title="Updating data"
              >previous</a> |</li>
-        <li><a href="index.html">MongoKit v0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009-2011, Nicolas Clairon.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
