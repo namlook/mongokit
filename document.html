@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documents &mdash; MongoKit 0.8.0 documentation</title>
+    
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.8.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="MongoKit 0.8.0 documentation" href="index.html" />
+    <link rel="next" title="The Structure" href="structure.html" />
+    <link rel="prev" title="Getting Started with MongoKit" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="structure.html" title="The Structure"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Getting Started with MongoKit"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documents</a><ul>
+<li><a class="reference internal" href="#document-class">Document Class</a></li>
+<li><a class="reference internal" href="#registering">Registering</a></li>
+<li><a class="reference internal" href="#database-and-collection">Database and Collection</a><ul>
+<li><a class="reference internal" href="#changing-collection-dynamically">Changing Collection Dynamically</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dot-notation">Dot Notation</a></li>
+<li><a class="reference internal" href="#polymorphism">Polymorphism</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Getting Started with MongoKit</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="structure.html"
+                        title="next chapter">The Structure</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="documents">
+<h1>Documents<a class="headerlink" href="#documents" title="Permalink to this headline">¶</a></h1>
+<p>Documents are the basic building blocks of MongoKit. They define the schema
+of each document and how that document should be accessed</p>
+<div class="section" id="document-class">
+<h2>Document Class<a class="headerlink" href="#document-class" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>from mongokit import Document, Connection
+
+class MyDocument(Document):
+    structure = {
+        ...
+    }
+    required_fields = [
+        ...
+    ]
+    default_values = {
+        ...
+    }</pre>
+</div>
+<p>You can read more about the <a class="reference external" href="structure.html">structure</a> attribute, and the <tt class="docutils literal"><span class="pre">required_fields</span></tt> and <tt class="docutils literal"><span class="pre">default_values</span></tt>  <a class="reference external" href="descriptors.html">descriptors</a>. They are the primary definition of a document. MongoKit also supports
+<a class="reference external" href="i18n.html">handling i18n</a>, <a class="reference external" href="indexes.html">indexes</a>, and <a class="reference external" href="migration.html">migration</a>.</p>
+<blockquote>
+<div></div></blockquote>
+</div>
+<div class="section" id="registering">
+<h2>Registering<a class="headerlink" href="#registering" title="Permalink to this headline">¶</a></h2>
+<p>Once a document has been defined, it must be registered with a Connection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+<span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">MyDocument</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Optionally, the register method can be used as a decorator:</p>
+<div class="highlight-python"><pre>@connection.register
+class MyDocument(Document):
+    structure = {...}</pre>
+</div>
+</div>
+<div class="section" id="database-and-collection">
+<h2>Database and Collection<a class="headerlink" href="#database-and-collection" title="Permalink to this headline">¶</a></h2>
+<p>To use a Document, you must call it from a collection. In pymongo&#8217;s syntax, you would use
+<tt class="docutils literal"><span class="pre">connection.&lt;database&gt;.&lt;collection&gt;</span></tt> to access the collection. Once you have
+the collection, you can create a new document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">MyDocument</span><span class="p">()</span>
+<span class="go">{... new Document&#39;s default values ...}</span>
+</pre></div>
+</div>
+<p>As a short cut, you can define the database and colleciton names in the
+Document definition:</p>
+<div class="highlight-python"><pre>@connection.register
+class MyDocument(Document):
+    __collection__ = 'collection_name'
+    __database__ = 'database_name'
+    structure = {...}</pre>
+</div>
+<p>Now, we can have access to our document directly from the connection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">MyDocument</span><span class="p">()</span>
+<span class="go">{... new Document&#39;s default values ...}</span>
+</pre></div>
+</div>
+<p>Note that if you want to specify the <tt class="docutils literal"><span class="pre">__database__</span></tt>, you should also specify the
+<tt class="docutils literal"><span class="pre">__collection__</span></tt> attribute.</p>
+<p>It is also possible to access the Document from the database:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">MyDocument</span><span class="p">()</span> <span class="c"># this will use __collection__ as collection name</span>
+</pre></div>
+</div>
+<p>This matches the typical pattern of creating and passing around a <tt class="docutils literal"><span class="pre">db</span></tt> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span> <span class="o">=</span> <span class="n">connection</span><span class="p">[</span><span class="n">MONGODB_DATABASE_NAME</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">MyDocument</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="changing-collection-dynamically">
+<h3>Changing Collection Dynamically<a class="headerlink" href="#changing-collection-dynamically" title="Permalink to this headline">¶</a></h3>
+<p>You might need to specify a different db or collection dynamically. For instance,
+say you want to store a User by database.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;login&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">,</span> <span class="s">&#39;screen_name&#39;</span><span class="p">:</span><span class="nb">unicode</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">User</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Like pymongo, MongoKit allow you to change those parameters on the fly :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user_name</span> <span class="o">=</span> <span class="s">&#39;namlook&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user_collection</span> <span class="o">=</span> <span class="n">connection</span><span class="p">[</span><span class="n">user_name</span><span class="p">]</span><span class="o">.</span><span class="n">profile</span> <span class="c">#returns a reference to the database &#39;namlook&#39; in the collection &#39;profile&#39;.</span>
+</pre></div>
+</div>
+<p>Now, we can query the database by passing our new collection :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">profiles</span> <span class="o">=</span> <span class="n">user_col</span><span class="o">.</span><span class="n">User</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">user_col</span><span class="o">.</span><span class="n">User</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="p">[</span><span class="s">&#39;login&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;namlook@namlook.com&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="p">[</span><span class="s">&#39;screen_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Namlook&#39;</span>
+</pre></div>
+</div>
+<p>Calling <tt class="docutils literal"><span class="pre">user.save()</span></tt> will save the object into the database <tt class="docutils literal"><span class="pre">namlook</span></tt>
+in the collection <tt class="docutils literal"><span class="pre">profile</span></tt>.</p>
+</div>
+</div>
+<div class="section" id="dot-notation">
+<h2>Dot Notation<a class="headerlink" href="#dot-notation" title="Permalink to this headline">¶</a></h2>
+<p>If you want to use the dot notation (ala json), you must set the
+<tt class="docutils literal"><span class="pre">use_dot_notation</span></tt> attribute to True:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">TestDotNotation</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">use_dot_notation</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;foo&#39;</span><span class="p">:{</span>
+            <span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="nb">basestring</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">TestDotNotation</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">TestDotNotation</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">bar</span> <span class="o">=</span> <span class="s">&#39;blah&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
+<span class="go">{&#39;foo&#39;: {&#39;bar&#39;: &#39;blah&#39;}}</span>
+</pre></div>
+</div>
+<p>Note that if an attribute is not in structure, the value will be added as attribute :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">arf</span> <span class="o">=</span> <span class="mi">3</span> <span class="c"># arf is not in structure</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span>
+<span class="go">{&#39;foo&#39;: {&#39;bar&#39;: u&#39;bla&#39;}}</span>
+</pre></div>
+</div>
+<p>If you want to be warned when a value is set as attribute, you can set the <cite>dot_notation_warning</cite> attribute as True.</p>
+</div>
+<div class="section" id="polymorphism">
+<h2>Polymorphism<a class="headerlink" href="#polymorphism" title="Permalink to this headline">¶</a></h2>
+<p>In the following example, we have to object A and B wich herite from Root.
+And we want to build an object C from A and B. Let&#8217;s build Root, A and B
+first:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">mongokit</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Document</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;root&#39;</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">}</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;root&#39;</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Root</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;a_field&#39;</span><span class="p">:</span> <span class="nb">basestring</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;a_field&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Root</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;b_field&#39;</span><span class="p">:</span> <span class="nb">basestring</span><span class="p">,</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>Polymorphism just work as expected:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;c_field&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">C</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;b_field&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;root&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;c_field&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;a_field&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span><span class="o">.</span><span class="n">required_fields</span>
+<span class="go">[&#39;root&#39;, &#39;a_field&#39;]</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="structure.html" title="The Structure"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Getting Started with MongoKit"
+             >previous</a> |</li>
+        <li><a href="index.html">MongoKit 0.8.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2012, Nicolas Clairon.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
