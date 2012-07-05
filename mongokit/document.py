@@ -231,7 +231,7 @@ class Document(SchemaDocument):
 
         if size > size_limit:
             raise MaxDocumentSizeError("The document size is too big, documents "
-              "lower than %s is allowed (got %s bytes)" % size_limit_str, size)
+              "lower than %s is allowed (got %s bytes)" % (size_limit_str, size))
         if auto_migrate:
             error = None
             try:
