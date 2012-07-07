@@ -35,7 +35,7 @@ class ApiTestCase(unittest.TestCase):
     def setUp(self):
         self.connection = Connection()
         self.col = self.connection['test']['mongokit']
-        
+
     def tearDown(self):
         self.connection.drop_database('test')
         self.connection.drop_database('othertest')
@@ -97,7 +97,7 @@ class ApiTestCase(unittest.TestCase):
         assert mydoc['foo'] == 1
         mydoc.delete()
         assert self.col.MyDoc.find().count() == 0
-        
+
     def test_generate_skeleton(self):
         class A(SchemaDocument):
             structure = {
@@ -441,7 +441,7 @@ class ApiTestCase(unittest.TestCase):
 
         # creating DocA
         mydoc = self.col.DocA()
-        mydoc['doc_a']["foo"] = u'bar' 
+        mydoc['doc_a']["foo"] = u'bar'
         assertion = False
         try:
             mydoc.save()
@@ -454,7 +454,7 @@ class ApiTestCase(unittest.TestCase):
 
         # creating DocA
         mydoc = self.col.DocA()
-        mydoc['doc_a']["foo"] = u'foo' 
+        mydoc['doc_a']["foo"] = u'foo'
         self.assertRaises(SchemaTypeError, mydoc.save, validate=True)
         mydoc.save()
 
@@ -509,7 +509,7 @@ class ApiTestCase(unittest.TestCase):
 
 
         sect_col = self.connection.test.section
-        sects = [s.collection.name == 'section' and s.db.name == 'test' for s in sect_col.Section.find({})] 
+        sects = [s.collection.name == 'section' and s.db.name == 'test' for s in sect_col.Section.find({})]
         assert len(sects) == 2, len(sects)
         assert any(sects)
         sects = [s.collection.name == 'section' and s.db.name == 'test' for s in sect_col.Section.fetch()]
@@ -517,7 +517,7 @@ class ApiTestCase(unittest.TestCase):
         assert any(sects)
 
         sect_col = self.connection.test.other_section
-        sects = [s.collection.name == 'other_section' and s.db.name == 'test' for s in sect_col.Section.find({})] 
+        sects = [s.collection.name == 'other_section' and s.db.name == 'test' for s in sect_col.Section.find({})]
         assert len(sects) == 2
         assert any(sects)
         sects = [s.collection.name == 'other_section' and s.db.name == 'test' for s in sect_col.Section.fetch()]
@@ -592,7 +592,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc['_id'] = u'1'
         mydoc['foo'] = 1
         mydoc.save()
-        
+
         mydoc = self.connection.test.othercol.MyDoc()
         mydoc['_id'] = u'2'
         mydoc['foo'] = 2
@@ -663,7 +663,7 @@ class ApiTestCase(unittest.TestCase):
         assert fetched_doc.bar.egg == "bla", fetched_doc.bar.egg
         self.assertEqual(fetched_doc.toto.spam.bla, 7)
 
-       
+
     def test_validate_doc_with_field_added_after_save(self):
         class Doc(Document):
            structure = {
@@ -747,7 +747,7 @@ class ApiTestCase(unittest.TestCase):
         doc = MyDoc(collection=self.col)
         doc['foo'] = u'bla'
         doc.save()
-        
+
     def test_reload(self):
         class MyDoc(Document):
             structure = {
@@ -783,7 +783,7 @@ class ApiTestCase(unittest.TestCase):
         self.connection.register([MyDoc])
 
         for i in range(10):
-            doc = self.col.MyDoc() 
+            doc = self.col.MyDoc()
             doc['foo'] = i
             doc.save()
 
@@ -799,8 +799,8 @@ class ApiTestCase(unittest.TestCase):
             assert isinstance(i, MyDoc), type(MyDoc)
         for i in cur.rewind():
             assert isinstance(i, MyDoc), type(MyDoc)
-            
-            
+
+
     def test_decorator(self):
         @self.connection.register
         class MyDoc(Document):
@@ -1040,3 +1040,15 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(isinstance(self.col.DocA.find()[0], DocA), True)
         self.assertEqual(isinstance(self.col.DocA.find()[3], DocA), True)
         self.assertEqual(isinstance(self.col.DocA.find()[3:], self.col.DocA.find().__class__), True)
+
+    def test_unwrapped_cursor(self):
+        self.assertEqual(self.col.count(), 0)
+
+        doc_id = self.col.save({}, safe=True)
+        self.assertEqual(self.col.count(), 1)
+
+        try:
+            self.col.find(_id=doc_id)[0]
+
+        except TypeError:
+            self.fail("Cursor.__getitem__ raised TypeError unexpectedly!")
