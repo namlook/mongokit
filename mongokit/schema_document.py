@@ -566,13 +566,13 @@ class SchemaDocument(dict):
                     for field in struct_doc_diff:
                         if (type(field) is not type) and (not self.use_schemaless):
                             self._raise_exception(StructureError, None,
-                              "missed fields : %s" % struct_doc_diff )
+                              "missed fields %s in %s" % (struct_doc_diff, type(doc).__name__) )
                 else:
                     struct_struct_diff = list(set(doc).difference(set(struct)))
                     bad_fields = [s for s in struct_struct_diff if s not in STRUCTURE_KEYWORDS]
                     if bad_fields and not self.use_schemaless:
                         self._raise_exception(StructureError, None,
-                          "unknown fields : %s" % bad_fields)
+                          "unknown fields %s in %s" % (bad_fields, type(doc).__name__))
             for key in struct:
                 if type(key) is type:
                     new_key = "$%s" % key.__name__
