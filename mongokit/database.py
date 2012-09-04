@@ -45,37 +45,14 @@ class Database(PymongoDatabase):
                 self._collections[key] = Collection(self, key) 
             return self._collections[key]
 
-
     def dereference(self, dbref, model = None):
         if model is None:
           return super(Database, self).dereference(dbref)
-
         if not isinstance(dbref, DBRef):
             raise TypeError("first argument must be a DBRef")
-
         if dbref.database is not None and dbref.database != self.name:
-            raise ValueError("dereference must be called on the database `%s`" % dbref.database)
-
+            raise ValueError("trying to dereference a DBRef that points to "
+                             "another database (%r not %r)" % (dbref.database, self._Database__name))
         if not issubclass(model, Document):
             raise TypeError("second argument must be a Document")
-
         return getattr(self[dbref.collection], model.__name__).one({'_id': dbref.id})
-
-    def _fix_outgoing(self, son, collection, wrap=None):
-        """Apply manipulators to a SON object as it comes out of the database.
-
-        :Parameters:
-          - `son`: the son object coming out of the database
-          - `collection`: the collection the son object was saved in
-          - `wrap` : a class object which its __init__ take a SON object and a collection
-
-          If `wrap` is not None, return an instance of the wrap object. Return
-          a SON object otherwise.
-        """
-        son = super(Database, self)._fix_outgoing(son, collection)
-        if wrap is not None:
-            if wrap.type_field in son:
-                return getattr(collection, son[wrap.type_field])(son)
-            return wrap(son, collection=collection)
-        return son
-

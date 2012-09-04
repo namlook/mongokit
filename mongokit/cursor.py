@@ -26,6 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymongo.cursor import Cursor as PymongoCursor
+from collections import deque
 
 class Cursor(PymongoCursor):
     def __init__(self, *args, **kwargs):
@@ -35,14 +36,24 @@ class Cursor(PymongoCursor):
         super(Cursor, self).__init__(*args, **kwargs)
 
     def next(self):
-        if self.__empty:
+        if self._Cursor__empty:
             raise StopIteration
         db = self._Cursor__collection.database
         if len(self.__data) or self._refresh():
-            next = db._fix_outgoing(self._Cursor__data.pop(0), self._Cursor__collection, wrap=self.__wrap)
+            if isinstance(self._Cursor__data, deque):
+                item = self._Cursor__data.popleft()
+            else:
+                item = self._Cursor__data.pop(0)
+            if self._Cursor__manipulate:
+                son = db._fix_outgoing(item, self._Cursor__collection)
+            else:
+                son = item
+            if self.__wrap is not None:
+                return self.__wrap(son, collection=self._Cursor__collection)
+            else:
+                return son
         else:
             raise StopIteration
-        return next
 
     def __getitem__(self, index):
         obj = super(Cursor, self).__getitem__(index)
