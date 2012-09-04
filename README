@@ -119,6 +119,21 @@ on the freenode #mongodb irc channel or on twitter_.
 Recent Change Log
 =================
 
+v0.8.1
+------
+
+ * support python 2.3
+ * small updates to validation messages (Merge pull request #94 from unpluggd/master)
+ * Fixes formatting error when throwing MaxDocumentSizeError in Document.validate() (Merge pull request #99 from apavlo/master)
+ * Fixed typo when throwing MaxDocumentSizeError in validate() (thanks to Andy Pavlo)
+ * added fix for unconditional access to __wrap on cursors (thanks to David T. Lehmann)
+ * added test for __getitem__ on cursor with undefined __wrap (thanks to David T. Lehmann)
+ * __getitem__ on unwrapped cursor checkes if __wrap is None (Merge pull request #97 from dtl/fix-getitem-on-unwrapped-cursor)
+ * Add .travis.yml for Travis CI (http://travis-ci.org/) (Merge pull request #96 from msabramo/travis)
+ * Fixed a very minor rendering issue in the docs (Merge pull request #95 from d0ugal/master)
+ * Fixed rendering issue in the docs. (thanks to Dougal Matthews)
+ * tweaked the error messages in validation for missing and unknown fields to aid in debugging projects (thanks to Phillip B Oldham)
+
 v0.8.0
 ------
 

@@ -1,6 +1,33 @@
 Change Log
 ==========
 
+v0.8.1
+------
+
+ * support pymongo 2.3
+ * small updates to validation messages (Merge pull request #94 from unpluggd/master)
+ * Fixed typo when throwing MaxDocumentSizeError in validate() (thanks to Andy Pavlo)
+ * added fix for unconditional access to __wrap on cursors (thanks to David T. Lehmann)
+ * Add .travis.yml for Travis CI (http://travis-ci.org/) (Marc Abramowitz)
+ * Fixed rendering issue in the docs. (thanks to Dougal Matthews)
+ * tweaked the error messages in validation for missing and unknown fields to aid in debugging projects (thanks to Phillip B Oldham)
+
+v0.8.0
+------
+
+ * Add spec file for rpm-based distributions (Merge pull request #63 from linuxnow/master)
+ * change document size limitation for mongodb 1.8 or later. Thanks to Aleksey Sivokon (Merge pull request #74 from key/master)
+ * validation of "" for an int (Merge pull request #79 from barnybug/master)
+ * Fix exception when loading documents with a custom type field missing (Merge pull request #80 from barnybug/master)
+ * Big documentation restructuration made by Sean Lynch (Merge pull request #82 from sean-lynch/master)
+ * Using rename no longer causes migrations throw an exception (Merge pull request #86 from matthewh/master)
+ * Some test is modified and added tox (Merge pull request #91 from aircastle/modifiytest)
+ * Replace pymongo.objectid with bson.objectid (Merge pull request #88 from behackett/master)
+ * Added Support for additional keyword-arguments for index-creation (Merge pull request #85 from mfelsche/master)
+ * Remove anyjson dependency and use builtin json instead
+
+Thank you all for all your patches !
+
 v0.7.2
 ------
 
