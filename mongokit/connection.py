@@ -25,7 +25,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pymongo import Connection as PymongoConnection
+import pkg_resources
+if pkg_resources.get_distribution('pymongo').version < 2.4:
+    from pymongo import Connection as PymongoConnection
+else:
+    from pymongo import MongoClient as PymongoConnection
 from database import Database
 
 class CallableMixin(object):
