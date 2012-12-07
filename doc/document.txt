@@ -30,9 +30,9 @@ You can read more about the `structure`_ attribute, and the ``required_fields`` 
     .. _`descriptors`: descriptors.html
 
     .. _`handling i18n`: i18n.html
-    
+
     .. _`indexes`: indexes.html
-    
+
     .. _`migration`: migration.html
 
 Registering
@@ -53,14 +53,14 @@ Optionally, the register method can be used as a decorator::
 Database and Collection
 -----------------------
 
-To use a Document, you must call it from a collection. In pymongo's syntax, you would use 
+To use a Document, you must call it from a collection. In pymongo's syntax, you would use
 ``connection.<database>.<collection>`` to access the collection. Once you have
 the collection, you can create a new document::
 
     >>> connection.database.collection.MyDocument()
     {... new Document's default values ...}
 
-As a short cut, you can define the database and colleciton names in the 
+As a short cut, you can define the database and colleciton names in the
 Document definition::
 
     @connection.register
@@ -91,7 +91,7 @@ Changing Collection Dynamically
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You might need to specify a different db or collection dynamically. For instance,
-say you want to store a User by database. 
+say you want to store a User by database.
 
     >>> class User(Document):
     ...     structure = {'login':unicode, 'screen_name':unicode}
@@ -114,7 +114,7 @@ Now, we can query the database by passing our new collection :
 Calling ``user.save()`` will save the object into the database ``namlook``
 in the collection ``profile``.
 
-Dot Notation 
+Dot Notation
 ------------
 
 If you want to use the dot notation (ala json), you must set the
@@ -124,7 +124,7 @@ If you want to use the dot notation (ala json), you must set the
         use_dot_notation = True
 
         structure = {
-            'foo':{ 
+            'foo':{
                 'bar': basestring
             }
         }
@@ -146,7 +146,7 @@ If you want to be warned when a value is set as attribute, you can set the `dot_
 Polymorphism
 ------------
 
-In the following example, we have to object A and B wich herite from Root.
+In the following example, we have two objects, A and B, which inherit from Root.
 And we want to build an object C from A and B. Let's build Root, A and B
 first::
 
@@ -170,7 +170,7 @@ first::
         }
 
 
-Polymorphism just work as expected::
+Polymorphisms just work as expected::
 
     class C(A,B):
         structure = {'c_field': float}
