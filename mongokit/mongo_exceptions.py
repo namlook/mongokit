@@ -26,7 +26,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from bson import InvalidDocument
-from pymongo.errors import OperationFailure
+import pkg_resources	
+if pkg_resources.get_distribution('pymongo').version < 2.4:
+    from pymongo.connection import OperationFailure
+else:
+    from pymongo.errors import OperationFailure
 class ConnectionError(Exception):pass
 class MongoAuthException(Exception):pass
 class MultipleResultsFound(Exception):pass
