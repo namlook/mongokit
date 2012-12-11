@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+v0.8.2
+------
+
+ * fix #101 - validators condition fix
+ * fix #110 - support PyMongo >= 2.4 (import MongoClient) -- thanks to @mattbodman and @zavatskiy
+ * Fixed some spelling/grammar (thanks to @gekitsuu)
+
 v0.8.1
 ------
 
