@@ -616,7 +616,7 @@ class SchemaDocument(dict):
         doted_struct = DotCollapsedDict(self.structure)
         doted_doc = DotCollapsedDict(doc)
         for key, validators in self.validators.iteritems():
-            if doted_doc[key] is not None:
+            if key in doted_doc and doted_doc[key] is not None:
                 if not hasattr(validators, "__iter__"):
                     validators = [validators]
                 for validator in validators:
