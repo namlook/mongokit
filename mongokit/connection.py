@@ -97,4 +97,4 @@ class Connection(PymongoConnection):
                 self._databases[key] = Database(self, key)
             return self._databases[key]
 
-
+MongoClient = Connection

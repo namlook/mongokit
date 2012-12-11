@@ -36,7 +36,7 @@ from document import Document, ObjectId
 from versioned_document import VersionedDocument
 from database import Database
 from collection import Collection
-from connection import Connection
+from connection import Connection, MongoClient
 from master_slave_connection import MasterSlaveConnection
 from pymongo import ASCENDING as INDEX_ASCENDING,\
   DESCENDING as INDEX_DESCENDING,\
