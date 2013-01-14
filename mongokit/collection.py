@@ -76,9 +76,11 @@ class Collection(PymongoCollection):
             kwargs['read_preference'] = self.read_preference
         if not 'tag_sets' in kwargs and hasattr(self, 'tag_sets'):
             kwargs['tag_sets'] = self.tag_sets
-        if not 'secondary_acceptable_latency_ms' in kwargs and hasattr(self, 'tag_sets'):
+        if not 'secondary_acceptable_latency_ms' in kwargs and\
+                hasattr(self, 'secondary_acceptable_latency_ms'):
             kwargs['secondary_acceptable_latency_ms'] = (
-                self.secondary_acceptable_latency_ms)
+                self.secondary_acceptable_latency_ms
+            )
         return Cursor(self, *args, **kwargs)
     find.__doc__ = PymongoCollection.find.__doc__ + """
         added by mongokit::
