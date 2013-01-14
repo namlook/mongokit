@@ -70,13 +70,13 @@ class Collection(PymongoCollection):
           "register it to the connection." % (name, name))
 
     def find(self, *args, **kwargs):
-        if not 'slave_okay' in kwargs:
+        if not 'slave_okay' in kwargs and hasattr(self, 'slave_okay'):
             kwargs['slave_okay'] = self.slave_okay
-        if not 'read_preference' in kwargs:
+        if not 'read_preference' in kwargs and hasattr(self, 'read_preference'):
             kwargs['read_preference'] = self.read_preference
-        if not 'tag_sets' in kwargs:
+        if not 'tag_sets' in kwargs and hasattr(self, 'tag_sets'):
             kwargs['tag_sets'] = self.tag_sets
-        if not 'secondary_acceptable_latency_ms' in kwargs:
+        if not 'secondary_acceptable_latency_ms' in kwargs and hasattr(self, 'tag_sets'):
             kwargs['secondary_acceptable_latency_ms'] = (
                 self.secondary_acceptable_latency_ms)
         return Cursor(self, *args, **kwargs)
