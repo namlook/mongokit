@@ -29,6 +29,7 @@ import unittest
 
 from mongokit import *
 from bson.objectid import ObjectId
+from pymongo import ReadPreference
 
 
 class ApiTestCase(unittest.TestCase):
@@ -1052,3 +1053,17 @@ class ApiTestCase(unittest.TestCase):
 
         except TypeError:
             self.fail("Cursor.__getitem__ raised TypeError unexpectedly!")
+
+    def test_pass_connection_arguments_to_cursor(self):
+        class MyDoc(Document):
+            structure = {
+                "foo":int,
+                "bar":{"bla":int},
+            }
+        con = Connection(read_preference=ReadPreference.SECONDARY_PREFERRED,
+            secondary_acceptable_latency_ms=16)
+        con.register([MyDoc])
+        col = con['test']['mongokit']
+        assert col.MyDoc.find()._Cursor__read_preference == ReadPreference.SECONDARY_PREFERRED
+        assert col.MyDoc.find()._Cursor__secondary_acceptable_latency_ms == 16
+        con.close()
