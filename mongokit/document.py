@@ -285,6 +285,12 @@ class Document(SchemaDocument):
         """
         return self.collection.find(wrap=self._obj_class, *args, **kwargs)
 
+    def find_and_modify(self, *args, **kwargs):
+        """
+        Update and return an object.
+        """
+        return self.collection.find_and_modify(wrap=self._obj_class, *args, **kwargs)
+
     def find_one(self, *args, **kwargs):
         """
         Get the first object found from the database.
