@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+v0.8.3
+------
+
+ * allow keyword arguments (like read_preferences, slave_okay, etc) to be set in Connection (thanks to Peter S Ng)
+ * Add find_and_modify again. It was removed by an unexpected rollback.
+ * use MongoClient with MasterSlaveConnection
+
 v0.8.2
 ------
 
