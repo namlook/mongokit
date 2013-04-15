@@ -33,7 +33,7 @@ Features
 
  * schema validation (wich use simple python type for the declaration)
  * schema less feature
- * doted notation
+ * dot notation
  * nested and complex schema declaration
  * untyped field support
  * required fields validation
