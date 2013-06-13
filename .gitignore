@@ -12,3 +12,5 @@ doc/_build
 mongokit.egg-info
 .tox
 
+build
+dist
