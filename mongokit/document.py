@@ -328,6 +328,16 @@ class Document(SchemaDocument):
             num = random.randint(0, max-1)
             return self.find().skip(num).next()
 
+    def text(self, search, **kwargs):
+        """
+        Executes a full-text search. Additional parameters may be passed as keyword arguments.
+        """
+        rv = self.collection.database.command("text", self.collection.name, search=search, **kwargs)
+        if 'results' in rv:
+            for res in rv['results']:
+                res['obj'] = self._obj_class(res['obj'])
+        return rv
+
     def get_from_id(self, id):
         """
         return the document which has the id
