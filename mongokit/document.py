@@ -103,9 +103,9 @@ class DocumentProperties(SchemaProperties):
                                 if value[0] not in attrs['_namespaces'] and value[0] not in STRUCTURE_KEYWORDS:
                                     raise ValueError(
                                       "Error in indexes: can't find %s in structure" % value[0] )
-                                if not value[1] in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D]:
+                                if not value[1] in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D, pymongo.GEOHAYSTACK, pymongo.GEOSPHERE, "text"]:
                                     raise BadIndexError(
-                                      "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL or INDEX_GEO2D. Got %s" % value[1])
+                                      "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE. Got %s" % value[1])  # Omit text because it's still beta
                             elif isinstance(value, list):
                                 for val in value:
                                     if isinstance(val, tuple):
@@ -113,9 +113,9 @@ class DocumentProperties(SchemaProperties):
                                         if field not in attrs['_namespaces'] and field not in STRUCTURE_KEYWORDS:
                                             raise ValueError(
                                               "Error in indexes: can't find %s in structure" % field )
-                                        if not direction in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D]:
+                                        if not direction in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D, pymongo.GEOHAYSTACK, pymongo.GEOSPHERE, "text"]:
                                             raise BadIndexError(
-                                              "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL or INDEX_GEO2D. Got %s" % direction)
+                                              "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE. Got %s" % direction)  # Omit text because it's still beta
                                     else:
                                         if val not in attrs['_namespaces'] and val not in STRUCTURE_KEYWORDS:
                                             raise ValueError(
