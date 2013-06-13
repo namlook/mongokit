@@ -55,9 +55,22 @@ Now, to open a connection to MongoDB::
 
     connection = Connection()
 
-This a wrapped version of pymongo's Connection_ and will attempt to connect to
-a MongoDB instance running locally. For more information on how to configure
-the Connection, see pymongo_'s documentation.
+This a wrapped version of pymongo's Connection_ and will attempt to connect to a MongoDB instance running locally.
+
+e.g. Speficying a host
+
+    connection = Connection(host="HOSTNAME", port=PORT)
+
+e.g. Specifiying a Replica Set host
+
+    from mongokit import ReplicaSetConnection
+
+    connection = ReplicaSetConnection(
+        host="HOSTNAME:PORT,HOSTNAME:PORT"
+        replicaset="REPLICA_SET_NAME",
+        read_preferences=pymongo.read_preferences.ReadPreferance.SECONDARY_PREFERRED)
+
+For more information on how to configure the Connection, see pymongo_'s documentation.
 
 Once you have an active connection, you need to register your the ``BlogPost``
 object::
@@ -141,3 +154,4 @@ as well::
 
 pymongo_ makes it very easy to perform complex queries on your data so for more
 information, see the :doc:`query` documentation.
+

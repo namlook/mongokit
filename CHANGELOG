@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+
+To Be Released:
+-----
+ * use MongoClient with MasterSlaveConnection
+
+
 v0.8.3
 ------
 
