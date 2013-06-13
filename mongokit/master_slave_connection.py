@@ -9,12 +9,10 @@ try:
     from pymongo import MongoClient as PymongoConnection
 except ImportError:
     from pymongo import Connection as PymongoConnection
-    
 
-from mongokit.database import Database
-from mongokit.connection import CallableMixin, _iterables
+from mongokit.connection import MongoKitConnection
 
-class MasterSlaveConnection(PymongoMasterSlaveConnection):
+class MasterSlaveConnection(MongoKitConnection, PymongoMasterSlaveConnection):
     """ Master-Slave support for MongoKit """
 
     def __init__(self, master, slaves=[]):
@@ -35,13 +33,13 @@ class MasterSlaveConnection(PymongoMasterSlaveConnection):
             master-slave setup).
         """
 
-        self._databases = {}
-        self._registered_documents = {}
+        # Run both inits. MongoKitConnection specific one. Then the Pymongo one at the end
+        MongoKitConnection.__init__(self)
 
         # I am the master
         if not isinstance(master, dict):
             raise TypeError('"master" must be a dict  containing pymongo.Connection parameters')
-        master_connection = PyMongoConnection(**master)
+        master_connection = PymongoConnection(**master)
 
         # You are my dirty slaves
         if not slaves:
@@ -52,41 +50,8 @@ class MasterSlaveConnection(PymongoMasterSlaveConnection):
             if not isinstance(slave, dict):
                 raise TypeError('"slaves" must be list of dicts containing pymongo.Connection parameters')
             slave['slave_okay'] = True
-            slave_connections.append(PyMongoConnection(**slave))
+            slave_connections.append(PymongoConnection(**slave))
 
-        super(MasterSlaveConnection, self).__init__(master_connection, slave_connections)
-
-    def register(self, obj_list):
-        decorator = None
-        if not isinstance(obj_list, _iterables):
-            # we assume that the user used this as a decorator
-            # using @register syntax or using conn.register(SomeDoc)
-            # we stock the class object in order to return it later
-            decorator = obj_list
-            obj_list = [obj_list]
-        # cleanup
-        for dbname, db in self._databases.items():
-            for colname, col in db._collections.items():
-                for docname, doc in col._documents.items():
-                    del col._documents[docname]
-                for obj_name in [obj.__name__ for obj in obj_list]:
-                    if obj_name in col._registered_documents:
-                        del col._registered_documents[obj_name]
-        # register
-        for obj in obj_list:
-            CallableDocument = type(
-              "Callable%s" % obj.__name__,
-              (obj, CallableMixin),
-              {"_obj_class":obj, "__repr__":object.__repr__}
-            )
-            self._registered_documents[obj.__name__] = CallableDocument
-        # if the class object is stored, it means the user used a decorator and
-        # we must return the class object
-        if decorator is not None:
-            return decorator
- 
-    def __getattr__(self, key):
-        if key not in self._databases:
-            self._databases[key] = Database(self, key)
-        return self._databases[key]
+        # Specifying that it should use the pymongo init
+        PymongoMasterSlaveConnection.__init__(self, master_connection, slave_connections)
 
