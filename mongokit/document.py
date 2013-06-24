@@ -495,14 +495,12 @@ class Document(SchemaDocument):
         """
         convert the document into a json string and return it
         """
-        def _convert_to_python(doc, struct, path = "", root_path=""):
+        def _convert_to_python(doc, struct):
             for key in struct:
-                new_key = key
-                new_path = ".".join([path, new_key]).strip('.')
                 if isinstance(struct[key], dict):
                     if doc: # we don't need to process an empty doc
                         if key in doc: # we don't care about missing fields
-                            _convert_to_python(doc[key], struct[key], new_path, root_path)
+                            _convert_to_python(doc[key], struct[key])
                 elif type(struct[key]) is list:
                     if struct[key]:
                         if isinstance(struct[key][0], R):
@@ -515,7 +513,7 @@ class Document(SchemaDocument):
                         elif isinstance(struct[key][0], dict):
                             if doc[key]:
                                 for obj in doc[key]:
-                                    _convert_to_python(obj, struct[key][0], new_path, root_path)
+                                    _convert_to_python(obj, struct[key][0])
                 else:
                     if isinstance(struct[key], R) and doc[key] is not None:
                         doc[key]['_collection'] = self.collection.name
