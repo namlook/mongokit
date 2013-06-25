@@ -124,3 +124,9 @@ class Collection(PymongoCollection):
             num = random.randint(0, max-1)
             return self.find().skip(num).next()
 
+    def text(self, search, **kwargs):
+        """
+        Executes a full-text search. Additional parameters may be passed as keyword arguments.
+        """
+        return self.database.command("text", self.name, search=search, **kwargs)
+
