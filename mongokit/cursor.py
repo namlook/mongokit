@@ -49,6 +49,9 @@ class Cursor(PymongoCursor):
             else:
                 son = item
             if self.__wrap is not None:
+                if self.__wrap.type_field in son:
+                    return getattr(self._Cursor__collection,
+                                   son[self.__wrap.type_field])(son)
                 return self.__wrap(son, collection=self._Cursor__collection)
             else:
                 return son
