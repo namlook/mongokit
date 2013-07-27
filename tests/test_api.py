@@ -205,6 +205,28 @@ class ApiTestCase(unittest.TestCase):
         raw_mydoc = self.col.find_one()
         assert one_doc == raw_mydoc
 
+    def test_find_and_modify_query_fails(self):
+        class MyDoc(Document):
+            structure = {
+                "baz":int
+            }
+        self.connection.register([MyDoc])
+        self.assertIsNone(self.col.MyDoc.find_and_modify(query={"baz": 1}, update={"$set": {"baz": 2}}))
+
+    def test_find_and_modify_query_succeeds(self):
+        class MyDoc(Document):
+            structure = {
+                "baz":int
+            }
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc()
+        mydoc["baz"] = 1
+        mydoc.save()
+
+        mydoc = self.col.MyDoc.find_and_modify(query={"baz": 1}, update={"$set": {"baz": 2}}, new=True)
+        self.assertIsInstance(mydoc, MyDoc)
+        self.assertEquals(2, mydoc["baz"])
+
     def test_one(self):
         class MyDoc(Document):
             structure = {
