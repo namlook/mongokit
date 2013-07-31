@@ -91,7 +91,7 @@ class Collection(PymongoCollection):
     def find_and_modify(self, *args, **kwargs):
         obj_class = kwargs.pop('wrap', None)
         doc = super(Collection, self).find_and_modify(*args, **kwargs)
-        if obj_class:
+        if doc and obj_class:
             return self.collection[obj_class.__name__](doc)
         return doc
     find_and_modify.__doc__ = PymongoCollection.find_and_modify.__doc__ + """
