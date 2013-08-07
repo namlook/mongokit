@@ -119,6 +119,22 @@ on the freenode #mongodb irc channel or on twitter_.
 Recent Change Log
 =================
 
+v0.9.0
+------
+
+ * now MongoKit required PyMongo >= 2.5
+ * find_and_modify returns None if the query fails (thanks to @a1gucis)
+ * Fix off-by-one error on SchemaDocument (thanks to @John Brodie)
+ * Fix inherited queries (issue #106) (thanks to @effem-git)
+ * Fix for serialization of nested structures with type validation (thanks to @LK4D4)
+ * Remove unnecessary path arguments in to_json._convert_to_python (thanks to @Alexandr Morozov)
+ * big refactorization by using multiple inheritance for DRYness (thanks to @liyanchang)
+ * Add find_fulltext mehtod for convenience (thanks to @astronouth7303) (not official and not documented yet)
+ * Allow text indexes in document definitions (thanks to @astronouth7303)
+ * Adding replica set support (thanks to @liyanchang)
+ * Fix typos on README (thanks to @girasquid)
+ * add pagination helper (not yed documented)(thanks to @jarrodb) https://github.com/namlook/mongokit/blob/master/mongokit/paginator.py
+
 v0.8.3
 ------
 
