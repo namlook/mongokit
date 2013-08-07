@@ -58,11 +58,11 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     packages = find_packages(),
-        
+
     zip_safe = False,
 
     install_requires = [
-        'pymongo>=2.0.1',
+        'pymongo>=2.5',
     ]
 
 )
