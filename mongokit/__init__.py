@@ -45,7 +45,7 @@ from pymongo import ASCENDING as INDEX_ASCENDING,\
   GEO2D as INDEX_GEO2D,\
   GEOHAYSTACK as INDEX_GEOHAYSTACK,\
   GEOSPHERE as INDEX_GEOSPHERE,\
-  OFF as INDEX_OFF,
+  OFF as INDEX_OFF, \
   HASHED as INDEX_HASHED
 from migration import DocumentMigration
 
