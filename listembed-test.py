@@ -80,9 +80,9 @@ class DescriptorsTestCase(unittest.TestCase):
         self.connection.register([ListEmbed])
 
         doc = self.col.ListEmbed()
-        self.assertDictEqual(doc, {'list': []})
+        self.assertDictEqual(doc, {'list': [{'name': 'default'}]})
 
-        doc.list.append({'age': 23})
+        doc.list[0]['age'] = 23
 
         self.assertDictEqual(
             doc, {
