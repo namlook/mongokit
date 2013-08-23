@@ -28,12 +28,14 @@
 from mongokit import *
 from mongo_exceptions import *
 
+
 class RevisionDocument(Document):
     structure = {
         "id": unicode,
-        "revision":int,
-        "doc":dict
+        "revision": int,
+        "doc": dict
     }
+
 
 class VersionedDocument(Document):
     """
@@ -56,9 +58,8 @@ class VersionedDocument(Document):
                 self['_revision'] = 0
             self['_revision'] += 1
             super(VersionedDocument, self).save(*args, **kwargs)
-            versionned_doc = RevisionDocument(
-              {"id":unicode(self['_id']), "revision":self['_revision']},
-              collection = self.versioning_collection)
+            versionned_doc = RevisionDocument({"id": unicode(self['_id']), "revision": self['_revision']},
+                                              collection=self.versioning_collection)
             versionned_doc['doc'] = dict(self)
             versionned_doc.save()
         else:
@@ -70,7 +71,7 @@ class VersionedDocument(Document):
         if versioning is True delete revisions documents as well
         """
         if versioning:
-            self.versioning_collection.remove({'id':self['_id']})
+            self.versioning_collection.remove({'id': self['_id']})
         super(VersionedDocument, self).delete(*args, **kwargs)
 
     def remove(self, query, versioning=False, *args, **kwargs):
@@ -81,24 +82,21 @@ class VersionedDocument(Document):
         """
         if versioning:
             id_lists = [i['_id'] for i in self.collection.find(query, fields=['_id'])]
-            self.versioning_collection.remove({'id':{'$in':id_lists}})
+            self.versioning_collection.remove({'id': {'$in': id_lists}})
         self.collection.remove(spec_or_id=query, *args, **kwargs)
-                
+
     def get_revision(self, revision_number):
         doc = self.versioning_collection.RevisionDocument.find_one(
-          {"id":self['_id'], 'revision':revision_number})
+            {"id": self['_id'], 'revision': revision_number})
         if doc:
             return self.__class__(doc['doc'], collection=self.collection)
 
     def get_revisions(self):
-        versionned_docs = self.versioning_collection.find({"id":self['_id']})
+        versionned_docs = self.versioning_collection.find({"id": self['_id']})
         for verdoc in versionned_docs:
             yield self.__class__(verdoc['doc'], collection=self.collection)
 
     def get_last_revision_id(self):
-        last_doc = self.versioning_collection.find(
-          {'id':unicode(self['_id'])}).sort('revision', -1).next()
+        last_doc = self.versioning_collection.find({'id': unicode(self['_id'])}).sort('revision', -1).next()
         if last_doc:
             return last_doc['revision']
-
-

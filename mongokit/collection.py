@@ -31,6 +31,7 @@ from cursor import Cursor
 
 from warnings import warn
 
+
 class Collection(PymongoCollection):
 
     def __init__(self, *args, **kwargs):
@@ -45,8 +46,8 @@ class Collection(PymongoCollection):
                 self._documents[key] = self._registered_documents[key](collection=self)
                 if self._documents[key].indexes:
                     warn('%s: Be careful, index generation is not automatic anymore.'
-                      'You have to generate your index youself' % self._documents[key]._obj_class.__name__,
-                      DeprecationWarning)
+                         'You have to generate your index youself' % self._documents[key]._obj_class.__name__,
+                         DeprecationWarning)
                 #self._documents[key].generate_index(self)
             return self._documents[key]
         else:
@@ -64,10 +65,10 @@ class Collection(PymongoCollection):
                             self.__name)
         name = self.__name.split(".")[-1]
         raise TypeError("'Collection' object is not callable. "
-          "If you meant to call the '%s' method on a 'Collection' "
-          "object it is failing because no such method exists.\n"
-          "If '%s' is a Document then you may have forgotten to "
-          "register it to the connection." % (name, name))
+                        "If you meant to call the '%s' method on a 'Collection' "
+                        "object it is failing because no such method exists.\n"
+                        "If '%s' is a Document then you may have forgotten to "
+                        "register it to the connection." % (name, name))
 
     def find(self, *args, **kwargs):
         if not 'slave_okay' in kwargs and hasattr(self, 'slave_okay'):
