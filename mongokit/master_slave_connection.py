@@ -12,6 +12,7 @@ except ImportError:
 
 from mongokit.connection import MongoKitConnection
 
+
 class MasterSlaveConnection(MongoKitConnection, PymongoMasterSlaveConnection):
     """ Master-Slave support for MongoKit """
 
@@ -54,4 +55,3 @@ class MasterSlaveConnection(MongoKitConnection, PymongoMasterSlaveConnection):
 
         # Specifying that it should use the pymongo init
         PymongoMasterSlaveConnection.__init__(self, master_connection, slave_connections)
-

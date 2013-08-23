@@ -28,17 +28,17 @@
 from mongokit import SchemaDocument, SchemaProperties, AutoReferenceError
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import (
-                        STRUCTURE_KEYWORDS,
-                        CustomType,
-                        SchemaTypeError,
-                        SchemaProperties,
-                        StructureError)
+    STRUCTURE_KEYWORDS,
+    CustomType,
+    SchemaTypeError,
+    SchemaProperties,
+    StructureError)
 from mongokit.helpers import (
-                        totimestamp,
-                        fromtimestamp,
-                        DotCollapsedDict,
-                        DotedDict,
-                        DotExpandedDict)
+    totimestamp,
+    fromtimestamp,
+    DotCollapsedDict,
+    DotedDict,
+    DotExpandedDict)
 from mongokit.grid import *
 import pymongo
 from bson import BSON
@@ -55,6 +55,7 @@ import datetime
 STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
+
 
 class DocumentProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
@@ -82,47 +83,56 @@ class DocumentProperties(SchemaProperties):
                 if index.get('check', True):
                     if 'fields' not in index:
                         raise BadIndexError(
-                          "'fields' key must be specify in indexes")
+                            "'fields' key must be specify in indexes")
                     for key, value in index.iteritems():
                         if key == "fields":
                             if isinstance(value, basestring):
                                 if value not in attrs['_namespaces'] and value not in STRUCTURE_KEYWORDS:
                                     raise ValueError(
-                                      "Error in indexes: can't find %s in structure" % value)
+                                        "Error in indexes: can't find %s in structure" % value)
                             elif isinstance(value, tuple):
                                 if len(value) != 2:
                                     raise BadIndexError(
-                                      "Error in indexes: a tuple must contain "
-                                      "only two value : the field name and the direction")
+                                        "Error in indexes: a tuple must contain "
+                                        "only two value : the field name and the direction")
                                 if not (isinstance(value[1], int) or isinstance(value[1], basestring)):
                                     raise BadIndexError(
-                                      "Error in %s, the direction must be int or basestring (got %s instead)" % (value[0], type(value[1])))
+                                        "Error in %s, the direction must be int or basestring "
+                                        "(got %s instead)" % (value[0], type(value[1])))
                                 if not isinstance(value[0], basestring):
                                     raise BadIndexError(
-                                      "Error in %s, the field name must be string (got %s instead)" % (value[0], type(value[0])))
+                                        "Error in %s, the field name must be string "
+                                        "(got %s instead)" % (value[0], type(value[0])))
                                 if value[0] not in attrs['_namespaces'] and value[0] not in STRUCTURE_KEYWORDS:
                                     raise ValueError(
-                                      "Error in indexes: can't find %s in structure" % value[0])
-                                if not value[1] in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D, pymongo.GEOHAYSTACK, pymongo.GEOSPHERE, pymongo.HASHED, "text"]:
+                                        "Error in indexes: can't find %s in structure" % value[0])
+                                if not value[1] in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL,
+                                                    pymongo.GEO2D, pymongo.GEOHAYSTACK, pymongo.GEOSPHERE,
+                                                    pymongo.HASHED, "text"]:
                                     raise BadIndexError(
-                                      "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE. Got %s" % value[1])  # Omit text because it's still beta
+                                        "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, "
+                                        "INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, "
+                                        "or INDEX_GEOSPHERE. Got %s" % value[1])  # Omit text because it's still beta
                             elif isinstance(value, list):
                                 for val in value:
                                     if isinstance(val, tuple):
                                         field, direction = val
                                         if field not in attrs['_namespaces'] and field not in STRUCTURE_KEYWORDS:
                                             raise ValueError(
-                                              "Error in indexes: can't find %s in structure" % field)
-                                        if not direction in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL, pymongo.GEO2D, pymongo.GEOHAYSTACK, pymongo.GEOSPHERE, "text"]:
+                                                "Error in indexes: can't find %s in structure" % field)
+                                        if not direction in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF,
+                                                             pymongo.ALL, pymongo.GEO2D, pymongo.GEOHAYSTACK,
+                                                             pymongo.GEOSPHERE, "text"]:
                                             raise BadIndexError(
-                                              "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE. Got %s" % direction)  # Omit text because it's still beta
+                                                "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, "
+                                                "INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE."
+                                                " Got %s" % direction)  # Omit text because it's still beta
                                     else:
                                         if val not in attrs['_namespaces'] and val not in STRUCTURE_KEYWORDS:
-                                            raise ValueError(
-                                              "Error in indexes: can't find %s in structure" % val)
+                                            raise ValueError("Error in indexes: can't find %s in structure" % val)
                             else:
-                                raise BadIndexError(
-                                  "fields must be a string, a tuple or a list of tuple (got %s instead)" % type(value))
+                                raise BadIndexError("fields must be a string, a tuple or a list of tuple "
+                                                    "(got %s instead)" % type(value))
                         elif key == "ttl":
                             assert isinstance(value, int)
 
@@ -133,7 +143,7 @@ class Document(SchemaDocument):
 
     type_field = '_type'
 
-    atomic_save = False # XXX Deprecated
+    atomic_save = False  # XXX Deprecated
     skip_validation = False
     use_autorefs = False
     force_autorefs_current_db = False
@@ -142,12 +152,12 @@ class Document(SchemaDocument):
     migration_handler = None
 
     authorized_types = SchemaDocument.authorized_types + [
-      Binary,
-      ObjectId,
-      DBRef,
-      Code,
-      UUID,
-      type(re.compile("")),
+        Binary,
+        ObjectId,
+        DBRef,
+        Code,
+        UUID,
+        type(re.compile("")),
     ]
 
     def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en'):
@@ -155,10 +165,8 @@ class Document(SchemaDocument):
         # If using autorefs, we need another authorized
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
-        super(Document, self).__init__(
-          doc=doc, gen_skel=gen_skel, gen_auth_types=False, lang=lang,
-          fallback_lang=fallback_lang
-        )
+        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False,
+                                       lang=lang, fallback_lang=fallback_lang)
         if self.type_field in self:
             self[self.type_field] = unicode(self.__class__.__name__)
         # collection
@@ -200,7 +208,7 @@ class Document(SchemaDocument):
         old_doc = self.collection.get_from_id(self['_id'])
         if not old_doc:
             raise OperationFailure('Can not reload an unsaved document.'
-              ' %s is not found in the database' % self['_id'])
+                                   ' %s is not found in the database' % self['_id'])
         else:
             self.update(DotedDict(old_doc))
         # self.reload()
@@ -230,7 +238,7 @@ class Document(SchemaDocument):
 
         if size > size_limit:
             raise MaxDocumentSizeError("The document size is too big, documents "
-              "lower than %s is allowed (got %s bytes)" % (size_limit_str, size))
+                                       "lower than %s is allowed (got %s bytes)" % (size_limit_str, size))
         if auto_migrate:
             error = None
             try:
@@ -390,7 +398,7 @@ class Document(SchemaDocument):
         old_doc = self.collection.get_from_id(self['_id'])
         if not old_doc:
             raise OperationFailure('Can not reload an unsaved document.'
-              ' %s is not found in the database' % self['_id'])
+                                   ' %s is not found in the database' % self['_id'])
         else:
             self.update(DotedDict(old_doc))
         self._process_custom_type('python', self, self.structure)
@@ -583,7 +591,8 @@ class Document(SchemaDocument):
                                     _convert_to_python(obj, struct[key][0], new_path, root_path)
                 elif struct[key] is datetime.datetime and doc[key] is not None:
                     doc[key] = fromtimestamp(doc[key])
-                elif (isinstance(struct[key], R) or isinstance(struct[key], DocumentProperties)) and doc[key] is not None:
+                elif (isinstance(struct[key], R) or isinstance(struct[key],
+                                                               DocumentProperties)) and doc[key] is not None:
                     db = doc[key].get('_database') or doc[key].get('$db')
                     col = doc[key].get('_collection') or doc[key].get('$ref')
                     if '_id' in doc[key]:
@@ -611,7 +620,6 @@ class Document(SchemaDocument):
             if '$oid' in obj['_id']:
                 obj['_id'] = ObjectId(obj['_id']['$oid'])
         return self._obj_class(obj, collection=self.collection)
-
 
     #
     # End of public API
@@ -667,8 +675,7 @@ class Document(SchemaDocument):
                     #doc._process_custom_type('python', doc, doc.structure)
                 # be sure that we have an instance of MongoDocument
                 if not isinstance(doc[key], struct[key]._doc) and doc[key] is not None:
-                    self._raise_exception(SchemaTypeError, new_path,
-                      "%s must be an instance of %s not %s" % (
+                    self._raise_exception(SchemaTypeError, new_path, "%s must be an instance of %s not %s" % (
                         new_path, struct[key]._doc.__name__, type(doc[key]).__name__))
                 # validate the embed doc
                 if not self.skip_validation and doc[key] is not None:
@@ -696,8 +703,8 @@ class Document(SchemaDocument):
                 # if the dict is still empty into the document we build
                 # it with None values
                 #
-                if len(struct[key]) and\
-                  not [i for i in struct[key].keys() if type(i) is type]:
+                if len(struct[key]) and \
+                        not [i for i in struct[key].keys() if type(i) is type]:
                     if key in doc:
                         self._make_reference(doc[key], struct[key], new_path)
                 else:  # case {unicode:int}
@@ -712,11 +719,11 @@ class Document(SchemaDocument):
                     l_objs = []
                     for no, obj in enumerate(doc[key]):
                         if isinstance(obj, DBRef):
-                            obj = getattr(self.connection[obj.database][obj.collection], struct[key][0]._doc.__name__).get_from_id(obj.id)
+                            obj = getattr(self.connection[obj.database][obj.collection],
+                                          struct[key][0]._doc.__name__).get_from_id(obj.id)
                         if not isinstance(obj, struct[key][0]._doc) and obj is not None:
-                            self._raise_exception(SchemaTypeError, new_path,
-                              "%s must be an instance of Document not %s" % (
-                                new_path, type(obj).__name__))
+                            self._raise_exception(SchemaTypeError, new_path, "%s must be an instance of Document "
+                                                                             "not %s" % (new_path, type(obj).__name__))
                         full_new_path = "%s.%s" % (new_path, no)
                         # validate the embed doc
                         if not self.skip_validation:
@@ -766,14 +773,14 @@ class R(CustomType):
                 database = self._fallback_database
             if database is None:
                 raise RuntimeError("It appears that you try to use autorefs. I found a DBRef without"
-                  " database specified.\n If you do want to use the current database, you"
-                  " have to add the attribute `force_autorefs_current_db` as True. Please see the doc"
-                  " for more details.\n The DBRef without database is : %s " % value)
+                                   " database specified.\n If you do want to use the current database, you"
+                                   " have to add the attribute `force_autorefs_current_db` as True. Please see the doc"
+                                   " for more details.\n The DBRef without database is : %s " % value)
             col = self.connection[database][value.collection]
             doc = col.find_one({'_id': value.id})
             if doc is None:
                 raise AutoReferenceError('Something wrong append. You probably change'
-                  ' your object when passing it as a value to an autorefs enable document.\n'
-                  'A document with id "%s" is not saved in the database "%s" but was giving as'
-                  ' a reference to a %s document' % (value.id, database, self._doc.__name__))
+                                         ' your object when passing it as a value to an autorefs enable document.\n'
+                                         'A document with id "%s" is not saved in the database "%s" but was giving as'
+                                         ' a reference to a %s document' % (value.id, database, self._doc.__name__))
             return self._doc(doc, collection=col)

@@ -104,7 +104,7 @@ class Collection(PymongoCollection):
         """
         return the document wich has the id
         """
-        return self.find_one({"_id":id})
+        return self.find_one({"_id": id})
 
     def one(self, *args, **kwargs):
         bson_obj = self.find(*args, **kwargs)
@@ -129,4 +129,3 @@ class Collection(PymongoCollection):
         Executes a full-text search. Additional parameters may be passed as keyword arguments.
         """
         return self.database.command("text", self.name, search=search, **kwargs)
-

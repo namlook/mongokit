@@ -30,6 +30,7 @@ from bson.dbref import DBRef
 from mongokit.document import Document
 from collection import Collection
 
+
 class Database(PymongoDatabase):
 
     def __init__(self, *args, **kwargs):
@@ -42,12 +43,12 @@ class Database(PymongoDatabase):
             return getattr(self[document.__collection__], key)
         else:
             if not key in self._collections:
-                self._collections[key] = Collection(self, key) 
+                self._collections[key] = Collection(self, key)
             return self._collections[key]
 
-    def dereference(self, dbref, model = None):
+    def dereference(self, dbref, model=None):
         if model is None:
-          return super(Database, self).dereference(dbref)
+            return super(Database, self).dereference(dbref)
         if not isinstance(dbref, DBRef):
             raise TypeError("first argument must be a DBRef")
         if dbref.database is not None and dbref.database != self.name:

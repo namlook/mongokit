@@ -31,6 +31,7 @@ except ImportError:
     from pymongo import Connection as PymongoConnection
 from database import Database
 
+
 class CallableMixin(object):
     """
     brings the callable method to a Document. usefull for the connection's
@@ -38,14 +39,15 @@ class CallableMixin(object):
     """
     def __call__(self, doc=None, gen_skel=True, lang='en', fallback_lang='en'):
         return self._obj_class(
-          doc=doc,
-          gen_skel=gen_skel,
-          collection=self.collection,
-          lang=lang,
-          fallback_lang=fallback_lang
+            doc=doc,
+            gen_skel=gen_skel,
+            collection=self.collection,
+            lang=lang,
+            fallback_lang=fallback_lang
         )
 
 _iterables = (list, tuple, set, frozenset)
+
 
 class MongoKitConnection(object):
 
@@ -72,9 +74,9 @@ class MongoKitConnection(object):
         # register
         for obj in obj_list:
             CallableDocument = type(
-              "Callable%s" % obj.__name__,
-              (obj, CallableMixin),
-              {"_obj_class":obj, "__repr__":object.__repr__}
+                "Callable%s" % obj.__name__,
+                (obj, CallableMixin),
+                {"_obj_class": obj, "__repr__": object.__repr__}
             )
             self._registered_documents[obj.__name__] = CallableDocument
         # if the class object is stored, it means the user used a decorator and
@@ -89,12 +91,13 @@ class MongoKitConnection(object):
                 return getattr(self[document.__database__][document.__collection__], key)
             except AttributeError:
                 raise AttributeError("%s: __collection__ attribute not found. "
-                  "You cannot specify the `__database__` attribute without "
-                  "the `__collection__` attribute" % key)
+                                     "You cannot specify the `__database__` attribute without "
+                                     "the `__collection__` attribute" % key)
         else:
             if key not in self._databases:
                 self._databases[key] = Database(self, key)
             return self._databases[key]
+
 
 class Connection(MongoKitConnection, PymongoConnection):
     def __init__(self, *args, **kwargs):

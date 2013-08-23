@@ -28,6 +28,7 @@
 from pymongo.cursor import Cursor as PymongoCursor
 from collections import deque
 
+
 class Cursor(PymongoCursor):
     def __init__(self, *args, **kwargs):
         self.__wrap = None
