@@ -36,7 +36,7 @@ class GridFSTestCase(unittest.TestCase):
     def setUp(self):
         self.connection = Connection()
         self.col = self.connection['test']['mongokit']
-        
+
     def tearDown(self):
         self.connection.drop_database('test')
 
@@ -161,34 +161,13 @@ class GridFSTestCase(unittest.TestCase):
         assert doc.fs.images['first.jpg'] == 'My very first image', doc.fs.images['first.jpg']
 
         del doc.fs.images['first.jpg']
-        
+
         assertion = False
         try:
             doc.fs.images['first.jpg']
         except NoFile:
             assertion = True
         assert assertion
-
-    def test_gridfs_mimetype_support(self):
-        class Doc(Document):
-            structure = {
-                'title':unicode,
-            }
-            gridfs = {'files': ['source']}
-        self.connection.register([Doc])
-        doc = self.col.Doc()
-        doc['title'] = u'Hello'
-        doc.save()
-
-        doc.fs.source = "Hello World !"
-        assert doc.fs.source == "Hello World !"
-        doc.fs.source = "1"
-        assert doc.fs.source == "1", doc.fs.source
-        doc.fs.source = "Hello World !"
-        assert doc.fs.source == "Hello World !"
-        assert doc.fs.source.content_type == 'text/plain; charset=us-ascii', doc.fs.source.content_type
-        doc.fs.source = "1"
-        assert doc.fs.source.content_type == 'application/octet-stream', doc.fs.source.content_type
 
     def test_gridfs_list(self):
         class Doc(Document):
@@ -261,4 +240,4 @@ class GridFSTestCase(unittest.TestCase):
         new_id = doc.fs.get_last_version("source")._id
         doc.fs.delete(new_id)
         assert doc.fs.source == 'Hello World', doc.fs.source
-         
+

@@ -174,7 +174,18 @@ class ApiTestCase(unittest.TestCase):
         assert self.col.MyDoc.find().hint([('foo', 1)])
         assert [i['foo'] for i in self.col.MyDoc.find().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
         allPlans = self.col.MyDoc.find().explain()['allPlans']
-        assert allPlans == [{u'cursor': u'BasicCursor', u'indexBounds': {}}]
+        self.assertEqual(
+            allPlans,
+            [
+                {
+                    u'cursor': u'BasicCursor',
+                    u'indexBounds': {},
+                    u'nscannedObjects': 10,
+                    u'nscanned': 10,
+                    u'n': 10,
+                },
+            ],
+        )
         next_doc =  self.col.MyDoc.find().sort('foo',1).next()
         assert callable(next_doc) is False
         assert isinstance(next_doc, MyDoc)
@@ -550,7 +561,7 @@ class ApiTestCase(unittest.TestCase):
     def test_get_collection_with_connection(self):
         class Section(Document):
             structure = {"section":int}
-        connection = Connection('127.0.0.3')
+        connection = Connection('localhost')
         connection.register([Section])
         col = connection.test.mongokit
         assert col.database.connection == col.Section.connection
@@ -562,8 +573,9 @@ class ApiTestCase(unittest.TestCase):
             structure = {
                 "doc":{"foo":int, "bla":unicode},
             }
+        self.connection.register([MyDoc])
 
-        mydoc = MyDoc()
+        mydoc = self.col.MyDoc()
         mydoc['doc']['foo'] = 3
         mydoc['doc']['bla'] = u'bla bla'
         assert mydoc.get_size() == 41, mydoc.get_size()
@@ -573,7 +585,7 @@ class ApiTestCase(unittest.TestCase):
 
         mydoc.validate()
 
-        mydoc['doc']['bla'] = u'b'*4000000
+        mydoc['doc']['bla'] = u'b'*40000000
         self.assertRaises(MaxDocumentSizeError, mydoc.validate)
 
     def test_get_with_no_wrap(self):
@@ -734,7 +746,9 @@ class ApiTestCase(unittest.TestCase):
         explain2 = self.col.find({'foo':{'gt':4}}).explain()
         explain1.pop('n')
         explain2.pop('n')
-        assert explain1 == explain2, (explain1, explain2)
+        explain1['allPlans'][0].pop('n')
+        explain2['allPlans'][0].pop('n')
+        self.assertEqual(explain1, explain2)
 
     def test_with_long(self):
         class Doc(Document):
