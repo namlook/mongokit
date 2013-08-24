@@ -29,12 +29,14 @@ import datetime
 import logging
 log = logging.getLogger(__name__)
 
+
 def totimestamp(value):
     """
     convert a datetime into a float since epoch
     """
     import calendar
     return int(calendar.timegm(value.timetuple()) * 1000 + value.microsecond / 1000)
+
 
 def fromtimestamp(epoch_date):
     """
@@ -44,6 +46,7 @@ def fromtimestamp(epoch_date):
     return datetime.datetime.utcfromtimestamp(seconds)
 
 from copy import deepcopy
+
 
 class i18nDotedDict(dict):
     """
@@ -61,7 +64,7 @@ class i18nDotedDict(dict):
             else:
                 self[key] = value
         else:
-           dict.__setattr__(self, key, value) 
+            dict.__setattr__(self, key, value)
 
     def __getattr__(self, key):
         from mongokit.schema_document import i18n
@@ -76,81 +79,92 @@ class i18nDotedDict(dict):
         obj = dict(self)
         return deepcopy(obj, memo)
 
+
 class DotedDict(dict):
     """
     Dot notation dictionnary access
     """
     def __init__(self, doc=None, warning=False):
         self._dot_notation_warning = warning
-        if doc is None: doc = {}
+        if doc is None:
+            doc = {}
         super(DotedDict, self).__init__(doc)
         self.__dotify_dict(self)
+
     def __dotify_dict(self, doc):
-        for k,v in doc.iteritems():
+        for k, v in doc.iteritems():
             if isinstance(v, dict):
                 doc[k] = DotedDict(v)
                 self.__dotify_dict(v)
+
     def __setattr__(self, key, value):
         if key in self:
             self[key] = value
         else:
-           if self._dot_notation_warning and not key.startswith('_') and\
-             key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
-               log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
-           dict.__setattr__(self, key, value) 
+            if self._dot_notation_warning and not key.startswith('_') and\
+               key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
+                log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
+            dict.__setattr__(self, key, value)
+
     def __getattr__(self, key):
         if key in self:
             return self[key]
+
     def __deepcopy__(self, memo={}):
         obj = dict(self)
         return deepcopy(obj, memo)
 
-class EvalException(Exception):pass
 
-class DotExpandedDict(dict): 
-    """ 
-    A special dictionary constructor that takes a dictionary in which the keys 
-    may contain dots to specify inner dictionaries. It's confusing, but this 
-    example should make sense. 
+class EvalException(Exception):
+    pass
 
-    >>> d = DotExpandedDict({'person.1.firstname': ['Simon'], \ 
-          'person.1.lastname': ['Willison'], \ 
-          'person.2.firstname': ['Adrian'], \ 
-          'person.2.lastname': ['Holovaty']}) 
-    >>> d 
-    {'person': {'1': {'lastname': ['Willison'], 'firstname': ['Simon']}, '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}}} 
-    >>> d['person'] 
-    {'1': {'lastname': ['Willison'], 'firstname': ['Simon']}, '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}} 
-    >>> d['person']['1'] 
-    {'lastname': ['Willison'], 'firstname': ['Simon']} 
 
-    # Gotcha: Results are unpredictable if the dots are "uneven": 
-    >>> DotExpandedDict({'c.1': 2, 'c.2': 3, 'c': 1}) 
-    {'c': 1} 
-    """ 
+class DotExpandedDict(dict):
+    """
+    A special dictionary constructor that takes a dictionary in which the keys
+    may contain dots to specify inner dictionaries. It's confusing, but this
+    example should make sense.
+
+    >>> d = DotExpandedDict({'person.1.firstname': ['Simon'], \
+          'person.1.lastname': ['Willison'], \
+          'person.2.firstname': ['Adrian'], \
+          'person.2.lastname': ['Holovaty']})
+    >>> d
+    {'person': {'1': {'lastname': ['Willison'], 'firstname': ['Simon']},
+    '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}}}
+    >>> d['person']
+    {'1': {'lastname': ['Willison'], 'firstname': ['Simon']}, '2': {'lastname': ['Holovaty'], 'firstname': ['Adrian']}}
+    >>> d['person']['1']
+    {'lastname': ['Willison'], 'firstname': ['Simon']}
+
+    # Gotcha: Results are unpredictable if the dots are "uneven":
+    >>> DotExpandedDict({'c.1': 2, 'c.2': 3, 'c': 1})
+    {'c': 1}
+    """
     # code taken from Django source code http://code.djangoproject.com/
-    def __init__(self, key_to_list_mapping): 
-        for k, v in key_to_list_mapping.items(): 
-            current = self 
-            bits = k.split('.') 
-            for bit in bits[:-1]: 
-               if bit.startswith('$'):
-                   try:
+    def __init__(self, key_to_list_mapping):
+        for k, v in key_to_list_mapping.items():
+            current = self
+            bits = k.split('.')
+            for bit in bits[:-1]:
+                if bit.startswith('$'):
+                    try:
                         bit = eval(bit[1:])
-                   except:
+                    except:
                         raise EvalException('%s is not a python type' % bit[:1])
-               current = current.setdefault(bit, {}) 
-            # Now assign value to current position 
+                current = current.setdefault(bit, {})
+            # Now assign value to current position
             last_bit = bits[-1]
             if last_bit.startswith('$'):
-               try:
+                try:
                     last_bit = eval(last_bit[1:])
-               except:
+                except:
                     raise EvalException('%s is not a python type' % last_bit)
-            try: 
-                current[last_bit] = v 
-            except TypeError: # Special-case if current isn't a dict. 
-                current = {last_bit: v} 
+            try:
+                current[last_bit] = v
+            except TypeError:  # Special-case if current isn't a dict.
+                current = {last_bit: v}
+
 
 class DotCollapsedDict(dict):
     """
@@ -180,7 +194,7 @@ class DotCollapsedDict(dict):
         self.update(final_dict)
 
     def _make_dotation(self, d, final_dict, key=""):
-        for k,v in d.iteritems():
+        for k, v in d.iteritems():
             if isinstance(k, type):
                 k = "$%s" % k.__name__
             if isinstance(v, dict) and v != {}:
@@ -189,7 +203,7 @@ class DotCollapsedDict(dict):
                 else:
                     _key = k
                 if self._reference and _key in self._reference:
-                    final_dict[_key]=v
+                    final_dict[_key] = v
                 if self._remove_under_type:
                     if [1 for i in v.keys() if isinstance(i, type)]:
                         v = v.__class__()
@@ -199,7 +213,7 @@ class DotCollapsedDict(dict):
                             final_dict["%s.%s" % (key, k)] = v
                     else:
                         self._make_dotation(v, final_dict, _key)
-                else: 
+                else:
                     self._make_dotation(v, final_dict, _key)
             else:
                 if not key:

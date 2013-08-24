@@ -28,8 +28,9 @@
 from mongokit.helpers import DotCollapsedDict
 from mongokit.mongo_exceptions import *
 
+
 class DocumentMigration(object):
-    
+
     def __init__(self, doc_class):
         self.doc_class = doc_class
         self.target = None
@@ -51,8 +52,8 @@ class DocumentMigration(object):
                 if op != '$unset' and op != '$rename':
                     if field not in structure:
                         raise UpdateQueryError("'%s' not found in %s's structure" % (
-                          field, self.doc_class.__name__))
-        
+                            field, self.doc_class.__name__))
+
     def migrate(self, doc, safe=True):
         """migrate the doc throught all migration process"""
         method_names = sorted([i for i in dir(self) if i.startswith('migration')])
@@ -68,8 +69,8 @@ class DocumentMigration(object):
                 try:
                     doc.update(doc.collection.get_from_id(doc['_id']))
                 except:
-                    raise OperationFailure('Can not reload an unsaved document.'
-                      ' %s is not found in the database' % doc['_id'])
+                    raise OperationFailure('Can not reload an unsaved document. '
+                                           '%s is not found in the database' % doc['_id'])
                 # self.reload()
 
     def migrate_all(self, collection, safe=True):
@@ -97,5 +98,4 @@ class DocumentMigration(object):
                 deprecated.append(method_name)
             else:
                 active.append(method_name)
-        return {'deprecated':deprecated, 'active':active}
-
+        return {'deprecated': deprecated, 'active': active}

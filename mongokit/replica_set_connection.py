@@ -7,6 +7,7 @@ Liyan Chang, liyan@filepicker.io
 from pymongo.replica_set_connection import ReplicaSetConnection as PymongoReplicaSetConnection
 from mongokit.connection import MongoKitConnection
 
+
 class ReplicaSetConnection(MongoKitConnection, PymongoReplicaSetConnection):
     """ Replica Set support for MongoKit """
 
@@ -14,4 +15,3 @@ class ReplicaSetConnection(MongoKitConnection, PymongoReplicaSetConnection):
         # Specifying that it should run both the inits
         MongoKitConnection.__init__(self, *args, **kwargs)
         PymongoReplicaSetConnection.__init__(self, *args, **kwargs)
-

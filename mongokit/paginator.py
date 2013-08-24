@@ -27,7 +27,8 @@
 
 import re
 
-DEFAULT_LIMIT=10
+DEFAULT_LIMIT = 10
+
 
 class Paginator(object):
     """ Provides pagination on a Cursor object
@@ -69,13 +70,16 @@ class Paginator(object):
 
     @property
     def start_index(self):
-        if self._page == 1: return 1
-        if self._limit == 1: return self._page
+        if self._page == 1:
+            return 1
+        if self._limit == 1:
+            return self._page
         return ((self._page-1) * self._limit) + 1
 
     @property
     def end_index(self):
-        if self._limit == 1: return self._page
+        if self._limit == 1:
+            return self._page
 
         if self._page == 1:
             return self._count if self._count < self._limit else self._limit
@@ -109,8 +113,10 @@ class Paginator(object):
 
     @property
     def num_pages(self):
-        if self._count <= 0: return 0
-        if self._count <= self._limit: return 1
+        if self._count <= 0:
+            return 0
+        if self._count <= self._limit:
+            return 1
 
         pages_f = self._count / float(self._limit)
         pages_i = int(pages_f)
@@ -127,5 +133,3 @@ class Paginator(object):
 
         if self._cursor:
             self._cursor.limit(self._limit)
-
-
