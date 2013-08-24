@@ -26,18 +26,20 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from mongokit import Document
-import hashlib, os
+import hashlib
+import os
+
 
 class User(Document):
     structure = {
-        "_id":unicode,
-        "user":{
-            "login":unicode,
-            "password":unicode, # TODO validator
-            "email":unicode,
+        "_id": unicode,
+        "user": {
+            "login": unicode,
+            "password": unicode,  # TODO validator
+            "email": unicode,
         }
     }
-    required_fields = ['user.password', 'user.email'] # what if openid ? password is None
+    required_fields = ['user.password', 'user.email']  # what if openid ? password is None
 
     def set_login(self, login):
         self['_id'] = login
