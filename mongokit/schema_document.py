@@ -560,7 +560,7 @@ class SchemaDocument(dict):
                 self._raise_exception(SchemaTypeError, path,
                   "%s must be an instance of %s not %s" %(
                     path, type(struct).__name__, type(doc).__name__))
-            struct_length = len(struct) if '_id' in struct else len(struct) - 1
+            struct_length = len(struct) if not '_id' in struct else len(struct) - 1
             if len(doc) != struct_length:
                 struct_doc_diff = list(set(struct).difference(set(doc)))
                 if struct_doc_diff:

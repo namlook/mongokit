@@ -176,12 +176,23 @@ class i18nTestCase(unittest.TestCase):
         doc.title.foo = u"Hello"
         doc.title.bar.bla = 2
         doc.save()
-        self.assertEqual(doc,
-          {'toto': {'titi': {'tata': None}}, 'title': {'egg': 4, 'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}}})
+
+        self.assertEqual(doc.toto, {'titi': {'tata': None}})
+        self.assertEqual(doc.title, {
+            'egg': 4,
+            'foo': {'fr': u'Salut', 'en': u'Hello'},
+            'bar': {'bla': {'fr': 3, 'en': 2}}
+        })
         doc.validate()
         doc.set_lang('fr')
-        self.assertEqual(doc,
-          {'toto': {'titi': {'tata': None}}, 'title': {'egg': 4, 'foo': {'fr': u'Salut', 'en': u'Hello'}, 'bar': {'bla': {'fr': 3, 'en': 2}}}})
+        self.assertEqual(doc.toto, {'titi': {'tata': None}})
+        self.assertEqual(doc.title, {
+            'egg': 4,
+            'foo': {'fr': u'Salut', 'en': u'Hello'},
+            'bar': {'bla': {'fr': 3, 'en': 2}}
+        })
+        self.assertEqual(doc.title.foo, u"Salut")
+        self.assertEqual(doc.title.bar.bla, 3)
         doc.save()
 
         raw_doc = self.col.find_one({'_id':doc['_id']})
@@ -259,6 +270,7 @@ class i18nTestCase(unittest.TestCase):
         self.assertEqual(failed, True)
 
         class Doc(Document):
+            use_dot_notation = True
             structure = {
                 'title':unicode,
             }

@@ -43,6 +43,10 @@ class Collection(PymongoCollection):
         if key in self._registered_documents:
             if not key in self._documents:
                 self._documents[key] = self._registered_documents[key](collection=self)
+                if hasattr(self._documents[key], "i18n"):
+                    # It seems that if we want i18n, we have to call twice the constructor.
+                    # Why on earth ? I don't know and I don't have the time to investigate yet.
+                    self._documents[key]()
                 if self._documents[key].indexes:
                     warn('%s: Be careful, index generation is not automatic anymore.'
                       'You have to generate your index youself' % self._documents[key]._obj_class.__name__,

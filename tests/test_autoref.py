@@ -228,9 +228,9 @@ class AutoRefTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, mydoc.save) 
   
     def test_badautoref_not_enabled(self):
-        # Test that, when autoref is disabled
-        # we refuse to allow a MongoDocument 
-        # to be valid schema.
+        # Test that, if autoref is disabled
+        # adding a Document to the structure act
+        # like a regular dict
 
         class EmbedDoc(Document):
             structure = {
@@ -250,7 +250,9 @@ class AutoRefTestCase(unittest.TestCase):
                 },
                 "spam": EmbedDoc,
             }
-        self.assertRaises(StructureError, self.connection.register, [MyDoc])
+        self.connection.register([MyDoc])
+        doc = self.col.MyDoc()
+        self.assertEqual(doc, {'bla': {'foo': None, 'bar': None}, 'spam': None})
 
     def test_subclass(self):
         # Test autoref enabled, but embed a subclass.
@@ -672,27 +674,34 @@ class AutoRefTestCase(unittest.TestCase):
 
     def test_autoref_without_database_specified(self):
         class EmbedDoc(Document):
-           structure = {
+            use_dot_notation = True
+            structure = {
                "foo": unicode,
-           }
+            }
 
         class Doc(Document):
            use_dot_notation=True
            use_autorefs = True
            force_autorefs_current_db = True
+           __database__ = "test"
+           __collection__ = "mongokit"
            structure = {
                "embed": EmbedDoc,
            }
         self.connection.register([EmbedDoc, Doc])
 
-        embed = self.col.EmbedDoc()
+        embed = self.connection.test.embed_docs.EmbedDoc()
         embed['foo'] = u'bar'
         embed.save()
 
-        raw_doc = {'embed':DBRef(collection=self.col.name, id=embed['_id'])}
-        self.col.insert(raw_doc)
-
-        doc = self.col.Doc.find_one({'_id':raw_doc['_id']})
+        raw_doc = {'embed':DBRef(
+            collection=self.connection.test.embed_docs.name,
+            id=embed['_id'])
+        }
+        self.connection.test.mongokit.insert(raw_doc)
+        doc = self.connection.Doc.find_one({'_id':raw_doc['_id']})
+        assert isinstance(doc.embed, EmbedDoc)
+        self.assertTrue(doc.embed.foo, u"bar")
 
     def test_recreate_and_reregister_class_with_reference(self):
         class CompanyDocument(Document):
