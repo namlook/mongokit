@@ -27,6 +27,7 @@
 
 try:
     from pymongo import MongoClient as PymongoConnection
+    from pymongo import MongoReplicaSetClient as PymongoReplicaSetConnection
 except ImportError:
     from pymongo import Connection as PymongoConnection
 from database import Database
@@ -105,4 +106,11 @@ class Connection(MongoKitConnection, PymongoConnection):
         MongoKitConnection.__init__(self, *args, **kwargs)
         PymongoConnection.__init__(self, *args, **kwargs)
 
+class __ReplicaConnection(MongoKitConnection, PymongoReplicaSetConnection):
+    def __init__(self, *args, **kwargs):
+        # Specifying that it should run both the inits
+        MongoKitConnection.__init__(self, *args, **kwargs)
+        PymongoReplicaSetConnection.__init__(self, *args, **kwargs)
+
 MongoClient = Connection
+MongoReplicaSetClient = __ReplicaConnection

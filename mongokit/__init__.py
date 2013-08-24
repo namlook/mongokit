@@ -36,7 +36,7 @@ from document import Document, ObjectId
 from versioned_document import VersionedDocument
 from database import Database
 from collection import Collection
-from connection import Connection, MongoClient
+from connection import Connection, MongoClient, MongoReplicaSetClient
 from master_slave_connection import MasterSlaveConnection
 from replica_set_connection import ReplicaSetConnection
 from pymongo import (
