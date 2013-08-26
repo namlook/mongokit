@@ -50,6 +50,7 @@ Go to the full [documentation](http://github.com/namlook/mongokit/wiki)
 Document are enhanced python dictionary with a `validate()` method.
 A Document declaration look like that:
 
+```python
     >>> from mongokit import *
     >>> import datetime
 
@@ -67,9 +68,11 @@ A Document declaration look like that:
     ...     required_fields = ['title','author', 'date_creation']
     ...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
     ... 
+```
 
 We fire a connection and register our objects.
 
+```python
     >>> blogpost = con.test.example.BlogPost() # this use the db "test" and the collection "example"
     >>> blogpost['title'] = u'my title'
     >>> blogpost['body'] = u'a body'
@@ -77,11 +80,13 @@ We fire a connection and register our objects.
     >>> blogpost
     {'body': u'a body', 'title': u'my title', 'date_creation': datetime.datetime(...), 'rank': 0, 'author': u'me'}
     >>> blogpost.save()
+```
    
 Saving the object will call the `validate()` method.
 
 And you can use more complex structure:
 
+```python
     >>>  @connection.register
     ...  class ComplexDoc(Document):
     ...     __database__ = 'test'
@@ -93,7 +98,8 @@ And you can use more complex structure:
     ...         }
     ...     }
     ...     required_fields = ['foo.content', 'bar.bla.spam']
-     
+```
+
 Please, see the [tutorial](https://github.com/namlook/mongokit/wiki/Tutorial) for more examples.
 
 Suggestion and patches are really welcome. If you find mistakes in the documentation
