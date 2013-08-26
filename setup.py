@@ -41,7 +41,7 @@ setup(
     version = '0.9.0',  # TODO don't forget to change version in __init__
 
     description = 'Python mongodb kit',
-    long_description = codecs.open('README', "r", "utf-8").read(),
+    long_description = codecs.open('README.md', "r", "utf-8").read(),
     author = 'Namlook',
     license = 'New BSD License',
     url = 'http://namlook.github.com/mongokit/',
