@@ -1,18 +1,12 @@
-========
-MongoKit
-========
+# MongoKit
 
-MongoDB_ is a great schema-less document oriented database. It have a lot of
-driver for many langages (python, ruby, perl, java, php...).
-
-.. _MongoDB : http://www.mongodb.org/display/DOCS/Home
+[MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It have a lot of driver for many langages (python, ruby, perl, java, php...).
 
 MongoKit is a python module that brings structured schema and validation layer
 on top of the great pymongo driver. It has be written to be as simple and light
 as possible with the KISS and DRY principles in mind.
 
-Philosophy
-==========
+## Philosophy
 
 MongoKit is designed to be:
 
@@ -20,16 +14,14 @@ MongoKit is designed to be:
  * **fast**: MongoKit is fast but if you *really* need to be fast you have access to the raw pymongo layer without changing the API
  * **powerful**: MongoKit brings many feature like document auto-reference, custom types or i18n support.
 
-.. topic:: **Your data is clean**:
+**Your data is clean:**
 
+> "Tools change, not data". In order to follow this "credo", MongoKit won't
+> add any information into your data saved into the database.
+> So if you need to use other mongo tools or ODMs in other languages, your
+> data won't be polluted by MongoKit's stuff.
 
-    "Tools change, not data". In order to follow this "credo", MongoKit won't
-    add any information into your data saved into the database.
-    So if you need to use other mongo tools or ODMs in other languages, your
-    data won't be polluted by MongoKit's stuff.
-
-Features
-========
+## Features
 
  * schema validation (wich use simple python type for the declaration)
  * schema less feature
@@ -51,15 +43,12 @@ Features
  * GridFS support
  * document migration support
 
-Go to the full documentation_ .
+Go to the full [documentation](http://namlook.github.com/mongokit/)
 
-.. _documentation : http://namlook.github.com/mongokit/
+## A quick example
 
-A quick example
-===============
-
-Document are enhanced python dictionary with a ``validate()`` method.
-A Document declaration look like that::
+Document are enhanced python dictionary with a `validate()` method.
+A Document declaration look like that:
 
     >>> from mongokit import *
     >>> import datetime
@@ -91,7 +80,7 @@ We fire a connection and register our objects.
    
 Saving the object will call the `validate()` method.
 
-And you can use more complex structure::
+And you can use more complex structure:
 
     >>>  @connection.register
     ...  class ComplexDoc(Document):
@@ -105,22 +94,16 @@ And you can use more complex structure::
     ...     }
     ...     required_fields = ['foo.content', 'bar.bla.spam']
      
-Please, see the tutorial_ for more examples.
-
-.. _tutorial : http://namlook.github.com/mongokit/tutorial.html
+Please, see the [tutorial](http://namlook.github.com/mongokit/tutorial.html) for more examples.
 
 Suggestion and patches are really welcome. If you find mistakes in the documentation
 (english is not my primary langage) feel free to contact me. You can find me (namlook) 
-on the freenode #mongodb irc channel or on twitter_.
-
-.. _twitter : http://twitter.com/namlook
+on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
 
 
-Recent Change Log
-=================
+## Recent Change Log
 
-v0.9.0
-------
+### v0.9.0
 
  * now MongoKit required PyMongo >= 2.5
  * find_and_modify returns None if the query fails (thanks to @a1gucis)
@@ -135,22 +118,19 @@ v0.9.0
  * Fix typos on README (thanks to @girasquid)
  * add pagination helper (not yed documented)(thanks to @jarrodb) https://github.com/namlook/mongokit/blob/master/mongokit/paginator.py
 
-v0.8.3
-------
+### v0.8.3
 
  * allow keyword arguments (like read_preferences, slave_okay, etc) to be set in Connection (thanks to @petersng)
  * Add find_and_modify again. It was removed by an unexpected rollback.
  * use MongoClient with MasterSlaveConnection
 
-v0.8.2
-------
+### v0.8.2
 
  * fix #101 - validators condition fix
  * fix #110 - support PyMongo >= 2.4 (import MongoClient) -- thanks to @mattbodman and @zavatskiy
  * Fixed some spelling/grammar (thanks to @gekitsuu)
 
-v0.8.1
-------
+### v0.8.1
 
  * support python 2.3
  * small updates to validation messages (Merge pull request #94 from unpluggd/master)
@@ -164,8 +144,7 @@ v0.8.1
  * Fixed rendering issue in the docs. (thanks to Dougal Matthews)
  * tweaked the error messages in validation for missing and unknown fields to aid in debugging projects (thanks to Phillip B Oldham)
 
-v0.8.0
-------
+### v0.8.0
 
  * Add spec file for rpm-based distributions (Merge pull request #63 from linuxnow/master)
  * change document size limitation for mongodb 1.8 or later. Thanks to Aleksey Sivokon (Merge pull request #74 from key/master)
@@ -180,14 +159,12 @@ v0.8.0
 
 Thank you all for all your patches !
 
-v0.7.2
-------
+### v0.7.2
 
  * add inherited queries support (please see http://github.com/namlook/mongokit/wiki/Inherited-queries for more details)
 
 
-v0.7.1
-------
+### v0.7.1
 
  * change MongokitMasterSlaveConnection to MasterSlaveConnection for consistency
  * fix #57 -- support pymongo > 1.9 in grid.py
@@ -196,8 +173,7 @@ v0.7.1
  * Dont try to convert None struct to json (patch from @mLewisLogic thanks !)
  * fix schemaless issue (thanks to Mihai Pocorschi for reporting it)
 
-v0.7
-----
+### v0.7
 
  * add `use_schemaless` feature ! please see the documentation for more informations
  * Add equality test for mongokit operators (thanks to @allancaffee)
@@ -216,6 +192,4 @@ v0.7
  * fix #39 -- KeyError when saving partially loaded documents
  * fix #34 -- add find_and_modify method to Document
  * fix #32 -- allow the structure to be empty (was: document.to_json())
- * fix #24 -- Don't handle __database__/__collection__ attribute for virtual documents
-
-
+ * fix #24 -- Don't handle `__database__` and `__collection__` attributes for virtual documents
