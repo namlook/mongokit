@@ -43,7 +43,7 @@ MongoKit is designed to be:
  * GridFS support
  * document migration support
 
-Go to the full [documentation](http://namlook.github.com/mongokit/)
+Go to the full [documentation](http://github.com/namlook/mongokit/wiki)
 
 ## A quick example
 
@@ -94,7 +94,7 @@ And you can use more complex structure:
     ...     }
     ...     required_fields = ['foo.content', 'bar.bla.spam']
      
-Please, see the [tutorial](http://namlook.github.com/mongokit/tutorial.html) for more examples.
+Please, see the [tutorial](https://github.com/namlook/mongokit/wiki/Tutorial) for more examples.
 
 Suggestion and patches are really welcome. If you find mistakes in the documentation
 (english is not my primary langage) feel free to contact me. You can find me (namlook) 
