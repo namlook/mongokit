@@ -79,6 +79,12 @@ class i18nDotedDict(dict):
         obj = dict(self)
         return deepcopy(obj, memo)
 
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, d):
+        self.__dict__.update(d)
+
 
 class DotedDict(dict):
     """
@@ -113,6 +119,12 @@ class DotedDict(dict):
     def __deepcopy__(self, memo={}):
         obj = dict(self)
         return deepcopy(obj, memo)
+
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, d):
+        self.__dict__.update(d)
 
 
 class EvalException(Exception):
