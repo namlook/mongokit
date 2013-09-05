@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongokit import SchemaDocument, SchemaProperties, AutoReferenceError
+from mongokit import SchemaDocument, AutoReferenceError
 from mongokit.mongo_exceptions import *
 from mongokit.schema_document import (
     STRUCTURE_KEYWORDS,
@@ -36,9 +36,7 @@ from mongokit.schema_document import (
 from mongokit.helpers import (
     totimestamp,
     fromtimestamp,
-    DotCollapsedDict,
-    DotedDict,
-    DotExpandedDict)
+    DotedDict)
 from mongokit.grid import *
 import pymongo
 from bson import BSON
@@ -203,7 +201,6 @@ class Document(SchemaDocument):
         if process_to_bson:
             self._process_custom_type('bson', self, self.structure)
         self._migration.migrate(self, safe=safe)
-        new_value = DotCollapsedDict(self)
         # reload
         old_doc = self.collection.get_from_id(self['_id'])
         if not old_doc:
@@ -211,10 +208,6 @@ class Document(SchemaDocument):
                                    ' %s is not found in the database' % self['_id'])
         else:
             self.update(DotedDict(old_doc))
-        # self.reload()
-        #old_value = DotCollapsedDict(self)
-        #old_value.update(new_value)
-        #self.update(DotExpandedDict(old_value))
         self._process_custom_type('python', self, self.structure)
 
     def _get_size_limit(self):
@@ -432,7 +425,7 @@ class Document(SchemaDocument):
             if uuid:
                 self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
         self._process_custom_type('bson', self, self.structure)
-        id = self.collection.save(self, safe=safe, *args, **kwargs)
+        self.collection.save(self, safe=safe, *args, **kwargs)
         self._process_custom_type('python', self, self.structure)
 
     def delete(self):
