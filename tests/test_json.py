@@ -162,7 +162,7 @@ class JsonTestCase(unittest.TestCase):
             mydoc.to_json(),
             '{"doc": {"foo": 3.7}, "_id": "mydoc"}',
         )
-        assert mydoc.to_json_type() == {"doc": {"foo": 3.7000000000000002}, "_id": "mydoc"}
+        assert mydoc.to_json_type() == {"doc": {"foo": 3.7}, "_id": "mydoc"}
 
     def test_to_json_embeded_doc(self):
         class EmbedDoc(Document):

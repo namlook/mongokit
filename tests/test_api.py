@@ -57,7 +57,6 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
         assert isinstance(mydoc['_id'], ObjectId)
 
-        d = self.col.MyDoc.find_one()
         saved_doc = self.col.find_one({"bla.bar":42})
         for key, value in mydoc.iteritems():
             assert saved_doc[key] == value
@@ -222,7 +221,7 @@ class ApiTestCase(unittest.TestCase):
                 "baz":int
             }
         self.connection.register([MyDoc])
-        self.assertIsNone(self.col.MyDoc.find_and_modify(query={"baz": 1}, update={"$set": {"baz": 2}}))
+        assert self.col.MyDoc.find_and_modify(query={"baz": 1}, update={"$set": {"baz": 2}}) is None
 
     def test_find_and_modify_query_succeeds(self):
         class MyDoc(Document):
@@ -235,7 +234,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc.save()
 
         mydoc = self.col.MyDoc.find_and_modify(query={"baz": 1}, update={"$set": {"baz": 2}}, new=True)
-        self.assertIsInstance(mydoc, MyDoc)
+        assert isinstance(mydoc, MyDoc)
         self.assertEquals(2, mydoc["baz"])
 
     def test_one(self):
