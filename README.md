@@ -1,4 +1,4 @@
-# MongoKit
+# MongoKit [![Build Status](https://travis-ci.org/namlook/mongokit.png)](https://travis-ci.org/namlook/mongokit.png)
 
 [MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It have a lot of driver for many langages (python, ruby, perl, java, php...).
 
