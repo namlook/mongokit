@@ -137,32 +137,36 @@ class JsonTestCase(unittest.TestCase):
         assert mydoc.to_json() == '{"bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}'
 
     def test_to_json_custom_type(self):
-        class CustomFloat(CustomType):
-            mongo_type = unicode
-            python_type = float
+        class CustomDegree(CustomType):
+            mongo_type = int
+            python_type = basestring
             def to_bson(self, value):
                 if value is not None:
-                    return unicode(value)
+                    return int(value.replace('C', ''))
             def to_python(self, value):
                 if value is not None:
-                    return float(value)
+                    return str(value)+"C"
 
         class MyDoc(Document):
             structure = {
                 "doc":{
-                    "foo":CustomFloat(),
+                    "foo":CustomDegree(),
                 },
             }
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc'
-        mydoc['doc']['foo'] = 3.70
+        mydoc['doc']['foo'] = '3C'
         mydoc.save()
         self.assertEqual(
-            mydoc.to_json(),
-            '{"doc": {"foo": 3.7}, "_id": "mydoc"}',
+            self.col.MyDoc.collection.find_one({'_id': 'mydoc'}),
+            {"doc": {"foo": 3}, "_id": "mydoc"}
         )
-        assert mydoc.to_json_type() == {"doc": {"foo": 3.7}, "_id": "mydoc"}
+        self.assertEqual(
+            mydoc.to_json(),
+            '{"doc": {"foo": "3C"}, "_id": "mydoc"}',
+        )
+        self.assertEqual(mydoc.to_json_type(), {"doc": {"foo": "3C"}, "_id": "mydoc"})
 
     def test_to_json_embeded_doc(self):
         class EmbedDoc(Document):
