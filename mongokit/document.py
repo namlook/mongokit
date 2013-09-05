@@ -667,7 +667,10 @@ class Document(SchemaDocument):
                 # _process_custom_type another time.
                 if isinstance(doc[key], DBRef):
                     # XXX check this
-                    db = doc[key].database
+                    if doc[key].database:
+                        db = doc[key].database
+                    else:
+                        db = self.db.name
                     col = doc[key].collection
                     _id = doc[key].id
                     obj_class = struct[key]._doc

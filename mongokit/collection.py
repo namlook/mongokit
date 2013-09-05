@@ -44,7 +44,7 @@ class Collection(PymongoCollection):
         if key in self._registered_documents:
             if not key in self._documents:
                 self._documents[key] = self._registered_documents[key](collection=self)
-                if hasattr(self._documents[key], "i18n"):
+                if hasattr(self._documents[key], "i18n") and self._documents[key].i18n:
                     # It seems that if we want i18n, we have to call twice the constructor.
                     # Why on earth ? I don't know and I don't have the time to investigate yet.
                     self._documents[key]()
