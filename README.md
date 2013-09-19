@@ -1,6 +1,6 @@
 # MongoKit [![Build Status](https://travis-ci.org/namlook/mongokit.png)](https://travis-ci.org/namlook/mongokit.png)
 
-[MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It has a lot of driver for many langages (python, ruby, perl, java, php...).
+[MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It has a lot of drivers for many languages (python, ruby, perl, java, php...).
 
 MongoKit is a python module that brings structured schema and validation layer
 on top of the great pymongo driver. It has be written to be as simple and light
