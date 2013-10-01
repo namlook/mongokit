@@ -1,6 +1,6 @@
 # MongoKit [![Build Status](https://travis-ci.org/namlook/mongokit.png)](https://travis-ci.org/namlook/mongokit.png)
 
-[MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It have a lot of driver for many langages (python, ruby, perl, java, php...).
+[MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It has a lot of drivers for many languages (python, ruby, perl, java, php...).
 
 MongoKit is a python module that brings structured schema and validation layer
 on top of the great pymongo driver. It has be written to be as simple and light
@@ -23,7 +23,7 @@ MongoKit is designed to be:
 
 ## Features
 
- * schema validation (wich use simple python type for the declaration)
+ * schema validation (which use simple python type for the declaration)
  * schema less feature
  * dot notation
  * nested and complex schema declaration
@@ -103,7 +103,7 @@ And you can use more complex structure:
 Please, see the [tutorial](https://github.com/namlook/mongokit/wiki/Tutorial) for more examples.
 
 Suggestion and patches are really welcome. If you find mistakes in the documentation
-(english is not my primary langage) feel free to contact me. You can find me (namlook) 
+(english is not my primary language) feel free to contact me. You can find me (namlook) 
 on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
 
 
@@ -118,11 +118,11 @@ on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
  * Fix for serialization of nested structures with type validation (thanks to @LK4D4)
  * Remove unnecessary path arguments in to_json._convert_to_python (thanks to @Alexandr Morozov)
  * big refactorization by using multiple inheritance for DRYness (thanks to @liyanchang)
- * Add find_fulltext mehtod for convenience (thanks to @astronouth7303) (not official and not documented yet)
+ * Add find_fulltext method for convenience (thanks to @astronouth7303) (not official and not documented yet)
  * Allow text indexes in document definitions (thanks to @astronouth7303)
  * Adding replica set support (thanks to @liyanchang)
  * Fix typos on README (thanks to @girasquid)
- * add pagination helper (not yed documented)(thanks to @jarrodb) https://github.com/namlook/mongokit/blob/master/mongokit/paginator.py
+ * add pagination helper (not yet documented)(thanks to @jarrodb) https://github.com/namlook/mongokit/blob/master/mongokit/paginator.py
 
 ### v0.8.3
 
@@ -144,7 +144,7 @@ on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
  * Fixed typo when throwing MaxDocumentSizeError in validate() (thanks to Andy Pavlo)
  * added fix for unconditional access to __wrap on cursors (thanks to David T. Lehmann)
  * added test for __getitem__ on cursor with undefined __wrap (thanks to David T. Lehmann)
- * __getitem__ on unwrapped cursor checkes if __wrap is None (Merge pull request #97 from dtl/fix-getitem-on-unwrapped-cursor)
+ * __getitem__ on unwrapped cursor checks if __wrap is None (Merge pull request #97 from dtl/fix-getitem-on-unwrapped-cursor)
  * Add .travis.yml for Travis CI (http://travis-ci.org/) (Merge pull request #96 from msabramo/travis)
  * Fixed a very minor rendering issue in the docs (Merge pull request #95 from d0ugal/master)
  * Fixed rendering issue in the docs. (thanks to Dougal Matthews)
@@ -156,7 +156,7 @@ on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
  * change document size limitation for mongodb 1.8 or later. Thanks to Aleksey Sivokon (Merge pull request #74 from key/master)
  * validation of "" for an int (Merge pull request #79 from barnybug/master)
  * Fix exception when loading documents with a custom type field missing (Merge pull request #80 from barnybug/master)
- * Big documentation restructuration made by Sean Lynch (Merge pull request #82 from sean-lynch/master)
+ * Big documentation restructuring made by Sean Lynch (Merge pull request #82 from sean-lynch/master)
  * Using rename no longer causes migrations throw an exception (Merge pull request #86 from matthewh/master)
  * Some test is modified and added tox (Merge pull request #91 from aircastle/modifiytest)
  * Replace pymongo.objectid with bson.objectid (Merge pull request #88 from behackett/master)
