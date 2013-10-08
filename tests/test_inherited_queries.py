@@ -73,7 +73,7 @@ class InheritedQueriesTestCase(unittest.TestCase):
 
         self.assertTrue(isinstance(self.connection.A.find_one({'_id':doc_b['_id']}), B))
         self.assertTrue(isinstance(self.connection.A.find({'_id':doc_b['_id']}).next(), B))
-        self.assertTrue(isinstance(self.connection.A.find({'_id':doc_b['_id']}).next(), B))
+        self.assertTrue(isinstance(self.connection.A.find({'_id':doc_b['_id']})[0], B))
 
     def test_inherited_queries_without___collection__(self):
         @self.connection.register
