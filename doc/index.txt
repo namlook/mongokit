@@ -14,7 +14,7 @@ MongoKit is designed to be:
 
  * **simple**: MongoKit use plain python type to describe document structure
  * **fast**: MongoKit is fast but if you *really* need to be fast you have access to the raw pymongo layer without changing the API
- * **powerfull**: MongoKit brings many feature like document auto-reference, custom types or i18n support.
+ * **powerful**: MongoKit brings many feature like document auto-reference, custom types or i18n support.
 
 .. topic:: **Your data is clean**:
 
