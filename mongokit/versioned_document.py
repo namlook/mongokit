@@ -77,7 +77,7 @@ class VersionedDocument(Document):
     def remove(self, query, versioning=False, *args, **kwargs):
         """
         if versioning is True, remove all revisions documents as well.
-        Be carefull when using this method. If your query match tons of
+        Be careful when using this method. If your query match tons of
         documents, this might be very very slow.
         """
         if versioning:
