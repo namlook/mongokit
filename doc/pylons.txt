@@ -42,7 +42,7 @@ Then go to the ``lib/app_globals.py`` and edit this file so it look like this::
             self.connection.register(register_models)
 
 
-In this file, we create the connection (optionaly the db if we use only on) and then
+In this file, we create the connection (optionally the db if we use only on) and then
 we register all our models.
 
 Now, you can access to the connection via the pylons.config :
