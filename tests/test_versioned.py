@@ -40,7 +40,7 @@ class VersionedTestCase(unittest.TestCase):
         self.connection['test'].drop_collection('versioned_mongokit2')
         self.connection['versioned_test'].drop_collection('versioned_mongokit')
 
-    def test_save_versionning(self):
+    def test_save_versioning(self):
         class MyDoc(Document):
             structure = {
                 "bla" : unicode,
@@ -115,7 +115,7 @@ class VersionedTestCase(unittest.TestCase):
         assert self.col.find().count() == 1
 
 
-    def test_save_versionning_without_id(self):
+    def test_save_versioning_without_id(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
                 "foo" : unicode,
@@ -215,7 +215,7 @@ class VersionedTestCase(unittest.TestCase):
         count =  self.col.MyVersionedDoc.collection.find().count()
         assert count == 0, count
 
-    def _test_versionning_with_dynamic_db(self):
+    def _test_versioning_with_dynamic_db(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
                 "foo" : unicode,
@@ -258,7 +258,7 @@ class VersionedTestCase(unittest.TestCase):
         ver_doc = list(CONNECTION['versioned_test']['versioned_mongokit'].find())
         assert len(ver_doc) == 1
 
-    def _test_versionning_with_dynamic_collection(self):
+    def _test_versioning_with_dynamic_collection(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
                 "foo" : unicode,
