@@ -85,7 +85,7 @@ class CustomType(object):
 
     def validate(self, value, path):
         """
-        This method is optionnal. It add a validation layer.
+        This method is optional. It add a validation layer.
         This method is been called in Document.validate()
 
         value: the value of the field
@@ -257,7 +257,7 @@ class SchemaDocument(dict):
     >>> doc = TestDoc()
     >>> doc['bar'] = 2
 
-    Validation is made with the `validate()` methode:
+    Validation is made with the `validate()` method:
 
     >>> doc.validate()  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
@@ -333,12 +333,12 @@ class SchemaDocument(dict):
 
     def __init__(self, doc=None, gen_skel=True, gen_auth_types=True, validate=True, lang='en', fallback_lang='en'):
         """
-        doc : a dictionnary
-        gen_skel : if True, generate automaticly the skeleton of the doc
+        doc : a dictionary
+        gen_skel : if True, generate automatically the skeleton of the doc
             filled with NoneType each time validate() is called. Note that
             if doc is not {}, gen_skel is always False. If gen_skel is False,
             default_values cannot be filled.
-        gen_auth_types: if True, generate automaticly the self.authorized_types
+        gen_auth_types: if True, generate automatically the self.authorized_types
             attribute from self.authorized_types
         """
         if self.structure is None:
@@ -377,7 +377,7 @@ class SchemaDocument(dict):
           * the doc follow the structure,
           * all required fields are filled
 
-        Additionnaly, this method will process all
+        Additionally, this method will process all
         validators.
 
         """
