@@ -1,10 +1,9 @@
-
 >>> from mongokit import Connection
 
 >>> con = Connection()
 
 Let's say we have previously created 3 MongoDocuments : Blog, BlogPost and User.
-Those objects have to be rechable via the connections so we register them :
+Those objects have to be reachable via the connections so we register them :
 
 >>> con.register([Blog, BlogPost, User])
 
@@ -25,7 +24,7 @@ Now enter the MongoDocument objects. Let's create a blog post:
     >>> blogpost.save()
 
 Note that this is quite the same as the current api. We just get the BlogPost object
-via the collection. The main advantage of this approche is that we don't have to
+via the collection. The main advantage of this approach is that we don't have to
 bother about the collection.
 
 Note that we can simulate the current api behavior by getting the BlogPost object
@@ -47,8 +46,8 @@ Quering is as simple as instanciating object. There's two way of fetching object
  * getting raw data (the pymongo's way)
  * getting instanciated object with all method defined (the mongokit way)
 
-The first approche will produce only python dict and is very fast.
-The seconde will wrap the data into the MongoDocument. This is useful if we defined
+The first approach will produce only python dict and is very fast.
+The second will wrap the data into the MongoDocument. This is useful if we defined
 methods and want to use them.
 
 Getting raw data :
