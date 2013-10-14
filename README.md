@@ -174,14 +174,14 @@ Thank you all for all your patches !
 
  * change MongokitMasterSlaveConnection to MasterSlaveConnection for consistency
  * fix #57 -- support pymongo > 1.9 in grid.py
- * fix #45 -- remove automatique index creation
+ * fix #45 -- remove automatic index creation
  * fix #43 -- slicing a cursor should return a mongokit document, not dict
  * Dont try to convert None struct to json (patch from @mLewisLogic thanks !)
  * fix schemaless issue (thanks to Mihai Pocorschi for reporting it)
 
 ### v0.7
 
- * add `use_schemaless` feature ! please see the documentation for more informations
+ * add `use_schemaless` feature ! please see the documentation for more information
  * Add equality test for mongokit operators (thanks to @allancaffee)
     This allows developers to write unit tests on the structure
     of their document classes when operators are used
