@@ -50,7 +50,7 @@ from copy import deepcopy
 
 class i18nDotedDict(dict):
     """
-    Dot notation dictionnary access with i18n support
+    Dot notation dictionary access with i18n support
     """
     def __init__(self, dic, doc):
         super(i18nDotedDict, self).__init__(dic)
@@ -88,7 +88,7 @@ class i18nDotedDict(dict):
 
 class DotedDict(dict):
     """
-    Dot notation dictionnary access
+    Dot notation dictionary access
     """
     def __init__(self, doc=None, warning=False):
         self._dot_notation_warning = warning

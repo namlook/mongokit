@@ -37,7 +37,7 @@ Let's create our ``Doc`` object so it look like this::
     ...    structure = {'title':unicode}
 
 The `db_name` and `collection_name` are not hard explained in the object
-declaration anymore. We juste describe the validation schema. Then, we have
+declaration anymore. We just describe the validation schema. Then, we have
 to fire a connection and register our ``Doc`` object ::
 
 >>> from mongokit import Connection
@@ -54,7 +54,7 @@ Let's the BlogPost object seen in the introduction:
 >>> blogpost.save()
 
 Note that this is quite the same as the current api. We just get the BlogPost object
-via the collection. The main advantage of this approche is that we don't have to
+via the collection. The main advantage of this approach is that we don't have to
 bother about the collection.
 
 You can simulate the current api behavior like this:
@@ -79,8 +79,8 @@ Quering is as simple as instanciating object. There's two way of fetching object
  * getting raw data (the pymongo's way)
  * getting instanciated object with all method defined (the mongokit way)
 
-The first approche will produce only python dict and is very fast.
-The seconde will wrap the data into the MongoDocument. This is useful if we defined
+The first approach will produce only python dict and is very fast.
+The second will wrap the data into the MongoDocument. This is useful if we defined
 methods and want to use them.
 
 Getting raw data :
@@ -115,7 +115,7 @@ So, what changed ?
  * replaced `all()` by `find()`. This in order to keep consistancy with the pymongo driver
  * replace `one()` by `find_one().
  * remove `db_name` and `collection_name`. Instead, you have to register your object to the connection.
- * passing a dictionnary in "fields" is now deprecated.  The problem when passing a dictionnary is that a dictionnary is unordered. This might be a problem for compound keys. If you want to make compound keys indexes, you now need to pass a list of tuples::
+ * passing a dictionary in "fields" is now deprecated. The problem when passing a dictionary is that a dictionary is unordered. This might be a problem for compound keys. If you want to make compound keys indexes, you now need to pass a list of tuples::
 
     >>> from mongokit import *
     >>> class MyDoc(Document):
@@ -134,13 +134,6 @@ So, what changed ?
     ...         },
     ...     ]
 
- * removed cascade (`belong_to`) and related features. MongoKit is writed to be fast and production ready. Adding such feature brings bugs and complication in maintainability. As far as I know, those features was not really used and there are easy to implemented. So, I removed them. This bring more less and cleaner code. If you don't know how to implemente thoses features, send me a message on the mailing list, Bitbucket or Twitter and I'll write a tutorial.
+ * removed cascade (`belong_to`) and related features. MongoKit is writed to be fast and production ready. Adding such feature brings bugs and complication in maintainability. As far as I know, those features was not really used and there are easy to implemented. So, I removed them. This bring more less and cleaner code. If you don't know how to implement those features, send me a message on the mailing list, Bitbucket or Twitter and I'll write a tutorial.
  * dropped Mongodb auth support. I'm not happy with the way it was handled. I have to think on a better API. So, in order to avoid another API changed, I removed this feature. If you really need this feature, contact me so we can think a new API together.
  * last but not least : better integration with web framework. All that you have to do is to set a connection and register all your objects.
-
- 
-
-
-
-
-

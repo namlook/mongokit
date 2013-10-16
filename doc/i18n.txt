@@ -21,10 +21,10 @@ Let's create a simple i18n BlogPost:
 
 Declare your structure as usual and add an `i18n` descriptor. The `i18n`
 descriptor will tel Mongokit that the fields `title` and `body` will be in
-multiple langage.
+multiple language.
 
 Note of the use of `use_dot_notation` attribute. Using i18n with dot notation is more fun
-but a little slower (not critical thought). We will see later how to use i18n is a blasing
+but a little slower (not critical thought). We will see later how to use i18n is a blazing
 fast way (but less fun).
 
 Let's create a BlogPost object and fill some fields:
@@ -59,7 +59,7 @@ Now, let's see how it work:
 >>> blog_post
 {'body': {'fr': u'Comment allez-vous ?', 'en': u'How are you ?'}, '_id': u'bp1', 'title': {'fr': u'Salut', 'en': u'Hello'}, 'author': u'me'}
 
-The `title` field is actually a dictionnary which keys are the language and the values are the text. This is usefull if you don't want
+The `title` field is actually a dictionary which keys are the language and the values are the text. This is useful if you don't want
 to use the dot notation. Let's save our object:
 
 >>> blog_post.save()
@@ -67,7 +67,7 @@ to use the dot notation. Let's save our object:
 >>> raw_blog_post
 {u'body': [{u'lang': u'fr', u'value': u'Comment allez-vous ?'}, {u'lang': u'en', u'value': u'How are you ?'}], u'_id': u'bp1', u'author': u'me', u'title': [{u'lang': u'fr', u'value': u'Salut'}, {u'lang': u'en', u'value': u'Hello'}]}
 
-Now, the `title` field looks little different. This is a list of dictionnary which have the following structure:
+Now, the `title` field looks little different. This is a list of dictionary which have the following structure:
 
     [{'lang': lang, 'value', text}, ...]
 
@@ -87,7 +87,7 @@ By default, the default language is english ('en'). You can change it easily by 
 >>> blog_post.get_lang()
 'fr'
 
-you can also specify a fallblack language. This is useful if a field was translated yet:
+you can also specify a fallback language. This is useful if a field was translated yet:
 
 >>> blog_post = con.test.i18n.BlogPost(lang='en', fallback_lang='en')
 >>> blog_post.title = u"Hello"
@@ -123,7 +123,7 @@ you can still use i18n. Let's take our BlogPost:
 >>> blog_post['body']['en'] = u"How are you ?"
 >>> blog_post['author'] = u"me"
 
-As you can see, fields `title` and `body` are now dictionnary which take the language as key. The result is the same:
+As you can see, fields `title` and `body` are now dictionary which take the language as key. The result is the same:
 
 >>> blog_post
 {'body': {'en': u'How are you ?'}, '_id': u'bp1', 'title': {'en': u'Hello'}, 'author': u'me'}
@@ -191,11 +191,3 @@ Using i18n different type allow you to translate list :
 >>> doc.tags = [u'pomme', u'jus']
 >>> doc
 {'tags': {'fr': [u'pomme', u'jus'], 'en': [u'apple', u'juice']}}
-
- 
-
-
-
-
-
-

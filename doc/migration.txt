@@ -22,7 +22,7 @@ Let's create some blog posts:
     >>> for i in range(10):
     ...     con.test.tutorial.BlogPost({'title':u'hello %s' % i, 'body': u'I the post number %s' % i}).save()
 
-Now, developpment goes on and we add a 'tags' field in our `BlogPost`::
+Now, development goes on and we add a 'tags' field in our `BlogPost`::
 
     class BlogPost(Document):
         structure = {
@@ -87,7 +87,7 @@ mongodb regular query.
 document which match this query will would get a migration.
 
 `self.update` is a mongodb update query with modifiers. This will describes
-what update shoud be apply to the matching document.
+what update should be apply to the matching document.
 
 Now that our `BlogPostMigration` is created, we have to tell Mongokit to what
 document thoses migration rules should be applied.  To do that, we have to set
@@ -109,7 +109,7 @@ Each time that an error is raised while validating a document, migration rules
 are applied to the object and the document is reloaded.
 
 .. CAUTION::
-    if `migration_handler` is set then `skip_validation` is desactivated.
+    if `migration_handler` is set then `skip_validation` is deactivated.
     Validation must be on to allow lazy migration.
 
 Bulk migration
@@ -122,7 +122,7 @@ should then use bulk migration.
 
 Bulk migration work like lazy migration but `DocumentMigration` method must
 start with `allmigration`. Because lazy migration add document `_id` to
-`self.target`, with bulk migration, you should provide more informations on
+`self.target`, with bulk migration, you should provide more information on
 `self.target`. Here's an example of bulk migration, finally, we wan't to remove
 the `tags` field from `BlogPost`::
 
@@ -136,7 +136,7 @@ the `tags` field from `BlogPost`::
         }
         default_values = {'blog_post.created_at':datetime.utcnow}
 
-Note that we don't need to add the `migration_hanlder`, it is required only for
+Note that we don't need to add the `migration_handler`, it is required only for
 lazy migration.
 
 Let's edit the `BlogPostMigration`::
@@ -162,7 +162,7 @@ Migration status
 ----------------
 
 Once all your documents have been migrated, some migration rules could become
-deprecated. To know wich rules are deprecated, use the `get_deprecated` method::
+deprecated. To know which rules are deprecated, use the `get_deprecated` method::
 
     >>>> migration = BlogPostMigration(BlogPost)
     >>> migration.get_deprecated(collection=con.test.tutorial)
@@ -206,6 +206,3 @@ directly modify the database and will be called by `get_deprecated()`. But calli
 `get_deprecated()` should not arm the database so, we need to specify what portion
 of the code must be ignored when calling `get_deprecated()`. This explain the
 second line.
-
-
-

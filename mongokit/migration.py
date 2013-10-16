@@ -55,7 +55,7 @@ class DocumentMigration(object):
                             field, self.doc_class.__name__))
 
     def migrate(self, doc, safe=True):
-        """migrate the doc throught all migration process"""
+        """migrate the doc through all migration process"""
         method_names = sorted([i for i in dir(self) if i.startswith('migration')])
         for method_name in method_names:
             self.clean()

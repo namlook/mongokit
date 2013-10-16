@@ -86,7 +86,7 @@ class User(Document):
         return self['user']['email']
 
     def set_email(self, email):
-        # TODO check if it's a well formated email
+        # TODO check if it's a well formatted email
         self['user']['email'] = email
 
     def del_email(self):

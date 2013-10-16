@@ -227,7 +227,7 @@ class DescriptorsTestCase(unittest.TestCase):
 #            default_values = {"foo.$int":time.time}
 #        mydoc = MyDoc()
 #        mydoc.validate()
-#        # can't go througt types, because no values
+#        # can't go through types, because no values
 #        assert mydoc['foo'] == {}
 
         # but

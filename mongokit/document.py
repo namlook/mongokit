@@ -346,7 +346,7 @@ class Document(SchemaDocument):
 
     def fetch(self, spec=None, *args, **kwargs):
         """
-        return all document wich match the structure of the object
+        return all document which match the structure of the object
         `fetch()` takes the same arguments than the the pymongo.collection.find method.
 
         The query is launch against the db and collection of the object.
@@ -363,7 +363,7 @@ class Document(SchemaDocument):
 
     def fetch_one(self, *args, **kwargs):
         """
-        return one document wich match the structure of the object
+        return one document which match the structure of the object
         `fetch_one()` takes the same arguments than the the pymongo.collection.find method.
 
         If multiple documents are found, raise a MultipleResultsFound exception.
@@ -383,7 +383,7 @@ class Document(SchemaDocument):
         allow to refresh the document, so after using update(), it could reload
         its value from the database.
 
-        Be carrefull : reload() will erase all unsaved values.
+        Be careful : reload() will erase all unsaved values.
 
         If no _id is set in the document, a KeyError is raised.
         """
@@ -407,7 +407,7 @@ class Document(SchemaDocument):
         """
         save the document into the db.
 
-        if uuid is True, a uuid4 will be automatiquely generated
+        if uuid is True, a uuid4 will be automatically generated
         else, the bson.ObjectId will be used.
 
         If validate is True, the `validate` method will be called before

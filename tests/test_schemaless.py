@@ -140,7 +140,7 @@ class SchemaLessTestCase(unittest.TestCase):
         self.assertEqual('bar' in doc, True)
         self.assertEqual(doc, {'_id': 'foo', 'foo':'bla', 'bar':3})
 
-    def test_schemaless_senario2(self):
+    def test_schemaless_scenario2(self):
         @self.connection.register
         class User(Document):
             __collection__ = 'mongokit'

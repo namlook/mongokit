@@ -100,7 +100,7 @@ explicitly specify them::
       }
 
 This will add another layer to validate the content. See the :ref:`validate-keys`
-section for more informations.
+section for more information.
 
 Lists
 ^^^^^

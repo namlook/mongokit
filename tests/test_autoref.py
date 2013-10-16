@@ -322,7 +322,7 @@ class AutoRefTestCase(unittest.TestCase):
         self.connection.register([DocB])
 
         docb = self.col.DocB()
-        # the structure is automaticly filled by the corresponding structure
+        # the structure is automatically filled by the corresponding structure
         assert docb == {'b': {'doc_a':[]}}, docb
         docb.validate()
         docb['_id'] = 'docb'
@@ -371,7 +371,7 @@ class AutoRefTestCase(unittest.TestCase):
         self.connection.register([DocB])
 
         docb = self.col.DocB()
-        # the structure is automaticly filled by the corresponding structure
+        # the structure is automatically filled by the corresponding structure
         docb['_id'] = 'docb'
         docb['b']['doc_a'] = doca
     

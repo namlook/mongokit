@@ -60,7 +60,7 @@ the collection, you can create a new document::
     >>> connection.database.collection.MyDocument()
     {... new Document's default values ...}
 
-As a short cut, you can define the database and colleciton names in the
+As a short cut, you can define the database and collection names in the
 Document definition::
 
     @connection.register

@@ -52,7 +52,7 @@ Now, we can fill the ``source`` and ``template``:
 And that's it ! By doing this, MongoKit will open a GridFile,
 fill it with the value, and close it.
 
-Note that you have to be carefull to the type : attachments
+Note that you have to be careful to the type : attachments
 only accept string.
 
 You can read any attachment in a very simple way :
@@ -68,7 +68,7 @@ You can add any image you want to the container "images":
 '...'
 >>> doc.fs.images['image2.png'] = '...'
 
-This is very usefull when you want of store a number of file but you don't
+This is very useful when you want of store a number of file but you don't
 know their names.
 
 

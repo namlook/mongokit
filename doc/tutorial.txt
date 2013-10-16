@@ -7,7 +7,7 @@ Getting Started with MongoKit
 
 MongoKit is based on pymongo_. As such, all of the pymongo API is exposed
 through MongoKit. If you don't find what you want in the MongoKit API,
-please take a look at pymongo's documenation. All the pymongo API is
+please take a look at pymongo's documentation. All the pymongo API is
 exposed via connection, database and collection so Connection, Database and
 Collection are wrappers around pymongo objects.
 
@@ -61,7 +61,7 @@ e.g. Speficying a host
 
     connection = Connection(host="HOSTNAME", port=PORT)
 
-e.g. Specifiying a Replica Set host
+e.g. Specifying a Replica Set host
 
     from mongokit import ReplicaSetConnection
 

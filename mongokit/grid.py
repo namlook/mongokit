@@ -130,7 +130,7 @@ class FS(GridFS):
 
         :Parameters:
           - `filename`: ``"filename"`` of the file to get, or `None`
-          - `version` (optional): version of the file to get (defualts
+          - `version` (optional): version of the file to get (defaults
             to -1, the most recent version uploaded)
           - `**kwargs` (optional): find files by custom metadata.
 
