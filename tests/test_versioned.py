@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import *
@@ -93,7 +95,7 @@ class VersionedTestCase(unittest.TestCase):
         assert versioned_doc['foo'] == 'bar'
         assert versioned_doc.get_revision(2) == {'foo':'bar', "_revision":2, "_id":"mydoc"}, versioned_doc.get_revision(2)
         old_doc = versioned_doc.get_revision(1)
-        print old_doc, type(old_doc)
+        print(old_doc, type(old_doc))
         old_doc.save()
         assert old_doc['_revision'] == 3
 

@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import *
@@ -112,7 +114,7 @@ class JsonTestCase(unittest.TestCase):
         b['bar'] = [a['_id']]
         b['egg']['nested'] = a['_id']
         b.save()
-        print b.to_json_type()
+        print(b.to_json_type())
         assert  isinstance(b.to_json_type()['_id']['$oid'], basestring), b.to_json_type()
         assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], basestring), b.to_json_type()
         assert  isinstance(b.to_json_type()['bar'][0]['$oid'], basestring), b.to_json_type()
@@ -676,7 +678,7 @@ class JsonTestCase(unittest.TestCase):
         a.save()
 
         json = '{"_id": "b", "bar":1, "a":{"$id": "a", "$ref": "%s", "$db": "%s"}}' % (self.col.name, self.col.database.name)
-        print json
+        print(json)
         b = self.col.B.from_json(json)
         b.save()
         assert isinstance(b['a'], A), type(b['a'])

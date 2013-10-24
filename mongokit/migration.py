@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 from mongokit.helpers import DotCollapsedDict
 from mongokit.mongo_exceptions import *
 
@@ -84,7 +86,7 @@ class DocumentMigration(object):
                 collection.update(self.target, self.update, multi=True, safe=safe)
                 status = collection.database.last_status()
                 if not status.get('updatedExisting', 1):
-                    print "%s : %s >>> deprecated" % (self.__class__.__name__, method_name)
+                    print("%s : %s >>> deprecated" % (self.__class__.__name__, method_name))
 
     def get_deprecated(self, collection):
         method_names = sorted([i for i in dir(self) if i.startswith('migration') or i.startswith('allmigration')])

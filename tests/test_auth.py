@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import *
@@ -68,7 +70,7 @@ class AuthTestCase(unittest.TestCase):
         user.login = u"user"
         user.email = u"user@foo.bar"
         user.password = u"u$ser_p4$$w0rd"
-        print "°°°°°°°°°", user
+        print("°°°°°°°°°", user)
         user.save()
 
         saved_user = self.col.SimpleUser.get_from_id('user')

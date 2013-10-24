@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import *
@@ -319,12 +321,12 @@ class DescriptorsTestCase(unittest.TestCase):
             default_values = {"foo":{}}
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
-        print id(mydoc.structure['foo']), id(mydoc['foo']), id(mydoc.default_values['foo'])
+        print(id(mydoc.structure['foo']), id(mydoc['foo']), id(mydoc.default_values['foo']))
         assert mydoc["foo"] == {}, mydoc
         mydoc['foo'][u'bar'] = 1
         mydoc.save()
         mydoc2 = self.col.MyDoc()
-        print id(mydoc2.structure['foo']), id(mydoc2['foo']), id(mydoc2.default_values['foo'])
+        print(id(mydoc2.structure['foo']), id(mydoc2['foo']), id(mydoc2.default_values['foo']))
         assert mydoc2["foo"] == {}, mydoc
 
         class MyDoc(Document):

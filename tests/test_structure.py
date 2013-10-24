@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import *
@@ -257,7 +259,7 @@ class StructureTestCase(unittest.TestCase):
         try:
             mydoc.not_found
         except AttributeError, e:
-            print str(e)
+            print(str(e))
         mydoc.foo.eggs = 4
         assert mydoc == {'foo':{'bar':None}, 'spam':None}, mydoc
         mydoc.validate()

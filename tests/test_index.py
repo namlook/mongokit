@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import Connection, Document, OperationFailure, BadIndexError, INDEX_GEO2D, INDEX_ASCENDING, INDEX_DESCENDING
@@ -605,7 +607,7 @@ class IndexTestCase(unittest.TestCase):
         #print list(collection.database.system.indexes.find())
 
         results = [i['_id'] for i in collection.find().sort([('mydoc.creation_date',-1),('_id',1)])]
-        print results
+        print(results)
         assert results  == [u'ccc', u'aa', u'aaa', u'bbb'], results
 
     def test_index_inheritance2(self):

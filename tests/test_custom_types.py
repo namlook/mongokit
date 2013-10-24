@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import *
@@ -188,10 +190,10 @@ class CustomTypesTestCase(unittest.TestCase):
         self.assertRaises(SchemaTypeError, foo1.save)
 
         foo2 = self.col.Foo()
-        print foo2
+        print(foo2)
         foo2['_id'] = 2
         foo2.save()
-        print id(foo['foo']['date']), id(foo2['foo']['date'])
+        print(id(foo['foo']['date']), id(foo2['foo']['date']))
 
         assert foo == {'foo': {'date': [datetime.datetime(2008, 6, 7, 0, 0), datetime.datetime(2003, 2, 1, 0, 0)]}, '_id': 1}
         foo = self.col.Foo.get_from_id(1)

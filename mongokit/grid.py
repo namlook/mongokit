@@ -28,6 +28,8 @@
 from gridfs import GridFS, NoFile, GridOut
 from pymongo import ASCENDING, DESCENDING
 
+from six import binary_type
+
 #try:
 #    from magic import Magic
 #except:
@@ -65,7 +67,7 @@ class FS(GridFS):
         try:
             self.put(value, **spec)
         except TypeError:
-            raise TypeError("GridFS value mus be string not %s" % type(value))
+            raise TypeError("GridFS value must be %s not %s" % (binary_type.__name__, type(value)))
 
     def __getattr__(self, key):
         if not key.startswith('_'):

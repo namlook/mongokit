@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit.schema_document import *
@@ -520,14 +522,14 @@ class TypesTestCase(unittest.TestCase):
                 required_fields=['title']
         self.connection.register([MyDoc])
         doc = self.col.MyDoc()
-        print doc # {'category': set([]), 'title': None}
+        print(doc) # {'category': set([]), 'title': None}
         assert isinstance(doc['category'], set)
         try:
                 doc.validate()
         except RequireFieldError as e:
-                print e # title is required
+                print(e) # title is required
 
-        print doc # {'category': [], 'title': None}
+        print(doc) # {'category': [], 'title': None}
         assert isinstance(doc['category'], set)
         doc['title']=u'hello'
         doc.validate()
