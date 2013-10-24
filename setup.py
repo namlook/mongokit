@@ -63,6 +63,7 @@ setup(
 
     install_requires = [
         'pymongo>=2.5',
+        'six>=1.4.1',
     ]
 
 )
