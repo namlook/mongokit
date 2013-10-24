@@ -1,11 +1,11 @@
 #!python
-"""Bootstrap setuptools installation
+"""Bootstrap distribute installation
 
 If you want to use setuptools in your package's setup.py, just include this
 file in the same directory with it, and add this to the top of your setup.py::
 
-    from ez_setup import use_setuptools
-    use_setuptools()
+from distribute_setup import use_setuptools
+use_setuptools()
 
 If you want to require a specific version of setuptools, set a download
 mirror, or use an alternate download directory, you can do so by supplying
@@ -13,264 +13,473 @@ the appropriate options to ``use_setuptools()``.
 
 This file can also be run as a script to install or upgrade setuptools.
 """
+import os
 import sys
-DEFAULT_VERSION = "0.6c7"
-DEFAULT_URL     = "http://pypi.python.org/packages/%s/s/setuptools/" % sys.version[:3]
+import time
+import fnmatch
+import tempfile
+import tarfile
+from distutils import log
 
-md5_data = {
-    'setuptools-0.6b1-py2.3.egg': '8822caf901250d848b996b7f25c6e6ca',
-    'setuptools-0.6b1-py2.4.egg': 'b79a8a403e4502fbb85ee3f1941735cb',
-    'setuptools-0.6b2-py2.3.egg': '5657759d8a6d8fc44070a9d07272d99b',
-    'setuptools-0.6b2-py2.4.egg': '4996a8d169d2be661fa32a6e52e4f82a',
-    'setuptools-0.6b3-py2.3.egg': 'bb31c0fc7399a63579975cad9f5a0618',
-    'setuptools-0.6b3-py2.4.egg': '38a8c6b3d6ecd22247f179f7da669fac',
-    'setuptools-0.6b4-py2.3.egg': '62045a24ed4e1ebc77fe039aa4e6f7e5',
-    'setuptools-0.6b4-py2.4.egg': '4cb2a185d228dacffb2d17f103b3b1c4',
-    'setuptools-0.6c1-py2.3.egg': 'b3f2b5539d65cb7f74ad79127f1a908c',
-    'setuptools-0.6c1-py2.4.egg': 'b45adeda0667d2d2ffe14009364f2a4b',
-    'setuptools-0.6c2-py2.3.egg': 'f0064bf6aa2b7d0f3ba0b43f20817c27',
-    'setuptools-0.6c2-py2.4.egg': '616192eec35f47e8ea16cd6a122b7277',
-    'setuptools-0.6c3-py2.3.egg': 'f181fa125dfe85a259c9cd6f1d7b78fa',
-    'setuptools-0.6c3-py2.4.egg': 'e0ed74682c998bfb73bf803a50e7b71e',
-    'setuptools-0.6c3-py2.5.egg': 'abef16fdd61955514841c7c6bd98965e',
-    'setuptools-0.6c4-py2.3.egg': 'b0b9131acab32022bfac7f44c5d7971f',
-    'setuptools-0.6c4-py2.4.egg': '2a1f9656d4fbf3c97bf946c0a124e6e2',
-    'setuptools-0.6c4-py2.5.egg': '8f5a052e32cdb9c72bcf4b5526f28afc',
-    'setuptools-0.6c5-py2.3.egg': 'ee9fd80965da04f2f3e6b3576e9d8167',
-    'setuptools-0.6c5-py2.4.egg': 'afe2adf1c01701ee841761f5bcd8aa64',
-    'setuptools-0.6c5-py2.5.egg': 'a8d3f61494ccaa8714dfed37bccd3d5d',
-    'setuptools-0.6c6-py2.3.egg': '35686b78116a668847237b69d549ec20',
-    'setuptools-0.6c6-py2.4.egg': '3c56af57be3225019260a644430065ab',
-    'setuptools-0.6c6-py2.5.egg': 'b2f8a7520709a5b34f80946de5f02f53',
-    'setuptools-0.6c7-py2.3.egg': '209fdf9adc3a615e5115b725658e13e2',
-    'setuptools-0.6c7-py2.4.egg': '5a8f954807d46a0fb67cf1f26c55a82e',
-    'setuptools-0.6c7-py2.5.egg': '45d2ad28f9750e7434111fde831e8372',
-    'setuptools-0.6c8-py2.3.egg': '50759d29b349db8cfd807ba8303f1902',
-    'setuptools-0.6c8-py2.4.egg': 'cba38d74f7d483c06e9daa6070cce6de',
-    'setuptools-0.6c8-py2.5.egg': '1721747ee329dc150590a58b3e1ac95b',
-    'setuptools-0.6c9-py2.3.egg': 'a83c4020414807b496e4cfbe08507c03',
-    'setuptools-0.6c9-py2.4.egg': '260a2be2e5388d66bdaee06abec6342a',
-    'setuptools-0.6c9-py2.5.egg': 'fe67c3e5a17b12c0e7c541b7ea43a8e6',
-    'setuptools-0.6c9-py2.6.egg': 'ca37b1ff16fa2ede6e19383e7b59245a',
-}
+try:
+    from site import USER_SITE
+except ImportError:
+    USER_SITE = None
 
-import sys, os
-try: from hashlib import md5
-except ImportError: from md5 import md5
+try:
+    import subprocess
 
-def _validate_md5(egg_name, data):
-    if egg_name in md5_data:
-        digest = md5(data).hexdigest()
-        if digest != md5_data[egg_name]:
-            print >>sys.stderr, (
-                "md5 validation of %s failed!  (Possible download problem?)"
-                % egg_name
-            )
-            sys.exit(2)
-    return data
+    def _python_cmd(*args):
+        args = (sys.executable,) + args
+        return subprocess.call(args) == 0
 
-def use_setuptools(
-    version=DEFAULT_VERSION, download_base=DEFAULT_URL, to_dir=os.curdir,
-    download_delay=15
-):
-    """Automatically find/download setuptools and make it available on sys.path
+except ImportError:
+    # will be used for python 2.3
+    def _python_cmd(*args):
+        args = (sys.executable,) + args
+        # quoting arguments if windows
+        if sys.platform == 'win32':
+            def quote(arg):
+                if ' ' in arg:
+                    return '"%s"' % arg
+                return arg
+            args = [quote(arg) for arg in args]
+        return os.spawnl(os.P_WAIT, sys.executable, *args) == 0
 
-    `version` should be a valid setuptools version number that is available
-    as an egg for download under the `download_base` URL (which should end with
-    a '/').  `to_dir` is the directory where setuptools will be downloaded, if
-    it is not already available.  If `download_delay` is specified, it should
-    be the number of seconds that will be paused before initiating a download,
-    should one be required.  If an older version of setuptools is installed,
-    this routine will print a message to ``sys.stderr`` and raise SystemExit in
-    an attempt to abort the calling script.
-    """
-    was_imported = 'pkg_resources' in sys.modules or 'setuptools' in sys.modules
-    def do_download():
-        egg = download_setuptools(version, download_base, to_dir, download_delay)
-        sys.path.insert(0, egg)
-        import setuptools; setuptools.bootstrap_install_from = egg
+DEFAULT_VERSION = "0.6.14"
+DEFAULT_URL = "http://pypi.python.org/packages/source/d/distribute/"
+SETUPTOOLS_FAKED_VERSION = "0.6c11"
+
+SETUPTOOLS_PKG_INFO = """\
+Metadata-Version: 1.0
+Name: setuptools
+Version: %s
+Summary: xxxx
+Home-page: xxx
+Author: xxx
+Author-email: xxx
+License: xxx
+Description: xxx
+""" % SETUPTOOLS_FAKED_VERSION
+
+
+def _install(tarball):
+    # extracting the tarball
+    tmpdir = tempfile.mkdtemp()
+    log.warn('Extracting in %s', tmpdir)
+    old_wd = os.getcwd()
+    try:
+        os.chdir(tmpdir)
+        tar = tarfile.open(tarball)
+        _extractall(tar)
+        tar.close()
+
+        # going in the directory
+        subdir = os.path.join(tmpdir, os.listdir(tmpdir)[0])
+        os.chdir(subdir)
+        log.warn('Now working in %s', subdir)
+
+        # installing
+        log.warn('Installing Distribute')
+        if not _python_cmd('setup.py', 'install'):
+            log.warn('Something went wrong during the installation.')
+            log.warn('See the error message above.')
+    finally:
+        os.chdir(old_wd)
+
+
+def _build_egg(egg, tarball, to_dir):
+    # extracting the tarball
+    tmpdir = tempfile.mkdtemp()
+    log.warn('Extracting in %s', tmpdir)
+    old_wd = os.getcwd()
+    try:
+        os.chdir(tmpdir)
+        tar = tarfile.open(tarball)
+        _extractall(tar)
+        tar.close()
+
+        # going in the directory
+        subdir = os.path.join(tmpdir, os.listdir(tmpdir)[0])
+        os.chdir(subdir)
+        log.warn('Now working in %s', subdir)
+
+        # building an egg
+        log.warn('Building a Distribute egg in %s', to_dir)
+        _python_cmd('setup.py', '-q', 'bdist_egg', '--dist-dir', to_dir)
+
+    finally:
+        os.chdir(old_wd)
+    # returning the result
+    log.warn(egg)
+    if not os.path.exists(egg):
+        raise IOError('Could not build the egg.')
+
+
+def _do_download(version, download_base, to_dir, download_delay):
+    egg = os.path.join(to_dir, 'distribute-%s-py%d.%d.egg'
+                       % (version, sys.version_info[0], sys.version_info[1]))
+    if not os.path.exists(egg):
+        tarball = download_setuptools(version, download_base,
+                                      to_dir, download_delay)
+        _build_egg(egg, tarball, to_dir)
+    sys.path.insert(0, egg)
+    import setuptools
+    setuptools.bootstrap_install_from = egg
+
+
+def use_setuptools(version=DEFAULT_VERSION, download_base=DEFAULT_URL,
+                   to_dir=os.curdir, download_delay=15, no_fake=True):
+    # making sure we use the absolute path
+    to_dir = os.path.abspath(to_dir)
+    was_imported = 'pkg_resources' in sys.modules or \
+        'setuptools' in sys.modules
+    try:
+        try:
+            import pkg_resources
+            if not hasattr(pkg_resources, '_distribute'):
+                if not no_fake:
+                    _fake_setuptools()
+                raise ImportError
+        except ImportError:
+            return _do_download(version, download_base, to_dir, download_delay)
+        try:
+            pkg_resources.require("distribute>="+version)
+            return
+        except pkg_resources.VersionConflict:
+            e = sys.exc_info()[1]
+            if was_imported:
+                sys.stderr.write(
+                "The required version of distribute (>=%s) is not available,\n"
+                "and can't be installed while this script is running. Please\n"
+                "install a more recent version first, using\n"
+                "'easy_install -U distribute'."
+                "\n\n(Currently using %r)\n" % (version, e.args[0]))
+                sys.exit(2)
+            else:
+                del pkg_resources, sys.modules['pkg_resources'] # reload ok
+                return _do_download(version, download_base, to_dir,
+                                    download_delay)
+        except pkg_resources.DistributionNotFound:
+            return _do_download(version, download_base, to_dir,
+                                download_delay)
+    finally:
+        if not no_fake:
+            _create_fake_setuptools_pkg_info(to_dir)
+
+def download_setuptools(version=DEFAULT_VERSION, download_base=DEFAULT_URL,
+                        to_dir=os.curdir, delay=15):
+    """Download distribute from a specified location and return its filename
+
+`version` should be a valid distribute version number that is available
+as an egg for download under the `download_base` URL (which should end
+with a '/'). `to_dir` is the directory where the egg will be downloaded.
+`delay` is the number of seconds to pause before an actual download
+attempt.
+"""
+    # making sure we use the absolute path
+    to_dir = os.path.abspath(to_dir)
+    try:
+        from urllib.request import urlopen
+    except ImportError:
+        from urllib2 import urlopen
+    tgz_name = "distribute-%s.tar.gz" % version
+    url = download_base + tgz_name
+    saveto = os.path.join(to_dir, tgz_name)
+    src = dst = None
+    if not os.path.exists(saveto): # Avoid repeated downloads
+        try:
+            log.warn("Downloading %s", url)
+            src = urlopen(url)
+            # Read/write all in one block, so we don't create a corrupt file
+            # if the download is interrupted.
+            data = src.read()
+            dst = open(saveto, "wb")
+            dst.write(data)
+        finally:
+            if src:
+                src.close()
+            if dst:
+                dst.close()
+    return os.path.realpath(saveto)
+
+def _no_sandbox(function):
+    def __no_sandbox(*args, **kw):
+        try:
+            from setuptools.sandbox import DirectorySandbox
+            if not hasattr(DirectorySandbox, '_old'):
+                def violation(*args):
+                    pass
+                DirectorySandbox._old = DirectorySandbox._violation
+                DirectorySandbox._violation = violation
+                patched = True
+            else:
+                patched = False
+        except ImportError:
+            patched = False
+
+        try:
+            return function(*args, **kw)
+        finally:
+            if patched:
+                DirectorySandbox._violation = DirectorySandbox._old
+                del DirectorySandbox._old
+
+    return __no_sandbox
+
+def _patch_file(path, content):
+    """Will backup the file then patch it"""
+    existing_content = open(path).read()
+    if existing_content == content:
+        # already patched
+        log.warn('Already patched.')
+        return False
+    log.warn('Patching...')
+    _rename_path(path)
+    f = open(path, 'w')
+    try:
+        f.write(content)
+    finally:
+        f.close()
+    return True
+
+_patch_file = _no_sandbox(_patch_file)
+
+def _same_content(path, content):
+    return open(path).read() == content
+
+def _rename_path(path):
+    new_name = path + '.OLD.%s' % time.time()
+    log.warn('Renaming %s into %s', path, new_name)
+    os.rename(path, new_name)
+    return new_name
+
+def _remove_flat_installation(placeholder):
+    if not os.path.isdir(placeholder):
+        log.warn('Unkown installation at %s', placeholder)
+        return False
+    found = False
+    for file in os.listdir(placeholder):
+        if fnmatch.fnmatch(file, 'setuptools*.egg-info'):
+            found = True
+            break
+    if not found:
+        log.warn('Could not locate setuptools*.egg-info')
+        return
+
+    log.warn('Removing elements out of the way...')
+    pkg_info = os.path.join(placeholder, file)
+    if os.path.isdir(pkg_info):
+        patched = _patch_egg_dir(pkg_info)
+    else:
+        patched = _patch_file(pkg_info, SETUPTOOLS_PKG_INFO)
+
+    if not patched:
+        log.warn('%s already patched.', pkg_info)
+        return False
+    # now let's move the files out of the way
+    for element in ('setuptools', 'pkg_resources.py', 'site.py'):
+        element = os.path.join(placeholder, element)
+        if os.path.exists(element):
+            _rename_path(element)
+        else:
+            log.warn('Could not find the %s element of the '
+                     'Setuptools distribution', element)
+    return True
+
+_remove_flat_installation = _no_sandbox(_remove_flat_installation)
+
+def _after_install(dist):
+    log.warn('After install bootstrap.')
+    placeholder = dist.get_command_obj('install').install_purelib
+    _create_fake_setuptools_pkg_info(placeholder)
+
+def _create_fake_setuptools_pkg_info(placeholder):
+    if not placeholder or not os.path.exists(placeholder):
+        log.warn('Could not find the install location')
+        return
+    pyver = '%s.%s' % (sys.version_info[0], sys.version_info[1])
+    setuptools_file = 'setuptools-%s-py%s.egg-info' % \
+            (SETUPTOOLS_FAKED_VERSION, pyver)
+    pkg_info = os.path.join(placeholder, setuptools_file)
+    if os.path.exists(pkg_info):
+        log.warn('%s already exists', pkg_info)
+        return
+
+    log.warn('Creating %s', pkg_info)
+    f = open(pkg_info, 'w')
+    try:
+        f.write(SETUPTOOLS_PKG_INFO)
+    finally:
+        f.close()
+
+    pth_file = os.path.join(placeholder, 'setuptools.pth')
+    log.warn('Creating %s', pth_file)
+    f = open(pth_file, 'w')
+    try:
+        f.write(os.path.join(os.curdir, setuptools_file))
+    finally:
+        f.close()
+
+_create_fake_setuptools_pkg_info = _no_sandbox(_create_fake_setuptools_pkg_info)
+
+def _patch_egg_dir(path):
+    # let's check if it's already patched
+    pkg_info = os.path.join(path, 'EGG-INFO', 'PKG-INFO')
+    if os.path.exists(pkg_info):
+        if _same_content(pkg_info, SETUPTOOLS_PKG_INFO):
+            log.warn('%s already patched.', pkg_info)
+            return False
+    _rename_path(path)
+    os.mkdir(path)
+    os.mkdir(os.path.join(path, 'EGG-INFO'))
+    pkg_info = os.path.join(path, 'EGG-INFO', 'PKG-INFO')
+    f = open(pkg_info, 'w')
+    try:
+        f.write(SETUPTOOLS_PKG_INFO)
+    finally:
+        f.close()
+    return True
+
+_patch_egg_dir = _no_sandbox(_patch_egg_dir)
+
+def _before_install():
+    log.warn('Before install bootstrap.')
+    _fake_setuptools()
+
+
+def _under_prefix(location):
+    if 'install' not in sys.argv:
+        return True
+    args = sys.argv[sys.argv.index('install')+1:]
+    for index, arg in enumerate(args):
+        for option in ('--root', '--prefix'):
+            if arg.startswith('%s=' % option):
+                top_dir = arg.split('root=')[-1]
+                return location.startswith(top_dir)
+            elif arg == option:
+                if len(args) > index:
+                    top_dir = args[index+1]
+                    return location.startswith(top_dir)
+        if arg == '--user' and USER_SITE is not None:
+            return location.startswith(USER_SITE)
+    return True
+
+
+def _fake_setuptools():
+    log.warn('Scanning installed packages')
     try:
         import pkg_resources
     except ImportError:
-        return do_download()       
+        # we're cool
+        log.warn('Setuptools or Distribute does not seem to be installed.')
+        return
+    ws = pkg_resources.working_set
     try:
-        pkg_resources.require("setuptools>="+version); return
-    except pkg_resources.VersionConflict, e:
-        if was_imported:
-            print >>sys.stderr, (
-            "The required version of setuptools (>=%s) is not available, and\n"
-            "can't be installed while this script is running. Please install\n"
-            " a more recent version first, using 'easy_install -U setuptools'."
-            "\n\n(Currently using %r)"
-            ) % (version, e.args[0])
-            sys.exit(2)
-        else:
-            del pkg_resources, sys.modules['pkg_resources']    # reload ok
-            return do_download()
-    except pkg_resources.DistributionNotFound:
-        return do_download()
+        setuptools_dist = ws.find(pkg_resources.Requirement.parse('setuptools',
+                                  replacement=False))
+    except TypeError:
+        # old distribute API
+        setuptools_dist = ws.find(pkg_resources.Requirement.parse('setuptools'))
 
-def download_setuptools(
-    version=DEFAULT_VERSION, download_base=DEFAULT_URL, to_dir=os.curdir,
-    delay = 15
-):
-    """Download setuptools from a specified location and return its filename
+    if setuptools_dist is None:
+        log.warn('No setuptools distribution found')
+        return
+    # detecting if it was already faked
+    setuptools_location = setuptools_dist.location
+    log.warn('Setuptools installation detected at %s', setuptools_location)
 
-    `version` should be a valid setuptools version number that is available
-    as an egg for download under the `download_base` URL (which should end
-    with a '/'). `to_dir` is the directory where the egg will be downloaded.
-    `delay` is the number of seconds to pause before an actual download attempt.
-    """
-    import urllib2, shutil
-    egg_name = "setuptools-%s-py%s.egg" % (version,sys.version[:3])
-    url = download_base + egg_name
-    saveto = os.path.join(to_dir, egg_name)
-    src = dst = None
-    if not os.path.exists(saveto):  # Avoid repeated downloads
+    # if --root or --preix was provided, and if
+    # setuptools is not located in them, we don't patch it
+    if not _under_prefix(setuptools_location):
+        log.warn('Not patching, --root or --prefix is installing Distribute'
+                 ' in another location')
+        return
+
+    # let's see if its an egg
+    if not setuptools_location.endswith('.egg'):
+        log.warn('Non-egg installation')
+        res = _remove_flat_installation(setuptools_location)
+        if not res:
+            return
+    else:
+        log.warn('Egg installation')
+        pkg_info = os.path.join(setuptools_location, 'EGG-INFO', 'PKG-INFO')
+        if (os.path.exists(pkg_info) and
+            _same_content(pkg_info, SETUPTOOLS_PKG_INFO)):
+            log.warn('Already patched.')
+            return
+        log.warn('Patching...')
+        # let's create a fake egg replacing setuptools one
+        res = _patch_egg_dir(setuptools_location)
+        if not res:
+            return
+    log.warn('Patched done.')
+    _relaunch()
+
+
+def _relaunch():
+    log.warn('Relaunching...')
+    # we have to relaunch the process
+    # pip marker to avoid a relaunch bug
+    if sys.argv[:3] == ['-c', 'install', '--single-version-externally-managed']:
+        sys.argv[0] = 'setup.py'
+    args = [sys.executable] + sys.argv
+    sys.exit(subprocess.call(args))
+
+
+def _extractall(self, path=".", members=None):
+    """Extract all members from the archive to the current working
+directory and set owner, modification time and permissions on
+directories afterwards. `path' specifies a different directory
+to extract to. `members' is optional and must be a subset of the
+list returned by getmembers().
+"""
+    import copy
+    import operator
+    from tarfile import ExtractError
+    directories = []
+
+    if members is None:
+        members = self
+
+    for tarinfo in members:
+        if tarinfo.isdir():
+            # Extract directories with a safe mode.
+            directories.append(tarinfo)
+            tarinfo = copy.copy(tarinfo)
+            tarinfo.mode = 448 # decimal for oct 0700
+        self.extract(tarinfo, path)
+
+    # Reverse sort directories.
+    if sys.version_info < (2, 4):
+        def sorter(dir1, dir2):
+            return cmp(dir1.name, dir2.name)
+        directories.sort(sorter)
+        directories.reverse()
+    else:
+        directories.sort(key=operator.attrgetter('name'), reverse=True)
+
+    # Set correct owner, mtime and filemode on directories.
+    for tarinfo in directories:
+        dirpath = os.path.join(path, tarinfo.name)
         try:
-            from distutils import log
-            if delay:
-                log.warn("""
----------------------------------------------------------------------------
-This script requires setuptools version %s to run (even to display
-help).  I will attempt to download it for you (from
-%s), but
-you may need to enable firewall access for this script first.
-I will start the download in %d seconds.
-
-(Note: if this machine does not have network access, please obtain the file
-
-   %s
-
-and place it in this directory before rerunning this script.)
----------------------------------------------------------------------------""",
-                    version, download_base, delay, url
-                ); from time import sleep; sleep(delay)
-            log.warn("Downloading %s", url)
-            src = urllib2.urlopen(url)
-            # Read/write all in one block, so we don't create a corrupt file
-            # if the download is interrupted.
-            data = _validate_md5(egg_name, src.read())
-            dst = open(saveto,"wb"); dst.write(data)
-        finally:
-            if src: src.close()
-            if dst: dst.close()
-    return os.path.realpath(saveto)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            self.chown(tarinfo, dirpath)
+            self.utime(tarinfo, dirpath)
+            self.chmod(tarinfo, dirpath)
+        except ExtractError:
+            e = sys.exc_info()[1]
+            if self.errorlevel > 1:
+                raise
+            else:
+                self._dbg(1, "tarfile: %s" % e)
 
 
 def main(argv, version=DEFAULT_VERSION):
     """Install or upgrade setuptools and EasyInstall"""
-    try:
-        import setuptools
-    except ImportError:
-        egg = None
-        try:
-            egg = download_setuptools(version, delay=0)
-            sys.path.insert(0,egg)
-            from setuptools.command.easy_install import main
-            return main(list(argv)+[egg])   # we're done here
-        finally:
-            if egg and os.path.exists(egg):
-                os.unlink(egg)
-    else:
-        if setuptools.__version__ == '0.0.1':
-            print >>sys.stderr, (
-            "You have an obsolete version of setuptools installed.  Please\n"
-            "remove it from your system entirely before rerunning this script."
-            )
-            sys.exit(2)
-
-    req = "setuptools>="+version
-    import pkg_resources
-    try:
-        pkg_resources.require(req)
-    except pkg_resources.VersionConflict:
-        try:
-            from setuptools.command.easy_install import main
-        except ImportError:
-            from easy_install import main
-        main(list(argv)+[download_setuptools(delay=0)])
-        sys.exit(0) # try to force an exit
-    else:
-        if argv:
-            from setuptools.command.easy_install import main
-            main(argv)
-        else:
-            print "Setuptools version",version,"or greater has been installed."
-            print '(Run "ez_setup.py -U setuptools" to reinstall or upgrade.)'
-
-def update_md5(filenames):
-    """Update our built-in md5 registry"""
-
-    import re
-
-    for name in filenames:
-        base = os.path.basename(name)
-        f = open(name,'rb')
-        md5_data[base] = md5(f.read()).hexdigest()
-        f.close()
-
-    data = ["    %r: %r,\n" % it for it in md5_data.items()]
-    data.sort()
-    repl = "".join(data)
-
-    import inspect
-    srcfile = inspect.getsourcefile(sys.modules[__name__])
-    f = open(srcfile, 'rb'); src = f.read(); f.close()
-
-    match = re.search("\nmd5_data = {\n([^}]+)}", src)
-    if not match:
-        print >>sys.stderr, "Internal error!"
-        sys.exit(2)
-
-    src = src[:match.start(1)] + repl + src[match.end(1):]
-    f = open(srcfile,'w')
-    f.write(src)
-    f.close()
+    tarball = download_setuptools()
+    _install(tarball)
 
 
-if __name__=='__main__':
-    if len(sys.argv)>2 and sys.argv[1]=='--md5update':
-        update_md5(sys.argv[2:])
-    else:
-        main(sys.argv[1:])
-
-
-
-
-
-
+if __name__ == '__main__':
+    main(sys.argv[1:])
