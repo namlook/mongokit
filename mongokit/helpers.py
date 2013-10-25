@@ -29,6 +29,8 @@ import datetime
 import logging
 log = logging.getLogger(__name__)
 
+import six
+
 
 def totimestamp(value):
     """

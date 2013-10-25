@@ -30,6 +30,8 @@ from __future__ import print_function
 from .helpers import DotCollapsedDict
 from .mongo_exceptions import *
 
+import six
+
 
 class DocumentMigration(object):
 
