@@ -67,7 +67,7 @@ class FS(GridFS):
         try:
             self.put(value, **spec)
         except TypeError:
-            raise TypeError("GridFS value must be %s not %s" % (binary_type.__name__, type(value)))
+            raise TypeError("GridFS value must be %s not %s" % (binary_type, type(value)))
 
     def __getattr__(self, key):
         if not key.startswith('_'):

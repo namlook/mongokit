@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import unittest
 
@@ -110,7 +110,7 @@ class StructureTestCase(unittest.TestCase):
         mydoc['foo'] = 3
         mydoc['bar']['bla'] = 2
         mydoc.validate()
-        mydoc['foo'] = 'arf'
+        mydoc['foo'] = b'arf'
         self.assertRaises(AuthorizedTypeError, mydoc.validate)
 
     def test_big_nested_structure(self):
@@ -169,7 +169,7 @@ class StructureTestCase(unittest.TestCase):
         mydoc['1']['2']['3']['4']['5']['6']['7'] = 8
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{"3":u"bla"}}
         self.assertRaises(SchemaTypeError,  mydoc.validate)
-        mydoc['1']['2']['3']['4']['5']['6']['8'] = {"9":{"3":10}}
+        mydoc['1']['2']['3']['4']['5']['6']['8'] = {b"9":{b"3":10}}
         self.assertRaises(SchemaTypeError,  mydoc.validate)
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{u"3":4}}
         mydoc.validate()

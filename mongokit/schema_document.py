@@ -30,6 +30,8 @@ import re
 import logging
 from copy import deepcopy
 
+import six
+
 log = logging.getLogger(__name__)
 
 from operators import SchemaOperator, IS
@@ -94,6 +96,35 @@ class CustomType(object):
         pass
 
 
+if six.PY3:
+    _authorized_types = [
+        type(None),
+        bool,
+        int,
+        float,
+        str,
+        bytes,
+        list,
+        dict,
+        datetime.datetime,
+        CustomType,
+    ]
+else:
+    _authorized_types = [
+        type(None),
+        bool,
+        int,
+        long,
+        float,
+        unicode,
+        basestring,
+        list,
+        dict,
+        datetime.datetime,
+        CustomType,
+    ]
+    
+    
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = []
 
@@ -317,19 +348,7 @@ class SchemaDocument(dict):
     use_dot_notation = False
     dot_notation_warning = False
 
-    authorized_types = [
-        type(None),
-        bool,
-        int,
-        long,
-        float,
-        unicode,
-        basestring,
-        list,
-        dict,
-        datetime.datetime,
-        CustomType,
-    ]
+    authorized_types = _authorized_types
 
     def __init__(self, doc=None, gen_skel=True, gen_auth_types=True, validate=True, lang='en', fallback_lang='en'):
         """
