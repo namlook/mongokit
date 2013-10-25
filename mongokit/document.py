@@ -25,19 +25,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongokit import SchemaDocument, AutoReferenceError
-from mongokit.mongo_exceptions import *
-from mongokit.schema_document import (
+from .mongo_exceptions import *
+from .schema_document import (
     STRUCTURE_KEYWORDS,
     CustomType,
+    SchemaDocument,
     SchemaTypeError,
     SchemaProperties,
     StructureError)
-from mongokit.helpers import (
+from .helpers import (
     totimestamp,
     fromtimestamp,
     DotedDict)
-from mongokit.grid import *
+from .grid import *
 import pymongo
 from bson import BSON
 from bson.binary import Binary

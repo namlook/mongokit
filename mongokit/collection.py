@@ -26,8 +26,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymongo.collection import Collection as PymongoCollection
-from mongo_exceptions import MultipleResultsFound
-from cursor import Cursor
+from .mongo_exceptions import MultipleResultsFound
+from .cursor import Cursor
 
 from warnings import warn
 

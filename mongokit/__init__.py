@@ -29,15 +29,15 @@ __version__ = "0.9.0"
 
 from bson.dbref import DBRef
 from cursor import Cursor
-from operators import *
-from schema_document import *
-from mongo_exceptions import *
-from document import Document, ObjectId
-from versioned_document import VersionedDocument
-from database import Database
-from collection import Collection
-from connection import Connection, MongoClient, MongoReplicaSetClient, ReplicaSetConnection
-from master_slave_connection import MasterSlaveConnection
+from .operators import *
+from .schema_document import *
+from .mongo_exceptions import *
+from .document import Document, ObjectId
+from .versioned_document import VersionedDocument
+from .database import Database
+from .collection import Collection
+from .connection import Connection, MongoClient, MongoReplicaSetClient, ReplicaSetConnection
+from .master_slave_connection import MasterSlaveConnection
 from pymongo import (
     ASCENDING as INDEX_ASCENDING,
     DESCENDING as INDEX_DESCENDING,

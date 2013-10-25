@@ -30,7 +30,7 @@ try:
     from pymongo import MongoReplicaSetClient as PymongoReplicaSetConnection
 except ImportError:
     from pymongo import Connection as PymongoConnection
-from database import Database
+from .database import Database
 
 
 class CallableMixin(object):

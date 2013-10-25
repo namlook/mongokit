@@ -34,8 +34,8 @@ import six
 
 log = logging.getLogger(__name__)
 
-from operators import SchemaOperator, IS
-from helpers import *
+from .operators import SchemaOperator, IS
+from .helpers import *
 
 __all__ = [
     'CustomType',

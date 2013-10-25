@@ -10,7 +10,7 @@ try:
 except ImportError:
     from pymongo import Connection as PymongoConnection
 
-from mongokit.connection import MongoKitConnection
+from .connection import MongoKitConnection
 
 
 class MasterSlaveConnection(MongoKitConnection, PymongoMasterSlaveConnection):
