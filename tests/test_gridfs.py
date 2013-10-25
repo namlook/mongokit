@@ -33,6 +33,8 @@ from mongokit import *
 from bson.objectid import ObjectId
 from gridfs import NoFile
 
+from six import text_type as unicode
+
 
 class GridFSTestCase(unittest.TestCase):
     def setUp(self):

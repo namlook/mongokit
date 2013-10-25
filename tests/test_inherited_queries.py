@@ -29,6 +29,8 @@ import unittest
 
 from mongokit import Document, Connection
 
+from six import text_type as unicode
+
 class InheritedQueriesTestCase(unittest.TestCase):
     def setUp(self):
         self.connection = Connection(safe=True)

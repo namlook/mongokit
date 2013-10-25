@@ -31,6 +31,8 @@ import unittest
 
 from mongokit import Connection, Document, OperationFailure, BadIndexError, INDEX_GEO2D, INDEX_ASCENDING, INDEX_DESCENDING
 
+from six import text_type as unicode
+
 class IndexTestCase(unittest.TestCase):
     def setUp(self):
         self.connection = Connection()

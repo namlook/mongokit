@@ -31,6 +31,8 @@ from mongokit import *
 from bson.objectid import ObjectId
 from mongokit.helpers import i18nDotedDict
 
+from six import text_type as unicode
+
 
 class i18nTestCase(unittest.TestCase):
     def setUp(self):

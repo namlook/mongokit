@@ -33,6 +33,8 @@ from mongokit import *
 from bson.objectid import ObjectId
 import datetime
 
+from six import text_type as unicode
+
 
 class JsonTestCase(unittest.TestCase):
     def setUp(self):

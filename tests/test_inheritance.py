@@ -29,6 +29,8 @@ import unittest
 
 from mongokit import *
 
+from six import text_type as unicode
+
 class InheritanceTestCase(unittest.TestCase):
     def setUp(self):
         self.collection = Connection()['test']['mongokit']

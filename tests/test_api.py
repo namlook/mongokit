@@ -31,6 +31,8 @@ from mongokit import *
 from bson.objectid import ObjectId
 from pymongo import ReadPreference
 
+from six import text_type as unicode
+
 
 class ApiTestCase(unittest.TestCase):
     def setUp(self):

@@ -32,6 +32,8 @@ import unittest
 from mongokit.schema_document import *
 from mongokit import Document, Connection
 
+from six import text_type as unicode
+
 class TypesTestCase(unittest.TestCase):
 
     def setUp(self):

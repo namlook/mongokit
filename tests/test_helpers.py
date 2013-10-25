@@ -30,6 +30,8 @@ import unittest
 from mongokit import *
 from mongokit.schema_document import DotExpandedDict
 
+from six import text_type as unicode
+
 class HelpersTestCase(unittest.TestCase):
         
     def test_DotExpandedDict(self):

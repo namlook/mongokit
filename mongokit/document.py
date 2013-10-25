@@ -54,6 +54,7 @@ STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
 
+from six import text_type as unicode
 
 class DocumentProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):

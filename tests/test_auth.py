@@ -33,6 +33,8 @@ from mongokit import *
 from mongokit.auth import User
 from bson.objectid import ObjectId
 
+from six import text_type as unicode
+
 import logging
 logging.basicConfig()
 

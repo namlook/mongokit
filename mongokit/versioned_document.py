@@ -28,6 +28,8 @@
 from .document import Document
 from .mongo_exceptions import *
 
+from six import text_type as unicode
+
 
 class RevisionDocument(Document):
     structure = {

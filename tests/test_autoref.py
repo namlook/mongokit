@@ -33,6 +33,8 @@ logging.basicConfig(level=logging.DEBUG)
 from mongokit import *
 from bson.objectid import ObjectId
 
+from six import text_type as unicode
+
 class AutoRefTestCase(unittest.TestCase):
     """Tests AutoRef case"""
     def setUp(self):

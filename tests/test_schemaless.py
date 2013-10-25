@@ -30,6 +30,8 @@ import unittest
 from mongokit import *
 import datetime
 
+from six import text_type as unicode
+
 
 class SchemaLessTestCase(unittest.TestCase):
 

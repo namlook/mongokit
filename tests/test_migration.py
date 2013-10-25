@@ -31,6 +31,8 @@ from mongokit import *
 from bson.objectid import ObjectId
 from datetime import datetime
 
+from six import text_type as unicode
+
 
 class MigrationTestCase(unittest.TestCase):
     def setUp(self):

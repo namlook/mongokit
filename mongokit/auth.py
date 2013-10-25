@@ -29,6 +29,7 @@ from .document import Document
 import hashlib
 import os
 
+from six import text_type as unicode
 
 class User(Document):
     structure = {
