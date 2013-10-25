@@ -59,6 +59,9 @@ class Cursor(PymongoCursor):
         else:
             raise StopIteration
 
+    # Python 3 iterator protocol
+    __next__ = next
+
     def __getitem__(self, index):
         obj = super(Cursor, self).__getitem__(index)
         if (self.__wrap is not None) and isinstance(obj, dict):
