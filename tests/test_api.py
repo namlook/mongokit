@@ -759,7 +759,7 @@ class ApiTestCase(unittest.TestCase):
             }
         self.connection.register([Doc])
         doc = self.col.Doc()
-        doc['foo'] = 12L
+        doc['foo'] = long(12)
         doc.save()
         fetch_doc = self.col.Doc.find_one()
         fetch_doc['bar'] = u'egg'
