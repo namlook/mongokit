@@ -264,7 +264,7 @@ class i18nTestCase(unittest.TestCase):
                     'title':unicode,
                 }
                 i18n = ['title', 'bla']
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual(str(e), "Error in i18n: can't find bla in structure")
             failed = True
         self.assertEqual(failed, True)

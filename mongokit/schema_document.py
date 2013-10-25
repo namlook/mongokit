@@ -666,7 +666,7 @@ class SchemaDocument(dict):
                     try:
                         if not validator(doted_doc[key]):
                             raise ValidationError("%s does not pass the validator " + validator.__name__)
-                    except Exception, e:
+                    except Exception as e:
                         self._raise_exception(ValidationError, key,
                                               unicode(e) % key)
 

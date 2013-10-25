@@ -258,7 +258,7 @@ class StructureTestCase(unittest.TestCase):
         assert mydoc.eggs == 4
         try:
             mydoc.not_found
-        except AttributeError, e:
+        except AttributeError as e:
             print(str(e))
         mydoc.foo.eggs = 4
         assert mydoc == {'foo':{'bar':None}, 'spam':None}, mydoc
@@ -302,7 +302,7 @@ class StructureTestCase(unittest.TestCase):
                     'topic': unicode,
                     'when': datetime.datetime.utcnow,
                 }
-        except TypeError, e:
+        except TypeError as e:
             assert str(e).startswith("MyDoc: <built-in method utcnow of type object at "), str(e)
             assert str(e).endswith("is not a type")
             failed = True

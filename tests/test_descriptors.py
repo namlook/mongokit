@@ -45,7 +45,7 @@ class DescriptorsTestCase(unittest.TestCase):
             class MyDoc(Document):
                 structure = {"foo":unicode}
                 required_fields = ["foo", "foo"]
-        except DuplicateRequiredError, e:
+        except DuplicateRequiredError as e:
             self.assertEqual(str(e), "duplicate required_fields : ['foo', 'foo']")
             failed = True
         self.assertEqual(failed, True)
@@ -467,7 +467,7 @@ class DescriptorsTestCase(unittest.TestCase):
         message = ""
         try:
             client.validate()
-        except Exception, e:
+        except Exception as e:
             message = unicode(e)
         assert message == "first_name must be atleast 2 characters long.", message
 
@@ -553,7 +553,7 @@ class DescriptorsTestCase(unittest.TestCase):
                     "foo":{"bar":int},
                 }
                 default_values = {"foo.bla":2}
-        except ValueError, e:
+        except ValueError as e:
             failed = True
             self.assertEqual(str(e), "Error in default_values: can't find foo.bla in structure")
         self.assertEqual(failed, True)
@@ -566,7 +566,7 @@ class DescriptorsTestCase(unittest.TestCase):
                     "foo":{"bar":int},
                 }
                 validators = {"foo.bla":lambda x:x}
-        except ValueError, e:
+        except ValueError as e:
             failed = True
             self.assertEqual(str(e), "Error in validators: can't find foo.bla in structure")
         self.assertEqual(failed, True)
@@ -584,7 +584,7 @@ class DescriptorsTestCase(unittest.TestCase):
                     }
                 }
                 required_fields = ['profil.screen_nam']
-        except ValueError, e:
+        except ValueError as e:
             failed = True
             self.assertEqual(str(e), "Error in required_fields: can't find profil.screen_nam in structure")
         self.assertEqual(failed, True)

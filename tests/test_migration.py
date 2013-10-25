@@ -377,7 +377,7 @@ class MigrationTestCase(unittest.TestCase):
                 }
                 use_schemaless = True
                 migration_handler = BlogPostMigration
-        except OptionConflictError, e:
+        except OptionConflictError as e:
             self.assertEqual('You cannot set a migration_handler with use_schemaless set to True', str(e))
             failed = True
         self.assertEqual(failed, True)

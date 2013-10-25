@@ -236,11 +236,11 @@ class Document(SchemaDocument):
             error = None
             try:
                 super(Document, self).validate()
-            except StructureError, e:
+            except StructureError as e:
                 error = e
-            except KeyError, e:
+            except KeyError as e:
                 error = e
-            except SchemaTypeError, e:
+            except SchemaTypeError as e:
                 error = e
             if error:
                 if not self.migration_handler:

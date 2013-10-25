@@ -273,7 +273,7 @@ class IndexTestCase(unittest.TestCase):
             class Movie(Document):
                 structure = {'standard':unicode}
                 indexes = [{'unique':True}]
-        except BadIndexError, e:
+        except BadIndexError as e:
             self.assertEqual(str(e), "'fields' key must be specify in indexes")
             failed = True
         self.assertEqual(failed, True)
@@ -290,7 +290,7 @@ class IndexTestCase(unittest.TestCase):
                         'uniq':True,
                     },
                 ]
-        except BadIndexError, e:
+        except BadIndexError as e:
             self.assertEqual(str(e), "uniq is unknown key for indexes")
             failed = True
         #self.assertEqual(failed, True)
@@ -306,7 +306,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':'std',
                     },
                 ]
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual(str(e), "Error in indexes: can't find std in structure")
             failed = True
         self.assertEqual(failed, True)
@@ -322,7 +322,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':{'standard':1},
                     },
                 ]
-        except BadIndexError, e:
+        except BadIndexError as e:
             self.assertEqual(str(e), "fields must be a string, a tuple or a list of tuple (got <type 'dict'> instead)")
             failed = True
         self.assertEqual(failed, True)
@@ -338,7 +338,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':('standard',1, "blah"),
                     },
                 ]
-        except BadIndexError, e:
+        except BadIndexError as e:
             self.assertEqual(str(e), "Error in indexes: a tuple must contain only two value : the field name and the direction")
             failed = True
         self.assertEqual(failed, True)
@@ -354,7 +354,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':('standard',"2"),
                     },
                 ]
-        except BadIndexError, e:
+        except BadIndexError as e:
             self.assertEqual(str(e), "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE. Got 2")
             failed = True
         self.assertEqual(failed, True)
@@ -370,7 +370,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':(3,1),
                     },
                 ]
-        except BadIndexError, e:
+        except BadIndexError as e:
             self.assertEqual(str(e), "Error in 3, the field name must be string (got <type 'int'> instead)")
             failed = True
         self.assertEqual(failed, True)
@@ -386,7 +386,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':("blah",1),
                     },
                 ]
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual(str(e), "Error in indexes: can't find blah in structure")
             failed = True
         self.assertEqual(failed, True)
@@ -402,7 +402,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':[('standard',1), ('bla',1)],
                     },
                 ]
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual(str(e), "Error in indexes: can't find bla in structure")
             failed = True
         self.assertEqual(failed, True)
@@ -418,7 +418,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':[('standard',3)],
                     },
                 ]
-        except BadIndexError, e:
+        except BadIndexError as e:
             self.assertEqual(str(e), "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE. Got 3")
             failed = True
         self.assertEqual(failed, True)
@@ -434,7 +434,7 @@ class IndexTestCase(unittest.TestCase):
                         'fields':['std'],
                     },
                 ]
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual(str(e), "Error in indexes: can't find std in structure")
             failed = True
         self.assertEqual(failed, True)

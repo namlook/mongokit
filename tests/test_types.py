@@ -61,7 +61,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc(SchemaDocument):
                     structure = { "foo":[unauth_type] }
-            except StructureError, e:
+            except StructureError as e:
                 self.assertEqual(str(e), "MyDoc: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -69,7 +69,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc(SchemaDocument):
                     structure = { "foo":(unauth_type) }
-            except StructureError, e:
+            except StructureError as e:
                 self.assertEqual(str(e), "MyDoc: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -77,7 +77,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc2(SchemaDocument):
                     structure = { 'foo':[{int:unauth_type }]}
-            except StructureError, e:
+            except StructureError as e:
                 self.assertEqual(str(e), "MyDoc2: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -85,7 +85,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc3(SchemaDocument):
                     structure = { 'foo':[{unauth_type:int }]}
-            except AuthorizedTypeError, e:
+            except AuthorizedTypeError as e:
                 self.assertEqual(str(e), "MyDoc3: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -94,7 +94,7 @@ class TypesTestCase(unittest.TestCase):
         try:
             class MyDoc4(SchemaDocument):
                 structure = {1:unicode}
-        except StructureError, e:
+        except StructureError as e:
             self.assertEqual(str(e), "MyDoc4: 1 must be a basestring or a type")
             failed = True
         self.assertEqual(failed, True)
@@ -359,7 +359,7 @@ class TypesTestCase(unittest.TestCase):
         try:
             class BadMyDoc(SchemaDocument):
                 structure = {"bla":OR(unicode,str)}
-        except StructureError, e:
+        except StructureError as e:
             self.assertEqual(str(e), "BadMyDoc: <type 'str'> in <unicode or str> is not an authorized type (type found)")
             failed = True
         self.assertEqual(failed, True)
@@ -400,7 +400,7 @@ class TypesTestCase(unittest.TestCase):
         try:
             class BadMyDoc(SchemaDocument):
                 structure = {"bla":NOT(unicode,str)}
-        except StructureError, e:
+        except StructureError as e:
             self.assertEqual(str(e), "BadMyDoc: <type 'str'> in <not unicode, not str> is not an authorized type (type found)")
             failed = True
         self.assertEqual(failed, True)
@@ -440,7 +440,7 @@ class TypesTestCase(unittest.TestCase):
         try:
             class BadMyDoc(SchemaDocument):
                 structure = {"bla":IS('bla',3)}
-        except StructureError, e:
+        except StructureError as e:
             self.assertEqual(str(e), "BadMyDoc: bla in <is 'bla' or is 3> is not an authorized type (str found)")
             failed = True
         self.assertEqual(failed, True)

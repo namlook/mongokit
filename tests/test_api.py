@@ -894,7 +894,7 @@ class ApiTestCase(unittest.TestCase):
             }
         try:
             doc = self.connection.MyDoc()
-        except AttributeError, e:
+        except AttributeError as e:
             failed = True
             self.assertEqual(str(e), 'MyDoc: __collection__ attribute not '
               'found. You cannot specify the `__database__` attribute '
@@ -977,7 +977,7 @@ class ApiTestCase(unittest.TestCase):
         failed = False
         try:
             doc.save()
-        except SchemaTypeError, e:
+        except SchemaTypeError as e:
             self.assertEqual(str(e), "title must be an instance of unicode not str")
             failed = True
         self.assertEqual(failed, True)
@@ -994,7 +994,7 @@ class ApiTestCase(unittest.TestCase):
         failed = False
         try:
             doc.save()
-        except SchemaTypeError, e:
+        except SchemaTypeError as e:
             self.assertEqual(str(e), "title must be an instance of str not unicode")
             failed = True
         self.assertEqual(failed, True)
@@ -1026,7 +1026,7 @@ class ApiTestCase(unittest.TestCase):
         failed = False
         try:
             doc.save()
-        except SchemaTypeError, e:
+        except SchemaTypeError as e:
             self.assertEqual(str(e), "foo must be an instance of int not float")
             failed = True
         self.assertEqual(failed, True)
@@ -1043,7 +1043,7 @@ class ApiTestCase(unittest.TestCase):
         failed = False
         try:
             doc.save()
-        except SchemaTypeError, e:
+        except SchemaTypeError as e:
             self.assertEqual(str(e), "foo must be an instance of float not int")
             failed = True
         self.assertEqual(failed, True)

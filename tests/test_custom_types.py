@@ -249,7 +249,7 @@ class CustomTypesTestCase(unittest.TestCase):
         failed = False
         try:
             self.col.Foo()
-        except DefaultFieldTypeError, e:
+        except DefaultFieldTypeError as e:
             failed = True
             self.assertEqual(str(e), 'date must be an instance of basestring not datetime')
  
@@ -276,7 +276,7 @@ class CustomTypesTestCase(unittest.TestCase):
         failed = False
         try:
             self.col.Foo()
-        except DefaultFieldTypeError, e:
+        except DefaultFieldTypeError as e:
             failed = True
             self.assertEqual(str(e),
               'date must be an instance of str not datetime')
@@ -301,7 +301,7 @@ class CustomTypesTestCase(unittest.TestCase):
         failed = False
         try:
             self.col.Foo()
-        except DefaultFieldTypeError, e:
+        except DefaultFieldTypeError as e:
             failed = True
             self.assertEqual(str(e),
               'date must be an instance of datetime not tuple')
@@ -315,7 +315,7 @@ class CustomTypesTestCase(unittest.TestCase):
         failed = False
         try:
             self.col.Foo()
-        except DefaultFieldTypeError, e:
+        except DefaultFieldTypeError as e:
             failed = True
             self.assertEqual(str(e),
               'date must be an instance of datetime not tuple')
@@ -467,7 +467,7 @@ class CustomTypesTestCase(unittest.TestCase):
                structure = {'amount': CustomObject()}
                required_fields = ['amount']
                indexes = [{'fields':['amount.f']}]
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual(str(e), "Error in indexes: can't find amount.f in structure")
             failed = True
         self.assertEqual(failed, True)
