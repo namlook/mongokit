@@ -165,7 +165,7 @@ class Document(with_metaclass(DocumentProperties, SchemaDocument)):
         super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False,
                                        lang=lang, fallback_lang=fallback_lang)
         if self.type_field in self:
-            self[self.type_field] = unicode(self.__class__.__name__)
+            self[self.type_field] = six.text_type(self.__class__.__name__)
         # collection
         self.collection = collection
         if collection:
@@ -422,7 +422,7 @@ class Document(with_metaclass(DocumentProperties, SchemaDocument)):
                 self._make_reference(self, self.structure)
         if '_id' not in self:
             if uuid:
-                self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
+                self['_id'] = six.text_type("%s-%s" % (self.__class__.__name__, uuid4()))
         self._process_custom_type('bson', self, self.structure)
         self.collection.save(self, safe=safe, *args, **kwargs)
         self._process_custom_type('python', self, self.structure)
@@ -535,7 +535,7 @@ class Document(with_metaclass(DocumentProperties, SchemaDocument)):
             raise ImportError("can't import anyjson. Please install it before continuing.")
         obj = self.to_json_type()
         _convert_to_python(obj, self.structure)
-        return unicode(dumps(obj))
+        return six.text_type(dumps(obj))
 
     def from_json(self, json):
         """

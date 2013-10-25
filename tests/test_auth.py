@@ -33,7 +33,7 @@ from mongokit import *
 from mongokit.auth import User
 from bson.objectid import ObjectId
 
-from six import text_type as unicode
+import six
 
 import logging
 logging.basicConfig()
@@ -96,10 +96,10 @@ class AuthTestCase(unittest.TestCase):
         class SimpleUser(User):
             structure = {
                 "auth":{
-                    "session_id":unicode,
+                    "session_id":six.text_type,
                 },
                 "profil":{
-                    "name":unicode,
+                    "name":six.text_type,
                 }
             }
         self.connection.register([SimpleUser])

@@ -31,8 +31,8 @@ from mongokit import *
 from bson.objectid import ObjectId
 from pymongo import ReadPreference
 
-from six import text_type as unicode, string_types, PY3
-string_type = string_types[0]
+import six
+string_type = six.string_types[0]
 
 class ApiTestCase(unittest.TestCase):
     def setUp(self):
@@ -47,7 +47,7 @@ class ApiTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -67,7 +67,7 @@ class ApiTestCase(unittest.TestCase):
         mydoc["bla"]["foo"] = u"bar"
         mydoc["bla"]["bar"] = 43
         mydoc.save(uuid=True)
-        assert isinstance(mydoc['_id'], unicode)
+        assert isinstance(mydoc['_id'], six.text_type)
         assert mydoc['_id'].startswith("MyDoc"), id
 
         saved_doc = self.col.find_one({"bla.bar":43})
@@ -104,7 +104,7 @@ class ApiTestCase(unittest.TestCase):
         class A(SchemaDocument):
             structure = {
                 "a":{"foo":int},
-                "bar":unicode
+                "bar":six.text_type
             }
         a = A(gen_skel=False)
         assert a == {}
@@ -115,7 +115,7 @@ class ApiTestCase(unittest.TestCase):
         class A(SchemaDocument):
             structure = {
                 "a":{"foo":[int]},
-                "bar":{unicode:{"egg":int}}
+                "bar":{six.text_type:{"egg":int}}
             }
         a = A(gen_skel=False)
         assert a == {}
@@ -125,8 +125,8 @@ class ApiTestCase(unittest.TestCase):
     def test_generate_skeleton3(self):
         class A(SchemaDocument):
             structure = {
-                "a":{"foo":[int], "spam":{"bla":unicode}},
-                "bar":{unicode:{"egg":int}}
+                "a":{"foo":[int], "spam":{"bla":six.text_type}},
+                "bar":{six.text_type:{"egg":int}}
             }
         a = A(gen_skel=False)
         assert a == {}
@@ -319,12 +319,12 @@ class ApiTestCase(unittest.TestCase):
     def test_fetch_with_query(self):
         class DocA(Document):
             structure = {
-                "bar":unicode,
+                "bar":six.text_type,
                 "doc_a":{'foo':int},
             }
         class DocB(Document):
             structure = {
-                "bar":unicode,
+                "bar":six.text_type,
                 "doc_b":{"bar":int},
             }
         self.connection.register([DocA, DocB])
@@ -439,7 +439,7 @@ class ApiTestCase(unittest.TestCase):
         # boostraping
         for i in range(10):
             mydoc = mongokit.MyDoc()
-            mydoc['_id'] = unicode(i)
+            mydoc['_id'] = six.text_type(i)
             mydoc['foo'] = i
             mydoc.save()
 
@@ -572,7 +572,7 @@ class ApiTestCase(unittest.TestCase):
     def test_get_size(self):
         class MyDoc(Document):
             structure = {
-                "doc":{"foo":int, "bla":unicode},
+                "doc":{"foo":int, "bla":six.text_type},
             }
         self.connection.register([MyDoc])
 
@@ -684,7 +684,7 @@ class ApiTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "foo":int,
-                "bar":{"egg":unicode},
+                "bar":{"egg":six.text_type},
                 "toto":{"spam":{"bla":int}}
             }
 
@@ -703,7 +703,7 @@ class ApiTestCase(unittest.TestCase):
     def test_validate_doc_with_field_added_after_save(self):
         class Doc(Document):
            structure = {
-               "foo": unicode,
+               "foo": six.text_type,
            }
         self.connection.register([Doc])
 
@@ -716,7 +716,7 @@ class ApiTestCase(unittest.TestCase):
     def test_distinct(self):
         class Doc(Document):
             structure = {
-                "foo": unicode,
+                "foo": six.text_type,
                 "bla": int
             }
         self.connection.register([Doc])
@@ -755,7 +755,7 @@ class ApiTestCase(unittest.TestCase):
         class Doc(Document):
             structure = {
                 "foo":OR(int, long),
-                "bar":unicode,
+                "bar":six.text_type,
             }
         self.connection.register([Doc])
         doc = self.col.Doc()
@@ -768,7 +768,7 @@ class ApiTestCase(unittest.TestCase):
     def test_skip_validation_with_required_field(self):
         class Task(Document):
             structure = {
-                'extra' : unicode,
+                'extra' : six.text_type,
             }
             required_fields = ['extra']
             skip_validation = True
@@ -780,7 +780,7 @@ class ApiTestCase(unittest.TestCase):
     def test_passing_collection_in_argument(self):
         class MyDoc(Document):
             structure = {
-                'foo':unicode
+                'foo':six.text_type
             }
         doc = MyDoc(collection=self.col)
         doc['foo'] = u'bla'
@@ -790,10 +790,10 @@ class ApiTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 'foo':{
-                    'bar':unicode,
+                    'bar':six.text_type,
                     'eggs':{'spam':int},
                 },
-                'bla':unicode
+                'bla':six.text_type
             }
         self.connection.register([MyDoc])
 
@@ -958,7 +958,7 @@ class ApiTestCase(unittest.TestCase):
         @self.connection.register
         class DocA(Root):
            __collection__ = "doca"
-           structure = {'title':unicode}
+           structure = {'title':six.text_type}
 
         doc = self.connection.DocA()
         doc['title'] = u'foo'
@@ -972,7 +972,7 @@ class ApiTestCase(unittest.TestCase):
         class DocA(Document):
            __database__ = 'test'
            __collection__ = "doca"
-           structure = {'title':unicode}
+           structure = {'title':six.text_type}
 
         doc = self.connection.DocA()
         doc['title'] = 'foo'
@@ -1015,7 +1015,7 @@ class ApiTestCase(unittest.TestCase):
         doc.save()
 
         # Test bytes type
-        if PY3:
+        if six.PY3:
             @self.connection.register
             class DocA(Document):
                __database__ = 'test'

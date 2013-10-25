@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 
 import unittest
 
@@ -33,7 +33,7 @@ from mongokit import *
 from bson.objectid import ObjectId
 from gridfs import NoFile
 
-from six import text_type as unicode
+import six
 
 
 class GridFSTestCase(unittest.TestCase):
@@ -47,7 +47,7 @@ class GridFSTestCase(unittest.TestCase):
     def test_simple_gridfs(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             gridfs = {'files': ['source']}
         self.connection.register([Doc])
@@ -92,7 +92,7 @@ class GridFSTestCase(unittest.TestCase):
     def test_gridfs_without_saving(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             gridfs = {'files': ['source']}
         self.connection.register([Doc])
@@ -110,7 +110,7 @@ class GridFSTestCase(unittest.TestCase):
     def test_gridfs_bad_type(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             gridfs = {'files': ['source']}
         self.connection.register([Doc])
@@ -133,7 +133,7 @@ class GridFSTestCase(unittest.TestCase):
     def test_gridfs_with_container(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             gridfs = {
                 'files': ['source'],
@@ -176,7 +176,7 @@ class GridFSTestCase(unittest.TestCase):
     def test_gridfs_list(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             gridfs = {'files': ['foo', 'bla'], 'containers':['attachments']}
         self.connection.register([Doc])
@@ -196,7 +196,7 @@ class GridFSTestCase(unittest.TestCase):
     def test_gridfs_new_file(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             gridfs = {'files': ['foo', 'bla'], 'containers':['attachments']}
         self.connection.register([Doc])
@@ -226,7 +226,7 @@ class GridFSTestCase(unittest.TestCase):
     def test_pymongo_compatibility(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             gridfs = {'files': ['source', 'foo'], 'containers':['attachments']}
         self.connection.register([Doc])

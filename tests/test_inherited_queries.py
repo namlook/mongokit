@@ -29,7 +29,7 @@ import unittest
 
 from mongokit import Document, Connection
 
-from six import text_type as unicode
+import six
 
 class InheritedQueriesTestCase(unittest.TestCase):
     def setUp(self):
@@ -45,10 +45,10 @@ class InheritedQueriesTestCase(unittest.TestCase):
             __database__ = 'test'
             __collection__ = 'mongolite'
             structure = {
-                '_type': unicode,
+                '_type': six.text_type,
                 'a':{
                     'foo': int,
-                    'bar': unicode,
+                    'bar': six.text_type,
                 }
             }
 
@@ -80,10 +80,10 @@ class InheritedQueriesTestCase(unittest.TestCase):
         @self.connection.register
         class A(Document):
             structure = {
-                '_type': unicode,
+                '_type': six.text_type,
                 'a':{
                     'foo': int,
-                    'bar': unicode,
+                    'bar': six.text_type,
                 }
             }
 
@@ -116,10 +116,10 @@ class InheritedQueriesTestCase(unittest.TestCase):
         class A(Document):
             type_field = None
             structure = {
-                '_type': unicode,
+                '_type': six.text_type,
                 'a':{
                     'foo': int,
-                    'bar': unicode,
+                    'bar': six.text_type,
                 }
             }
 
@@ -155,7 +155,7 @@ class InheritedQueriesTestCase(unittest.TestCase):
             structure = {
                 'a':{
                     'foo': int,
-                    'bar': unicode,
+                    'bar': six.text_type,
                 }
             }
 
@@ -190,11 +190,11 @@ class InheritedQueriesTestCase(unittest.TestCase):
         class A(Document):
             type_field = '_t'
             structure = {
-                '_type': unicode,
-                '_t': unicode,
+                '_type': six.text_type,
+                '_t': six.text_type,
                 'a':{
                     'foo': int,
-                    'bar': unicode,
+                    'bar': six.text_type,
                 }
             }
 

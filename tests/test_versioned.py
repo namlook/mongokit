@@ -31,7 +31,7 @@ import unittest
 
 from mongokit import *
 
-from six import text_type as unicode
+import six
 
 class VersionedTestCase(unittest.TestCase):
     def setUp(self):
@@ -47,7 +47,7 @@ class VersionedTestCase(unittest.TestCase):
     def test_save_versioning(self):
         class MyDoc(Document):
             structure = {
-                "bla" : unicode,
+                "bla" : six.text_type,
             }
         self.connection.register([MyDoc])
 
@@ -59,7 +59,7 @@ class VersionedTestCase(unittest.TestCase):
 
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
         self.connection.register([MyVersionedDoc])
  
@@ -107,7 +107,7 @@ class VersionedTestCase(unittest.TestCase):
     def test_save_without_versionning(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
         self.connection.register([MyVersionedDoc])
  
@@ -122,7 +122,7 @@ class VersionedTestCase(unittest.TestCase):
     def test_save_versioning_without_id(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
         self.connection.register([MyVersionedDoc])
  
@@ -143,7 +143,7 @@ class VersionedTestCase(unittest.TestCase):
     def _test_bad_versioning(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
  
         self.connection.register([MyVersionedDoc])
@@ -152,7 +152,7 @@ class VersionedTestCase(unittest.TestCase):
     def test_delete_versioning(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
         self.connection.register([MyVersionedDoc])
  
@@ -183,7 +183,7 @@ class VersionedTestCase(unittest.TestCase):
     def test_remove_versioning(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
         self.connection.register([MyVersionedDoc])
  
@@ -222,7 +222,7 @@ class VersionedTestCase(unittest.TestCase):
     def _test_versioning_with_dynamic_db(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
         self.connection.register([MyVersionedDoc])
  
@@ -265,7 +265,7 @@ class VersionedTestCase(unittest.TestCase):
     def _test_versioning_with_dynamic_collection(self):
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
             }
             versioning_collection_name = "versioned_mongokit"
  
@@ -311,7 +311,7 @@ class VersionedTestCase(unittest.TestCase):
             class Group(VersionedDocument):
                 use_autorefs = True
                 structure = {
-                       'name':unicode,
+                       'name':six.text_type,
                        'members':[User], #users
                    }
         except:
@@ -340,7 +340,7 @@ class VersionedTestCase(unittest.TestCase):
         """
         class MyVersionedDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
                 }
 
         self.connection.register([MyVersionedDoc])
@@ -364,7 +364,7 @@ class VersionedTestCase(unittest.TestCase):
         """
         class MyVersionedUUIDDoc(VersionedDocument):
             structure = {
-                "foo" : unicode,
+                "foo" : six.text_type,
                 }
             def save(self, versioning=True, uuid=True, *args, **kwargs):
                 """ Ensure that the save is performed using uuid=True """

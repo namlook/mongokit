@@ -29,15 +29,15 @@ from .document import Document
 import hashlib
 import os
 
-from six import text_type as unicode
+import six
 
 class User(Document):
     structure = {
-        "_id": unicode,
+        "_id": six.text_type,
         "user": {
-            "login": unicode,
-            "password": unicode,  # TODO validator
-            "email": unicode,
+            "login": six.text_type,
+            "password": six.text_type,  # TODO validator
+            "email": six.text_type,
         }
     }
     required_fields = ['user.password', 'user.email']  # what if openid ? password is None
@@ -57,11 +57,11 @@ class User(Document):
 
     def set_password(self, password):
         """ Hash password on the fly """
-        if isinstance(password, unicode):
+        if isinstance(password, six.text_type):
             password = password.encode('utf-8')
         password_salt = hashlib.sha1(os.urandom(60)).hexdigest()
         crypt = hashlib.sha1(password + password_salt).hexdigest()
-        self['user']['password'] = unicode(password_salt + crypt, 'utf-8')
+        self['user']['password'] = six.text_type(password_salt + crypt, 'utf-8')
 
     def get_password(self):
         """ Return the password hashed """
@@ -74,7 +74,7 @@ class User(Document):
 
     def verify_password(self, password):
         """ Check the password against existing credentials  """
-        if isinstance(password, unicode):
+        if isinstance(password, six.text_type):
             password = password.encode('utf-8')
         password_salt = self['user']['password'][:40]
         crypt_pass = hashlib.sha1(password + password_salt).hexdigest()

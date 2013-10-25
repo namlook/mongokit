@@ -31,7 +31,7 @@ from mongokit import *
 from bson.objectid import ObjectId
 from mongokit.helpers import i18nDotedDict
 
-from six import text_type as unicode
+import six
 
 
 class i18nTestCase(unittest.TestCase):
@@ -46,7 +46,7 @@ class i18nTestCase(unittest.TestCase):
     def test_simple_i18n(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             i18n = ['title']
         self.connection.register([Doc])
@@ -105,7 +105,7 @@ class i18nTestCase(unittest.TestCase):
         class Doc(Document):
             use_dot_notation = True
             structure = {
-                "title":[unicode]
+                "title":[six.text_type]
             }
             i18n = ['title']
         self.connection.register([Doc])
@@ -126,7 +126,7 @@ class i18nTestCase(unittest.TestCase):
         class Doc(Document):
             structure = {
                 'title':{
-                    'foo':unicode,
+                    'foo':six.text_type,
                     'bar':{'bla':int},
                     'egg':int,
                 }
@@ -157,7 +157,7 @@ class i18nTestCase(unittest.TestCase):
             structure = {
                 'toto':{'titi':{'tata':int}},
                 'title':{
-                    'foo':unicode,
+                    'foo':six.text_type,
                     'bar':{'bla':int},
                     'egg':int,
                 }
@@ -226,7 +226,7 @@ class i18nTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 'title':{
-                    'foo':unicode,
+                    'foo':six.text_type,
                 },
                 'bar':int,
             }
@@ -249,7 +249,7 @@ class i18nTestCase(unittest.TestCase):
     def test_i18n_bad_type(self):
         class Doc(Document):
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             i18n = ['title']
         self.connection.register([Doc])
@@ -263,7 +263,7 @@ class i18nTestCase(unittest.TestCase):
         try:
             class Doc(Document):
                 structure = {
-                    'title':unicode,
+                    'title':six.text_type,
                 }
                 i18n = ['title', 'bla']
         except ValueError as e:
@@ -274,7 +274,7 @@ class i18nTestCase(unittest.TestCase):
         class Doc(Document):
             use_dot_notation = True
             structure = {
-                'title':unicode,
+                'title':six.text_type,
             }
             i18n = ['title']
         self.connection.register([Doc])
@@ -293,7 +293,7 @@ class i18nTestCase(unittest.TestCase):
         class A(Document):
             structure = {
                 'a':{
-                    'title':unicode,
+                    'title':six.text_type,
                 }
             }
             i18n = ['a.title']
@@ -301,7 +301,7 @@ class i18nTestCase(unittest.TestCase):
         class B(A):
             structure = {
                 'b':{
-                    'title':unicode,
+                    'title':six.text_type,
                 }
             }
             i18n = ['b.title']
@@ -310,7 +310,7 @@ class i18nTestCase(unittest.TestCase):
         class C(Document):
             structure = {
                 'c':{
-                    'title':unicode,
+                    'title':six.text_type,
                 }
             }
             i18n = ['c.title']
@@ -318,7 +318,7 @@ class i18nTestCase(unittest.TestCase):
         class D(B, C):
             structure = {
                 'd':{
-                    'title':unicode,
+                    'title':six.text_type,
                 }
             }
 
@@ -335,7 +335,7 @@ class i18nTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 'title':int,
-                'foo':{'bar':unicode},
+                'foo':{'bar':six.text_type},
             }
             i18n = ['title', 'foo.bar']
             default_values = {'title':{'en':3, 'fr':4}, 'foo.bar': {'en':u'bla', 'fr': u'ble'}}
@@ -348,9 +348,9 @@ class i18nTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "foo":{
-                    "bar": unicode,
+                    "bar": six.text_type,
                     "bla":{
-                        unicode:[unicode],
+                        six.text_type:[six.text_type],
                     },
                 },
             }

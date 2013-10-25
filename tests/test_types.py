@@ -32,7 +32,7 @@ import unittest
 from mongokit.schema_document import *
 from mongokit import Document, Connection
 
-from six import text_type as unicode
+import six
 
 class TypesTestCase(unittest.TestCase):
 
@@ -95,7 +95,7 @@ class TypesTestCase(unittest.TestCase):
         failed = False
         try:
             class MyDoc4(SchemaDocument):
-                structure = {1:unicode}
+                structure = {1:six.text_type}
         except StructureError as e:
             self.assertEqual(str(e), "MyDoc4: 1 must be a string or a type")
             failed = True
@@ -156,7 +156,7 @@ class TypesTestCase(unittest.TestCase):
     def test_typed_list_with_dict(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":[{unicode:int}]
+                "foo":[{six.text_type:int}]
             }
         mydoc = MyDoc()
         mydoc['foo'] = [{u"bla":1},{u"ble":2}]
@@ -167,7 +167,7 @@ class TypesTestCase(unittest.TestCase):
     def test_typed_list_with_list(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":[[unicode]]
+                "foo":[[six.text_type]]
             }
         mydoc = MyDoc()
         mydoc['foo'] = [[u"bla",u"blu"],[u"ble",u"bli"]]
@@ -178,7 +178,7 @@ class TypesTestCase(unittest.TestCase):
     def test_typed_tuple(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":(int, unicode, float)
+                "foo":(int, six.text_type, float)
             }
         mydoc = MyDoc()
         mydoc.validate()
@@ -199,7 +199,7 @@ class TypesTestCase(unittest.TestCase):
     def test_nested_typed_tuple(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{'bar':(int, unicode, float)}
+                "foo":{'bar':(int, six.text_type, float)}
             }
         mydoc = MyDoc()
         mydoc.validate()
@@ -217,7 +217,7 @@ class TypesTestCase(unittest.TestCase):
 
     def test_saving_tuple(self):
         class MyDoc(Document):
-            structure = { 'foo': (int, unicode, float) }
+            structure = { 'foo': (int, six.text_type, float) }
         self.connection.register([MyDoc])
 
         mydoc = self.col.MyDoc()
@@ -228,7 +228,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc = self.col.find_one()
 
         class MyDoc(Document):
-            structure = {'foo':[unicode]}
+            structure = {'foo':[six.text_type]}
         self.connection.register([])
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
@@ -240,7 +240,7 @@ class TypesTestCase(unittest.TestCase):
     def test_nested_typed_tuple_in_list(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{'bar':[(int, unicode, float)]}
+                "foo":{'bar':[(int, six.text_type, float)]}
             }
         mydoc = MyDoc()
         mydoc.validate()
@@ -261,7 +261,7 @@ class TypesTestCase(unittest.TestCase):
     def test_dict_unicode_typed_list(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:[int]}
+                "foo":{six.text_type:[int]}
             }
         mydoc = MyDoc()
         mydoc['foo'] = {u"bar":[1,2,3]}
@@ -276,7 +276,7 @@ class TypesTestCase(unittest.TestCase):
             pass
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:int}
+                "foo":{six.text_type:int}
             }
         mydoc = MyDoc()
         mydict = MyDict()
@@ -289,7 +289,7 @@ class TypesTestCase(unittest.TestCase):
             pass
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":MyDict({unicode:int})
+                "foo":MyDict({six.text_type:int})
             }
         mydoc = MyDoc()
         mydict = MyDict()
@@ -314,7 +314,7 @@ class TypesTestCase(unittest.TestCase):
     def test_list_instead_of_dict(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:[unicode]}
+                "foo":{six.text_type:[six.text_type]}
             }
         mydoc = MyDoc()
         mydoc['foo'] = [u'bla']
@@ -324,8 +324,8 @@ class TypesTestCase(unittest.TestCase):
         # XXX TODO
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:[int], u"bar":{"spam":{int:[unicode]}}},
-                "bla":{"blo":{"bli":[{"arf":unicode}]}},
+                "foo":{six.text_type:[int], u"bar":{"spam":{int:[six.text_type]}}},
+                "bla":{"blo":{"bli":[{"arf":six.text_type}]}},
             }
         mydoc = MyDoc()
         mydoc['foo'].update({u"bir":[1,2,3]})
@@ -369,8 +369,8 @@ class TypesTestCase(unittest.TestCase):
         from datetime import datetime
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":OR(unicode,int),
-                "bar":OR(unicode, datetime)
+                "foo":OR(six.text_type,int),
+                "bar":OR(six.text_type, datetime)
             }
 
         mydoc = MyDoc()
@@ -410,7 +410,7 @@ class TypesTestCase(unittest.TestCase):
         from datetime import datetime
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":NOT(unicode,int),
+                "foo":NOT(six.text_type,int),
                 "bar":NOT(datetime)
             }
 
@@ -518,8 +518,8 @@ class TypesTestCase(unittest.TestCase):
     def test_set_type2(self):
         class MyDoc(Document):
                 structure = {
-                        'title':unicode,
-                        'category':Set(unicode)
+                        'title':six.text_type,
+                        'category':Set(six.text_type)
                 }
                 required_fields=['title']
         self.connection.register([MyDoc])

@@ -31,7 +31,7 @@ from mongokit import *
 from bson.objectid import ObjectId
 from datetime import datetime
 
-from six import text_type as unicode
+import six
 
 
 class MigrationTestCase(unittest.TestCase):
@@ -42,11 +42,11 @@ class MigrationTestCase(unittest.TestCase):
         # create initial blog post class
         class BlogPost(Document):
             structure = {
-                'author':unicode,
+                'author':six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "created_at": datetime,
-                    "body": unicode,
+                    "body": six.text_type,
                 }
             }
             default_values = {'blog_post.created_at':datetime(2010, 1, 1)}
@@ -66,12 +66,12 @@ class MigrationTestCase(unittest.TestCase):
     def test_simple_doc_migration(self):
         class BlogPost(Document):
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "created_at": datetime,
-                    "body": unicode,
-                    "tags":  [unicode],
+                    "body": six.text_type,
+                    "tags":  [six.text_type],
                 }
             }
         self.connection.register([BlogPost])
@@ -93,12 +93,12 @@ class MigrationTestCase(unittest.TestCase):
     def test_simple_all_migration(self):
         class BlogPost(Document):
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "created_at": datetime,
-                    "body": unicode,
-                    "tags":  [unicode],
+                    "body": six.text_type,
+                    "tags":  [six.text_type],
                 }
             }
         self.connection.register([BlogPost])
@@ -120,12 +120,12 @@ class MigrationTestCase(unittest.TestCase):
     def test_simple_all_migration_with_unset(self):
         class BlogPost(Document):
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "created_at": datetime,
-                    "body": unicode,
-                    "tags":  [unicode],
+                    "body": six.text_type,
+                    "tags":  [six.text_type],
                 }
             }
         self.connection.register([BlogPost])
@@ -140,11 +140,11 @@ class MigrationTestCase(unittest.TestCase):
         # redfine class to drop the tags field
         class BlogPost(Document):
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "created_at": datetime,
-                    "body": unicode,
+                    "body": six.text_type,
                 }
             }
         self.connection.register([BlogPost])
@@ -156,12 +156,12 @@ class MigrationTestCase(unittest.TestCase):
     def test_simple_all_migration_with_bad_update(self):
         class BlogPost(Document):
             structure = {
-                "author": unicode,
+                "author": six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "created_at": datetime,
-                    "body": unicode,
-                    "tags":  [unicode],
+                    "body": six.text_type,
+                    "tags":  [six.text_type],
                 }
             }
         self.connection.register([BlogPost])
@@ -191,12 +191,12 @@ class MigrationTestCase(unittest.TestCase):
         # update blog post class
         class BlogPost(Document):
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "creation_date": datetime,
-                    "body": unicode,
-                    "tags": [unicode],
+                    "body": six.text_type,
+                    "tags": [six.text_type],
                 }
             }
             migration_handler = BlogPostMigration
@@ -230,12 +230,12 @@ class MigrationTestCase(unittest.TestCase):
         class BlogPost(Document):
             skip_validation = True
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "creation_date": datetime,
-                    "body": unicode,
-                    "tags": [unicode],
+                    "body": six.text_type,
+                    "tags": [six.text_type],
                 }
             }
             migration_handler = BlogPostMigration
@@ -267,12 +267,12 @@ class MigrationTestCase(unittest.TestCase):
         # update blog post class
         class BlogPost(Document):
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": unicode,
+                    "title": six.text_type,
                     "creation_date": datetime,
-                    "body": unicode,
-                    "tags": [unicode],
+                    "body": six.text_type,
+                    "tags": [six.text_type],
                 }
             }
             migration_handler = BlogPostMigration
@@ -334,12 +334,12 @@ class MigrationTestCase(unittest.TestCase):
         # update blog post class
         class BlogPost(Document):
             structure = {
-                "author":unicode,
+                "author":six.text_type,
                 "blog_post":{
-                    "title": {'lang':unicode, 'value':unicode},
+                    "title": {'lang':six.text_type, 'value':six.text_type},
                     "creation_date": datetime,
-                    "body": unicode,
-                    "tags": [{'foo':unicode}],
+                    "body": six.text_type,
+                    "tags": [{'foo':six.text_type}],
                 }
             }
             migration_handler = BlogPostMigration
@@ -369,12 +369,12 @@ class MigrationTestCase(unittest.TestCase):
         try:
             class BlogPost(Document):
                 structure = {
-                    "author":unicode,
+                    "author":six.text_type,
                     "blog_post":{
-                        "title": unicode,
+                        "title": six.text_type,
                         "creation_date": datetime,
-                        "body": unicode,
-                        "tags": [unicode],
+                        "body": six.text_type,
+                        "tags": [six.text_type],
                     }
                 }
                 use_schemaless = True

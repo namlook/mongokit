@@ -259,7 +259,7 @@ class SchemaDocument(six.with_metaclass(SchemaProperties, dict)):
 
     >>> class TestDoc(SchemaDocument):
     ...     structure = {
-    ...         "foo":unicode,
+    ...         "foo":six.text_type,
     ...         "bar":int,
     ...         "nested":{
     ...            "bla":float}}

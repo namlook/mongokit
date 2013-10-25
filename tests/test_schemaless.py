@@ -30,7 +30,7 @@ import unittest
 from mongokit import *
 import datetime
 
-from six import text_type as unicode
+import six
 
 
 class SchemaLessTestCase(unittest.TestCase):
@@ -48,7 +48,7 @@ class SchemaLessTestCase(unittest.TestCase):
         class MyDoc(Document):
             use_schemaless = True
             structure = {
-                'foo': unicode,
+                'foo': six.text_type,
                 'bar': int,
             }
 
@@ -87,7 +87,7 @@ class SchemaLessTestCase(unittest.TestCase):
         class MyDoc(Document):
             use_schemaless = True
             structure = {
-                'foo': unicode,
+                'foo': six.text_type,
                 'bar': int,
             }
             required_fields = ['foo']
@@ -149,11 +149,11 @@ class SchemaLessTestCase(unittest.TestCase):
             __database__ = 'test'
             use_schemaless = True
             structure = {
-                'name': unicode,
-                'password': unicode,
-                'last_name': unicode,
-                'first_name': unicode,
-                'email': unicode,
+                'name': six.text_type,
+                'password': six.text_type,
+                'last_name': six.text_type,
+                'first_name': six.text_type,
+                'email': six.text_type,
                 'last_login': datetime.datetime,
             }
             use_dot_notation = True

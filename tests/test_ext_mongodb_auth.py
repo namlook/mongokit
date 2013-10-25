@@ -33,7 +33,7 @@ logging.basicConfig(level=logging.DEBUG)
 from mongokit import *
 from bson.objectid import ObjectId
 
-from six import text_type as unicode
+import six
 
 admin_created = False
 
@@ -71,7 +71,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
             db_password = "bar"
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -108,7 +108,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
             collection_name = "mongokit_auth"
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -127,7 +127,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
                 db_password = "spam"
                 structure = {
                     "bla":{
-                        "foo":unicode,
+                        "foo":six.text_type,
                         "bar":int,
                     },
                     "spam":[],

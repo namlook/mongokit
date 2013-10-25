@@ -33,7 +33,7 @@ from mongokit import *
 from bson.objectid import ObjectId
 import datetime
 
-from six import text_type as unicode, string_types
+import six
 
 
 class JsonTestCase(unittest.TestCase):
@@ -49,7 +49,7 @@ class JsonTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                     "egg":datetime.datetime,
                 },
@@ -79,7 +79,7 @@ class JsonTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -90,13 +90,13 @@ class JsonTestCase(unittest.TestCase):
         mydoc["bla"]["bar"] = 42
         mydoc['spam'] = range(10)
         mydoc.save()
-        assert  isinstance(mydoc.to_json_type()['_id']['$oid'], string_types), type(mydoc.to_json_type()['_id'])
-        assert isinstance(mydoc.to_json(), unicode)
+        assert  isinstance(mydoc.to_json_type()['_id']['$oid'], six.string_types), type(mydoc.to_json_type()['_id'])
+        assert isinstance(mydoc.to_json(), six.text_type)
 
     def test_simple_to_json_with_oid_in_list(self):
         class A(Document):
             structure = {
-                "foo":unicode,
+                "foo":six.text_type,
             }
         class B(Document):
             structure = {
@@ -110,24 +110,24 @@ class JsonTestCase(unittest.TestCase):
         a = self.col.A()
         a["foo"] = u"bar"
         a.save()
-        assert  isinstance(a.to_json_type()['_id']['$oid'], string_types), type(a.to_json_type()['_id'])
+        assert  isinstance(a.to_json_type()['_id']['$oid'], six.string_types), type(a.to_json_type()['_id'])
         a.to_json()
         b = self.col.B()
         b['bar'] = [a['_id']]
         b['egg']['nested'] = a['_id']
         b.save()
         print(b.to_json_type())
-        assert  isinstance(b.to_json_type()['_id']['$oid'], string_types), b.to_json_type()
-        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], string_types), b.to_json_type()
-        assert  isinstance(b.to_json_type()['bar'][0]['$oid'], string_types), b.to_json_type()
-        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], string_types), b.to_json_type()
+        assert  isinstance(b.to_json_type()['_id']['$oid'], six.string_types), b.to_json_type()
+        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], six.string_types), b.to_json_type()
+        assert  isinstance(b.to_json_type()['bar'][0]['$oid'], six.string_types), b.to_json_type()
+        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], six.string_types), b.to_json_type()
         assert "ObjectId" not in b.to_json()
 
     def test_simple_to_json_with_no_id(self):
         class MyDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -143,7 +143,7 @@ class JsonTestCase(unittest.TestCase):
     def test_to_json_custom_type(self):
         class CustomDegree(CustomType):
             mongo_type = int
-            python_type = string_types[0]
+            python_type = six.string_types[0]
             def to_bson(self, value):
                 if value is not None:
                     return int(value.replace('C', ''))
@@ -176,7 +176,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -206,7 +206,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -227,7 +227,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc = self.col.MyDoc()
         mydoc['doc']['embed'] = embed
         mydoc.save()
-        assert isinstance(mydoc.to_json_type()['doc']['embed']['_id']['$oid'], string_types)
+        assert isinstance(mydoc.to_json_type()['doc']['embed']['_id']['$oid'], six.string_types)
         assert mydoc.to_json() == '{"doc": {"embed": {"_collection": "mongokit", "_database": "test", "_id": {"$oid": "%s"}, "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": {"$oid": "%s"}}' % (
           embed['_id'], mydoc['_id']), mydoc.to_json()
 
@@ -235,7 +235,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -257,7 +257,7 @@ class JsonTestCase(unittest.TestCase):
     def test_to_json_with_dict_in_list(self):
         class MyDoc(Document):
             structure = {
-                "foo":[{'bar':unicode, 'egg':int}],
+                "foo":[{'bar':six.text_type, 'egg':int}],
             }
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
@@ -272,7 +272,7 @@ class JsonTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -287,7 +287,7 @@ class JsonTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                     "egg":datetime.datetime,
                 },
@@ -303,7 +303,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -336,7 +336,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -369,7 +369,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -394,7 +394,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -426,7 +426,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -457,7 +457,7 @@ class JsonTestCase(unittest.TestCase):
         class EmbedDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -482,7 +482,7 @@ class JsonTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "doc":{
-                    "embed":[{"foo":unicode, "bar":int}],
+                    "embed":[{"foo":six.text_type, "bar":int}],
                 },
             }
             use_autorefs = True
@@ -495,9 +495,9 @@ class JsonTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 "doc":{
-                    "name":unicode
+                    "name":six.text_type
                 },
-                "foo": unicode,
+                "foo": six.text_type,
             }
             use_autorefs = True
         self.connection.register([MyDoc])
@@ -507,16 +507,16 @@ class JsonTestCase(unittest.TestCase):
         mydoc['foo'] = u'bar'
         json = mydoc.to_json()
         mydoc2 = self.col.MyDoc.from_json(json)
-        assert isinstance(mydoc['doc']['name'], unicode)
-        assert isinstance(mydoc['foo'], unicode)
-        assert isinstance(mydoc2['doc']['name'], unicode)
-        assert isinstance(mydoc2['foo'], unicode)
+        assert isinstance(mydoc['doc']['name'], six.text_type)
+        assert isinstance(mydoc['foo'], six.text_type)
+        assert isinstance(mydoc2['doc']['name'], six.text_type)
+        assert isinstance(mydoc2['foo'], six.text_type)
 
     def test_simple_to_json_from_cursor(self):
         class MyDoc(Document):
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -564,7 +564,7 @@ class JsonTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                     "egg":datetime.datetime,
                 },
@@ -612,7 +612,7 @@ class JsonTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                     "egg":datetime.datetime,
                 },
@@ -650,7 +650,7 @@ class JsonTestCase(unittest.TestCase):
     def test_from_json_with_list(self):
         class MyDoc(Document):
             structure = {
-                'foo': {'bar': [unicode]}
+                'foo': {'bar': [six.text_type]}
             }
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
@@ -665,7 +665,7 @@ class JsonTestCase(unittest.TestCase):
     def test_from_json_with_ref(self):
         class A(Document):
             structure = {
-                'foo': unicode
+                'foo': six.text_type
             }
         class B(Document):
             structure = {
@@ -688,7 +688,7 @@ class JsonTestCase(unittest.TestCase):
     def test_from_json_with_ref_in_list(self):
         class A(Document):
             structure = {
-                'foo': unicode
+                'foo': six.text_type
             }
         class B(Document):
             structure = {
@@ -710,7 +710,7 @@ class JsonTestCase(unittest.TestCase):
     def test_from_json_with_type_as_key(self):
         class MyDoc(Document):
             structure = {
-                'foo': {unicode:[unicode]}
+                'foo': {six.text_type:[six.text_type]}
             }
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
