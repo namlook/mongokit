@@ -39,28 +39,36 @@ class Cursor(PymongoCursor):
     def next(self):
         if self._Cursor__empty:
             raise StopIteration
-        db = self._Cursor__collection.database
         if len(self.__data) or self._refresh():
             if isinstance(self._Cursor__data, deque):
                 item = self._Cursor__data.popleft()
             else:
                 item = self._Cursor__data.pop(0)
-            if self._Cursor__manipulate:
-                son = db._fix_outgoing(item, self._Cursor__collection)
-            else:
-                son = item
-            if self.__wrap is not None:
-                if self.__wrap.type_field in son:
-                    return getattr(self._Cursor__collection,
-                                   son[self.__wrap.type_field])(son)
-                return self.__wrap(son, collection=self._Cursor__collection)
-            else:
-                return son
+
+            return self.__manipulate_item(item)
+
         else:
             raise StopIteration
 
     def __getitem__(self, index):
-        obj = super(Cursor, self).__getitem__(index)
-        if (self.__wrap is not None) and isinstance(obj, dict):
-            return self.__wrap(obj)
-        return obj
+        # This will be a cursor if `index` is a slice
+        item_or_cursor = super(Cursor, self).__getitem__(index)
+
+        if isinstance(item_or_cursor, dict):
+            return self.__manipulate_item(item_or_cursor)
+        else:
+            return item_or_cursor
+
+    def __manipulate_item(self, item):
+        if self._Cursor__manipulate:
+            db = self._Cursor__collection.database
+            son = db._fix_outgoing(item, self._Cursor__collection)
+        else:
+            son = item
+        if self.__wrap is not None:
+            if self.__wrap.type_field in son:
+                return getattr(self._Cursor__collection,
+                               son[self.__wrap.type_field])(son)
+            return self.__wrap(son, collection=self._Cursor__collection)
+        else:
+            return son
