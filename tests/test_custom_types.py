@@ -31,7 +31,8 @@ import unittest
 
 from mongokit import *
 
-from six import text_type as unicode
+from six import text_type as unicode, string_types
+string_type = string_types[0]
 
 class CustomTypesTestCase(unittest.TestCase):
     def setUp(self):
@@ -88,7 +89,7 @@ class CustomTypesTestCase(unittest.TestCase):
 
         class CustomPrice(CustomType):
             mongo_type = float
-            python_type = basestring
+            python_type = string_type
             def to_bson(self, value):
                 return float(value)
             def to_python(self, value):
@@ -232,7 +233,7 @@ class CustomTypesTestCase(unittest.TestCase):
 
         class CustomDate(CustomType):
             mongo_type = unicode
-            python_type = basestring
+            python_type = string_type
             def to_bson(self, value):
                 """convert type to a mongodb type"""
                 return unicode(datetime.datetime.strftime(value,'%y-%m-%d'))
@@ -381,7 +382,7 @@ class CustomTypesTestCase(unittest.TestCase):
 
         class CustomPrice(CustomType):
             mongo_type = float
-            python_type = basestring
+            python_type = string_type
             def to_bson(self, value):
                 return float(value)
             def to_python(self, value):

@@ -33,7 +33,7 @@ from mongokit import *
 from bson.objectid import ObjectId
 import datetime
 
-from six import text_type as unicode
+from six import text_type as unicode, string_types
 
 
 class JsonTestCase(unittest.TestCase):
@@ -90,7 +90,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc["bla"]["bar"] = 42
         mydoc['spam'] = range(10)
         mydoc.save()
-        assert  isinstance(mydoc.to_json_type()['_id']['$oid'], basestring), type(mydoc.to_json_type()['_id'])
+        assert  isinstance(mydoc.to_json_type()['_id']['$oid'], string_types), type(mydoc.to_json_type()['_id'])
         assert isinstance(mydoc.to_json(), unicode)
 
     def test_simple_to_json_with_oid_in_list(self):
@@ -110,17 +110,17 @@ class JsonTestCase(unittest.TestCase):
         a = self.col.A()
         a["foo"] = u"bar"
         a.save()
-        assert  isinstance(a.to_json_type()['_id']['$oid'], basestring), type(a.to_json_type()['_id'])
+        assert  isinstance(a.to_json_type()['_id']['$oid'], string_types), type(a.to_json_type()['_id'])
         a.to_json()
         b = self.col.B()
         b['bar'] = [a['_id']]
         b['egg']['nested'] = a['_id']
         b.save()
         print(b.to_json_type())
-        assert  isinstance(b.to_json_type()['_id']['$oid'], basestring), b.to_json_type()
-        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], basestring), b.to_json_type()
-        assert  isinstance(b.to_json_type()['bar'][0]['$oid'], basestring), b.to_json_type()
-        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], basestring), b.to_json_type()
+        assert  isinstance(b.to_json_type()['_id']['$oid'], string_types), b.to_json_type()
+        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], string_types), b.to_json_type()
+        assert  isinstance(b.to_json_type()['bar'][0]['$oid'], string_types), b.to_json_type()
+        assert  isinstance(b.to_json_type()['egg']['nested']['$oid'], string_types), b.to_json_type()
         assert "ObjectId" not in b.to_json()
 
     def test_simple_to_json_with_no_id(self):
@@ -143,7 +143,7 @@ class JsonTestCase(unittest.TestCase):
     def test_to_json_custom_type(self):
         class CustomDegree(CustomType):
             mongo_type = int
-            python_type = basestring
+            python_type = string_types[0]
             def to_bson(self, value):
                 if value is not None:
                     return int(value.replace('C', ''))
@@ -227,7 +227,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc = self.col.MyDoc()
         mydoc['doc']['embed'] = embed
         mydoc.save()
-        assert isinstance(mydoc.to_json_type()['doc']['embed']['_id']['$oid'], basestring)
+        assert isinstance(mydoc.to_json_type()['doc']['embed']['_id']['$oid'], string_types)
         assert mydoc.to_json() == '{"doc": {"embed": {"_collection": "mongokit", "_database": "test", "_id": {"$oid": "%s"}, "bla": {"foo": "bar", "bar": 42}, "spam": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}, "_id": {"$oid": "%s"}}' % (
           embed['_id'], mydoc['_id']), mydoc.to_json()
 

@@ -31,8 +31,8 @@ from mongokit import *
 from bson.objectid import ObjectId
 from pymongo import ReadPreference
 
-from six import text_type as unicode
-
+from six import text_type as unicode, string_types, PY3
+string_type = string_types[0]
 
 class ApiTestCase(unittest.TestCase):
     def setUp(self):
@@ -967,7 +967,7 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(self.connection.test.doca.find_one(), doc)
 
 
-    def test_basestring_type(self):
+    def test_string_types(self):
         @self.connection.register
         class DocA(Document):
            __database__ = 'test'
@@ -1006,13 +1006,32 @@ class ApiTestCase(unittest.TestCase):
         class DocA(Document):
            __database__ = 'test'
            __collection__ = "doca"
-           structure = {'title':basestring}
+           structure = {'title':string_type}
 
         doc = self.connection.DocA()
         doc['title'] = u'foo'
         doc.save()
         doc['title'] = 'foo'
         doc.save()
+
+        # Test bytes type
+        if PY3:
+            @self.connection.register
+            class DocA(Document):
+               __database__ = 'test'
+               __collection__ = "doca"
+               structure = {'title':bytes}
+           
+            doc = self.connection.DocA()
+            doc['title'] = u'foo'
+            failed = False
+            try:
+                doc.save()
+            except SchemaTypeError as e:
+                self.assertEqual(str(e), "title must be an instance of str not unicode")
+                failed = True
+            self.assertEqual(failed, True)
+
 
         self.assertEqual(self.connection.test.doca.find_one(), doc)
 

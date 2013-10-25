@@ -95,33 +95,26 @@ class CustomType(object):
         """
         pass
 
-
-if six.PY3:
-    _authorized_types = [
+_authorized_types = [
         type(None),
         bool,
         int,
         float,
-        str,
-        bytes,
         list,
         dict,
         datetime.datetime,
         CustomType,
     ]
+if six.PY3:
+    _authorized_types += [
+        str,
+        bytes,
+    ]
 else:
-    _authorized_types = [
-        type(None),
-        bool,
-        int,
+    _authorized_types += [
         long,
-        float,
         unicode,
         basestring,
-        list,
-        dict,
-        datetime.datetime,
-        CustomType,
     ]
     
     
@@ -493,7 +486,7 @@ class SchemaDocument(six.with_metaclass(SchemaProperties, dict)):
                         raise StructureError("%s: %s is not an authorized type" % (name, struct))
             elif isinstance(struct, dict):
                 for key in struct:
-                    if isinstance(key, basestring):
+                    if isinstance(key, six.string_types):
                         if "." in key:
                             raise BadKeyError("%s: %s must not contain '.'" % (name, key))
                         if key.startswith('$'):
@@ -502,7 +495,7 @@ class SchemaDocument(six.with_metaclass(SchemaProperties, dict)):
                         if not key in authorized_types:
                             raise AuthorizedTypeError("%s: %s is not an authorized type" % (name, key))
                     else:
-                        raise StructureError("%s: %s must be a basestring or a type" % (name, key))
+                        raise StructureError("%s: %s must be a string or a type" % (name, key))
                     if struct[key] is None:
                         pass
                     elif isinstance(struct[key], dict):

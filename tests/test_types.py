@@ -97,7 +97,7 @@ class TypesTestCase(unittest.TestCase):
             class MyDoc4(SchemaDocument):
                 structure = {1:unicode}
         except StructureError as e:
-            self.assertEqual(str(e), "MyDoc4: 1 must be a basestring or a type")
+            self.assertEqual(str(e), "MyDoc4: 1 must be a string or a type")
             failed = True
         self.assertEqual(failed, True)
 
