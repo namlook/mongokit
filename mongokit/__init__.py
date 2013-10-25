@@ -48,4 +48,4 @@ from pymongo import (
     OFF as INDEX_OFF,
     HASHED as INDEX_HASHED
 )
-from migration import DocumentMigration
+from .migration import DocumentMigration
