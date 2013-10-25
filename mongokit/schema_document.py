@@ -359,7 +359,7 @@ class SchemaDocument(six.with_metaclass(SchemaProperties, dict)):
         self.validation_errors = {}
         # init
         if doc:
-            for k, v in doc.iteritems():
+            for k, v in six.iteritems(doc):
                 self[k] = v
             gen_skel = False
         if gen_skel:
@@ -650,7 +650,7 @@ class SchemaDocument(six.with_metaclass(SchemaProperties, dict)):
     def _process_validators(self, doc, struct, path=""):
         doted_struct = DotCollapsedDict(self.structure)
         doted_doc = DotCollapsedDict(doc)
-        for key, validators in self.validators.iteritems():
+        for key, validators in six.iteritems(self.validators):
             if key in doted_doc and doted_doc[key] is not None:
                 if not hasattr(validators, "__iter__"):
                     validators = [validators]
@@ -920,7 +920,7 @@ class i18n(dict, CustomType):
 
     def to_bson(self, value):
         if value is not None:
-            for l, v in value.iteritems():
+            for l, v in six.iteritems(value):
                 if isinstance(v, list) and isinstance(self._field_type, list):
                     for i in v:
                         if not isinstance(i, self._field_type[0]):
@@ -930,7 +930,7 @@ class i18n(dict, CustomType):
                     if not isinstance(v, self._field_type):
                         raise SchemaTypeError("%s (%s) must be an instance of %s not %s" % (
                                               self._field_name, l, self._field_type, type(v).__name__))
-            return [{'lang': l, 'value': v} for l, v in value.iteritems()]
+            return [{'lang': l, 'value': v} for l, v in six.iteritems(value)]
 
     def to_python(self, value):
         if value is not None:

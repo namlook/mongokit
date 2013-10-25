@@ -83,7 +83,7 @@ class DocumentProperties(SchemaProperties):
                     if 'fields' not in index:
                         raise BadIndexError(
                             "'fields' key must be specify in indexes")
-                    for key, value in index.iteritems():
+                    for key, value in six.iteritems(index):
                         if key == "fields":
                             if isinstance(value, string_types):
                                 if value not in attrs['_namespaces'] and value not in STRUCTURE_KEYWORDS:

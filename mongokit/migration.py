@@ -49,7 +49,7 @@ class DocumentMigration(object):
 
     def validate_update(self, update_query):
         structure = DotCollapsedDict(self.doc_class.structure)
-        for op, fields in update_query.iteritems():
+        for op, fields in six.iteritems(update_query):
             for field in fields:
                 if op != '$unset' and op != '$rename':
                     if field not in structure:

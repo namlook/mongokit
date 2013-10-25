@@ -60,7 +60,7 @@ class ApiTestCase(unittest.TestCase):
         assert isinstance(mydoc['_id'], ObjectId)
 
         saved_doc = self.col.find_one({"bla.bar":42})
-        for key, value in mydoc.iteritems():
+        for key, value in six.iteritems(mydoc):
             assert saved_doc[key] == value
 
         mydoc = self.col.MyDoc()
@@ -71,7 +71,7 @@ class ApiTestCase(unittest.TestCase):
         assert mydoc['_id'].startswith("MyDoc"), id
 
         saved_doc = self.col.find_one({"bla.bar":43})
-        for key, value in mydoc.iteritems():
+        for key, value in six.iteritems(mydoc):
             assert saved_doc[key] == value
 
     def test_save_without_collection(self):
