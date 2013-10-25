@@ -54,7 +54,7 @@ STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
 
-from six import text_type as unicode
+from six import text_type as unicode, with_metaclass
 
 class DocumentProperties(SchemaProperties):
     def __new__(cls, name, bases, attrs):
@@ -136,9 +136,7 @@ class DocumentProperties(SchemaProperties):
                             assert isinstance(value, int)
 
 
-class Document(SchemaDocument):
-
-    __metaclass__ = DocumentProperties
+class Document(with_metaclass(DocumentProperties, SchemaDocument)):
 
     type_field = '_type'
 

@@ -258,7 +258,7 @@ class SchemaProperties(type):
                     raise ValueError("Error in i18n: can't find %s in structure" % i18n)
 
 
-class SchemaDocument(dict):
+class SchemaDocument(six.with_metaclass(SchemaProperties, dict)):
     """
     A SchemaDocument is dictionary with a building structured schema
     The validate method will check that the document match the underling
@@ -329,7 +329,6 @@ class SchemaDocument(dict):
     >>> doc
     {"foo":{"bar":u"bla}}
     """
-    __metaclass__ = SchemaProperties
 
     structure = None
     required_fields = []
