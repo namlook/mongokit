@@ -143,10 +143,15 @@ class i18nTestCase(unittest.TestCase):
         doc.save()
 
         raw_doc = self.col.find_one({'_id':doc['_id']})
-        assert raw_doc == {'_id':doc['_id'],
-          u'title': {u'foo': [{u'lang': u'fr', u'value': u'Salut'}, {u'lang': u'en', u'value': u'Hello'}],
-          u'bar': {u'bla': [{u'lang': u'fr', u'value': 3}, {u'lang': u'en', u'value': 2}]}, 'egg':4}
-        }, raw_doc
+        # The i18n data is stored in a list, parsed from the dict in 'foo'.
+        # Since python does not guarantee an order to dict, the list might
+        # change order, so it is sorted for testing
+        raw_doc[u'title'][u'foo'].sort(key=lambda i: i[u'lang'])
+        raw_doc[u'title'][u'bar'][u'bla'].sort(key=lambda i: i[u'lang'])
+        self.assertEqual(raw_doc, {'_id':doc['_id'],
+          u'title': {u'foo': [{u'lang': u'en', u'value': u'Hello'}, {u'lang': u'fr', u'value': u'Salut'}],
+          u'bar': {u'bla': [{u'lang': u'en', u'value': 2}, {u'lang': u'fr', u'value': 3}]}, 'egg':4}
+        })
         fetched_doc = self.col.Doc.find_one({'_id':doc['_id']})
         assert fetched_doc['title']['foo']['en'] == 'Hello'
         assert fetched_doc['title']['foo']['fr'] == 'Salut'
@@ -198,16 +203,18 @@ class i18nTestCase(unittest.TestCase):
         doc.save()
 
         raw_doc = self.col.find_one({'_id':doc['_id']})
+        raw_doc[u'title'][u'foo'].sort(key=lambda i: i[u'lang'])
+        raw_doc[u'title'][u'bar'][u'bla'].sort(key=lambda i: i[u'lang'])
         self.assertEqual(raw_doc, {'_id':doc['_id'],
           u'toto': {u'titi': {u'tata': None}},
           u'title': {
               u'foo':[
-                  {u'lang': u'fr', u'value': u'Salut'},
-                  {u'lang': u'en', u'value': u'Hello'}
+                  {u'lang': u'en', u'value': u'Hello'},
+                  {u'lang': u'fr', u'value': u'Salut'}
                 ],
               u'bar': {u'bla': [
-                  {u'lang': u'fr', u'value': 3},
-                  {u'lang': u'en', u'value': 2}
+                  {u'lang': u'en', u'value': 2},
+                  {u'lang': u'fr', u'value': 3}
                 ]},
               'egg':4}
         })
@@ -324,7 +331,7 @@ class i18nTestCase(unittest.TestCase):
 
         self.connection.register([D])
         doc = self.col.D()
-        assert doc.i18n == ['a.title', 'c.title', 'b.title'], doc.i18n
+        assert set(doc.i18n) == set(['a.title', 'c.title', 'b.title']), doc.i18n
         doc['a']['title']['en'] = u'Hello'
         doc['b']['title']['fr'] = u"Salut"
         doc['c']['title']['fr'] = u"Salut"

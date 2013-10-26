@@ -175,7 +175,7 @@ class JsonTestCase(unittest.TestCase):
             self.col.MyDoc.collection.find_one({'_id': 'mydoc'}),
             {"doc": {"foo": 3}, "_id": "mydoc"}
         )
-        self.assertEqual(
+        self.assertJSON(
             mydoc.to_json(),
             '{"doc": {"foo": "3C"}, "_id": "mydoc"}',
         )
@@ -260,7 +260,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc = self.col.MyDoc()
         mydoc['_id'] = u'mydoc'
         mydoc.save()
-        assert mydoc.to_json() == '{"doc": {"embed": null}, "_id": "mydoc"}'
+        self.assertJSON(mydoc.to_json(), '{"doc": {"embed": null}, "_id": "mydoc"}')
         assert mydoc.to_json_type() == {'doc': {'embed': None}, '_id': 'mydoc'}, mydoc.to_json_type()
 
     def test_to_json_with_dict_in_list(self):
@@ -273,7 +273,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc["foo"] = [{'bar':u'bla', 'egg':3}, {'bar':u'bli', 'egg':4}]
         mydoc.save()
-        assert  mydoc.to_json() == '{"foo": [{"bar": "bla", "egg": 3}, {"bar": "bli", "egg": 4}], "_id": "mydoc"}', mydoc.to_json()
+        self.assertJSON(mydoc.to_json(), '{"foo": [{"bar": "bla", "egg": 3}, {"bar": "bli", "egg": 4}], "_id": "mydoc"}')
         assert  mydoc.to_json_type() == {'foo': [{'bar': u'bla', 'egg': 3}, {'bar': u'bli', 'egg': 4}], '_id': 'mydoc'}
 
 
@@ -395,7 +395,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc.save()
         json= mydoc.to_json()
-        assert json == '{"doc": {"embed": null}, "_id": "mydoc"}'
+        self.assertJSON(json, '{"doc": {"embed": null}, "_id": "mydoc"}')
         doc = self.col.MyDoc.from_json(json)
         assert doc == {'doc': {'embed': None}, '_id': 'mydoc'}
 
@@ -483,7 +483,7 @@ class JsonTestCase(unittest.TestCase):
         mydoc['_id'] = u'mydoc'
         mydoc.save()
         json = mydoc.to_json()
-        assert json == '{"doc": {"embed": []}, "_id": "mydoc"}'
+        self.assertJSON(json, '{"doc": {"embed": []}, "_id": "mydoc"}')
         mydoc = self.col.MyDoc.from_json(json)
         assert mydoc == {'doc': {'embed': []}, '_id': 'mydoc'}
 

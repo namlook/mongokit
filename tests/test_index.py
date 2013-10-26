@@ -325,7 +325,7 @@ class IndexTestCase(unittest.TestCase):
                     },
                 ]
         except BadIndexError as e:
-            self.assertEqual(str(e), "fields must be a string, a tuple or a list of tuple (got <type 'dict'> instead)")
+            self.assertEqual(str(e), "fields must be a string, a tuple or a list of tuple (got <%s 'dict'> instead)" % ('type' if six.PY2 else 'class'))
             failed = True
         self.assertEqual(failed, True)
 
@@ -373,7 +373,7 @@ class IndexTestCase(unittest.TestCase):
                     },
                 ]
         except BadIndexError as e:
-            self.assertEqual(str(e), "Error in 3, the field name must be string (got <type 'int'> instead)")
+            self.assertEqual(str(e), "Error in 3, the field name must be string (got <%s 'int'> instead)" % ('type' if six.PY2 else 'class'))
             failed = True
         self.assertEqual(failed, True)
 

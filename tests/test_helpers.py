@@ -37,8 +37,11 @@ class HelpersTestCase(unittest.TestCase):
     def test_DotExpandedDict(self):
         d = DotExpandedDict({'a.$int.c.d': 3, 'a.$int.e': 5, '_id': u'user', 'a.g': 2, 'f': 6})
         assert d == {'_id': u'user', 'a':{int:{'c':{'d':3}, 'e':5}, "g":2}, 'f':6}, d
-
-        d = DotExpandedDict({'foo.bla.$unicode': [unicode], 'foo.bar': {}})
+        
+        if six.PY2:
+            d = DotExpandedDict({'foo.bla.$unicode': [unicode], 'foo.bar': {}})
+        else:
+            d = DotExpandedDict({'foo.bla.$str': [str], 'foo.bar': {}})
         assert d == {'foo': {'bar': {}, 'bla': {six.text_type: [six.text_type]}}}, d
 
         self.assertRaises(EvalException, DotExpandedDict, {'foo.bla.$arf': [six.text_type], 'foo.bar': {}})
@@ -128,8 +131,15 @@ class HelpersTestCase(unittest.TestCase):
 
         dic = {'bla':{'foo':{six.text_type:{"bla":3}}, 'bar':'egg'}}
         d = DotCollapsedDict(dic)
-        assert d == {'bla.foo.$unicode.bla': 3, 'bla.bar': "egg"}, d
-
+        if six.PY2:
+            assert d == {'bla.foo.$unicode.bla': 3, 'bla.bar': "egg"}, d
+        else:
+            assert d == {'bla.foo.$str.bla': 3, 'bla.bar': "egg"}, d
+            
         dic = {'bla':{'foo':{six.text_type:['egg']}, 'bar':"egg"}}
         d = DotCollapsedDict(dic)
-        assert d == {'bla.foo.$unicode': ['egg'], 'bla.bar': 'egg'}, d
+        if six.PY2:
+            assert d == {'bla.foo.$unicode': ['egg'], 'bla.bar': 'egg'}, d
+        else:
+            assert d == {'bla.foo.$str': ['egg'], 'bla.bar': 'egg'}, d
+            

@@ -254,7 +254,7 @@ class CustomTypesTestCase(unittest.TestCase):
             self.col.Foo()
         except DefaultFieldTypeError as e:
             failed = True
-            self.assertEqual(str(e), 'date must be an instance of basestring not datetime')
+            self.assertEqual(str(e), 'date must be an instance of %s not datetime' % six.string_types[0].__name__)
  
     def test_custom_type_bad_python(self):
         import datetime

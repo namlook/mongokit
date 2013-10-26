@@ -119,7 +119,7 @@ class DescriptorsTestCase(unittest.TestCase):
             structure = {
                 "foo":{six.text_type:{"bar":int}}
             }
-            required_fields = ["foo.$unicode.bar"]
+            required_fields = ["foo.$" + ("unicode" if six.PY2 else "str") + ".bar"]
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
         self.assertRaises(RequireFieldError, mydoc.validate )
@@ -600,5 +600,8 @@ class DescriptorsTestCase(unittest.TestCase):
             }
 
         mydoc = MyDoc()
-        assert mydoc._namespaces == ['$unicode', '$unicode.$int']
+        if six.PY2:
+            assert mydoc._namespaces == ['$unicode', '$unicode.$int']
+        else:
+            assert mydoc._namespaces == ['$str', '$str.$int']
 

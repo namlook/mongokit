@@ -107,12 +107,12 @@ class StructureTestCase(unittest.TestCase):
                 }
             }
         mydoc = MyDoc()
-        mydoc['foo'] = u'bla'
+        mydoc['foo'] = six.u('bla')
         mydoc.validate()
         mydoc['foo'] = 3
         mydoc['bar']['bla'] = 2
         mydoc.validate()
-        mydoc['foo'] = b'arf'
+        mydoc['foo'] = ('arf',)
         self.assertRaises(AuthorizedTypeError, mydoc.validate)
 
     def test_big_nested_structure(self):
@@ -136,7 +136,11 @@ class StructureTestCase(unittest.TestCase):
                 }
             }
         mydoc = MyDoc()
-        assert mydoc._namespaces == ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$int', '1.2.3.4.5.6.7']
+        if six.PY2:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$int', '1.2.3.4.5.6.7']
+        else:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$str', '1.2.3.4.5.6.8.$str.$int', '1.2.3.4.5.6.7']
+        self.assertEqual(set(mydoc._namespaces), set(expect))
         mydoc['1']['2']['3']['4']['5']['6']['7'] = 8
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{3:u"bla"}}
         self.assertRaises(SchemaTypeError,  mydoc.validate)
@@ -167,12 +171,19 @@ class StructureTestCase(unittest.TestCase):
             }
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
-        assert mydoc._namespaces == ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$unicode', '1.2.3.4.5.6.7']
+        if six.PY2:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$unicode', '1.2.3.4.5.6.7']
+        else:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$str', '1.2.3.4.5.6.8.$str.$str', '1.2.3.4.5.6.7']
+        self.assertEqual(set(mydoc._namespaces), set(expect))
         mydoc['1']['2']['3']['4']['5']['6']['7'] = 8
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{"3":u"bla"}}
         self.assertRaises(SchemaTypeError,  mydoc.validate)
-        mydoc['1']['2']['3']['4']['5']['6']['8'] = {b"9":{b"3":10}}
-        self.assertRaises(SchemaTypeError,  mydoc.validate)
+        # This test does not apply in Py3, since keys must be strings and 
+        # there is no distinction between 'str' and 'unicode'
+        if six.PY2:
+            mydoc['1']['2']['3']['4']['5']['6']['8'] = {"9":{"3":10}}
+            self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{u"3":4}}
         mydoc.validate()
             

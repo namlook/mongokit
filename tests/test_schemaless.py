@@ -76,7 +76,7 @@ class SchemaLessTestCase(unittest.TestCase):
         doc.pop('bar')
         doc.save()
         doc = self.col.MyDoc.find_one()
-        self.assertEqual(doc.keys(), ['_id', 'egg'])
+        self.assertEqual(set(doc.keys()), set(['_id', 'egg']))
 
         doc = self.col.MyDoc({'_id':1, 'foo':u'bla'})
         doc.save()
