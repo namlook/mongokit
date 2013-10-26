@@ -355,14 +355,14 @@ class TypesTestCase(unittest.TestCase):
 
     def test_or_operator(self):
         from mongokit import OR
-        assert repr(OR(unicode, str)) == "<unicode or str>"
+        assert repr(OR(int, str)) == "<int or str>"
 
         failed = False
         try:
             class BadMyDoc(SchemaDocument):
-                structure = {"bla":OR(unicode,str)}
+                structure = {"bla":OR(six.text_type, tuple)}
         except StructureError as e:
-            self.assertEqual(str(e), "BadMyDoc: <type 'str'> in <unicode or str> is not an authorized type (type found)")
+            self.assertEqual(str(e), "BadMyDoc: <type 'tuple'> in <unicode or tuple> is not an authorized type (type found)")
             failed = True
         self.assertEqual(failed, True)
 

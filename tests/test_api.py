@@ -594,7 +594,7 @@ class ApiTestCase(unittest.TestCase):
             structure = {"foo":int}
         self.connection.register([MyDoc])
 
-        for i in xrange(2000):
+        for i in six.moves.range(2000):
             mydoc = self.col.MyDoc()
             mydoc['foo'] = i
             mydoc.save()
@@ -752,18 +752,20 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(explain1, explain2)
 
     def test_with_long(self):
-        class Doc(Document):
-            structure = {
-                "foo":OR(int, long),
-                "bar":six.text_type,
-            }
-        self.connection.register([Doc])
-        doc = self.col.Doc()
-        doc['foo'] = long(12)
-        doc.save()
-        fetch_doc = self.col.Doc.find_one()
-        fetch_doc['bar'] = u'egg'
-        fetch_doc.save()
+        # Python 2 test only
+        if six.PY2:
+            class Doc(Document):
+                structure = {
+                    "foo":OR(int, long),
+                    "bar":six.text_type,
+                }
+            self.connection.register([Doc])
+            doc = self.col.Doc()
+            doc['foo'] = long(12)
+            doc.save()
+            fetch_doc = self.col.Doc.find_one()
+            fetch_doc['bar'] = u'egg'
+            fetch_doc.save()
 
     def test_skip_validation_with_required_field(self):
         class Task(Document):
