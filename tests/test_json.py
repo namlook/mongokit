@@ -52,7 +52,7 @@ class JsonTestCase(unittest.TestCase):
         """
         a = a.replace('null', 'None')
         b = b.replace('null', 'None')
-        self.assertEqual(a, b)    
+        self.assertEqual(eval(a), eval(b))    
         
     def test_simple_to_json(self):
         class MyDoc(Document):
