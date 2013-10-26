@@ -729,7 +729,7 @@ class ApiTestCase(unittest.TestCase):
             doc = self.col.Doc(doc={'foo':foo, 'bla':i})
             doc.save()
         assert self.col.find().distinct('foo') == ['blo', 'bla']
-        assert self.col.find().distinct('bla') == range(15)
+        assert self.col.find().distinct('bla') == list(range(15))
 
     def test_explain(self):
         class MyDoc(Document):
@@ -977,12 +977,12 @@ class ApiTestCase(unittest.TestCase):
            structure = {'title':six.text_type}
 
         doc = self.connection.DocA()
-        doc['title'] = 'foo'
+        doc['title'] = six.b('foo')
         failed = False
         try:
             doc.save()
         except SchemaTypeError as e:
-            self.assertEqual(str(e), "title must be an instance of unicode not str")
+            self.assertEqual(str(e), "title must be an instance of %s not %s" % (six.text_type.__name__, six.binary_type.__name__))
             failed = True
         self.assertEqual(failed, True)
 
@@ -991,15 +991,15 @@ class ApiTestCase(unittest.TestCase):
            __database__ = 'test'
            __collection__ = "doca"
            authorized_types = Document.authorized_types+[str]
-           structure = {'title':str}
+           structure = {'title':six.binary_type}
 
         doc = self.connection.DocA()
-        doc['title'] = u'foo'
+        doc['title'] = six.u('foo')
         failed = False
         try:
             doc.save()
         except SchemaTypeError as e:
-            self.assertEqual(str(e), "title must be an instance of str not unicode")
+            self.assertEqual(str(e), "title must be an instance of %s not %s" % (six.binary_type.__name__, six.text_type.__name__))
             failed = True
         self.assertEqual(failed, True)
 
@@ -1015,25 +1015,6 @@ class ApiTestCase(unittest.TestCase):
         doc.save()
         doc['title'] = 'foo'
         doc.save()
-
-        # Test bytes type
-        if six.PY3:
-            @self.connection.register
-            class DocA(Document):
-               __database__ = 'test'
-               __collection__ = "doca"
-               structure = {'title':bytes}
-           
-            doc = self.connection.DocA()
-            doc['title'] = u'foo'
-            failed = False
-            try:
-                doc.save()
-            except SchemaTypeError as e:
-                self.assertEqual(str(e), "title must be an instance of str not unicode")
-                failed = True
-            self.assertEqual(failed, True)
-
 
         self.assertEqual(self.connection.test.doca.find_one(), doc)
 
