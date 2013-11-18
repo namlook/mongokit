@@ -97,48 +97,51 @@ class CustomType(object):
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = []
 
-
-class RequireFieldError(Exception):
+class SchemaDocumentError(Exception):
     pass
 
 
-class StructureError(Exception):
+class RequireFieldError(SchemaDocumentError):
     pass
 
 
-class BadKeyError(Exception):
+class StructureError(SchemaDocumentError):
     pass
 
 
-class AuthorizedTypeError(Exception):
+class BadKeyError(SchemaDocumentError):
     pass
 
 
-class ValidationError(Exception):
+class AuthorizedTypeError(SchemaDocumentError):
     pass
 
 
-class DuplicateRequiredError(Exception):
+class ValidationError(SchemaDocumentError):
     pass
 
 
-class DuplicateDefaultValueError(Exception):
+class DuplicateRequiredError(SchemaDocumentError):
     pass
 
 
-class ModifierOperatorError(Exception):
+class DuplicateDefaultValueError(SchemaDocumentError):
     pass
 
 
-class SchemaTypeError(Exception):
+class ModifierOperatorError(SchemaDocumentError):
     pass
 
 
-class DefaultFieldTypeError(Exception):
+class SchemaTypeError(SchemaDocumentError):
     pass
 
 
-class i18nError(Exception):
+class DefaultFieldTypeError(SchemaDocumentError):
+    pass
+
+
+class i18nError(SchemaDocumentError):
     pass
 
 
