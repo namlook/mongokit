@@ -2,17 +2,19 @@
 
 [MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It has a lot of drivers for many languages (python, ruby, perl, java, php...).
 
-MongoKit is a python module that brings structured schema and validation layer
-on top of the great pymongo driver. It has be written to be as simple and light
+MongoKit is a python module that brings a structured schema and validation layer
+on top of the great pymongo driver. It has been written to be as simple and light
 as possible with the KISS and DRY principles in mind.
 
 ## Philosophy
 
 MongoKit is designed to be:
 
- * **simple**: MongoKit use plain python type to describe document structure
- * **fast**: MongoKit is fast but if you *really* need to be fast you have access to the raw pymongo layer without changing the API
- * **powerful**: MongoKit brings many feature like document auto-reference, custom types or i18n support.
+ * **simple**: MongoKit uses plain python types to describe document structure
+ * **fast**: MongoKit is fast but if you *really* need to be fast you have
+   access to the raw pymongo layer without changing the API **powerful**:
+ * MongoKit brings many features like document auto-reference, custom types or
+   i18n support.
 
 **Your data is clean:**
 
@@ -23,8 +25,8 @@ MongoKit is designed to be:
 
 ## Features
 
- * schema validation (which use simple python type for the declaration)
- * schema less feature
+ * schema validation (which uses simple python types for the declaration)
+ * schema-less feature
  * dot notation
  * nested and complex schema declaration
  * untyped field support
@@ -33,7 +35,7 @@ MongoKit is designed to be:
  * custom validators
  * cross database document reference
  * random query support (which returns a random document from the database)
- * inheritance and polymorphisme support
+ * inheritance and polymorphism support
  * versionized document support (in beta stage)
  * partial auth support (it brings a simple User model) 
  * operator for validation (currently : OR, NOT and IS)
@@ -47,8 +49,8 @@ Go to the full [documentation](http://github.com/namlook/mongokit/wiki)
 
 ## A quick example
 
-Document are enhanced python dictionary with a `validate()` method.
-A Document declaration look like that:
+Documents are enhanced python dictionaries with a `validate()` method.
+A Document declaration look as follows:
 
 ```python
 >>> from mongokit import *
@@ -70,10 +72,10 @@ A Document declaration look like that:
 ... 
 ```
 
-We fire a connection and register our objects.
+We establish a connection and register our objects.
 
 ```python
->>> blogpost = con.test.example.BlogPost() # this use the db "test" and the collection "example"
+>>> blogpost = con.test.example.BlogPost() # this uses the database "test" and the collection "example"
 >>> blogpost['title'] = u'my title'
 >>> blogpost['body'] = u'a body'
 >>> blogpost['author'] = u'me'
@@ -84,7 +86,7 @@ We fire a connection and register our objects.
    
 Saving the object will call the `validate()` method.
 
-And you can use more complex structure:
+And you can use a more complex structure as follows:
 
 ```python
 >>>  @connection.register
@@ -100,10 +102,10 @@ And you can use more complex structure:
 ...     required_fields = ['foo.content', 'bar.bla.spam']
 ```
 
-Please, see the [tutorial](https://github.com/namlook/mongokit/wiki/Tutorial) for more examples.
+Please see the [tutorial](https://github.com/namlook/mongokit/wiki/Tutorial) for more examples.
 
-Suggestion and patches are really welcome. If you find mistakes in the documentation
-(english is not my primary language) feel free to contact me. You can find me (namlook) 
+Suggestions and patches are really welcome. If you find mistakes in the documentation
+(English is not my primary language) feel free to contact me. You can find me (namlook) 
 on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
 
 
@@ -111,7 +113,7 @@ on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
 
 ### v0.9.0
 
- * now MongoKit required PyMongo >= 2.5
+ * now MongoKit requires PyMongo >= 2.5
  * find_and_modify returns None if the query fails (thanks to @a1gucis)
  * Fix off-by-one error on SchemaDocument (thanks to @John Brodie)
  * Fix inherited queries (issue #106) (thanks to @effem-git)
