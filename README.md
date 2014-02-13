@@ -37,7 +37,7 @@ MongoKit is designed to be:
  * random query support (which returns a random document from the database)
  * inheritance and polymorphism support
  * versionized document support (in beta stage)
- * partial auth support (it brings a simple User model) 
+ * partial auth support (it brings a simple User model)
  * operator for validation (currently : OR, NOT and IS)
  * simple web framework integration
  * import/export to json
@@ -69,7 +69,7 @@ A Document declaration look as follows:
 ...     }
 ...     required_fields = ['title','author', 'date_creation']
 ...     default_values = {'rank':0, 'date_creation':datetime.datetime.utcnow}
-... 
+...
 ```
 
 We establish a connection and register our objects.
@@ -83,7 +83,7 @@ We establish a connection and register our objects.
 {'body': u'a body', 'title': u'my title', 'date_creation': datetime.datetime(...), 'rank': 0, 'author': u'me'}
 >>> blogpost.save()
 ```
-   
+
 Saving the object will call the `validate()` method.
 
 And you can use a more complex structure as follows:
@@ -105,7 +105,7 @@ And you can use a more complex structure as follows:
 Please see the [tutorial](https://github.com/namlook/mongokit/wiki/Tutorial) for more examples.
 
 Suggestions and patches are really welcome. If you find mistakes in the documentation
-(English is not my primary language) feel free to contact me. You can find me (namlook) 
+(English is not my primary language) feel free to contact me. You can find me (namlook)
 on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
 
 
@@ -118,7 +118,7 @@ on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
  * Added a Makefile for running tests in venv (thanks to @gulbinas)
  * fixed pep8 error (thanks to @gulbinas)
  * added support for MongoReplicaSetClient (thanks to @inabhi9)
- * Added __getstate__ and __setstate__ to DotedDict and i18nDotedDict. Problems appeared here when pickling mongokit documents due to apparent lack of these functions. (thanks to @petersng)
+ * Added `__getstate__` and `__setstate__` to DotedDict and i18nDotedDict. Problems appeared here when pickling mongokit documents due to apparent lack of these functions. (thanks to @petersng)
  * Fixed english mistake and typos into the documentation (thanks to @biow0lf, @SeyZ, @gianpaj and @1123)
  * Fixed inherited queries when accessing cursor by index (thanks to @asivokon)
  * changed the namespace on schema document errors (thanks to @rtjoseph11)
@@ -156,9 +156,9 @@ on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
  * small updates to validation messages (Merge pull request #94 from unpluggd/master)
  * Fixes formatting error when throwing MaxDocumentSizeError in Document.validate() (Merge pull request #99 from apavlo/master)
  * Fixed typo when throwing MaxDocumentSizeError in validate() (thanks to Andy Pavlo)
- * added fix for unconditional access to __wrap on cursors (thanks to David T. Lehmann)
- * added test for __getitem__ on cursor with undefined __wrap (thanks to David T. Lehmann)
- * __getitem__ on unwrapped cursor checks if __wrap is None (Merge pull request #97 from dtl/fix-getitem-on-unwrapped-cursor)
+ * added fix for unconditional access to `__wrap on cursors (thanks to David T. Lehmann)
+ * added test for `__getitem__` on cursor with undefined `__wrap` (thanks to David T. Lehmann)
+ * `__getitem__` on unwrapped cursor checks if `__wrap` is None (Merge pull request #97 from dtl/fix-getitem-on-unwrapped-cursor)
  * Add .travis.yml for Travis CI (http://travis-ci.org/) (Merge pull request #96 from msabramo/travis)
  * Fixed a very minor rendering issue in the docs (Merge pull request #95 from d0ugal/master)
  * Fixed rendering issue in the docs. (thanks to Dougal Matthews)
