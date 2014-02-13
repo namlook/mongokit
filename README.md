@@ -111,6 +111,18 @@ on the freenode #mongodb irc channel or on [twitter](http://twitter.com/namlook)
 
 ## Recent Change Log
 
+### v0.9.1
+
+ * fixed #131 - Use PEP8 recommendation for import
+ * fixed tests (thanks @JohnBrodie and @bneron)
+ * Added a Makefile for running tests in venv (thanks to @gulbinas)
+ * fixed pep8 error (thanks to @gulbinas)
+ * added support for MongoReplicaSetClient (thanks to @inabhi9)
+ * Added __getstate__ and __setstate__ to DotedDict and i18nDotedDict. Problems appeared here when pickling mongokit documents due to apparent lack of these functions. (thanks to @petersng)
+ * Fixed english mistake and typos into the documentation (thanks to @biow0lf, @SeyZ, @gianpaj and @1123)
+ * Fixed inherited queries when accessing cursor by index (thanks to @asivokon)
+ * changed the namespace on schema document errors (thanks to @rtjoseph11)
+
 ### v0.9.0
 
  * now MongoKit requires PyMongo >= 2.5
