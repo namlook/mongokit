@@ -25,6 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import bson
 import datetime
 import re
 import logging
@@ -332,6 +333,7 @@ class SchemaDocument(dict):
         list,
         dict,
         datetime.datetime,
+        bson.binary.Binary,
         CustomType,
     ]
 
