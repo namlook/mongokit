@@ -97,6 +97,7 @@ class CustomType(object):
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = []
 
+
 class SchemaDocumentError(Exception):
     pass
 
