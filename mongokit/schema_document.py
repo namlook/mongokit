@@ -25,6 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import bson
 import datetime
 import re
 import logging
@@ -96,6 +97,7 @@ class CustomType(object):
 
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = []
+
 
 class SchemaDocumentError(Exception):
     pass
@@ -331,6 +333,7 @@ class SchemaDocument(dict):
         list,
         dict,
         datetime.datetime,
+        bson.binary.Binary,
         CustomType,
     ]
 

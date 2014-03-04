@@ -106,6 +106,7 @@ class Connection(MongoKitConnection, PymongoConnection):
         MongoKitConnection.__init__(self, *args, **kwargs)
         PymongoConnection.__init__(self, *args, **kwargs)
 
+
 class ReplicaSetConnection(MongoKitConnection, PymongoReplicaSetConnection):
     def __init__(self, *args, **kwargs):
         # Specifying that it should run both the inits
