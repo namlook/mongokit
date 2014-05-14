@@ -204,8 +204,8 @@ class StructureTestCase(unittest.TestCase):
         mydoc.existent = u"31337"
         mydoc.exists.subexists = u"31337"
 
-        self.assertIsInstance(mydoc, MyDoc)
-        self.assertIsInstance(mydoc.exists, DotedDict)
+        self.assertTrue(isinstance(mydoc, MyDoc), 'MyDoc is MyDoc')
+        self.assertTrue(isinstance(mydoc.exists, DotedDict), 'MyDoc contains DotedDict')
 
         self.assertEqual(mydoc.existent, u"31337", 'Getting existent value from dotted')
         self.assertEqual(mydoc.exists.subexists, u"31337", 'Getting existent value from dotted')
