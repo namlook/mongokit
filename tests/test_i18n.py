@@ -219,6 +219,31 @@ class i18nTestCase(unittest.TestCase):
         fetched_doc.set_lang('fr')
         assert fetched_doc.title.foo == 'Salut'
 
+    def test_i18n_dot_notation_missing(self):
+        class MyDoc(Document):
+            use_dot_notation = True
+            structure = {
+                "existent": unicode,
+                'exists': {
+                    'subexists': unicode
+                }
+            }
+            i18n = ["existent", "exists.subexists"]
+        # We register it, and not use directly coz i18n is fucking broken
+        # (see https://github.com/namlook/mongokit/pull/170)
+        # TODO: remove this when fix would be applied in upstream
+        self.connection.register([MyDoc])
+        mydoc = self.col.MyDoc(lang='en')
+        mydoc.existent = u"31337"
+        mydoc.exists.subexists = u"31337"
+        self.assertIsInstance(mydoc, MyDoc)
+        self.assertIsInstance(mydoc.exists, i18nDotedDict)
+
+        self.assertEqual(mydoc.existent, u"31337", 'Getting existent value from dotted')
+        self.assertEqual(mydoc.exists.subexists, u"31337", 'Getting existent value from dotted')
+        self.assertRaises(AttributeError, lambda: mydoc.not_existent)
+        self.assertRaises(AttributeError, lambda: mydoc.exists.not_subexists)
+
     def test_i18n_fallback(self):
         class Doc(Document):
             use_dot_notation = True
