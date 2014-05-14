@@ -123,7 +123,7 @@ class DotedDict(dict):
             if key.startswith('_'):
                 return super(i18nDotedDict, self).__getattribute__(key)
             else:
-                raise AttributeError('Not such attribute {}'.format(key))
+                raise AttributeError('Not such attribute {0}'.format(key))
 
     def __deepcopy__(self, memo={}):
         obj = dict(self)
