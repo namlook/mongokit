@@ -190,7 +190,29 @@ class StructureTestCase(unittest.TestCase):
         mydoc.bar = u"bar"
         assert mydoc == {'foo':3, 'bar':'bar'}
         mydoc.validate()
-        
+
+    def test_dot_notation_missing(self):
+        class MyDoc(SchemaDocument):
+            use_dot_notation = True
+            structure = {
+                "existent": unicode,
+                "exists": {
+                    'subexists': unicode
+                }
+            }
+        mydoc = MyDoc()
+        mydoc.existent = u"31337"
+        mydoc.exists.subexists = u"31337"
+
+        self.assertTrue(isinstance(mydoc, MyDoc), 'MyDoc is MyDoc')
+        self.assertTrue(isinstance(mydoc.exists, DotedDict), 'MyDoc contains DotedDict')
+
+        self.assertEqual(mydoc.existent, u"31337", 'Getting existent value from dotted')
+        self.assertEqual(mydoc.exists.subexists, u"31337", 'Getting existent value from dotted')
+        self.assertRaises(AttributeError, lambda: mydoc.not_existent)
+        self.assertRaises(AttributeError, lambda: mydoc.exists.not_subexists)
+
+
     def test_dot_notation_nested(self):
         class MyDoc(SchemaDocument):
             use_dot_notation = True

@@ -74,6 +74,8 @@ class i18nDotedDict(dict):
                     return self[key].get(self._doc._fallback_lang)
                 return self[key][self._doc._current_lang]
             return self[key]
+        else:
+            return super(i18nDotedDict, self).__getattribute__(key)
 
     def __deepcopy__(self, memo={}):
         obj = dict(self)
@@ -107,7 +109,8 @@ class DotedDict(dict):
         if key in self:
             self[key] = value
         else:
-            if self._dot_notation_warning and not key.startswith('_') and\
+            # Check for '_' should be first, coz we want to set protected attrs in __init__ without recursion, i.e. _dot_notation_warning
+            if not key.startswith('_') and self._dot_notation_warning and\
                key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
                 log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
             dict.__setattr__(self, key, value)
@@ -115,6 +118,12 @@ class DotedDict(dict):
     def __getattr__(self, key):
         if key in self:
             return self[key]
+        else:
+            # kindof bulletproof
+            if key.startswith('_'):
+                return super(i18nDotedDict, self).__getattribute__(key)
+            else:
+                raise AttributeError('Not such attribute {0}'.format(key))
 
     def __deepcopy__(self, memo={}):
         obj = dict(self)
