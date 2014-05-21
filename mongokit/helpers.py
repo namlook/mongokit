@@ -121,7 +121,7 @@ class DotedDict(dict):
         else:
             # kindof bulletproof
             if key.startswith('_'):
-                return super(i18nDotedDict, self).__getattribute__(key)
+                return super(DotedDict, self).__getattribute__(key)
             else:
                 raise AttributeError('Not such attribute {0}'.format(key))
 
