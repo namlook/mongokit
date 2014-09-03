@@ -173,12 +173,16 @@ class ApiTestCase(unittest.TestCase):
         assert self.col.MyDoc.find().hint([('foo', 1)])
         assert [i['foo'] for i in self.col.MyDoc.find().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
         allPlans = self.col.MyDoc.find().explain()['allPlans']
+        allPlans[0].pop(u'indexBounds', None)
+        allPlans[0].pop(u'indexOnly', None)
+        allPlans[0].pop(u'nChunkSkips', None)
+        allPlans[0].pop(u'scanAndOrder', None)
+        allPlans[0].pop(u'isMultiKey', None)
         self.assertEqual(
             allPlans,
             [
                 {
                     u'cursor': u'BasicCursor',
-                    u'indexBounds': {},
                     u'nscannedObjects': 10,
                     u'nscanned': 10,
                     u'n': 10,
@@ -746,7 +750,9 @@ class ApiTestCase(unittest.TestCase):
         explain1.pop('n')
         explain2.pop('n')
         explain1['allPlans'][0].pop('n')
+        explain1.pop('stats', None)
         explain2['allPlans'][0].pop('n')
+        explain2.pop('stats', None)
         self.assertEqual(explain1, explain2)
 
     def test_with_long(self):

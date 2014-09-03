@@ -109,7 +109,8 @@ class DotedDict(dict):
         if key in self:
             self[key] = value
         else:
-            # Check for '_' should be first, coz we want to set protected attrs in __init__ without recursion, i.e. _dot_notation_warning
+            # Check for '_' should be first, coz we want to set protected
+            # attrs in __init__ without recursion, i.e. _dot_notation_warning
             if not key.startswith('_') and self._dot_notation_warning and\
                key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
                 log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
