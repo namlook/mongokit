@@ -30,7 +30,7 @@ try:
     from pymongo import MongoReplicaSetClient as PymongoReplicaSetConnection
 except ImportError:
     from pymongo import Connection as PymongoConnection
-from database import Database
+from mongokit.database import Database
 
 
 class CallableMixin(object):
@@ -47,7 +47,7 @@ class CallableMixin(object):
             fallback_lang=fallback_lang
         )
 
-_iterables = (list, tuple, set, frozenset)
+_ITERABLES = (list, tuple, set, frozenset)
 
 
 class MongoKitConnection(object):
@@ -55,19 +55,20 @@ class MongoKitConnection(object):
     def __init__(self, *args, **kwargs):
         self._databases = {}
         self._registered_documents = {}
+        super(MongoKitConnection, self).__init__(*args, **kwargs)
 
     def register(self, obj_list):
         decorator = None
-        if not isinstance(obj_list, _iterables):
+        if not isinstance(obj_list, _ITERABLES):
             # we assume that the user used this as a decorator
             # using @register syntax or using conn.register(SomeDoc)
             # we stock the class object in order to return it later
             decorator = obj_list
             obj_list = [obj_list]
         # cleanup
-        for dbname, db in self._databases.items():
-            for colname, col in db._collections.items():
-                for docname, doc in col._documents.items():
+        for _, db in self._databases.items():
+            for __, col in db._collections.items():
+                for docname, ___ in col._documents.items():
                     del col._documents[docname]
                 for obj_name in [obj.__name__ for obj in obj_list]:
                     if obj_name in col._registered_documents:
@@ -103,8 +104,7 @@ class MongoKitConnection(object):
 class Connection(MongoKitConnection, PymongoConnection):
     def __init__(self, *args, **kwargs):
         # Specifying that it should run both the inits
-        MongoKitConnection.__init__(self, *args, **kwargs)
-        PymongoConnection.__init__(self, *args, **kwargs)
+        super(Connection, self).__init__(*args, **kwargs)
 
 
 class ReplicaSetConnection(MongoKitConnection, PymongoReplicaSetConnection):

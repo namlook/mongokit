@@ -28,7 +28,7 @@
 from pymongo.database import Database as PymongoDatabase
 from bson.dbref import DBRef
 from mongokit.document import Document
-from collection import Collection
+from mongokit.collection import Collection
 
 
 class Database(PymongoDatabase):
