@@ -8,9 +8,10 @@ before_install:
     pip install --use-mirrors nose unittest2 pymongo
 
 install:
-  - python setup.py install
+    - make setup
 
-script: nosetests 
+script:
+    - make test
 
 services:
   - mongodb
