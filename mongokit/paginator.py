@@ -127,7 +127,7 @@ class Paginator(object):
     def count(self):
         return self._count
 
-    def _set_page(self, page_num):
+    def _set_page(self, _):
         if self._page > 1:
             self._cursor.skip(self.start_index - 1)
 
