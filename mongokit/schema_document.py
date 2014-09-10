@@ -33,7 +33,10 @@ from copy import deepcopy
 log = logging.getLogger(__name__)
 
 from mongokit.operators import SchemaOperator, IS
-from mongokit.helpers import *
+from mongokit.helpers import DotCollapsedDict
+from mongokit.helpers import DotExpandedDict
+from mongokit.helpers import i18nDotedDict
+from mongokit.helpers import DotedDict
 
 __all__ = [
     'AuthorizedTypeError',
@@ -45,8 +48,6 @@ __all__ = [
     'DotExpandedDict',
     'DuplicateDefaultValueError',
     'DuplicateRequiredError',
-    'EvalException',
-    'fromtimestamp',
     'i18n',
     'i18nError',
     'ModifierOperatorError',
@@ -57,7 +58,6 @@ __all__ = [
     'SchemaTypeError',
     'Set',
     'StructureError',
-    'totimestamp',
     'ValidationError',
 ]
 
