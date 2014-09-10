@@ -49,4 +49,3 @@ from pymongo import (
     HASHED as INDEX_HASHED
 )
 from mongokit.migration import DocumentMigration
-
