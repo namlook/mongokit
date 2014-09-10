@@ -165,6 +165,7 @@ class DotExpandedDict(dict):
     """
     # code taken from Django source code http://code.djangoproject.com/
     def __init__(self, key_to_list_mapping):
+        super(DotExpandedDict, self).__init__()
         for k, v in key_to_list_mapping.items():
             current = self
             bits = k.split('.')
@@ -208,6 +209,7 @@ class DotCollapsedDict(dict):
 
     """
     def __init__(self, passed_dict, remove_under_type=False, reference=None):
+        super(DotCollapsedDict, self).__init__()
         self._remove_under_type = remove_under_type
         assert isinstance(passed_dict, dict), "you must pass a dict instance"
         final_dict = {}

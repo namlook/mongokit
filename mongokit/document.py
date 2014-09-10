@@ -56,7 +56,7 @@ log = logging.getLogger(__name__)
 
 
 class DocumentProperties(SchemaProperties):
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         for base in bases:
             parent = base.__mro__[0]
             if hasattr(parent, 'structure'):
@@ -68,10 +68,10 @@ class DocumentProperties(SchemaProperties):
                         for index in attrs['indexes']+parent.indexes:
                             if index not in attrs['indexes']:
                                 attrs['indexes'].append(index)
-        return SchemaProperties.__new__(cls, name, bases, attrs)
+        return SchemaProperties.__new__(mcs, name, bases, attrs)
 
     @classmethod
-    def _validate_descriptors(cls, attrs):
+    def _validate_descriptors(mcs, attrs):
         SchemaProperties._validate_descriptors(attrs)
         # validate index descriptor
         if attrs.get('migration_handler') and attrs.get('use_schemaless'):
@@ -163,7 +163,7 @@ class Document(SchemaDocument):
         # If using autorefs, we need another authorized
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
-        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False,
+        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, _gen_auth_types=False,
                                        lang=lang, fallback_lang=fallback_lang)
         if self.type_field in self:
             self[self.type_field] = unicode(self.__class__.__name__)
@@ -461,7 +461,7 @@ class Document(SchemaDocument):
                     if isinstance(field, basestring):
                         field = (field, 1)
                     fields.append(field)
-            log.debug('Creating index for %s' % str(given_fields))
+            log.debug('Creating index for {}'.format(str(given_fields)))
             collection.ensure_index(fields, unique=unique, ttl=ttl, **index)
 
     def to_json_type(self):

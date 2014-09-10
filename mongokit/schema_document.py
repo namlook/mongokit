@@ -33,8 +33,8 @@ from copy import deepcopy
 
 log = logging.getLogger(__name__)
 
-from operators import SchemaOperator, IS
-from helpers import *
+from mongokit.operators import SchemaOperator, IS
+from mongokit.helpers import *
 
 __all__ = [
     'AuthorizedTypeError',
@@ -147,8 +147,16 @@ class i18nError(SchemaDocumentError):
     pass
 
 
+class DeprecationError(Exception):
+    pass
+
+
+class DuplicateI18nError(Exception):
+    pass
+
+
 class SchemaProperties(type):
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         attrs['_protected_field_names'] = set(
             ['_protected_field_names', '_namespaces', '_required_namespace'])
         for base in bases:
@@ -191,7 +199,7 @@ class SchemaProperties(type):
             attrs['_namespaces'] = list(base._SchemaDocument__walk_dict(attrs['structure']))
             if [1 for i in attrs['_namespaces'] if type(i) is type]:
                 raise DeprecationError("%s: types are not allowed as structure key anymore" % name)
-            cls._validate_descriptors(attrs)
+            mcs._validate_descriptors(attrs)
             ## building required fields namespace
             attrs['_required_namespace'] = set([])
             for rf in attrs.get('required_fields', []):
@@ -205,10 +213,10 @@ class SchemaProperties(type):
         attrs['_i18n_namespace'] = []
         if attrs.get('i18n'):
             attrs['_i18n_namespace'] = set(['.'.join(i.split('.')[:-1]) for i in attrs['i18n']])
-        return type.__new__(cls, name, bases, attrs)
+        return type.__new__(mcs, name, bases, attrs)
 
     @classmethod
-    def _validate_descriptors(cls, attrs):
+    def _validate_descriptors(mcs, attrs):
         # TODO i18n validator
         for dv in attrs.get('default_values', {}):
             if not dv in attrs['_namespaces']:
@@ -227,9 +235,9 @@ class SchemaProperties(type):
         if attrs.get('i18n'):
             if len(attrs['i18n']) != len(set(attrs['i18n'])):
                 raise DuplicateI18nError("duplicated i18n : %s" % attrs['i18n'])
-            for i18n in attrs['i18n']:
-                if i18n not in attrs['_namespaces']:
-                    raise ValueError("Error in i18n: can't find %s in structure" % i18n)
+            for _i18n in attrs['i18n']:
+                if _i18n not in attrs['_namespaces']:
+                    raise ValueError("Error in i18n: can't find {} in structure".format(_i18n))
 
 
 class SchemaDocument(dict):
@@ -337,7 +345,7 @@ class SchemaDocument(dict):
         CustomType,
     ]
 
-    def __init__(self, doc=None, gen_skel=True, gen_auth_types=True, validate=True, lang='en', fallback_lang='en'):
+    def __init__(self, doc=None, gen_skel=True, _gen_auth_types=True, _validate=True, lang='en', fallback_lang='en'):
         """
         doc : a dictionary
         gen_skel : if True, generate automatically the skeleton of the doc
@@ -347,6 +355,7 @@ class SchemaDocument(dict):
         gen_auth_types: if True, generate automatically the self.authorized_types
             attribute from self.authorized_types
         """
+        super(SchemaDocument, self).__init__()
         if self.structure is None:
             self.structure = {}
         self._current_lang = lang
@@ -404,7 +413,7 @@ class SchemaDocument(dict):
         else:
             if self.dot_notation_warning and not key.startswith('_') and key not in \
                     ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
-                log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
+                log.warning("dot notation: {} was not found in structure. Add it as attribute instead".format(key))
             dict.__setattr__(self, key, value)
 
     def __getattr__(self, key):
@@ -474,7 +483,7 @@ class SchemaDocument(dict):
         validate if all fields in self.structure are in authorized types.
         """
         ##############
-        def __validate_structure(struct, name,  authorized):
+        def __validate_structure(struct, name, _authorized):
             if type(struct) is type:
                 if struct not in authorized_types:
                     if struct not in authorized_types:
@@ -642,8 +651,7 @@ class SchemaDocument(dict):
             for i in range(len(struct)):
                 self._validate_doc(doc[i], struct[i], path)
 
-    def _process_validators(self, doc, struct, path=""):
-        doted_struct = DotCollapsedDict(self.structure)
+    def _process_validators(self, doc, _struct, _path=""):
         doted_doc = DotCollapsedDict(doc)
         for key, validators in self.validators.iteritems():
             if key in doted_doc and doted_doc[key] is not None:
@@ -800,7 +808,7 @@ class SchemaDocument(dict):
                     else:
                         doc[key] = new_value
 
-    def _validate_required(self, doc, struct, path="", root_path=""):
+    def _validate_required(self, doc, _struct, _path="", _root_path=""):
         doted_struct = DotCollapsedDict(self.structure)
         doted_doc = DotCollapsedDict(doc, reference=doted_struct)
         for req in self.required_fields:
@@ -848,7 +856,7 @@ class SchemaDocument(dict):
                 elif struct[key] is list:
                     doc[key] = []
                 elif isinstance(struct[key], tuple):
-                    doc[key] = [None for i in range(len(struct[key]))]
+                    doc[key] = [None for _ in range(len(struct[key]))]
                 else:
                     doc[key] = None
             #

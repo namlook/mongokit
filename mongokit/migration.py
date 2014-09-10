@@ -37,6 +37,7 @@ class DocumentMigration(object):
         self.update = None
         self.doc = None
         self.collection = None
+        self.status = None
 
     def clean(self):
         self.target = None
