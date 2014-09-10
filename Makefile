@@ -7,8 +7,9 @@ clean:
 # run tests
 test: pep8 lint utest
 
-utest: setup build
+utest: setup
 	. venv/bin/activate \
+	&& export PYTHONPATH=$$PYTHONPATH:$$(pwd) \
 	&& nosetests --where=tests --with-coverage --cover-package=mongokit
 
 lint: setup
@@ -22,7 +23,7 @@ pep8: setup
 build: setup
 	. venv/bin/activate \
 	&& python setup.py clean \
-	&& python setup.py install
+	&& python setup.py build
 
 venv/_venv_setup_done:
 	virtualenv --version > /dev/null 2>&1 || pip install --user virtualenv \
@@ -32,5 +33,5 @@ venv/_venv_setup_done:
 venv/_venv_packages_installed: requirements.txt
 	. venv/bin/activate \
 	&& pip install --upgrade pip setuptools \
-	&& venv/bin/pip install --download-cache=./.tmp/pip_cache_dir -r requirements.txt --use-mirrors \
+	&& venv/bin/pip install --download-cache=./.tmp/pip_cache_dir -r requirements.txt \
 	&& touch venv/_venv_packages_installed
