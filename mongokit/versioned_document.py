@@ -28,10 +28,12 @@
 from mongokit.document import Document
 from mongokit.mongo_exceptions import *
 
+import six
+
 
 class RevisionDocument(Document):
     structure = {
-        "id": unicode,
+        "id": six.text_type,
         "revision": int,
         "doc": dict
     }
@@ -58,7 +60,7 @@ class VersionedDocument(Document):
                 self['_revision'] = 0
             self['_revision'] += 1
             super(VersionedDocument, self).save(*args, **kwargs)
-            versionned_doc = RevisionDocument({"id": unicode(self['_id']), "revision": self['_revision']},
+            versionned_doc = RevisionDocument({"id": six.text_type(self['_id']), "revision": self['_revision']},
                                               collection=self.versioning_collection)
             versionned_doc['doc'] = dict(self)
             versionned_doc.save()
@@ -97,6 +99,6 @@ class VersionedDocument(Document):
             yield self.__class__(verdoc['doc'], collection=self.collection)
 
     def get_last_revision_id(self):
-        last_doc = self.versioning_collection.find({'id': unicode(self['_id'])}).sort('revision', -1).next()
+        last_doc = self.versioning_collection.find({'id': six.text_type(self['_id'])}).sort('revision', -1).next()
         if last_doc:
             return last_doc['revision']

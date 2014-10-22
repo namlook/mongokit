@@ -53,7 +53,7 @@ And that's it ! By doing this, MongoKit will open a GridFile,
 fill it with the value, and close it.
 
 Note that you have to be careful to the type : attachments
-only accept string.
+only accept string (Python 2) or bytes (Python 3).
 
 You can read any attachment in a very simple way :
 

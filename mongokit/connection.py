@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+
 try:
     from pymongo import MongoClient as PymongoConnection
     from pymongo import MongoReplicaSetClient as PymongoReplicaSetConnection
@@ -66,13 +68,12 @@ class MongoKitConnection(object):
             decorator = obj_list
             obj_list = [obj_list]
         # cleanup
-        for _, db in self._databases.items():
-            for __, col in db._collections.items():
-                for docname, ___ in col._documents.items():
-                    del col._documents[docname]
-                for obj_name in [obj.__name__ for obj in obj_list]:
-                    if obj_name in col._registered_documents:
-                        del col._registered_documents[obj_name]
+        for db in self._databases.values():
+            for col in db._collections.values():
+                col._documents.clear()
+                for obj in obj_list:
+                    if obj.__name__ in col._registered_documents:
+                        del col._registered_documents[obj.__name__]
         # register
         for obj in obj_list:
             CallableDocument = type(

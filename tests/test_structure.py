@@ -25,9 +25,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit import *
+
+import six
 
 class StructureTestCase(unittest.TestCase):
     def setUp(self):
@@ -62,7 +66,7 @@ class StructureTestCase(unittest.TestCase):
     def test_load_with_dict(self):
         doc = {"foo":1, "bla":{"bar":u"spam"}}
         class MyDoc(SchemaDocument):
-            structure = {"foo":int, "bla":{"bar":unicode}}
+            structure = {"foo":int, "bla":{"bar":six.text_type}}
         mydoc = MyDoc(doc)
         assert mydoc == doc
         mydoc.validate()
@@ -70,7 +74,7 @@ class StructureTestCase(unittest.TestCase):
     def test_simple_structure(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":unicode,
+                "foo":six.text_type,
                 "bar":int
             }
         assert MyDoc() == {"foo":None, "bar":None}
@@ -79,7 +83,7 @@ class StructureTestCase(unittest.TestCase):
         doc = {"foo":u"arf"}
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":unicode,
+                "foo":six.text_type,
                 "bar":{"bla":int}
             }
         mydoc = MyDoc(doc)
@@ -88,7 +92,7 @@ class StructureTestCase(unittest.TestCase):
     def test_unknown_field(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":unicode,
+                "foo":six.text_type,
             }
         mydoc = MyDoc()
         mydoc["bar"] = 4
@@ -103,12 +107,12 @@ class StructureTestCase(unittest.TestCase):
                 }
             }
         mydoc = MyDoc()
-        mydoc['foo'] = u'bla'
+        mydoc['foo'] = six.u('bla')
         mydoc.validate()
         mydoc['foo'] = 3
         mydoc['bar']['bla'] = 2
         mydoc.validate()
-        mydoc['foo'] = 'arf'
+        mydoc['foo'] = ('arf',)
         self.assertRaises(AuthorizedTypeError, mydoc.validate)
 
     def test_big_nested_structure(self):
@@ -122,7 +126,7 @@ class StructureTestCase(unittest.TestCase):
                                     "6":{
                                         "7":int,
                                         "8":{
-                                            unicode:{int:int}
+                                            six.text_type:{int:int}
                                         }
                                     }
                                 }
@@ -132,7 +136,11 @@ class StructureTestCase(unittest.TestCase):
                 }
             }
         mydoc = MyDoc()
-        assert mydoc._namespaces == ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$int', '1.2.3.4.5.6.7']
+        if six.PY2:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$int', '1.2.3.4.5.6.7']
+        else:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$str', '1.2.3.4.5.6.8.$str.$int', '1.2.3.4.5.6.7']
+        self.assertEqual(set(mydoc._namespaces), set(expect))
         mydoc['1']['2']['3']['4']['5']['6']['7'] = 8
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{3:u"bla"}}
         self.assertRaises(SchemaTypeError,  mydoc.validate)
@@ -152,7 +160,7 @@ class StructureTestCase(unittest.TestCase):
                                     "6":{
                                         "7":int,
                                         "8":{
-                                            unicode:{unicode:int}
+                                            six.text_type:{six.text_type:int}
                                         }
                                     }
                                 }
@@ -163,12 +171,19 @@ class StructureTestCase(unittest.TestCase):
             }
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
-        assert mydoc._namespaces == ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$unicode', '1.2.3.4.5.6.7']
+        if six.PY2:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$unicode', '1.2.3.4.5.6.8.$unicode.$unicode', '1.2.3.4.5.6.7']
+        else:
+            expect = ['1', '1.2', '1.2.3', '1.2.3.4', '1.2.3.4.5', '1.2.3.4.5.6', '1.2.3.4.5.6.8', '1.2.3.4.5.6.8.$str', '1.2.3.4.5.6.8.$str.$str', '1.2.3.4.5.6.7']
+        self.assertEqual(set(mydoc._namespaces), set(expect))
         mydoc['1']['2']['3']['4']['5']['6']['7'] = 8
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{"3":u"bla"}}
         self.assertRaises(SchemaTypeError,  mydoc.validate)
-        mydoc['1']['2']['3']['4']['5']['6']['8'] = {"9":{"3":10}}
-        self.assertRaises(SchemaTypeError,  mydoc.validate)
+        # This test does not apply in Py3, since keys must be strings and 
+        # there is no distinction between 'str' and 'unicode'
+        if six.PY2:
+            mydoc['1']['2']['3']['4']['5']['6']['8'] = {"9":{"3":10}}
+            self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['1']['2']['3']['4']['5']['6']['8'] = {u"bla":{u"3":4}}
         mydoc.validate()
             
@@ -177,7 +192,7 @@ class StructureTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "foo":int,
-                "bar":unicode
+                "bar":six.text_type
             }
 
         mydoc = MyDoc()
@@ -195,9 +210,9 @@ class StructureTestCase(unittest.TestCase):
         class MyDoc(SchemaDocument):
             use_dot_notation = True
             structure = {
-                "existent": unicode,
+                "existent": six.text_type,
                 "exists": {
-                    'subexists': unicode
+                    'subexists': six.text_type
                 }
             }
         mydoc = MyDoc()
@@ -218,7 +233,7 @@ class StructureTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "foo":{
-                    "bar":unicode
+                    "bar":six.text_type
                 }
             }
 
@@ -239,7 +254,7 @@ class StructureTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "foo":{
-                    "bar":unicode
+                    "bar":six.text_type
                 }
             }
         self.connection.register([MyDoc])
@@ -265,7 +280,7 @@ class StructureTestCase(unittest.TestCase):
             use_dot_notation = True
             structure = {
                 "foo":{
-                    "bar":unicode,
+                    "bar":six.text_type,
                 },
                 "spam":int,
             }
@@ -278,8 +293,8 @@ class StructureTestCase(unittest.TestCase):
         assert mydoc.eggs == 4
         try:
             mydoc.not_found
-        except AttributeError, e:
-            print str(e)
+        except AttributeError as e:
+            print(str(e))
         mydoc.foo.eggs = 4
         assert mydoc == {'foo':{'bar':None}, 'spam':None}, mydoc
         mydoc.validate()
@@ -289,7 +304,7 @@ class StructureTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 'foo':int,
-                'bar':unicode,
+                'bar':six.text_type,
             }
         self.connection.register([MyDoc])
         
@@ -300,7 +315,7 @@ class StructureTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 'foo':int,
-                'arf': unicode,
+                'arf': six.text_type,
             }
         self.connection.register([MyDoc])
         
@@ -319,10 +334,10 @@ class StructureTestCase(unittest.TestCase):
         try:
             class MyDoc(SchemaDocument):
                 structure = {
-                    'topic': unicode,
+                    'topic': six.text_type,
                     'when': datetime.datetime.utcnow,
                 }
-        except TypeError, e:
+        except TypeError as e:
             assert str(e).startswith("MyDoc: <built-in method utcnow of type object at "), str(e)
             assert str(e).endswith("is not a type")
             failed = True

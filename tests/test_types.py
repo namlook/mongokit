@@ -25,10 +25,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import unittest
 
 from mongokit.schema_document import *
 from mongokit import Document, Connection
+
+import six
 
 class TypesTestCase(unittest.TestCase):
 
@@ -59,7 +63,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc(SchemaDocument):
                     structure = { "foo":[unauth_type] }
-            except StructureError, e:
+            except StructureError as e:
                 self.assertEqual(str(e), "MyDoc: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -67,7 +71,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc(SchemaDocument):
                     structure = { "foo":(unauth_type) }
-            except StructureError, e:
+            except StructureError as e:
                 self.assertEqual(str(e), "MyDoc: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -75,7 +79,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc2(SchemaDocument):
                     structure = { 'foo':[{int:unauth_type }]}
-            except StructureError, e:
+            except StructureError as e:
                 self.assertEqual(str(e), "MyDoc2: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -83,7 +87,7 @@ class TypesTestCase(unittest.TestCase):
             try:
                 class MyDoc3(SchemaDocument):
                     structure = { 'foo':[{unauth_type:int }]}
-            except AuthorizedTypeError, e:
+            except AuthorizedTypeError as e:
                 self.assertEqual(str(e), "MyDoc3: %s is not an authorized type" % unauth_type)
                 failed = True
             self.assertEqual(failed, True)
@@ -91,9 +95,9 @@ class TypesTestCase(unittest.TestCase):
         failed = False
         try:
             class MyDoc4(SchemaDocument):
-                structure = {1:unicode}
-        except StructureError, e:
-            self.assertEqual(str(e), "MyDoc4: 1 must be a basestring or a type")
+                structure = {1:six.text_type}
+        except StructureError as e:
+            self.assertEqual(str(e), "MyDoc4: 1 must be a string or a type")
             failed = True
         self.assertEqual(failed, True)
 
@@ -152,7 +156,7 @@ class TypesTestCase(unittest.TestCase):
     def test_typed_list_with_dict(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":[{unicode:int}]
+                "foo":[{six.text_type:int}]
             }
         mydoc = MyDoc()
         mydoc['foo'] = [{u"bla":1},{u"ble":2}]
@@ -163,7 +167,7 @@ class TypesTestCase(unittest.TestCase):
     def test_typed_list_with_list(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":[[unicode]]
+                "foo":[[six.text_type]]
             }
         mydoc = MyDoc()
         mydoc['foo'] = [[u"bla",u"blu"],[u"ble",u"bli"]]
@@ -174,7 +178,7 @@ class TypesTestCase(unittest.TestCase):
     def test_typed_tuple(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":(int, unicode, float)
+                "foo":(int, six.text_type, float)
             }
         mydoc = MyDoc()
         mydoc.validate()
@@ -195,7 +199,7 @@ class TypesTestCase(unittest.TestCase):
     def test_nested_typed_tuple(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{'bar':(int, unicode, float)}
+                "foo":{'bar':(int, six.text_type, float)}
             }
         mydoc = MyDoc()
         mydoc.validate()
@@ -213,7 +217,7 @@ class TypesTestCase(unittest.TestCase):
 
     def test_saving_tuple(self):
         class MyDoc(Document):
-            structure = { 'foo': (int, unicode, float) }
+            structure = { 'foo': (int, six.text_type, float) }
         self.connection.register([MyDoc])
 
         mydoc = self.col.MyDoc()
@@ -224,7 +228,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc = self.col.find_one()
 
         class MyDoc(Document):
-            structure = {'foo':[unicode]}
+            structure = {'foo':[six.text_type]}
         self.connection.register([])
         self.connection.register([MyDoc])
         mydoc = self.col.MyDoc()
@@ -236,7 +240,7 @@ class TypesTestCase(unittest.TestCase):
     def test_nested_typed_tuple_in_list(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{'bar':[(int, unicode, float)]}
+                "foo":{'bar':[(int, six.text_type, float)]}
             }
         mydoc = MyDoc()
         mydoc.validate()
@@ -257,7 +261,7 @@ class TypesTestCase(unittest.TestCase):
     def test_dict_unicode_typed_list(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:[int]}
+                "foo":{six.text_type:[int]}
             }
         mydoc = MyDoc()
         mydoc['foo'] = {u"bar":[1,2,3]}
@@ -272,7 +276,7 @@ class TypesTestCase(unittest.TestCase):
             pass
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:int}
+                "foo":{six.text_type:int}
             }
         mydoc = MyDoc()
         mydict = MyDict()
@@ -285,7 +289,7 @@ class TypesTestCase(unittest.TestCase):
             pass
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":MyDict({unicode:int})
+                "foo":MyDict({six.text_type:int})
             }
         mydoc = MyDoc()
         mydict = MyDict()
@@ -310,7 +314,7 @@ class TypesTestCase(unittest.TestCase):
     def test_list_instead_of_dict(self):
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:[unicode]}
+                "foo":{six.text_type:[six.text_type]}
             }
         mydoc = MyDoc()
         mydoc['foo'] = [u'bla']
@@ -320,8 +324,8 @@ class TypesTestCase(unittest.TestCase):
         # XXX TODO
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":{unicode:[int], u"bar":{"spam":{int:[unicode]}}},
-                "bla":{"blo":{"bli":[{"arf":unicode}]}},
+                "foo":{six.text_type:[int], u"bar":{"spam":{int:[six.text_type]}}},
+                "bla":{"blo":{"bli":[{"arf":six.text_type}]}},
             }
         mydoc = MyDoc()
         mydoc['foo'].update({u"bir":[1,2,3]})
@@ -351,43 +355,43 @@ class TypesTestCase(unittest.TestCase):
 
     def test_or_operator(self):
         from mongokit import OR
-        assert repr(OR(unicode, str)) == "<unicode or str>"
+        assert repr(OR(int, str)) == "<int or str>"
 
         failed = False
         try:
             class BadMyDoc(SchemaDocument):
-                structure = {"bla":OR(unicode,str)}
-        except StructureError, e:
-            self.assertEqual(str(e), "BadMyDoc: <type 'str'> in <unicode or str> is not an authorized type (type found)")
+                structure = {"bla":OR(int, tuple)}
+        except StructureError as e:
+            self.assertEqual(str(e), "BadMyDoc: <%s 'tuple'> in <int or tuple> is not an authorized type (type found)" % ('type' if six.PY2 else 'class'))
             failed = True
         self.assertEqual(failed, True)
 
         from datetime import datetime
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":OR(unicode,int),
-                "bar":OR(unicode, datetime)
+                "foo":OR(six.text_type,int),
+                "bar":OR(six.text_type, datetime)
             }
 
         mydoc = MyDoc()
-        assert str(mydoc.structure['foo']) == '<unicode or int>'
-        assert str(mydoc.structure['bar']) == '<unicode or datetime>'
+        assert str(mydoc.structure['foo']) == '<%s or int>' % six.text_type.__name__
+        assert str(mydoc.structure['bar']) == '<%s or datetime>' % six.text_type.__name__
         assert mydoc == {'foo': None, 'bar': None}
         mydoc['foo'] = 3.0
         self.assertRaises(SchemaTypeError, mydoc.validate)
-        mydoc['foo'] = u"foo"
+        mydoc['foo'] = six.u("foo")
         mydoc.validate()
         mydoc['foo'] = 3
         mydoc.validate()
-        mydoc['foo'] = 'bar'
+        mydoc['foo'] = six.b('bar')
         self.assertRaises(SchemaTypeError, mydoc.validate)
 
         mydoc['foo'] = datetime.now()
         self.assertRaises(SchemaTypeError, mydoc.validate)
-        mydoc['foo'] = u"foo"
+        mydoc['foo'] = six.u("foo")
         mydoc['bar'] = datetime.now()
         mydoc.validate()
-        mydoc['bar'] = u"today"
+        mydoc['bar'] = six.u("today")
         mydoc.validate()
         mydoc['bar'] = 25
         self.assertRaises(SchemaTypeError, mydoc.validate)
@@ -397,21 +401,21 @@ class TypesTestCase(unittest.TestCase):
         failed = False
         try:
             class BadMyDoc(SchemaDocument):
-                structure = {"bla":NOT(unicode,str)}
-        except StructureError, e:
-            self.assertEqual(str(e), "BadMyDoc: <type 'str'> in <not unicode, not str> is not an authorized type (type found)")
+                structure = {"bla":NOT(int, tuple)}
+        except StructureError as e:
+            self.assertEqual(str(e), "BadMyDoc: <%s 'tuple'> in <not int, not tuple> is not an authorized type (type found)" % ('type' if six.PY2 else 'class'))
             failed = True
         self.assertEqual(failed, True)
 
         from datetime import datetime
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":NOT(unicode,int),
+                "foo":NOT(six.text_type,int),
                 "bar":NOT(datetime)
             }
 
         mydoc = MyDoc()
-        assert str(mydoc.structure['foo']) == '<not unicode, not int>', str(mydoc.structure['foo'])
+        assert str(mydoc.structure['foo']) == '<not %s, not int>' % six.text_type.__name__, str(mydoc.structure['foo'])
         assert str(mydoc.structure['bar']) == '<not datetime>'
         assert mydoc == {'foo': None, 'bar': None}
         assert mydoc['foo'] is None
@@ -437,9 +441,9 @@ class TypesTestCase(unittest.TestCase):
         failed = False
         try:
             class BadMyDoc(SchemaDocument):
-                structure = {"bla":IS('bla',3)}
-        except StructureError, e:
-            self.assertEqual(str(e), "BadMyDoc: bla in <is 'bla' or is 3> is not an authorized type (str found)")
+                structure = {"bla":IS(('bla',),3)}
+        except StructureError as e:
+            self.assertEqual(str(e), "BadMyDoc: ('bla',) in <is ('bla',) or is 3> is not an authorized type (tuple found)")
             failed = True
         self.assertEqual(failed, True)
 
@@ -451,8 +455,12 @@ class TypesTestCase(unittest.TestCase):
             }
 
         mydoc = MyDoc()
-        assert str(mydoc.structure['foo']) == "<is u'spam' or is u'eggs'>"
-        assert str(mydoc.structure['bar']) == "<is u'3' or is 3>"
+        if six.PY2:
+            assert str(mydoc.structure['foo']) == "<is u'spam' or is u'eggs'>"
+            assert str(mydoc.structure['bar']) == "<is u'3' or is 3>"
+        else:
+            assert str(mydoc.structure['foo']) == "<is 'spam' or is 'eggs'>"
+            assert str(mydoc.structure['bar']) == "<is '3' or is 3>"
         assert mydoc == {'foo': None, 'bar': None}
         assert mydoc['foo'] is None
         assert mydoc['bar'] is None
@@ -514,20 +522,20 @@ class TypesTestCase(unittest.TestCase):
     def test_set_type2(self):
         class MyDoc(Document):
                 structure = {
-                        'title':unicode,
-                        'category':Set(unicode)
+                        'title':six.text_type,
+                        'category':Set(six.text_type)
                 }
                 required_fields=['title']
         self.connection.register([MyDoc])
         doc = self.col.MyDoc()
-        print doc # {'category': set([]), 'title': None}
+        print(doc) # {'category': set([]), 'title': None}
         assert isinstance(doc['category'], set)
         try:
                 doc.validate()
         except RequireFieldError as e:
-                print e # title is required
+                print(e) # title is required
 
-        print doc # {'category': [], 'title': None}
+        print(doc) # {'category': [], 'title': None}
         assert isinstance(doc['category'], set)
         doc['title']=u'hello'
         doc.validate()
@@ -564,7 +572,7 @@ class TypesTestCase(unittest.TestCase):
         @self.connection.register
         class MyDoc(Document):
             structure = {
-                'my_binary': basestring,
+                'my_binary': six.string_types,
             }
         obj = self.col.MyDoc()
         # non-utf8 string
@@ -578,7 +586,7 @@ class TypesTestCase(unittest.TestCase):
         @self.connection.register
         class MyDoc(Document):
             structure = {
-                'my_binary': unicode,
+                'my_binary': six.text_type,
             }
         obj = self.col.MyDoc()
         # non-utf8 string

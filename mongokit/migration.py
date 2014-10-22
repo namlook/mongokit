@@ -25,8 +25,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongokit.helpers import DotCollapsedDict
-from mongokit.mongo_exceptions import *
+from __future__ import print_function
+
+from .helpers import DotCollapsedDict
+from .mongo_exceptions import *
+
+import six
 
 
 class DocumentMigration(object):
@@ -48,7 +52,7 @@ class DocumentMigration(object):
 
     def validate_update(self, update_query):
         structure = DotCollapsedDict(self.doc_class.structure)
-        for op, fields in update_query.iteritems():
+        for op, fields in six.iteritems(update_query):
             for field in fields:
                 if op != '$unset' and op != '$rename':
                     if field not in structure:
@@ -85,7 +89,7 @@ class DocumentMigration(object):
                 collection.update(self.target, self.update, multi=True, safe=safe)
                 status = collection.database.last_status()
                 if not status.get('updatedExisting', 1):
-                    print "%s : %s >>> deprecated" % (self.__class__.__name__, method_name)
+                    print("%s : %s >>> deprecated" % (self.__class__.__name__, method_name))
 
     def get_deprecated(self, collection):
         method_names = sorted([i for i in dir(self) if i.startswith('migration') or i.startswith('allmigration')])

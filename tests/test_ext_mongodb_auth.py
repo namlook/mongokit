@@ -33,6 +33,8 @@ logging.basicConfig(level=logging.DEBUG)
 from mongokit import *
 from bson.objectid import ObjectId
 
+import six
+
 admin_created = False
 
 class _ExtMongoDBAuthTestCase(unittest.TestCase):
@@ -69,7 +71,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
             db_password = "bar"
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -82,7 +84,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
         assert isinstance(id['_id'], ObjectId)
 
         saved_doc = self.collection.find_one({"bla.bar":42})
-        for key, value in mydoc.iteritems():
+        for key, value in six.iteritems(mydoc):
             assert saved_doc[key] == value
 
         mydoc = self.connection.test.mongokit_auth.MyDoc()
@@ -92,7 +94,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
         assert isinstance(id['_id'], ObjectId)
 
         saved_doc = self.collection.find_one({"bla.bar":43})
-        for key, value in mydoc.iteritems():
+        for key, value in six.iteritems(mydoc):
             assert saved_doc[key] == value
         self.db.logout()
 
@@ -106,7 +108,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
             collection_name = "mongokit_auth"
             structure = {
                 "bla":{
-                    "foo":unicode,
+                    "foo":six.text_type,
                     "bar":int,
                 },
                 "spam":[],
@@ -125,7 +127,7 @@ class _ExtMongoDBAuthTestCase(unittest.TestCase):
                 db_password = "spam"
                 structure = {
                     "bla":{
-                        "foo":unicode,
+                        "foo":six.text_type,
                         "bar":int,
                     },
                     "spam":[],

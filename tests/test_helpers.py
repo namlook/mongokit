@@ -30,16 +30,21 @@ import unittest
 from mongokit import *
 from mongokit.schema_document import DotExpandedDict
 
+import six
+
 class HelpersTestCase(unittest.TestCase):
         
     def test_DotExpandedDict(self):
         d = DotExpandedDict({'a.$int.c.d': 3, 'a.$int.e': 5, '_id': u'user', 'a.g': 2, 'f': 6})
         assert d == {'_id': u'user', 'a':{int:{'c':{'d':3}, 'e':5}, "g":2}, 'f':6}, d
+        
+        if six.PY2:
+            d = DotExpandedDict({'foo.bla.$unicode': [unicode], 'foo.bar': {}})
+        else:
+            d = DotExpandedDict({'foo.bla.$str': [str], 'foo.bar': {}})
+        assert d == {'foo': {'bar': {}, 'bla': {six.text_type: [six.text_type]}}}, d
 
-        d = DotExpandedDict({'foo.bla.$unicode': [unicode], 'foo.bar': {}})
-        assert d == {'foo': {'bar': {}, 'bla': {unicode: [unicode]}}}, d
-
-        self.assertRaises(EvalException, DotExpandedDict, {'foo.bla.$arf': [unicode], 'foo.bar': {}})
+        self.assertRaises(EvalException, DotExpandedDict, {'foo.bla.$arf': [six.text_type], 'foo.bar': {}})
 
         d = DotExpandedDict({'person.1.firstname': ['Simon'],
           'person.1.lastname': ['Willison'],
@@ -111,11 +116,11 @@ class HelpersTestCase(unittest.TestCase):
         d = DotCollapsedDict(dic, remove_under_type=True)
         assert d == {'a': {}, '_id': u'user', 'f': 6}, d
 
-        dic = {'bla':{'foo':{unicode:{"bla":int}}, 'bar':unicode}}
+        dic = {'bla':{'foo':{six.text_type:{"bla":int}}, 'bar':six.text_type}}
         d = DotCollapsedDict(dic, remove_under_type=True)
-        assert d == {'bla.foo':{}, 'bla.bar':unicode}, d
+        assert d == {'bla.foo':{}, 'bla.bar':six.text_type}, d
 
-        dic = {'bla':{'foo':{unicode:[unicode]}, 'bar':"egg"}}
+        dic = {'bla':{'foo':{six.text_type:[six.text_type]}, 'bar':"egg"}}
         d = DotCollapsedDict(dic, remove_under_type=True)
         assert d == {'bla.foo':{}, 'bla.bar':"egg"}, d
 
@@ -124,10 +129,17 @@ class HelpersTestCase(unittest.TestCase):
         d = DotCollapsedDict(dic)
         assert d == {'a.$int.c.d': 3, 'a.$int.e': 5, '_id': u'user', 'a.g': 2, 'f': 6}, d
 
-        dic = {'bla':{'foo':{unicode:{"bla":3}}, 'bar':'egg'}}
+        dic = {'bla':{'foo':{six.text_type:{"bla":3}}, 'bar':'egg'}}
         d = DotCollapsedDict(dic)
-        assert d == {'bla.foo.$unicode.bla': 3, 'bla.bar': "egg"}, d
-
-        dic = {'bla':{'foo':{unicode:['egg']}, 'bar':"egg"}}
+        if six.PY2:
+            assert d == {'bla.foo.$unicode.bla': 3, 'bla.bar': "egg"}, d
+        else:
+            assert d == {'bla.foo.$str.bla': 3, 'bla.bar': "egg"}, d
+            
+        dic = {'bla':{'foo':{six.text_type:['egg']}, 'bar':"egg"}}
         d = DotCollapsedDict(dic)
-        assert d == {'bla.foo.$unicode': ['egg'], 'bla.bar': 'egg'}, d
+        if six.PY2:
+            assert d == {'bla.foo.$unicode': ['egg'], 'bla.bar': 'egg'}, d
+        else:
+            assert d == {'bla.foo.$str': ['egg'], 'bla.bar': 'egg'}, d
+            

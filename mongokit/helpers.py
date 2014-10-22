@@ -29,6 +29,8 @@ import datetime
 import logging
 log = logging.getLogger(__name__)
 
+import six
+
 
 def totimestamp(value):
     """
@@ -100,7 +102,7 @@ class DotedDict(dict):
         self.__dotify_dict(self)
 
     def __dotify_dict(self, doc):
-        for k, v in doc.iteritems():
+        for k, v in six.iteritems(doc):
             if isinstance(v, dict):
                 doc[k] = DotedDict(v)
                 self.__dotify_dict(v)
@@ -218,7 +220,7 @@ class DotCollapsedDict(dict):
         self.update(final_dict)
 
     def _make_dotation(self, d, final_dict, key=""):
-        for k, v in d.iteritems():
+        for k, v in six.iteritems(d):
             if isinstance(k, type):
                 k = "$%s" % k.__name__
             if isinstance(v, dict) and v != {}:

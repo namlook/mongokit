@@ -25,18 +25,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongokit import Document
+from .document import Document
 import hashlib
 import os
 
+import six
 
 class User(Document):
     structure = {
-        "_id": unicode,
+        "_id": six.text_type,
         "user": {
-            "login": unicode,
-            "password": unicode,  # TODO validator
-            "email": unicode,
+            "login": six.text_type,
+            "password": six.text_type,  # TODO validator
+            "email": six.text_type,
         }
     }
     required_fields = ['user.password', 'user.email']  # what if openid ? password is None
@@ -56,11 +57,17 @@ class User(Document):
 
     def set_password(self, password):
         """ Hash password on the fly """
-        if isinstance(password, unicode):
+        password_salt = hashlib.sha1(os.urandom(60)).hexdigest()  # Always str
+        if isinstance(password, six.text_type):
             password = password.encode('utf-8')
-        password_salt = hashlib.sha1(os.urandom(60)).hexdigest()
+        if six.PY3:
+            password_salt = password_salt.encode('utf-8')
         crypt = hashlib.sha1(password + password_salt).hexdigest()
-        self['user']['password'] = unicode(password_salt + crypt, 'utf-8')
+        if six.PY3:
+            crypt = crypt.encode('utf-8')
+        password_crypt = password_salt + crypt
+        password_crypt = six.text_type(password_crypt, 'utf-8')
+        self['user']['password'] = password_crypt
 
     def get_password(self):
         """ Return the password hashed """
@@ -73,9 +80,11 @@ class User(Document):
 
     def verify_password(self, password):
         """ Check the password against existing credentials  """
-        if isinstance(password, unicode):
-            password = password.encode('utf-8')
         password_salt = self['user']['password'][:40]
+        if isinstance(password, six.text_type):
+            password = password.encode('utf-8')
+        if six.PY3:
+            password_salt = password_salt.encode('utf-8')
         crypt_pass = hashlib.sha1(password + password_salt).hexdigest()
         if crypt_pass == self['user']['password'][40:]:
             return True

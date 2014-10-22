@@ -29,6 +29,8 @@ import unittest
 
 from mongokit import *
 
+import six
+
 class InheritanceTestCase(unittest.TestCase):
     def setUp(self):
         self.collection = Connection()['test']['mongokit']
@@ -44,7 +46,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
 
         assert B() == {"a":{"foo":None}, "b":{"bar":None}}, B()
@@ -72,7 +74,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
 
         b = B()
@@ -89,14 +91,14 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
 
         assert B() == {"a":{"foo":3}, "b":{"bar":None}}
  
         class C(A):
             structure = {
-                "c":{"spam":unicode}
+                "c":{"spam":six.text_type}
             }
             default_values = {"a.foo":5}
 
@@ -112,14 +114,14 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
 
         assert isinstance(B()['a']['foo'], datetime)
  
         class C(A):
             structure = {
-                "c":{"spam":unicode}
+                "c":{"spam":six.text_type}
             }
             default_values = {"a.foo":datetime(2008,8,8)}
 
@@ -135,7 +137,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
 
         b = B()
@@ -159,19 +161,19 @@ class InheritanceTestCase(unittest.TestCase):
     def test_complexe_validation_inheritance(self):
         class A(SchemaDocument):
             structure = {
-                "foo":unicode,
+                "foo":six.text_type,
             }
             def validate(self):
-                self["foo"] = unicode(self["foo"])
+                self["foo"] = six.text_type(self["foo"])
                 super(A, self).validate()
 
         class B(A):
             structure = {
-                "bar":{"bla":unicode}
+                "bar":{"bla":six.text_type}
             }
             default_values = {"bar.bla":3}
             def validate(self):
-                self["bar"]["bla"] = unicode(self["bar"]["bla"])
+                self["bar"]["bla"] = six.text_type(self["bar"]["bla"])
                 super(B, self).validate()
 
         b = B()
@@ -190,7 +192,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
             required_fields = ['b.bar']
             default_values = {"a.foo":5}
@@ -201,7 +203,7 @@ class InheritanceTestCase(unittest.TestCase):
  
         class C(B):
             structure = {
-                "c":{"spam":unicode}
+                "c":{"spam":six.text_type}
             }
 
         c =  C()
@@ -219,7 +221,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(SchemaDocument):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
             required_fields = ['b.bar']
 
@@ -229,7 +231,7 @@ class InheritanceTestCase(unittest.TestCase):
  
         class C(A,B):
             structure = {
-                "c":{"spam":unicode}
+                "c":{"spam":six.text_type}
             }
             default_values = {"a.foo":5}
 
@@ -248,7 +250,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
             structure.update(A.structure)
 
@@ -264,7 +266,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
             structure.update(A.structure)
             required_fields = A.required_fields
@@ -284,7 +286,7 @@ class InheritanceTestCase(unittest.TestCase):
 
         class B(A):
             structure = {
-                "b":{"bar":unicode}
+                "b":{"bar":six.text_type}
             }
             structure.update(A.structure)
             default_values = A.default_values
@@ -293,7 +295,7 @@ class InheritanceTestCase(unittest.TestCase):
  
         class C(A):
             structure = {
-                "c":{"spam":unicode}
+                "c":{"spam":six.text_type}
             }
             structure.update(A.structure)
             default_values = A.default_values

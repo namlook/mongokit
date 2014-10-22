@@ -12,9 +12,11 @@ types::
     - bool 
     - int 
     - float
-    - long
-    - basestring
-    - unicode
+    - long # Python 2 only
+    - basestring # Python 2 only
+	- bytes # Python 3 only
+    - unicode # Python 2 only
+    - str # Python 3 only
     - list
     - dict
     - datetime.datetime

@@ -50,6 +50,9 @@ class Cursor(PymongoCursor):
         else:
             raise StopIteration
 
+    # Python 3 iterator protocol
+    __next__ = next
+
     def __getitem__(self, index):
         # This will be a cursor if `index` is a slice
         item_or_cursor = super(Cursor, self).__getitem__(index)
