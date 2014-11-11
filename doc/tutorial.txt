@@ -43,7 +43,7 @@ see :doc:`structure`.
 
 Optionally, you can add some descriptors. In order to specify fields which are
 required, just add a ``required_fields`` attribute. This is a simple list which
-list all required_fields (ie, those field must not be None when validating).
+lists all required_fields (ie, this field must not be None when validating).
 You can also specify the ``default_values`` attribute which can indicates the
 default values of a Documents structure. Note that you can pass callable object (like a 
 ``datetime.utcnow``). For more information, see :doc:`descriptors`.
@@ -72,7 +72,7 @@ e.g. Specifying a Replica Set host
 
 For more information on how to configure the Connection, see pymongo_'s documentation.
 
-Once you have an active connection, you need to register your the ``BlogPost``
+Once you have an active connection, you need to register your ``BlogPost``
 object::
 
     connection.register([BlogPost])
