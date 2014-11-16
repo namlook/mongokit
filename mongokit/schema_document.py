@@ -27,7 +27,6 @@
 
 import bson
 import datetime
-import re
 import logging
 from copy import deepcopy
 
