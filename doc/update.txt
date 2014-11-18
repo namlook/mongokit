@@ -1,7 +1,7 @@
 Updating data
 =============
 
-Update in Mongokit is as easy than saving an object. Just modify your
+Update in Mongokit is as easy as saving an object. Just modify your
 document and save it::
 
     @connection.register
@@ -29,13 +29,13 @@ document and save it::
     >>> doc.save()
 
 .. IMPORTANT::
-    You have to be conscient that updating a document like that is not atomic. To do so, please read the next section.
+    You have to be aware that updating a document like that is not atomic. To do so, please read the next section.
 
 
 Bulk and atomic updates
 -----------------------
 
-As Mongokit expose all the pymongo API, you can use the pymongo's update on collection:
+As Mongokit exposes all the pymongo API, you can use the pymongo's update on collection:
 
     >>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
 
@@ -46,10 +46,10 @@ For more information, please look at the `pymongo documentation`_.
 reload()
 --------
 
-If a document was updated in another thread, it would be interesting to refresh the document to
+If a document was updated in another thread, it would be necessary to refresh the document to
 match changes from the database. To do that, use the `reload()` method.
 
-Two thing you should know before using this method :
+You should know two things before using this method :
 
  * If no _id is set in the document, a KeyError is raised.
  * If a document is not saved into the database, the OperationFailure exception is raised.
@@ -84,7 +84,7 @@ Example::
 find_and_modify()
 -----------------
 
-    This method allow to return a Document object after or before making an update.
+    This method allows to return a Document object after or before making an update.
 
     If you call `find_and_modify` on a Collection object, it will return a dict object::
 
