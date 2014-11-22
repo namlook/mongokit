@@ -105,9 +105,9 @@ Like pymongo, MongoKit allow you to change those parameters on the fly :
 
 Now, we can query the database by passing our new collection :
 
-    >>> profiles = user_col.User.find()
+    >>> profiles = user_collection.User.find()
 
-    >>> user = user_col.User()
+    >>> user = user_collection.User()
     >>> user['login'] = 'namlook@namlook.com'
     >>> user['screen_name'] = 'Namlook'
 
