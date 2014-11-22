@@ -27,10 +27,7 @@
 
 from bson import InvalidDocument
 
-try:
-    from pymongo.connection import OperationFailure
-except ImportError:
-    from pymongo.errors import OperationFailure
+from pymongo.errors import OperationFailure
 
 
 class ConnectionError(Exception):
