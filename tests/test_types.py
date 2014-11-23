@@ -366,13 +366,15 @@ class TypesTestCase(unittest.TestCase):
         class MyDoc(SchemaDocument):
             structure = {
                 "foo":OR(unicode,int),
-                "bar":OR(unicode, datetime)
+                "bar":OR(unicode, datetime),
+                "foobar": OR(basestring, int),
             }
 
         mydoc = MyDoc()
         assert str(mydoc.structure['foo']) == '<unicode or int>'
         assert str(mydoc.structure['bar']) == '<unicode or datetime>'
-        assert mydoc == {'foo': None, 'bar': None}
+        assert str(mydoc.structure['foobar']) == '<basestring or int>'
+        assert mydoc == {'foo': None, 'bar': None, 'foobar': None}
         mydoc['foo'] = 3.0
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = u"foo"
@@ -381,7 +383,6 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo'] = 'bar'
         self.assertRaises(SchemaTypeError, mydoc.validate)
-
         mydoc['foo'] = datetime.now()
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = u"foo"
@@ -391,6 +392,14 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['bar'] = 25
         self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['bar'] = u"bar"
+        mydoc["foo"] = u"foo"
+        mydoc["foobar"] = "foobar"
+        mydoc.validate()
+        mydoc["foobar"] = datetime.now()
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc["foobar"] = 3
+        mydoc.validate()
 
     def test_not_operator(self):
         from mongokit import NOT
@@ -407,15 +416,18 @@ class TypesTestCase(unittest.TestCase):
         class MyDoc(SchemaDocument):
             structure = {
                 "foo":NOT(unicode,int),
-                "bar":NOT(datetime)
+                "bar":NOT(datetime),
+                "foobar": NOT(basestring)
             }
 
         mydoc = MyDoc()
         assert str(mydoc.structure['foo']) == '<not unicode, not int>', str(mydoc.structure['foo'])
         assert str(mydoc.structure['bar']) == '<not datetime>'
-        assert mydoc == {'foo': None, 'bar': None}
+        assert str(mydoc.structure['foobar']) == '<not basestring>'
+        assert mydoc == {'foo': None, 'bar': None, 'foobar': None}
         assert mydoc['foo'] is None
         assert mydoc['bar'] is None
+        assert mydoc['foobar'] is None
         mydoc['foo'] = 3
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = u"foo"
@@ -430,6 +442,10 @@ class TypesTestCase(unittest.TestCase):
         mydoc['bar'] = u"today"
         mydoc.validate()
         mydoc['bar'] = 25
+        mydoc.validate()
+        mydoc['foobar'] = 'abc'
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foobar'] = 1
         mydoc.validate()
 
     def test_is_operator(self):
