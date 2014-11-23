@@ -26,7 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from mongokit.helpers import DotCollapsedDict
-from mongokit.mongo_exceptions import *
+from mongokit.mongo_exceptions import UpdateQueryError, OperationFailure
 
 
 class DocumentMigration(object):
