@@ -30,7 +30,19 @@ from bson import InvalidDocument
 from pymongo.errors import OperationFailure
 
 
+class AutoReferenceError(Exception):
+    pass
+
+
+class BadIndexError(Exception):
+    pass
+
+
 class ConnectionError(Exception):
+    pass
+
+
+class MaxDocumentSizeError(Exception):
     pass
 
 
@@ -39,18 +51,6 @@ class MongoAuthException(Exception):
 
 
 class MultipleResultsFound(Exception):
-    pass
-
-
-class BadIndexError(Exception):
-    pass
-
-
-class AutoReferenceError(Exception):
-    pass
-
-
-class MaxDocumentSizeError(Exception):
     pass
 
 
