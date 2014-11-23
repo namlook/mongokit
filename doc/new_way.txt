@@ -3,12 +3,12 @@
 >>> con = Connection()
 
 Let's say we have previously created 3 MongoDocuments : Blog, BlogPost and User.
-Those objects have to be reachable via the connections so we register them :
+These objects have to be reachable via the connection, so we register them :
 
 >>> con.register([Blog, BlogPost, User])
 
-and now, we can play. All begin via the connection `con`. Just like the pymongo
-api, we get to the collection Via the connection and the db.
+and now we can play. Just like in the pymongo
+api, we get to the collection via the connection - `con` in this case - and the db.
 
 >>> con.mongokit.tutorial.find()
 
@@ -41,25 +41,25 @@ by user) :
     >>> user_col = 'me'
     >>> blogpost = con.mongokit[user_col].BlogPost()
 
-Quering is as simple as instanciating object. There's two way of fetching objects :
+Quering is as simple as instantiating an object. There are two ways of fetching objects :
 
  * getting raw data (the pymongo's way)
  * getting instanciated object with all method defined (the mongokit way)
 
-The first approach will produce only python dict and is very fast.
-The second will wrap the data into the MongoDocument. This is useful if we defined
+The first approach will produce only Python dict and is very fast.
+The second will wrap the data into the MongoDocument. This is useful if we have defined
 methods and want to use them.
 
 Getting raw data :
 
     >>> raw_data = con.mongokit.tutorial.find()
 
-Actually, all pymongo's method can be apply :
+Actually, all pymongo's methods can be applied :
     
     >>> con.mongokit.tutorial.remove({})
     >>> con.mongokit.drop_collection('tutorial')
 
-Getting instanciated objects :
+Getting instantiated objects:
 
     >>> blogpost_cursor = con.mongokit.tutorial.BlogPost.find()
     >>> bp = blogpost_cursor.next()
@@ -70,7 +70,7 @@ We can apply MongoDocument methods (`validate`, `to_json` etc...)
     >>> bp
     {'body': u'a body', 'title': u'my title', 'date_creation': datetime.datetime(...), 'rank': 0, 'author': u'me'}
 
-Other mongokit queries are available :
+Other MongoKit query methods are also available :
 
     >>> blogpost_cursor = con.mongokit.tutorial.BlogPost.fetch() # get only BlogPost
 
