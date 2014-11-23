@@ -27,6 +27,8 @@
 
 import datetime
 import logging
+from copy import deepcopy
+
 log = logging.getLogger(__name__)
 
 
@@ -44,8 +46,6 @@ def fromtimestamp(epoch_date):
     """
     seconds = float(epoch_date) / 1000.0
     return datetime.datetime.utcfromtimestamp(seconds)
-
-from copy import deepcopy
 
 
 class i18nDotedDict(dict):
