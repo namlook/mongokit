@@ -28,6 +28,7 @@
 import datetime
 import logging
 from copy import deepcopy
+from mongokit.mongo_exceptions import EvalException
 
 log = logging.getLogger(__name__)
 
@@ -135,10 +136,6 @@ class DotedDict(dict):
 
     def __setstate__(self, d):
         self.__dict__.update(d)
-
-
-class EvalException(Exception):
-    pass
 
 
 class DotExpandedDict(dict):

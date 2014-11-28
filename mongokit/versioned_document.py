@@ -26,7 +26,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from mongokit.document import Document
-from mongokit.mongo_exceptions import *
 
 
 class RevisionDocument(Document):
