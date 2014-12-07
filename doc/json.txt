@@ -2,16 +2,16 @@ JSON support
 ============
 
 While building web application, you might want to create a REST API with JSON
-support. Then, you may need to convert all your Document into a JSON format
+support. Then, you may need to convert all your Documents into a JSON format
 in order to pass it via the REST API. Unfortunately (or fortunately), MongoDB
-support field format which is not supported by JSON. This is the case for `datetime`
+supports field format which is not supported by JSON. This is the case for `datetime`
 but also for all your `CustomTypes` you may have built and your embedded objects.
 
 ``Document`` supports the JSON import/export.
 
 :`to_json`:
 
-`to_json` is a simply method which export you document into a JSON document:
+`to_json` is a simple method which exports your document into a JSON format:
 
 >>> class MyDoc(Document):
 ...         structure = {
@@ -50,7 +50,7 @@ To load a JSON string into a ``Document``, use the `from_json` class method:
 {'_id': 'mydoc', 'bla': {'foo': 'bar', 'bar': 42}, 'spam': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
 
 Note that `from_json` will take care of all your embedded `Document`\ s if you used the `to_json()` method to
-generated the JSON. Indeed, some extra value has to be set : the database and the collection where
+generate the JSON. Indeed, some extra value has to be set : the database and the collection where
 the embedded document lives. This is added by the `to_json()` method:
 
 >>> class EmbedDoc(Document):
@@ -70,7 +70,7 @@ the embedded document lives. This is added by the `to_json()` method:
 ...    use_autorefs = True
 >>> con.register([EmbedDoc, MyDoc])
 
-Let's create an embed doc:
+Let's create an embedded doc:
 
 >>> embed = tutorial.EmbedDoc()
 >>> embed['_id'] = u"embed"
@@ -84,22 +84,22 @@ and embed this doc to another doc
 >>> mydoc['doc']['embed'] = embed
 >>> mydoc.save()
 
-Now let's see how look the generated json:
+Now let's see how the generated json looks like:
 
 >>> json = mydoc.to_json()
 >>> json
 u'{"doc": {"embed": {"_collection": "tutorial", "_database": "test", "_id": "embed", "foo": "bar"}}, "_id": "mydoc"}'
 
 As you can see, two new fields have been added : `_collection` and `_database`
-which represent respectively the collection and the database where the embed
-doc has been saved. That information is needed to generate the embed
+which represent respectively the collection and the database where the embedded
+doc has been saved. That information is needed to generate the embedded
 document. These are removed when calling the `from_json()` method:
 
 >>> mydoc = tutorial.MyDoc.from_json(json)
 >>> mydoc
 {u'doc': {u'embed': {u'_id': u'embed', u'foo': u'bar'}}, u'_id': u'mydoc'}
 
-An the embed document is an instance of EmbedDoc:
+An the embedded document is an instance of EmbedDoc:
 
 >>> isinstance(mydoc['doc']['embed'], EmbedDoc)
 True
@@ -108,7 +108,7 @@ ObjectId support
 ----------------
 
 `from_json()` can detect if the `_id` is an ``ObjectId`` instance or a simple string. When you serialize an object
-with ``ObjectId`` instance to json, the generated json object look like this:
+with ``ObjectId`` instance to json, the generated json object looks like this:
 
     '{"_id": {"$oid": "..."}, ...}'
 
@@ -119,7 +119,7 @@ with ``ObjectId`` instance to json, the generated json object look like this:
 u'{"foo": "bar", "_id": {"$oid": "4b5ec47390bce737e5000002"}}'
 
 the "$oid" field is added to tell `from_json()` that '_id' is an ``ObjectId`` instance.
-The same append with embed doc:
+The same happens with embedded docs:
 
 >>> mydoc = tutorial.MyDoc()
 >>> mydoc['doc']['embed'] = embed
