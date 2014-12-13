@@ -25,15 +25,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# W0401,W0614,W0611 wildcard/unused import
+# pylint: disable=W0401,W0614,W0611
+
 from bson import InvalidDocument
 
-try:
-    from pymongo.connection import OperationFailure
-except ImportError:
-    from pymongo.errors import OperationFailure
+from pymongo.errors import OperationFailure
+
+
+class AutoReferenceError(Exception):
+    pass
+
+
+class BadIndexError(Exception):
+    pass
 
 
 class ConnectionError(Exception):
+    pass
+
+
+class MaxDocumentSizeError(Exception):
     pass
 
 
@@ -45,21 +57,15 @@ class MultipleResultsFound(Exception):
     pass
 
 
-class BadIndexError(Exception):
-    pass
-
-
-class AutoReferenceError(Exception):
-    pass
-
-
-class MaxDocumentSizeError(Exception):
-    pass
-
-
 class OptionConflictError(Exception):
     pass
 
 
 class UpdateQueryError(Exception):
     pass
+
+
+class EvalException(Exception):
+    pass
+
+# pylint: enable=W0401,W0614,W0611

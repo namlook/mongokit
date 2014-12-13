@@ -370,13 +370,15 @@ class TypesTestCase(unittest.TestCase):
         class MyDoc(SchemaDocument):
             structure = {
                 "foo":OR(six.text_type,int),
-                "bar":OR(six.text_type, datetime)
+                "bar":OR(six.text_type, datetime),
+                "foobar": OR(six.string_types, int),
             }
 
         mydoc = MyDoc()
         assert str(mydoc.structure['foo']) == '<%s or int>' % six.text_type.__name__
         assert str(mydoc.structure['bar']) == '<%s or datetime>' % six.text_type.__name__
-        assert mydoc == {'foo': None, 'bar': None}
+        assert str(mydoc.structure['foobar']) == '<%s or int>' % six.string_types.__name__
+        assert mydoc == {'foo': None, 'bar': None, 'foobar': None}
         mydoc['foo'] = 3.0
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = six.u("foo")
@@ -385,7 +387,6 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo'] = six.b('bar')
         self.assertRaises(SchemaTypeError, mydoc.validate)
-
         mydoc['foo'] = datetime.now()
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = six.u("foo")
@@ -395,6 +396,14 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['bar'] = 25
         self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['bar'] = u"bar"
+        mydoc["foo"] = u"foo"
+        mydoc["foobar"] = "foobar"
+        mydoc.validate()
+        mydoc["foobar"] = datetime.now()
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc["foobar"] = 3
+        mydoc.validate()
 
     def test_not_operator(self):
         from mongokit import NOT
@@ -411,15 +420,18 @@ class TypesTestCase(unittest.TestCase):
         class MyDoc(SchemaDocument):
             structure = {
                 "foo":NOT(six.text_type,int),
-                "bar":NOT(datetime)
+                "bar":NOT(datetime),
+                "foobar": NOT(six.string_types)
             }
 
         mydoc = MyDoc()
         assert str(mydoc.structure['foo']) == '<not %s, not int>' % six.text_type.__name__, str(mydoc.structure['foo'])
         assert str(mydoc.structure['bar']) == '<not datetime>'
-        assert mydoc == {'foo': None, 'bar': None}
+        assert str(mydoc.structure['foobar']) == '<not %s>' % six.string_types.__name__
+        assert mydoc == {'foo': None, 'bar': None, 'foobar': None}
         assert mydoc['foo'] is None
         assert mydoc['bar'] is None
+        assert mydoc['foobar'] is None
         mydoc['foo'] = 3
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = u"foo"
@@ -434,6 +446,10 @@ class TypesTestCase(unittest.TestCase):
         mydoc['bar'] = u"today"
         mydoc.validate()
         mydoc['bar'] = 25
+        mydoc.validate()
+        mydoc['foobar'] = 'abc'
+        self.assertRaises(SchemaTypeError, mydoc.validate)
+        mydoc['foobar'] = 1
         mydoc.validate()
 
     def test_is_operator(self):

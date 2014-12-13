@@ -25,19 +25,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .mongo_exceptions import *
-from .schema_document import (
+
+from mongokit.mongo_exceptions import AutoReferenceError
+from mongokit.mongo_exceptions import OptionConflictError
+from mongokit.mongo_exceptions import BadIndexError
+from mongokit.mongo_exceptions import MaxDocumentSizeError
+from mongokit.mongo_exceptions import MultipleResultsFound
+from mongokit.mongo_exceptions import ConnectionError
+from mongokit.mongo_exceptions import OperationFailure
+
+from mongokit.schema_document import (
     STRUCTURE_KEYWORDS,
     CustomType,
-    SchemaDocument,
     SchemaTypeError,
     SchemaProperties,
+    SchemaDocument,
     StructureError)
-from .helpers import (
+from mongokit.helpers import (
     totimestamp,
     fromtimestamp,
     DotedDict)
-from .grid import *
+from mongokit.grid import FS
 import pymongo
 from bson import BSON
 from bson.binary import Binary

@@ -25,7 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
 
 DEFAULT_LIMIT = 10
 
@@ -43,9 +42,9 @@ class Paginator(object):
     is_paginated -- Boolean value determining if the cursor has multiple pages
     start_index  -- int index of the first item on the requested page
     end_index    -- int index of the last item on the requested page
-    current_page -- int index of the last item on the requested page
-    previous_page-- int index of the last item on the requested page
-    next_page    -- int index of the last item on the requested page
+    current_page -- int page number of the requested page
+    previous_page-- int page number of the previous page w.r.t. current requested page
+    next_page    -- int page number of the next page w.r.t. current requested page
     has_next     -- True or False if the Cursor has a next page
     has_previous -- True or False if the Cursor has a previous page
     page_range   -- list of page numbers

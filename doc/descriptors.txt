@@ -3,7 +3,7 @@ Descriptors
 
 In the MongoKit philosophy, the structure must be simple, clear and readable.
 So all descriptors (validation, requirement, default values, etc.) are
-described outside of the structure. Descriptors can be combined and can apply
+described outside the structure. Descriptors can be combined and applied to
 the same field.
 
 required
@@ -26,7 +26,7 @@ If you want to reach nested fields, just use the dot notation.
 default_values
 --------------
 
-This descriptors allow to specify a default value at the creation of the
+This descriptor allows to specify a default value at the creation of the
 document::
 
    class MyDoc(Document):
@@ -45,8 +45,8 @@ fields, use dot notation.
 validators
 ----------
 
-This descriptor bring a validation layer to a field. It take a function which
-returns a ``False`` if the validation fails, ``True`` otherwise::
+This descriptor brings a validation layer to a field. It takes a function which
+returns ``False`` if the validation fails, ``True`` otherwise::
 
     import re
     def email_validator(value):
@@ -65,18 +65,18 @@ returns a ``False`` if the validation fails, ``True`` otherwise::
            'foo.eggs': lambda x: x > 10
        }
 
-You can add custom message in your validators by throwing a ``ValidatorError``
-instead of returning false. ::
+You can add custom message to your validators by throwing a ``ValidationError``
+instead of returning ``False`` ::
 
     def email_validator(value):
        email = re.compile(r'(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)',re.IGNORECASE)
-       if not bool(email.match(value))
-          raise ValidatorError('%s is not a valid email')
+       if not email.match(value):
+          raise ValidationError('%s is not a valid email' % value)
 
 *Do you need to throw ValidatorError or any Exception -Ed *
-
-Make sure to include one '%s' in the message. This will be used to describes
-the failing field name.
+Validato
+Make sure to include one '%s' in the message. This will be used to refer to
+the name of the field containing errors.
 
 You can also pass params to your validator by wrapping it in a class::
 
@@ -88,7 +88,7 @@ You can also pass params to your validator by wrapping it in a class::
             if len(value) >= self.min_length:
                 return True
             else:
-                raise Exception('%s must be at least ' + str(self.min_length) + ' characters long.')
+                raise Exception('%s must be at least %d characters long.' % (value, self.min_length))
 
     class Client(Document):
         structure = {
@@ -104,7 +104,7 @@ Adding Complex Validation
 If the use of a validator is not enough, you can overload the validation method
 to fit your needs.
 
-Example the following document::
+For example, take the following document::
 
     class MyDoc(Document):
         structure = {
@@ -113,7 +113,7 @@ Example the following document::
             'baz': basestring
         }
 
-We want to be sure that before saving our object, foo is greater than bar. To
+We want to be sure before saving our object that foo is greater than bar. To
 do that, we just overload the validation method::
 
     def validate(self, *args, **kwargs):
@@ -158,8 +158,8 @@ Quiet Validation Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, when validation is on, each error raises an Exception. Sometimes,
-you just want to collect any errors in one place. This is possible by setting
-the ``raise_validation_errors`` to False. This causes any errors to be stored
+you just want to collect all errors in one place. This is possible by setting
+the ``raise_validation_errors`` to ``False``. This causes all errors to be stored
 in the ``validation_errors`` attribute::
 
     class MyDoc(Document):
@@ -174,9 +174,9 @@ in the ``validation_errors`` attribute::
 >>> doc.validation_errors
 {'foo': [StructureError("<type 'set'> is not an authorized type",), RequireFieldError('foo is required',)]}
 
-``validation_errors`` is a dictionary which take the field name as key and the
-python exception as value. Here foo has two issues : a structure one (``set``
-is not an authorized type) and field requirement error (``foo`` is required
+``validation_errors`` is a dictionary which takes the field name as key and the
+Python exception as value. There are two issues with foo here: one with it's structure (``set``
+is not an authorized type) and another with required field (``foo`` is required
 field but is not specified).
 
 >>> doc.validation_errors['foo'][0].message
@@ -202,7 +202,7 @@ we use the "$<type>" descriptor::
 
       required_fields = ["key1.$unicode.bla"]
 
-Note that if you use a python type as a key in structure, generate_skeleton
+Note that if you use a Python type as a key in structure, generate_skeleton
 won't be able to build the entire underlying structure :
 
 >>> con.register([MyDoc])

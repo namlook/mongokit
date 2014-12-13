@@ -26,11 +26,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
-
-from .helpers import DotCollapsedDict
-from .mongo_exceptions import *
-
 import six
+from mongokit.helpers import DotCollapsedDict
+from mongokit.mongo_exceptions import UpdateQueryError
+from mongokit.mongo_exceptions import OperationFailure
 
 
 class DocumentMigration(object):
