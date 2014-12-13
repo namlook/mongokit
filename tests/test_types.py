@@ -360,7 +360,7 @@ class TypesTestCase(unittest.TestCase):
         try:
             class BadMyDoc(SchemaDocument):
                 structure = {"bla": OR(int, tuple)}
-        except StructureError, e:
+        except StructureError as e:
             self.assertEqual(str(e),
                              "BadMyDoc: <%s 'tuple'> in <int or tuple> is not an authorized type (type found)"
                              % ('type' if six.PY2 else 'class'))
