@@ -352,7 +352,6 @@ class TypesTestCase(unittest.TestCase):
         op = OP()
         self.assertRaises(NotImplementedError, op.validate, "bla")
 
-
     def test_or_operator(self):
         from mongokit import OR
         assert repr(OR(int, str)) == "<int or str>"
@@ -360,24 +359,31 @@ class TypesTestCase(unittest.TestCase):
         failed = False
         try:
             class BadMyDoc(SchemaDocument):
-                structure = {"bla":OR(int, tuple)}
-        except StructureError as e:
-            self.assertEqual(str(e), "BadMyDoc: <%s 'tuple'> in <int or tuple> is not an authorized type (type found)" % ('type' if six.PY2 else 'class'))
+                structure = {"bla": OR(int, tuple)}
+        except StructureError, e:
+            self.assertEqual(str(e),
+                             "BadMyDoc: <%s 'tuple'> in <int or tuple> is not an authorized type (type found)"
+                             % ('type' if six.PY2 else 'class'))
             failed = True
         self.assertEqual(failed, True)
 
         from datetime import datetime
+        if six.PY2:
+            string_type = basestring
+        else:
+            string_type = str
+
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":OR(six.text_type,int),
-                "bar":OR(six.text_type, datetime),
-                "foobar": OR(six.string_types, int),
-            }
+                "foo": OR(six.text_type, int),
+                "bar": OR(six.text_type, datetime),
+                "foobar": OR(string_type, int),
+                }
 
         mydoc = MyDoc()
         assert str(mydoc.structure['foo']) == '<%s or int>' % six.text_type.__name__
         assert str(mydoc.structure['bar']) == '<%s or datetime>' % six.text_type.__name__
-        assert str(mydoc.structure['foobar']) == '<%s or int>' % six.string_types.__name__
+        assert str(mydoc.structure['foobar']) == '<%s or int>' % string_type.__name__
         assert mydoc == {'foo': None, 'bar': None, 'foobar': None}
         mydoc['foo'] = 3.0
         self.assertRaises(SchemaTypeError, mydoc.validate)
@@ -385,7 +391,7 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['foo'] = 3
         mydoc.validate()
-        mydoc['foo'] = six.b('bar')
+        mydoc['foo'] = 'bar'
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = datetime.now()
         self.assertRaises(SchemaTypeError, mydoc.validate)
@@ -396,8 +402,8 @@ class TypesTestCase(unittest.TestCase):
         mydoc.validate()
         mydoc['bar'] = 25
         self.assertRaises(SchemaTypeError, mydoc.validate)
-        mydoc['bar'] = u"bar"
-        mydoc["foo"] = u"foo"
+        mydoc['bar'] = six.u("bar")
+        mydoc["foo"] = six.u("foo")
         mydoc["foobar"] = "foobar"
         mydoc.validate()
         mydoc["foobar"] = datetime.now()
@@ -412,22 +418,28 @@ class TypesTestCase(unittest.TestCase):
             class BadMyDoc(SchemaDocument):
                 structure = {"bla":NOT(int, tuple)}
         except StructureError as e:
-            self.assertEqual(str(e), "BadMyDoc: <%s 'tuple'> in <not int, not tuple> is not an authorized type (type found)" % ('type' if six.PY2 else 'class'))
+            self.assertEqual(str(e),
+                             "BadMyDoc: <%s 'tuple'> in <not int, not tuple> is not an authorized type (type found)"
+                             % ('type' if six.PY2 else 'class'))
             failed = True
         self.assertEqual(failed, True)
 
         from datetime import datetime
+        if six.PY2:
+            string_type = basestring
+        else:
+            string_type = str
         class MyDoc(SchemaDocument):
             structure = {
-                "foo":NOT(six.text_type,int),
-                "bar":NOT(datetime),
-                "foobar": NOT(six.string_types)
+                "foo": NOT(six.text_type,int),
+                "bar": NOT(datetime),
+                "foobar": NOT(string_type)
             }
 
         mydoc = MyDoc()
         assert str(mydoc.structure['foo']) == '<not %s, not int>' % six.text_type.__name__, str(mydoc.structure['foo'])
         assert str(mydoc.structure['bar']) == '<not datetime>'
-        assert str(mydoc.structure['foobar']) == '<not %s>' % six.string_types.__name__
+        assert str(mydoc.structure['foobar']) == '<not %s>' % string_type.__name__
         assert mydoc == {'foo': None, 'bar': None, 'foobar': None}
         assert mydoc['foo'] is None
         assert mydoc['bar'] is None
