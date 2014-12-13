@@ -57,6 +57,7 @@ from copy import deepcopy
 from uuid import UUID, uuid4
 import logging
 import datetime
+import six
 
 STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
