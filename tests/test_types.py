@@ -392,7 +392,10 @@ class TypesTestCase(unittest.TestCase):
         mydoc['foo'] = 3
         mydoc.validate()
         mydoc['foo'] = 'bar'
-        self.assertRaises(SchemaTypeError, mydoc.validate)
+        if six.PY2:
+            self.assertRaises(SchemaTypeError, mydoc.validate)
+        else:
+            mydoc.validate()
         mydoc['foo'] = datetime.now()
         self.assertRaises(SchemaTypeError, mydoc.validate)
         mydoc['foo'] = six.u("foo")
