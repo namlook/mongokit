@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-
 try:
     from pymongo import MongoClient as PymongoConnection
     from pymongo import MongoReplicaSetClient as PymongoReplicaSetConnection

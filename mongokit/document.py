@@ -65,6 +65,7 @@ log = logging.getLogger(__name__)
 
 from six import text_type as unicode, with_metaclass, string_types
 
+
 class DocumentProperties(SchemaProperties):
     def __new__(mcs, name, bases, attrs):
         for base in bases:

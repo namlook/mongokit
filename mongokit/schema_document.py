@@ -96,15 +96,15 @@ class CustomType(object):
         pass
 
 _authorized_types = [
-        type(None),
-        bool,
-        int,
-        float,
-        list,
-        dict,
-        datetime.datetime,
-        bson.binary.Binary,
-        CustomType,
+    type(None),
+    bool,
+    int,
+    float,
+    list,
+    dict,
+    datetime.datetime,
+    bson.binary.Binary,
+    CustomType,
     ]
 if six.PY3:
     _authorized_types += [
@@ -117,8 +117,8 @@ else:
         unicode,
         basestring,
     ]
-    
-    
+
+
 # field wich does not need to be declared into the structure
 STRUCTURE_KEYWORDS = []
 
