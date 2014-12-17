@@ -48,6 +48,7 @@ Contents:
     migration
     pylons
     api
+    changelog
 ..    version_migration
 
 
