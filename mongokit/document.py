@@ -58,12 +58,11 @@ from uuid import UUID, uuid4
 import logging
 import datetime
 import six
+from six import with_metaclass, string_types
 
 STRUCTURE_KEYWORDS += ['_id', '_ns', '_revision', '_version']
 
 log = logging.getLogger(__name__)
-
-from six import text_type as unicode, with_metaclass, string_types
 
 
 class DocumentProperties(SchemaProperties):
