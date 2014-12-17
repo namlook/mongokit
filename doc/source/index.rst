@@ -49,3 +49,11 @@ Contents:
     pylons
 ..    version_migration
 
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
