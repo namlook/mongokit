@@ -93,15 +93,27 @@ Changing Collection Dynamically
 You might need to specify a different db or collection dynamically. For instance,
 say you want to store a User by database.
 
+    >>> # Python 3
     >>> class User(Document):
-    ...     structure = {'login':unicode, 'screen_name':unicode}
+    ...     structure = {
+    ...         'login':str,
+    ...         'screen_name':str
+    ...     }
+    >>> con.register([User])
 
+    >>> # Python 2
+    >>> class User(Document):
+    ...     structure = {
+    ...         'login':unicode,
+    ...         'screen_name':unicode
+    ...     }
     >>> con.register([User])
 
 Like pymongo, MongoKit allow you to change those parameters on the fly :
 
     >>> user_name = 'namlook'
-    >>> user_collection = connection[user_name].profile #returns a reference to the database 'namlook' in the collection 'profile'.
+    >>> user_collection = connection[user_name].profile
+    returns a reference to the database 'namlook' in the collection 'profile'.
 
 Now, we can query the database by passing our new collection :
 
@@ -120,6 +132,17 @@ Dot Notation
 If you want to use the dot notation (ala json), you must set the
 ``use_dot_notation`` attribute to True::
 
+    # Python 3
+    class TestDotNotation(Document):
+        use_dot_notation = True
+
+        structure = {
+            'foo':{
+                'bar': str
+            }
+        }
+
+    # Python 2
     class TestDotNotation(Document):
         use_dot_notation = True
 
@@ -150,6 +173,27 @@ In the following example, we have two objects, A and B, which inherit from Root.
 And we want to build an object C from A and B. Let's build Root, A and B
 first::
 
+    # Python 3
+    from mongokit import *
+    class Root(Document):
+        structure = {
+            'root': int
+        }
+        required_fields = ['root']
+
+    class A(Root):
+        structure = {
+            'a_field': str,
+        }
+        required_fields = ['a_field']
+
+
+    class B(Root):
+        structure = {
+            'b_field': str,
+        }
+
+    # Python 2
     from mongokit import *
     class Root(Document):
         structure = {
