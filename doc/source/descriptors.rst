@@ -1,5 +1,5 @@
 Descriptors
-===========
+-----------
 
 In the MongoKit philosophy, the structure must be simple, clear and readable.
 So all descriptors (validation, requirement, default values, etc.) are
@@ -7,7 +7,7 @@ described outside the structure. Descriptors can be combined and applied to
 the same field.
 
 required
---------
+~~~~~~~~
 
 This descriptor describes the required fields::
 
@@ -35,7 +35,7 @@ This descriptor describes the required fields::
 If you want to reach nested fields, just use the dot notation.
 
 default_values
---------------
+~~~~~~~~~~~~~~
 
 This descriptor allows to specify a default value at the creation of the
 document::
@@ -66,7 +66,7 @@ Note that the default value must be a valid type. Again, to reach nested
 fields, use dot notation.
 
 validators
-----------
+~~~~~~~~~~
 
 This descriptor brings a validation layer to a field. It takes a function which
 returns ``False`` if the validation fails, ``True`` otherwise::

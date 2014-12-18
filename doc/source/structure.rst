@@ -1,10 +1,10 @@
 The Structure
-=============
+-------------
 
 The ``structure`` is a simple dict which defines the document's schema.
 
 Field Types
------------
+~~~~~~~~~~~
 Field types are simple python types. By default, MongoKit allows the following types::
 
     # Common types between python 3 and python 2
@@ -35,7 +35,7 @@ Field types are simple python types. By default, MongoKit allows the following t
 
 
 Untyped field
--------------
+~~~~~~~~~~~~~
 
 Sometimes you don't want to specify a type for a field. In order to allow a
 field to have any of the authorized types, just set the field to ``None`` in the
@@ -49,7 +49,7 @@ structure::
 In this example, ``bar`` can be any of the above types except for a CustomType.
 
 Nested Structure
-----------------
+~~~~~~~~~~~~~~~~
 
 MongoDB allows documents to include nested structures using lists and dicts.
 You can also use the structure dict to specify these nested structures as
@@ -258,7 +258,7 @@ anyway, use the ``Set()`` custom type::
       }
 
 Using Custom Types
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Sometimes we need to work with complex objects while keeping
 their footprint in the database fairly simple. Let's take a
@@ -360,7 +360,7 @@ python object:
 datetime.datetime(2003, 2, 1, 0, 0)
 
 OR, NOT, and IS operators
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can also use boolean logic to do field type validation.
 
@@ -516,7 +516,7 @@ set. The IS operator can be used for this purpose::
 
 
 Schemaless Structure
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 One of the main advantages of MongoDB is the ability to insert schemaless
 documents into the database. As of version 0.7, MongoKit allows you to
