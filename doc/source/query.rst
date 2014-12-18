@@ -1,19 +1,19 @@
 Query
-=====
+-----
 
 There are two ways to query a collection : :ref:`raw-data` or :ref:`document-instance` .
 
 .. _raw-data:
 
 Getting raw data
-----------------
+~~~~~~~~~~~~~~~~
 
 Getting raw data is useful when you only want to have one value from your data. This is fast
 as there's no validation or wrapping. There are four methods to query raw data : `find()` and
 `find_one()`, `one()` and `find_random()`.
 
 find() and find_one()
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 `find()`_, and `find_one()`_ act like the similar `pymongo`_'s methods.
 Please, see the pymongo documentation.
@@ -23,7 +23,7 @@ Please, see the pymongo documentation.
 .. _`find_one()` : http://api.mongodb.org/python/current/api/pymongo/collection.html?highlight=find_one#pymongo.collection.Collection.find_one
 
 one()
-~~~~~
+^^^^^
 
 `one()` acts like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
 there is more than one result. ::
@@ -56,19 +56,19 @@ there is more than one result. ::
     >>> tutorial.one({'title':'my first blog post'})
     {u'body': None, u'author': u'myself', u'title': u'my first blog post', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
 
-If no document is found, `one()` returns ``None``
+If no document is found, `one()` returns ^^None^^
 
 find_random()
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 `find_random()` will return a random document from the database. This method doesn't take any arguments.
 
 .. _document-instance:
 
 Getting Document instance
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are 5 methods to query your data which return ``Document`` instances:
+There are 5 methods to query your data which return ^^Document^^ instances:
 `find()`, `find_one()`, `one()`, `fetch()`, `fetch_one()` and `find_random()`.
 `find()` and `fetch()` return a cursor of collection.  A cursor is a container
 which lazily evaluates the results. A cursor is acting like an iterator.
@@ -78,7 +78,7 @@ All these methods can take a query as an argument. A query is a simple dict. Che
 the mongodb and the pymongo documentation for further details.
 
 find()
-------
+^^^^^^
 
 `find()` without an argument will return a cursor of all documents from the collection.
 If a query is passed, it will return a cursor of all documents matching the query.
@@ -95,14 +95,14 @@ If a query is passed, it will return a cursor of all documents matching the quer
     my first blog post
 
 find_one()
-----------
+^^^^^^^^^^
 
 `find_one()` acts like `find()` but will return only the first document found. This
 method takes the same arguments as pymongo's `find_one()` method. Check
 the pymongo documentation.
 
 one()
------
+^^^^^
 
 `one()` acts like `find_one()` but will raise a `mongokit.MultipleResultsFound` exception if
 there is more than one result. ::
@@ -134,7 +134,7 @@ there is more than one result. ::
 If no document is found, `one()` returns None
 
 fetch()
--------
+^^^^^^^
 
 Unlike `find()`, `fetch()` will return only documents which match the structure of the Document.
 
@@ -154,13 +154,13 @@ which is equivalent to:
 >>> all_blog_posts = tutorial.BlogPost.find({'body': {'$exists': True}, 'title': {'$exists': True}, 'date_creation': {'$exists': True}, 'rank': {'$exists': True}, 'author': 'myself'})
 
 fetch_one()
------------
+^^^^^^^^^^^
 
 Just like `fetch()` but raise a  `mongokit.MultipleResultsFound` exception if
 there is more than one result.
 
 find_random()
--------------
+^^^^^^^^^^^^^
 
 `find_random()` will return a random document from the database. This method doesn't take other arguments.
 
