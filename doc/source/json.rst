@@ -1,5 +1,5 @@
-JSON support
-------------
+JSON
+----
 
 While building web application, you might want to create a REST API with JSON
 support. Then, you may need to convert all your Documents into a JSON format
