@@ -1,7 +1,9 @@
 Query
 =====
 
-There are two ways to query a collection : getting raw data or ``Document`` instance.
+There are two ways to query a collection : :ref:`raw-data` or :ref:`document-instance` .
+
+.. _raw-data:
 
 Getting raw data
 ----------------
@@ -13,27 +15,46 @@ as there's no validation or wrapping. There are four methods to query raw data :
 find() and find_one()
 ~~~~~~~~~~~~~~~~~~~~~
 
-`find()`, and `find_one()` act like the similar pymongo's methods.
+`find()`_, and `find_one()`_ act like the similar `pymongo`_'s methods.
 Please, see the pymongo documentation.
+
+.. _`pymongo`: http://api.mongodb.org/python/current/index.html
+.. _`find()` : http://api.mongodb.org/python/current/api/pymongo/collection.html?highlight=find_one#pymongo.collection.Collection.find
+.. _`find_one()` : http://api.mongodb.org/python/current/api/pymongo/collection.html?highlight=find_one#pymongo.collection.Collection.find_one
 
 one()
 ~~~~~
 
 `one()` acts like `find()` but will raise a `mongokit.MultipleResultsFound` exception if
-there is more than one result.
+there is more than one result. ::
 
->>> bp2 = tutorial.BlogPost()
->>> bp2['title'] = u'my second blog post'
->>> bp2['author'] = u'you'
->>> bp2.save()
+    >>># Python 3
+    >>> bp2 = tutorial.BlogPost()
+    >>> bp2['title'] = 'my second blog post'
+    >>> bp2['author'] = 'you'
+    >>> bp2.save()
 
->>> tutorial.one()
-Traceback (most recent call last):
-...
-MultipleResultsFound: 2 results found
+    >>> tutorial.one()
+    Traceback (most recent call last):
+    ...
+    MultipleResultsFound: 2 results found
 
->>> tutorial.one({'title':'my first blog post'})
-{u'body': None, u'author': u'myself', u'title': u'my first blog post', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
+    >>> tutorial.one({'title':'my first blog post'})
+    {'body': None, 'author': myself', 'title': 'my first blog post', 'rank': 0, '_id': ObjectId('4b5ec4b690bce73814000000'), 'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
+
+    >>> # Python 2
+    >>> bp2 = tutorial.BlogPost()
+    >>> bp2['title'] = u'my second blog post'
+    >>> bp2['author'] = u'you'
+    >>> bp2.save()
+
+    >>> tutorial.one()
+    Traceback (most recent call last):
+    ...
+    MultipleResultsFound: 2 results found
+
+    >>> tutorial.one({'title':'my first blog post'})
+    {u'body': None, u'author': u'myself', u'title': u'my first blog post', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
 
 If no document is found, `one()` returns ``None``
 
@@ -41,6 +62,8 @@ find_random()
 ~~~~~~~~~~~~~
 
 `find_random()` will return a random document from the database. This method doesn't take any arguments.
+
+.. _document-instance:
 
 Getting Document instance
 -----------------------------
@@ -60,17 +83,16 @@ find()
 `find()` without an argument will return a cursor of all documents from the collection.
 If a query is passed, it will return a cursor of all documents matching the query.
 
-`find()` takes the same arguments as the `pymongo.collection.find` method.
+`find()` takes the same arguments as the `pymongo.collection.find` method. ::
 
->>> for post in tutorial.BlogPost.find():
-...     print post['title']
-my first blog post
-my second blog post
+    >>> for post in tutorial.BlogPost.find():
+    ...     print post['title']
+    my first blog post
+    my second blog post
 
-
->>> for post in tutorial.BlogPost.find({'title':'my first blog post'}):
-...     print post['title']
-my first blog post
+    >>> for post in tutorial.BlogPost.find({'title':'my first blog post'}):
+    ...     print post['title']
+    my first blog post
 
 find_one()
 ----------
@@ -83,18 +105,31 @@ one()
 -----
 
 `one()` acts like `find_one()` but will raise a `mongokit.MultipleResultsFound` exception if
-there is more than one result.
+there is more than one result. ::
 
->>> tutorial.BlogPost.one()
-Traceback (most recent call last):
-...
-MultipleResultsFound: 2 results found
+    >>> # Python 3
+    >>> tutorial.BlogPost.one()
+    Traceback (most recent call last):
+    ...
+    MultipleResultsFound: 2 results found
 
->>> doc = tutorial.BlogPost.one({'title':'my first blog post'})
->>> doc
-{u'body': None, u'title': u'my first blog post', u'author': u'myself', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
->>> isinstance(doc, BlogPost)
-True
+    >>> doc = tutorial.BlogPost.one({'title':'my first blog post'})
+    >>> doc
+    {'body': None, 'title': 'my first blog post', 'author': 'myself', 'rank': 0, '_id': ObjectId('4b5ec4b690bce73814000000'), 'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
+    >>> isinstance(doc, BlogPost)
+    True
+
+    >>> # Python 2
+    >>> tutorial.BlogPost.one()
+    Traceback (most recent call last):
+    ...
+    MultipleResultsFound: 2 results found
+
+    >>> doc = tutorial.BlogPost.one({'title':'my first blog post'})
+    >>> doc
+    {u'body': None, u'title': u'my first blog post', u'author': u'myself', u'rank': 0, u'_id': ObjectId('4b5ec4b690bce73814000000'), u'date_creation': datetime.datetime(2010, 1, 26, 10, 32, 22, 497000)}
+    >>> isinstance(doc, BlogPost)
+    True
 
 If no document is found, `one()` returns None
 
