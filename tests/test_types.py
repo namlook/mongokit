@@ -632,12 +632,17 @@ class TypesTestCase(unittest.TestCase):
         class MyDoc(Document):
             structure = {
                 'my_binary': bson.binary.Binary,
-            }
+                }
         obj = self.col.MyDoc()
         # non-utf8 string
-        non_utf8 = "\xFF\xFE\xFF";
-        bin_obj = bson.binary.Binary(non_utf8)
+        string = "\xFF\xFE\xFF";
+
+        if six.PY3:
+            bin_obj = bson.binary.Binary(bytes(string,'utf-8'))
+        else:
+            bin_obj = bson.binary.Binary(string)
+
         obj['my_binary'] = bin_obj
         obj.save()
-
-        self.assertEquals(self.col.MyDoc.find_one()['my_binary'], bin_obj)
+        db_obj = bson.binary.Binary(self.col.MyDoc.find_one()['my_binary'])
+        self.assertEquals(db_obj, bin_obj)
