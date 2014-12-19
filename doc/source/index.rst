@@ -3,18 +3,24 @@ MongoKit Documentation
 
 .. image:: https://github.com/namlook/mongokit/raw/devel/doc/mongokit_logo.png
 
-MongoKit is a python module that brings structured schema and validation layer
+|Build Status|
+
+.. |Build Status| image:: https://travis-ci.org/namlook/mongokit.png
+
+`MongoKit`_ is a python module that brings structured schema and validation layer
 on top of the great pymongo driver. It has be written to be simpler and lighter
 as possible with the KISS and DRY principles in mind.
+
+.. _`MongoKit` : http://github.com/namlook/mongokit
 
 Philosophy
 ==========
 
 MongoKit is designed to be:
 
- * **simple**: MongoKit use plain python type to describe document structure
- * **fast**: MongoKit is fast but if you *really* need to be fast you have access to the raw pymongo layer without changing the API
- * **powerful**: MongoKit brings many feature like document auto-reference, custom types or i18n support.
+ * **Simple**: MongoKit use plain python type to describe document structure
+ * **Fast**: MongoKit is fast but if you *really* need to be fast you have access to the raw pymongo layer without changing the API
+ * **Powerful**: MongoKit brings many feature like document auto-reference, custom types or i18n support.
 
 .. topic:: **Your data is clean**:
 
@@ -23,30 +29,54 @@ MongoKit is designed to be:
     So if you need to use other mongo tools or ODMs in other languages, your
     data won’t be polluted by MongoKit’s stuff.
 
-Browse the `source code`_
+Features
+========
 
-.. _`source code` : http://github.com/namlook/mongokit
+ * Schema validation (which uses simple python types for the declaration)
+ * Schema-less feature
+ * Dot notation
+ * Nested and complex schema declaration
+ * Untyped field support
+ * Required fields validation
+ * Default values
+ * Custom validators
+ * Cross database document reference
+ * Random query support (which returns a random document from the database)
+ * Inheritance and polymorphism support
+ * Versionized document support (in beta stage)
+ * Partial auth support (it brings a simple User model)
+ * Operator for validation (currently : OR, NOT and IS)
+ * Simple web framework integration
+ * Import/export to json
+ * I18n support
+ * GridFS support
+ * Document migration support
 
+.. include:: quick_example.rst
+
+Support
+=======
+Suggestions and patches are really welcome. If you find mistakes in the documentation
+feel free to contact us.
+
+ * `Google Groups`_
+ * `Github Issues`_
+ * `Stackoverflow`_
+
+.. _`Github Issues` : https://github.com/namlook/mongokit/issues
+.. _`Google Groups` : http://groups.google.com/group/mongokit
+.. _`Stackoverflow` : http://stackoverflow.com/questions/tagged/mongokit
 
 Contents:
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
-    introduction
     tutorial
-    document
-    structure
-    descriptors
-    query
-    update
-    dbref
-    indexes
-    json
-    i18n
-    gridfs
-    migration
-    pylons
+    model
+    crud
+    features
+    frameworks
     api
     changelog
 ..    version_migration

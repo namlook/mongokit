@@ -1,9 +1,8 @@
 .. _pymongo : http://api.mongodb.org/python/
 .. _Connection : http://api.mongodb.org/python/current/tutorial.html#making-a-connection
 
-=============================
-Getting Started with MongoKit
-=============================
+Getting Started
+===============
 
 MongoKit is based on pymongo_. As such, all of the pymongo API is exposed
 through MongoKit. If you don't find what you want in the MongoKit API,
@@ -19,6 +18,27 @@ Defining a Document
 
 Start by defining the Document::
 
+    # Python 3
+    from mongokit import Document, Connection
+    import datetime
+
+    class BlogPost(Document):
+        structure = {
+            'title': str,
+            'body': str,
+            'author': str,
+            'date_creation': datetime.datetime,
+            'rank': int,
+            'tags': [str],
+        }
+        required_fields = ['title', 'author', 'date_creation']
+        default_values = {
+            'rank': 0,
+            'date_creation': datetime.datetime.utcnow
+        }
+
+
+    # Python 2
     from mongokit import Document, Connection
     import datetime
 
@@ -57,11 +77,11 @@ Now, to open a connection to MongoDB::
 
 This a wrapped version of pymongo's Connection_ and will attempt to connect to a MongoDB instance running locally.
 
-e.g. Speficying a host
+e.g. Speficying a host ::
 
     connection = Connection(host="HOSTNAME", port=PORT)
 
-e.g. Specifying a Replica Set host
+e.g. Specifying a Replica Set host ::
 
     from mongokit import ReplicaSetConnection
 
@@ -130,7 +150,7 @@ Alright, type validation works. :
     ...
     RequireFieldError: author is required
 
-    >>> bp['author'] = u'myself'
+    >>> bp['author'] = 'myself'
     >>> bp.validate()
     >>> 
 
@@ -153,5 +173,4 @@ as well::
     my first blog post
 
 pymongo_ makes it very easy to perform complex queries on your data so for more
-information, see the :doc:`query` documentation.
-
+information, see the :doc:`crud` documentation.

@@ -3,6 +3,12 @@ Changelog
 
 Version 1.0.0
 -------------
+ * Added python 3 support (thanks to @aquavitae)
+ * Big code clean up (thanks to @Winnetou)
+ * Updated documentation
+ * Added read the docs documentation
+ * Improved documentation structure
+
 
 Version 0.9.1
 -------------
