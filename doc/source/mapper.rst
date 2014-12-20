@@ -1,5 +1,5 @@
-Model Syntax
-============
+Mapper Syntax
+=============
 
 .. include:: document.rst
 .. include:: descriptors.rst

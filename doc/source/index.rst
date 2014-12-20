@@ -54,10 +54,10 @@ Features
 
 .. include:: quick_example.rst
 
-Support
-=======
+Community
+=========
 Suggestions and patches are really welcome. If you find mistakes in the documentation
-feel free to contact us.
+feel free to send a pull request or to contact us.
 
  * `Google Groups`_
  * `Github Issues`_
@@ -67,16 +67,19 @@ feel free to contact us.
 .. _`Google Groups` : http://groups.google.com/group/mongokit
 .. _`Stackoverflow` : http://stackoverflow.com/questions/tagged/mongokit
 
+
 Contents:
+=========
 
 .. toctree::
     :maxdepth: 3
 
     tutorial
-    model
+    mapper
     crud
     features
     frameworks
+    development
     api
     changelog
 ..    version_migration
