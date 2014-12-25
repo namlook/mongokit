@@ -1,5 +1,5 @@
 Descriptors
-===========
+-----------
 
 In the MongoKit philosophy, the structure must be simple, clear and readable.
 So all descriptors (validation, requirement, default values, etc.) are
@@ -7,10 +7,22 @@ described outside the structure. Descriptors can be combined and applied to
 the same field.
 
 required
---------
+~~~~~~~~
 
 This descriptor describes the required fields::
 
+    # Python 3
+    class MyDoc(Document):
+        structure = {
+            'bar': str,
+            'foo':{
+                'spam': str,
+                'eggs': int,
+            }
+        }
+        required = ['bar', 'foo.spam']
+
+    # Python 2
     class MyDoc(Document):
         structure = {
             'bar': basestring,
@@ -20,15 +32,26 @@ This descriptor describes the required fields::
             }
         }
         required = ['bar', 'foo.spam']
-
 If you want to reach nested fields, just use the dot notation.
 
 default_values
---------------
+~~~~~~~~~~~~~~
 
 This descriptor allows to specify a default value at the creation of the
 document::
 
+   # Python 3
+   class MyDoc(Document):
+        structure = {
+            'bar': str,
+            'foo':{
+                'spam': str,
+                'eggs': int,
+            }
+        }
+        default_values = {'bar': 'hello', 'foo.eggs': 4}
+
+   # Python 2
    class MyDoc(Document):
         structure = {
             'bar': basestring,
@@ -43,11 +66,30 @@ Note that the default value must be a valid type. Again, to reach nested
 fields, use dot notation.
 
 validators
-----------
+~~~~~~~~~~
 
 This descriptor brings a validation layer to a field. It takes a function which
 returns ``False`` if the validation fails, ``True`` otherwise::
 
+    # Python 3
+    import re
+    def email_validator(value):
+       email = re.compile(r'(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)',re.IGNORECASE)
+       return bool(email.match(value))
+
+    class MyDoc(Document):
+       structure = {
+          'email': str,
+          'foo': {
+            'eggs': int,
+          }
+       }
+       validators = {
+           'email': email_validator,
+           'foo.eggs': lambda x: x > 10
+       }
+
+    # Python 2
     import re
     def email_validator(value):
        email = re.compile(r'(?:^|\s)[-a-z0-9_.]+@(?:[-a-z0-9]+\.)+[a-z]{2,6}(?:\s|$)',re.IGNORECASE)
@@ -73,8 +115,7 @@ instead of returning ``False`` ::
        if not email.match(value):
           raise ValidationError('%s is not a valid email' % value)
 
-*Do you need to throw ValidatorError or any Exception -Ed *
-Validato
+
 Make sure to include one '%s' in the message. This will be used to refer to
 the name of the field containing errors.
 
@@ -90,6 +131,14 @@ You can also pass params to your validator by wrapping it in a class::
             else:
                 raise Exception('%s must be at least %d characters long.' % (value, self.min_length))
 
+    # Python 3
+    class Client(Document):
+        structure = {
+          'first_name': str
+        }
+        validators = { 'first_name': MinLengthValidator(2) }
+
+    # Python 2
     class Client(Document):
         structure = {
           'first_name': basestring
@@ -106,6 +155,15 @@ to fit your needs.
 
 For example, take the following document::
 
+    # Python 3
+    class MyDoc(Document):
+        structure = {
+            'foo': int,
+            'bar': int,
+            'baz': str
+        }
+
+    # Python 2
     class MyDoc(Document):
         structure = {
             'foo': int,
@@ -188,19 +246,35 @@ Validate Keys
 If the value of key is not known but we want to validate some deeper structure, 
 we use the "$<type>" descriptor::
 
+    # Python 3
     class MyDoc(Document):
-      structure = {
-        'key': {
-          unicode: {
-            'first': int,
-            'secondpart: {
-              unicode: int
+        structure = {
+            'key': {
+                str: {
+                    'first': int,
+                    'secondpart': {
+                        str: int
+                    }
+                }
             }
-          }
         }
-      }
 
-      required_fields = ["key1.$unicode.bla"]
+    required_fields = ["key1.$str.bla"]
+
+    # Python 2
+    class MyDoc(Document):
+        structure = {
+            'key': {
+                unicode: {
+                    'first': int,
+                    'secondpart': {
+                        unicode: int
+                    }
+                }
+            }
+        }
+
+    required_fields = ["key1.$unicode.bla"]
 
 Note that if you use a Python type as a key in structure, generate_skeleton
 won't be able to build the entire underlying structure :

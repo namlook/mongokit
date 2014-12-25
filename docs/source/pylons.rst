@@ -1,5 +1,5 @@
-Pylons support
-==============
+Pylons
+------
 
 You can very easily interface Mongokit with Pylons. This tutorial explains how to do this.
 Note that there's a lot of ways to do the same thing. If you found another better solution,

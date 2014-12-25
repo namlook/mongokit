@@ -1,23 +1,23 @@
 GridFS
-======
+------
 
 MongoKit implements GridFS support and brings some helpers
 to facilitate the use of relative small files.
 
 Let's create a document ``Doc`` which have two attachment in
-GridFS  named as  `source` and `template`:
+GridFS  named as  `source` and `template`::
 
->>> from mongokit import *
->>> class Doc(Document):
-...        structure = {
-...            'title':unicode,
-...        }
-...        gridfs = {'files':['source', 'template']}
+    >>> from mongokit import *
+    >>> class Doc(Document):
+    ...        structure = {
+    ...            'title':unicode,
+    ...        }
+    ...        gridfs = {'files':['source', 'template']}
 
 
 You might want to be able to add file in gridfs on the fly without knowing
 their name.  The new API allow to add "containers" to gridfs. So, the gridfs
-declaration look like this ::
+declaration look like this::
 
     gridfs = {
       'files':['source', 'template'],
@@ -27,27 +27,26 @@ declaration look like this ::
 As you can see, nothing hard. We just declare our attachment files
 in the `gridfs` attribute. Filling this attribute will generate
 an `fs` attribute at runtime. This `fs` attribute is actually an
-object which deal with GridFS.
+object which deal with GridFS. ::
 
-
->>> connection = Connection()
->>> connection.register([Doc])
->>> doc = connection.test.tutorial.Doc()
->>> doc['title'] = u'Hello'
->>> doc.save()
+    >>> connection = Connection()
+    >>> connection.register([Doc])
+    >>> doc = connection.test.tutorial.Doc()
+    >>> doc['title'] = u'Hello'
+    >>> doc.save()
 
 Before using gridfs attachment, you have to save the document.
 This is required as under the hood, mongokit use the document
 ``_id`` to link with GridFS files.
 
 The simple way
---------------
+~~~~~~~~~~~~~~
 
 All gridfs attachments are accessible via the `fs` object.
-Now, we can fill the ``source`` and ``template``:
+Now, we can fill the ``source`` and ``template``::
 
->>> doc.fs.source = "Hello World !"
->>> doc.fs.template = "My pretty template"
+    >>> doc.fs.source = "Hello World !"
+    >>> doc.fs.template = "My pretty template"
 
 And that's it ! By doing this, MongoKit will open a GridFile,
 fill it with the value, and close it.
@@ -55,18 +54,17 @@ fill it with the value, and close it.
 Note that you have to be careful to the type : attachments
 only accept string (Python 2) or bytes (Python 3).
 
-You can read any attachment in a very simple way :
+You can read any attachment in a very simple way::
 
->>> doc.fs.source
-'Hello World !'
+    >>> doc.fs.source
+    'Hello World !'
 
+You can add any image you want to the container "images"::
 
-You can add any image you want to the container "images":
-
->>> doc.fs.images['image1.png'] = "..."
->>> doc.fs.images['image1.png']
-'...'
->>> doc.fs.images['image2.png'] = '...'
+    >>> doc.fs.images['image1.png'] = "..."
+    >>> doc.fs.images['image1.png']
+    '...'
+    >>> doc.fs.images['image2.png'] = '...'
 
 This is very useful when you want of store a number of file but you don't
 know their names.
@@ -95,43 +93,41 @@ You can list a container as well. The container name is accessible via the `cont
 
 
 The full way
-------------
+~~~~~~~~~~~
 
 While the previous method is very easy, it might not be enougth
 if you're dealing with very big files or want to use some file
 related feature (for instance, using seek to not have to load
 all the file in memory)
 
-You can do that with using the `get_last_version()` method on the ``fs`` object.
+You can do that with using the `get_last_version()` method on the ``fs`` object. ::
 
->>> f = doc.fs.get_last_version("source")
->>> f.read(10)
+    >>> f = doc.fs.get_last_version("source")
+    >>> f.read(10)
 
 If you want to create a file and write in it, you can do that with using the
-`new_file()` method on the ``fs`` object.  The `new_file()` method take the
-file name and all other properties pymongo
-accepts here::
+`new_file()` method on the ``fs`` object. The `new_file()` method take the
+file name and all other properties pymongo accepts::
 
->>> f = doc.fs.new_file('source')
->>> f.write("Hello World again !")
->>> f.close() 
+    >>> f = doc.fs.new_file('source')
+    >>> f.write("Hello World again !")
+    >>> f.close()
 
 
 By supporting PyMongo 1.6 you can use the advanced ``with`` keyword
-to handle write operations:
+to handle write operations::
 
    >>> with doc.fs.new_file("source") as f:
    ...     f.write("Hello World again !")
    ...
 
-You can add any image you want to the container "images":
+You can add any image you want to the container "images"::
 
     >>> f = doc.fs.images.new_file('image1.png')
     >>> f.write('...')
     >>> f.close()
     >>> f = doc.fs.images.get_last_version('image1.png')
     >>> f.read(10)
-
 
 All PyMongo API is supported::
 

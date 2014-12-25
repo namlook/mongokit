@@ -1,12 +1,11 @@
-=========
 Documents
-=========
+---------
 
 Documents are the basic building blocks of MongoKit. They define the schema
 of each document and how that document should be accessed
 
 Document Class
---------------
+~~~~~~~~~~~~~~
 ::
 
     from mongokit import Document, Connection
@@ -36,7 +35,7 @@ You can read more about the `structure`_ attribute, and the ``required_fields`` 
     .. _`migration`: migration.html
 
 Registering
------------
+~~~~~~~~~~~
 
 Once a document has been defined, it must be registered with a Connection::
 
@@ -51,7 +50,7 @@ Optionally, the register method can be used as a decorator::
 
 
 Database and Collection
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 To use a Document, you must call it from a collection. In pymongo's syntax, you would use
 ``connection.<database>.<collection>`` to access the collection. Once you have
@@ -93,15 +92,27 @@ Changing Collection Dynamically
 You might need to specify a different db or collection dynamically. For instance,
 say you want to store a User by database.
 
+    >>> # Python 3
     >>> class User(Document):
-    ...     structure = {'login':unicode, 'screen_name':unicode}
+    ...     structure = {
+    ...         'login':str,
+    ...         'screen_name':str
+    ...     }
+    >>> con.register([User])
 
+    >>> # Python 2
+    >>> class User(Document):
+    ...     structure = {
+    ...         'login':unicode,
+    ...         'screen_name':unicode
+    ...     }
     >>> con.register([User])
 
 Like pymongo, MongoKit allow you to change those parameters on the fly :
 
     >>> user_name = 'namlook'
-    >>> user_collection = connection[user_name].profile #returns a reference to the database 'namlook' in the collection 'profile'.
+    >>> user_collection = connection[user_name].profile
+    returns a reference to the database 'namlook' in the collection 'profile'.
 
 Now, we can query the database by passing our new collection :
 
@@ -115,11 +126,22 @@ Calling ``user.save()`` will save the object into the database ``namlook``
 in the collection ``profile``.
 
 Dot Notation
-------------
+~~~~~~~~~~~~
 
 If you want to use the dot notation (ala json), you must set the
 ``use_dot_notation`` attribute to True::
 
+    # Python 3
+    class TestDotNotation(Document):
+        use_dot_notation = True
+
+        structure = {
+            'foo':{
+                'bar': str
+            }
+        }
+
+    # Python 2
     class TestDotNotation(Document):
         use_dot_notation = True
 
@@ -144,12 +166,33 @@ Note that if an attribute is not in structure, the value will be added as attrib
 If you want to be warned when a value is set as attribute, you can set the `dot_notation_warning` attribute as True.
 
 Polymorphism
-------------
+~~~~~~~~~~~~
 
 In the following example, we have two objects, A and B, which inherit from Root.
 And we want to build an object C from A and B. Let's build Root, A and B
 first::
 
+    # Python 3
+    from mongokit import *
+    class Root(Document):
+        structure = {
+            'root': int
+        }
+        required_fields = ['root']
+
+    class A(Root):
+        structure = {
+            'a_field': str,
+        }
+        required_fields = ['a_field']
+
+
+    class B(Root):
+        structure = {
+            'b_field': str,
+        }
+
+    # Python 2
     from mongokit import *
     class Root(Document):
         structure = {
@@ -175,9 +218,9 @@ Polymorphisms just work as expected::
     class C(A,B):
         structure = {'c_field': float}
 
->>> c = C()
->>> c == {'b_field': None, 'root': None, 'c_field': None, 'a_field': None}
-True
->>> C.required_fields
-['root', 'a_field']
+    >>> c = C()
+    >>> c == {'b_field': None, 'root': None, 'c_field': None, 'a_field': None}
+    True
+    >>> C.required_fields
+    ['root', 'a_field']
 

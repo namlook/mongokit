@@ -1,9 +1,37 @@
-Updating data
-=============
+Update
+------
 
 Update in Mongokit is as easy as saving an object. Just modify your
 document and save it::
 
+    # Python 3
+    @connection.register
+    ... class MyDoc(Document):
+    ...    structure = {
+    ...        'foo':{
+    ...            'bar':[str],
+    ...            'eggs':{'spam':int},
+    ...        },
+    ...        'bla':str
+    ...    }
+
+.. code-block:: pycon
+
+    >>> doc = self.col.MyDoc()
+    >>> doc['_id'] = 3
+    >>> doc['foo']['bar'] = ['mybar', 'yourbar']
+    >>> doc['foo']['eggs']['spam'] = 4
+    >>> doc['bla'] = 'ble'
+    >>> doc.save() 
+
+    >>> # Let's modify our doc :
+    >>> doc['foo']['eggs']['spam'] = 2
+    >>> doc['bla']= 'bli'
+    >>> doc.save()
+
+.. code-block:: python
+
+    # Python 2
     @connection.register
     ... class MyDoc(Document):
     ...    structure = {
@@ -14,16 +42,16 @@ document and save it::
     ...        'bla':unicode
     ...    }
 
+.. code-block:: pycon
 
     >>> doc = self.col.MyDoc()
     >>> doc['_id'] = 3
     >>> doc['foo']['bar'] = [u'mybar', u'yourbar']
     >>> doc['foo']['eggs']['spam'] = 4
     >>> doc['bla'] = u'ble'
-    >>> doc.save() 
+    >>> doc.save()
 
-    Let's modify our doc :
-
+    >>> # Let's modify our doc :
     >>> doc['foo']['eggs']['spam'] = 2
     >>> doc['bla']= u'bli'
     >>> doc.save()
@@ -33,9 +61,9 @@ document and save it::
 
 
 Bulk and atomic updates
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
-As Mongokit exposes all the pymongo API, you can use the pymongo's update on collection:
+As Mongokit exposes all the pymongo API, you can use the pymongo's update on collection::
 
     >>> con.test.tutorial.update({'title': 'my first blog post'}, {'$set':{'title':u'my very first blog post'}})
 
@@ -44,7 +72,7 @@ For more information, please look at the `pymongo documentation`_.
 .. _`pymongo documentation` : http://api.mongodb.org/python/
 
 reload()
---------
+^^^^^^^^
 
 If a document was updated in another thread, it would be necessary to refresh the document to
 match changes from the database. To do that, use the `reload()` method.
@@ -82,22 +110,21 @@ Example::
     {'_id': 3, 'foo': {u'eggs': {u'spam': 2}}, 'bla': u'ble'}
 
 find_and_modify()
------------------
+^^^^^^^^^^^^^^^^^
+This method allows to return a Document object after or before making an update.
 
-    This method allows to return a Document object after or before making an update.
+If you call `find_and_modify` on a Collection object, it will return a dict object::
 
-    If you call `find_and_modify` on a Collection object, it will return a dict object::
+    >>> d = connection.test.tutorial.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+    >>> isinstance(d, MyDoc)
+    False
+    >>> isinstance(d, dict)
+    True
 
-        >>> d = connection.test.tutorial.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
-        >>> isinstance(d, MyDoc)
-        False
-        >>> isinstance(d, dict)
-        True
+If you call `find_and_modify` on a Document object, it will return a Document object::
 
-    If you call `find_and_modify` on a Document object, it will return a Document object::
+    >>> d = connection.MyDoc.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
+    >>> isinstance(d, MyDoc)
+    True
 
-        >>> d = connection.MyDoc.find_and_modify({'bla':'ble'}, {'$set':{'foo.eggs.spam':2}})
-        >>> isinstance(d, MyDoc)
-        True
-
-    Please, read the mongodb documentation to learn how to use the `find_and_modify` method.
+Please, read the mongodb documentation to learn how to use the `find_and_modify` method.

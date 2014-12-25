@@ -1,20 +1,33 @@
 Migration
-=========
+---------
 
 Let's say we have created a blog post which look like this::
 
+    # Python 3
     >>> from mongokit import *
     >>> con = Connection()
+    ... class BlogPost(Document):
+    ...     structure = {
+    ...         "blog_post":{
+    ...             "title": str,
+    ...             "created_at": datetime,
+    ...             "body": str,
+    ...         }
+    ...     }
+    ...     default_values = {'blog_post.created_at':datetime.utcnow()}
 
-    class BlogPost(Document):
-        structure = {
-            "blog_post":{
-                "title": unicode,
-                "created_at": datetime,
-                "body": unicode,
-            }
-        }
-        default_values = {'blog_post.created_at':datetime.utcnow()}
+    >>> # Python 2
+    >>> from mongokit import *
+    >>> con = Connection()
+    ... class BlogPost(Document):
+    ...     structure = {
+    ...         "blog_post":{
+    ...             "title": unicode,
+    ...             "created_at": datetime,
+    ...             "body": unicode,
+    ...         }
+    ...     }
+    ...     default_values = {'blog_post.created_at':datetime.utcnow()}
 
 
 Let's create some blog posts:
@@ -24,6 +37,19 @@ Let's create some blog posts:
 
 Now, development goes on and we add a 'tags' field to our `BlogPost`::
 
+    # Python 3
+    class BlogPost(Document):
+        structure = {
+            "blog_post":{
+                "title": str,
+                "created_at": datetime,
+                "body": str,
+                "tags":  [str],
+            }
+        }
+        default_values = {'blog_post.created_at':datetime.utcnow()}
+
+    # Python 2
     class BlogPost(Document):
         structure = {
             "blog_post":{
@@ -58,7 +84,7 @@ and now we can save our blog_post::
     >>> blog_post.save()
 
 Lazy migration
---------------
+~~~~~~~~~~~~~~
 
 .. IMPORTANT::
     You cannot use this feature if `use_schemaless` is set to True
@@ -93,6 +119,20 @@ Now that our `BlogPostMigration` is created, we have to tell Mongokit to what
 document these migration rules should be applied.  To do that, we have to set
 the `migration_handler` in `BlogPost`::
 
+    # Python 3
+    class BlogPost(Document):
+        structure = {
+            "blog_post":{
+                "title": unicode,
+                "created_at": datetime,
+                "body": unicode,
+                "tags": [unicode],
+            }
+        }
+        default_values = {'blog_post.created_at':datetime.utcnow}
+        migration_handler = BlogPostMigration
+
+    # Python 2
     class BlogPost(Document):
         structure = {
             "blog_post":{
@@ -113,7 +153,7 @@ are applied to the object and the document is reloaded.
     Validation must be on to allow lazy migration.
 
 Bulk migration
---------------
+~~~~~~~~~~~~~~
 
 Lazy migration is useful if you have many documents to migrate, because update
 will lock the database. But sometimes you might want to make a migration on few
@@ -126,6 +166,18 @@ start with `allmigration`. Because lazy migration adds document `_id` to
 `self.target`. Here's an example of bulk migration, where we finally wan't to remove
 the `tags` field from `BlogPost`::
 
+    # Python 3
+    class BlogPost(Document):
+        structure = {
+            "blog_post":{
+                "title": unicode,
+                "creation_date": datetime,
+                "body": unicode,
+            }
+        }
+        default_values = {'blog_post.created_at':datetime.utcnow}
+
+    # Python 2
     class BlogPost(Document):
         structure = {
             "blog_post":{
@@ -159,7 +211,7 @@ To apply the migration, instantiate the `BlogPostMigration` and call the
     can mix `migration_*` and `allmigration_*` methods.
 
 Migration status
-----------------
+~~~~~~~~~~~~~~~~
 
 Once all your documents have been migrated, some migration rules could become
 deprecated. To know which rules are deprecated, use the `get_deprecated` method::
@@ -172,10 +224,10 @@ Here we can remove the rule `allmigration01__remove_tags`.
 
 
 Advanced migration
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Lazy migration
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 Sometimes we might want to build more advanced migration. For instance, say you
 want to copy a field value into another field, you can have access to the
@@ -189,7 +241,7 @@ current doc value via `self.doc`. In the following example, we want to add an
 
 
 Advanced and bulk migration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you want to do the same thing with bulk migration, things are a little different::
 
