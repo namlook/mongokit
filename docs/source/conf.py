@@ -52,14 +52,14 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'MongoKit'
-copyright = '2009-2014, Nicolas Clairon'
+copyright = '2009-2015, Nicolas Clairon'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '1.0.0'
+version = '1.0'
 # The full version, including alpha/beta/rc tags.
 release = '1.0.0'
 

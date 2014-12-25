@@ -33,5 +33,5 @@ venv/_venv_setup_done:
 venv/_venv_packages_installed: requirements.txt
 	. venv/bin/activate \
 	&& pip install --upgrade pip setuptools \
-	&& venv/bin/pip install --download-cache=./.tmp/pip_cache_dir -r requirements.txt \
+	&& venv/bin/pip install -r requirements.txt \
 	&& touch venv/_venv_packages_installed

@@ -38,7 +38,7 @@ import codecs
 
 setup(
     name = 'mongokit',
-    version = '0.9.1',  # TODO don't forget to change version in __init__
+    version = '1.0.0',  # TODO don't forget to change version in __init__
 
     description = 'Python mongodb kit',
     long_description = codecs.open('README.md', "r", "utf-8").read(),
@@ -47,12 +47,16 @@ setup(
     url = 'http://namlook.github.com/mongokit/',
 
     classifiers = [
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta'
         'Environment :: Other Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Database',
         'Topic :: Utilities',
         'Topic :: Software Development :: Libraries :: Python Modules',
