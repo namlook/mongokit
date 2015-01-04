@@ -590,8 +590,9 @@ class Document(with_metaclass(DocumentProperties, SchemaDocument)):
                             if doc[key]:
                                 for obj in doc[key]:
                                     _convert_to_python(obj, struct[key][0], new_path, root_path)
-                elif struct[key] is datetime.datetime and doc[key] is not None:
-                    doc[key] = fromtimestamp(doc[key])
+                elif struct[key] is datetime.datetime and key in doc.keys():
+                    if doc[key] is not None:
+                        doc[key] = fromtimestamp(doc[key])
                 elif (isinstance(struct[key], R) or isinstance(struct[key],
                                                                DocumentProperties)) and doc[key] is not None:
                     db = doc[key].get('_database') or doc[key].get('$db')
