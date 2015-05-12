@@ -1,3 +1,6 @@
+
+**maintainers wanted !** See [#182](https://github.com/namlook/mongokit/issues/182) for more infos.
+
 # MongoKit [![Build Status](https://travis-ci.org/namlook/mongokit.png)](https://travis-ci.org/namlook/mongokit.png)
 
 [MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It has a lot of drivers for many languages (python, ruby, perl, java, php...).
