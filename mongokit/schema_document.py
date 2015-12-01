@@ -160,32 +160,34 @@ class SchemaProperties(type):
             ['_protected_field_names', '_namespaces', '_required_namespace'])
         for base in bases:
             parent = base.__mro__[0]
-            if hasattr(parent, 'structure'):
-                if parent.structure is not None:
-                    #parent = parent()
-                    if parent.structure:
-                        if 'structure' not in attrs and parent.structure:
-                            attrs['structure'] = parent.structure.copy()
-                        else:
-                            obj_structure = attrs.get('structure', {}).copy()
-                            attrs['structure'] = parent.structure.copy()
-                            attrs['structure'].update(obj_structure)
-                    if parent.required_fields:
-                        attrs['required_fields'] = list(set(
-                            attrs.get('required_fields', [])+parent.required_fields))
-                    if parent.default_values:
-                        obj_default_values = attrs.get('default_values', {}).copy()
-                        attrs['default_values'] = parent.default_values.copy()
-                        attrs['default_values'].update(obj_default_values)
-                    if parent.validators:
-                        obj_validators = attrs.get('validators', {}).copy()
-                        attrs['validators'] = parent.validators.copy()
-                        attrs['validators'].update(obj_validators)
-                    if parent.i18n:
-                        attrs['i18n'] = list(set(
-                            attrs.get('i18n', [])+parent.i18n))
-                if attrs.get('authorized_types'):
-                    attrs['authorized_types'] = list(set(parent.authorized_types).union(set(attrs['authorized_types'])))
+            if not hasattr(parent, 'structure'):
+                continue
+
+            if parent.structure is not None:
+                #parent = parent()
+                if parent.structure:
+                    if 'structure' not in attrs and parent.structure:
+                        attrs['structure'] = parent.structure.copy()
+                    else:
+                        obj_structure = attrs.get('structure', {}).copy()
+                        attrs['structure'] = parent.structure.copy()
+                        attrs['structure'].update(obj_structure)
+                if parent.required_fields:
+                    attrs['required_fields'] = list(set(
+                        attrs.get('required_fields', [])+parent.required_fields))
+                if parent.default_values:
+                    obj_default_values = attrs.get('default_values', {}).copy()
+                    attrs['default_values'] = parent.default_values.copy()
+                    attrs['default_values'].update(obj_default_values)
+                if parent.validators:
+                    obj_validators = attrs.get('validators', {}).copy()
+                    attrs['validators'] = parent.validators.copy()
+                    attrs['validators'].update(obj_validators)
+                if parent.i18n:
+                    attrs['i18n'] = list(set(
+                        attrs.get('i18n', [])+parent.i18n))
+            if attrs.get('authorized_types'):
+                attrs['authorized_types'] = list(set(parent.authorized_types).union(set(attrs['authorized_types'])))
         for mro in bases[0].__mro__:
             attrs['_protected_field_names'] = attrs['_protected_field_names'].union(list(mro.__dict__))
         attrs['_protected_field_names'] = list(attrs['_protected_field_names'])
