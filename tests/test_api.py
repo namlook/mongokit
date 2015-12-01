@@ -243,6 +243,28 @@ class ApiTestCase(unittest.TestCase):
         assert isinstance(mydoc, MyDoc)
         self.assertEquals(2, mydoc["baz"])
 
+    def test_find_and_modify_collection(self):
+        class MyDoc(Document):
+            __collection__ = 'my_doc_foo'
+            structure = {
+                "_id":int,
+                "foo":int,
+            }
+        self.connection.register([MyDoc])
+
+        mydoc = self.col.MyDoc.find_and_modify(query={"_id": 1}, update={"$set": {"foo": 2}}, new=True, upsert=True)
+        self.assertEquals(2, mydoc["foo"])
+        assert isinstance(mydoc, MyDoc)
+
+        # update fetched document
+        mydoc["foo"] = 3
+        mydoc.save()
+        self.assertEquals(3, mydoc["foo"])
+
+        # check if doc has been updated
+        mydoc = self.col.MyDoc.find_one({"_id": 1}, ['foo'])
+        self.assertEquals(3, mydoc["foo"])
+
     def test_one(self):
         class MyDoc(Document):
             structure = {

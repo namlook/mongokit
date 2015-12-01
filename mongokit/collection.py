@@ -97,7 +97,8 @@ class Collection(PymongoCollection):
         obj_class = kwargs.pop('wrap', None)
         doc = super(Collection, self).find_and_modify(*args, **kwargs)
         if doc and obj_class:
-            return self.collection[obj_class.__name__](doc)
+            doc = self.collection[obj_class.__name__](doc)
+            doc.collection = self
         return doc
     find_and_modify.__doc__ = PymongoCollection.find_and_modify.__doc__ + """
         added by mongokit::
