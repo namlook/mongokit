@@ -64,7 +64,7 @@ Python's dict syntax ``{}`` is used for describing nested structure::
     class Person(Document):
       structure = {
         'biography': {
-          'name': basestring,
+          'name': str,
           'age': int
         }
       }
@@ -73,7 +73,7 @@ Python's dict syntax ``{}`` is used for describing nested structure::
     class Person(Document):
       structure = {
         'biography': {
-          'name': str,
+          'name': basestring,
           'age': int
         }
       }
@@ -171,7 +171,7 @@ You can also validate an array of complex objects by using a dict::
             ]
         }
 
-    # Python 3
+    # Python 2
     class Article(Document):
         structure = {
             'tags': [
