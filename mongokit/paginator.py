@@ -25,6 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 
 DEFAULT_LIMIT = 10
 
@@ -73,7 +74,7 @@ class Paginator(object):
             return 1
         if self._limit == 1:
             return self._page
-        return ((self._page-1) * self._limit) + 1
+        return ((self._page - 1) * self._limit) + 1
 
     @property
     def end_index(self):
@@ -108,7 +109,10 @@ class Paginator(object):
 
     @property
     def page_range(self):
-        return [p for p in xrange(1, self.num_pages+1)]
+        if sys.version_info < (3,):
+            return [p for p in xrange(1, self.num_pages + 1)]
+        else:
+            return [p for p in range(1, self.num_pages + 1)]
 
     @property
     def num_pages(self):
